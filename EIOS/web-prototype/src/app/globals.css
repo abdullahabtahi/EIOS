@@ -15,6 +15,12 @@
   --color-cockpit-card: #ffffff;
   --color-cockpit-border: #e2e8f0;
 
+  /** Dark global chrome (nav rail + top header only; analytical surfaces stay light) */
+  --color-chrome-line: rgb(255 255 255 / 0.09);
+  --color-chrome-hover: rgb(255 255 255 / 0.06);
+  --color-chrome-active: rgb(255 255 255 / 0.1);
+  --color-chrome-accent: #5aa9dc;
+
   /** Font Tokens */
   --font-display: 'Inter', sans-serif;
   --font-headings: 'Inter', sans-serif;

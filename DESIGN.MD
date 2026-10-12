@@ -5,7 +5,7 @@
 This document outlines the strict visual constraints for the **Financial Enterprise Intelligence Operating System (FEIOS)**. The aesthetic is institutional, high-trust, editorial, and starkly analytical—specifically the "Sovereign Light" mode. It is designed to feel like an institutional executive intelligence dossier merged with a high-performance operating system.
 
 ### Core Philosophy
-- **Light Mode Only**: The interface is strictly 100% light mode.
+- **Light Mode Only**: All analytical surfaces are strictly 100% light mode. **Scoped exception:** the global chrome (left navigation rail and the top header's first row) is dark slate (`--color-cockpit-rail`, `--color-chrome-*`) to frame the light workspace. No other dark surfaces.
 - **Data over Chrome**: UI borders are subtle (`var(--color-border)`), backgrounds are pristine (`#fafafa` paper-white), and content is the focal point.
 - **No Glows or Neons**: Eliminate all cyber-slop (drop-shadow glows, neon cyan/magenta).
 - **Subtle Micro-interactions**: Animations are limited to polished, expensive-feeling snappy state changes (`ease-out`, 150-250ms).

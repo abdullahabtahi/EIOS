@@ -29,6 +29,7 @@ const SHORTCUT_GROUPS = [
     shortcuts: [
       { key: '[', description: 'Toggle Left Triage Rail (Collapse / Expand)' },
       { key: ']', description: 'Toggle Right Kinetic Canvas (Collapse / Expand)' },
+      { key: '\\', description: 'Expand / Collapse Global Navigation Rail' },
       { key: '⌘ K', description: 'Open Copilot Conversational Command Bar' },
       { key: '?', description: 'Open Keyboard Shortcuts Palette' },
       { key: 'Esc', description: 'Dismiss active dialog or modal' },

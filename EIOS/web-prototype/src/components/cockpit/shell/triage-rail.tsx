@@ -113,10 +113,11 @@ export function TriageRail() {
                 key={item.id}
                 type="button"
                 onClick={() => selectTriageItem(item.id)}
-                className={`w-full text-left p-3 transition-colors cursor-pointer block focus:outline-none ${
+                aria-current={isSelected ? 'true' : undefined}
+                className={`w-full text-left p-3 border-l-2 border-l-transparent transition-colors cursor-pointer block outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#106BA3] ${
                   isSelected
-                    ? 'bg-[#F4F8FB] border-l-2 border-l-[#106BA3]'
-                    : 'bg-white hover:bg-[#F9FBFC] border-l-2 border-l-transparent'
+                    ? 'bg-[#E8F1F8] shadow-[inset_0_1px_0_rgba(16,107,163,0.28),inset_0_-1px_0_rgba(16,107,163,0.28)]'
+                    : 'bg-white hover:bg-[#F9FBFC]'
                 }`}
               >
                 {/* Severity & Score Header */}
@@ -141,7 +142,7 @@ export function TriageRail() {
                 </div>
 
                 {/* Title & Subtitle */}
-                <div className="text-xs font-bold text-[#182026] leading-snug truncate">
+                <div className={`text-xs font-bold leading-snug truncate ${isSelected ? 'text-[#0E5A8A]' : 'text-[#182026]'}`}>
                   {item.title}
                 </div>
                 <div className="text-[11px] text-[#5C7080] truncate mt-0.5 leading-normal">

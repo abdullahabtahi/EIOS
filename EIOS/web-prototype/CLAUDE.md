@@ -10,10 +10,11 @@ The Web Cockpit implements the **Tripartite Common Operating Picture (COP)**:
 - **Bottom Shelf (`<GovernedActionShelf />`)**: Two-phase commit action staging, Four-Eyes dual approval, KMS P-256 digital signing.
 - **Global Modal (`<CopilotCommandBar />`)**: Cmd+K command bar with real-time Metric Auditor Gate verification.
 
-### Strict Design Rules (Palantir Sovereign Light)
-1. **Light Mode Only**: 100% institutional light mode (`#fdfdfd` canvas, `#ffffff` elevated cards, `#e5e5e5` 1px borders, `#111111` headlines). No cyber-slop, no glowing dark themes, no decorative gradients.
+### Strict Design Rules (Institutional Sovereign Light)
+1. **Light Mode Only (analytical surfaces)**: 100% institutional light mode (`#fdfdfd` canvas, `#ffffff` elevated cards, `#e5e5e5` 1px borders, `#111111` headlines). No cyber-slop, no glowing dark themes, no decorative gradients.
+   - **Scoped exception, dark global chrome**: exactly two elements are dark, the left navigation rail (`<AppNavRail />`, 48px icon strip that hover-expands to a 232px overlay) and the first row of the top header (`<HeaderNav />`: brand, telemetry, operator; the persona tab strip below it stays light). They use the `cockpit-rail` / `chrome-*` tokens in `globals.css` (`#1c2530` slate). Everything inside the three columns, the Kinetic Canvas studio bar and the action shelf stays light. No other dark surfaces.
 2. **Strict 2-Header Maximum**:
-   - **Header 1 (Global Shell)**: Full-width top bar (`EIOS / OPERATOR COCKPIT v2.4` + 5 Global Workstation tabs: Executive, AML Investigator, Partner Manager, Compliance & Audit, Data Operations).
+   - **Header 1 (Global Shell)**: Top bar, dark first row + light persona strip (right of the nav rail) (`EIOS / OPERATOR COCKPIT v2.4` + 5 Global Workstation tabs: Executive, AML Investigator, Partner Manager, Compliance & Audit, Data Operations).
    - **Header 2 (Kinetic Canvas Studio Bar)**: Scoped exclusively to the right column (`KINETIC CANVAS: {ROLE} | Mode: {SECTION}` + segmented surface tabs + `Flywheel Feedback` trigger).
    - **Header 3 is STRICTLY BANNED**: Workstations must never render a redundant 3rd internal toolbar.
 3. **Continuous Scrollable Workspaces**:

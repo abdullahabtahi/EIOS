@@ -4,6 +4,7 @@
  * Universal Tripartite Grid Shell
  * Assembles the Common Operational Picture (COP) layout:
  * - Top: Header Navigation & Role Switcher
+ * - Full-height left edge: Global Navigation Rail (48px dark icon strip, hover-expands as overlay)
  * - Left: Discrepancy-Ranked Triage Rail (fluid w-72 2xl:w-80, collapsible)
  * - Center: Copilot Operational Dossier (fluid w-[420px] xl:w-[480px] 2xl:w-[540px])
  * - Right: Kinetic Canvas (Flexible min-w-[440px], collapsible)
@@ -14,6 +15,7 @@
 
 import * as React from 'react';
 import { HeaderNav } from './header-nav';
+import { AppNavRail } from './app-nav-rail';
 import { TriageRail } from './triage-rail';
 import { CopilotDossier } from './copilot-dossier';
 import { KineticCanvas } from './kinetic-canvas';
@@ -74,80 +76,86 @@ export function TripartiteShell({
   }, [setRole]);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-[#f4f6f8] text-slate-900 font-sans antialiased overflow-hidden select-none">
-      {/* Top Header Bar */}
-      <HeaderNav onOpenShortcuts={() => setShortcutsModalOpen(true)} />
+    <div className="relative h-screen w-screen flex flex-row bg-[#f4f6f8] text-slate-900 font-sans antialiased overflow-hidden select-none">
+      {/* Global Navigation Rail: permanent 48px dark icon strip, expands on hover as an overlay */}
+      <AppNavRail onOpenShortcuts={() => setShortcutsModalOpen(true)} />
 
-      {/* Tripartite COP Center Work Area */}
-      <div className="flex-1 flex overflow-hidden relative">
-        {/* Left Triage Rail: fluid (collapsible on smaller displays) */}
-        {!leftRailCollapsed ? (
-          <div className="flex h-full relative">
-            <TriageRail />
-            <button
-              type="button"
-              onClick={() => setLeftRailCollapsed(true)}
-              className="absolute right-0 top-2 translate-x-1/2 z-20 size-5 bg-white border border-slate-300 rounded-full shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 cursor-pointer hidden lg:flex"
-              title="Collapse Left Rail (press [)"
-              aria-label="Collapse Left Rail"
-            >
-              <span className="material-symbols-sharp text-xs">chevron_left</span>
-            </button>
-          </div>
-        ) : (
-          <div className="w-8 shrink-0 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-3 select-none">
-            <button
-              type="button"
-              onClick={() => setLeftRailCollapsed(false)}
-              className="size-6 bg-white border border-slate-300 flex items-center justify-center text-slate-700 hover:bg-slate-50 cursor-pointer"
-              title="Expand Left Rail (press [)"
-              aria-label="Expand Left Rail"
-            >
-              <span className="material-symbols-sharp text-sm">chevron_right</span>
-            </button>
-            <span className="[writing-mode:vertical-rl] text-[10px] font-mono tracking-wider text-slate-500 uppercase mt-4">
-              Triage Signals
-            </span>
-          </div>
-        )}
+      {/* Main column: header, tripartite work area, action shelf */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        {/* Top Header Bar */}
+        <HeaderNav onOpenShortcuts={() => setShortcutsModalOpen(true)} />
 
-        {/* Center Copilot Dossier: fluid */}
-        <CopilotDossier />
+        {/* Tripartite COP Center Work Area */}
+        <div className="flex-1 flex overflow-hidden relative">
+          {/* Left Triage Rail: fluid (collapsible on smaller displays) */}
+          {!leftRailCollapsed ? (
+            <div className="flex h-full relative">
+              <TriageRail />
+              <button
+                type="button"
+                onClick={() => setLeftRailCollapsed(true)}
+                className="absolute right-0 top-2 translate-x-1/2 z-20 size-5 bg-white border border-slate-300 rounded-full shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 cursor-pointer hidden lg:flex"
+                title="Collapse Left Rail (press [)"
+                aria-label="Collapse Left Rail"
+              >
+                <span className="material-symbols-sharp text-xs">chevron_left</span>
+              </button>
+            </div>
+          ) : (
+            <div className="w-8 shrink-0 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-3 select-none">
+              <button
+                type="button"
+                onClick={() => setLeftRailCollapsed(false)}
+                className="size-6 bg-white border border-slate-300 flex items-center justify-center text-slate-700 hover:bg-slate-50 cursor-pointer"
+                title="Expand Left Rail (press [)"
+                aria-label="Expand Left Rail"
+              >
+                <span className="material-symbols-sharp text-sm">chevron_right</span>
+              </button>
+              <span className="[writing-mode:vertical-rl] text-[10px] font-mono tracking-wider text-slate-500 uppercase mt-4">
+                Triage Signals
+              </span>
+            </div>
+          )}
 
-        {/* Right Kinetic Canvas: Flexible fill (collapsible) */}
-        {!rightCanvasCollapsed ? (
-          <div className="flex-1 flex h-full relative overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setRightCanvasCollapsed(true)}
-              className="absolute left-0 top-2 -translate-x-1/2 z-20 size-5 bg-white border border-slate-300 rounded-full shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 cursor-pointer hidden lg:flex"
-              title="Collapse Right Canvas (press ])"
-              aria-label="Collapse Right Canvas"
-            >
-              <span className="material-symbols-sharp text-xs">chevron_right</span>
-            </button>
-            <KineticCanvas />
-          </div>
-        ) : (
-          <div className="w-8 shrink-0 bg-slate-100 border-l border-slate-300 flex flex-col items-center py-3 select-none">
-            <button
-              type="button"
-              onClick={() => setRightCanvasCollapsed(false)}
-              className="size-6 bg-white border border-slate-300 flex items-center justify-center text-slate-700 hover:bg-slate-50 cursor-pointer"
-              title="Expand Right Canvas (press ])"
-              aria-label="Expand Right Canvas"
-            >
-              <span className="material-symbols-sharp text-sm">chevron_left</span>
-            </button>
-            <span className="[writing-mode:vertical-rl] text-[10px] font-mono tracking-wider text-slate-500 uppercase mt-4">
-              Kinetic Canvas
-            </span>
-          </div>
-        )}
+          {/* Center Copilot Dossier: fluid */}
+          <CopilotDossier />
+
+          {/* Right Kinetic Canvas: Flexible fill (collapsible) */}
+          {!rightCanvasCollapsed ? (
+            <div className="flex-1 flex h-full relative overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setRightCanvasCollapsed(true)}
+                className="absolute left-0 top-2 -translate-x-1/2 z-20 size-5 bg-white border border-slate-300 rounded-full shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 cursor-pointer hidden lg:flex"
+                title="Collapse Right Canvas (press ])"
+                aria-label="Collapse Right Canvas"
+              >
+                <span className="material-symbols-sharp text-xs">chevron_right</span>
+              </button>
+              <KineticCanvas />
+            </div>
+          ) : (
+            <div className="w-8 shrink-0 bg-slate-100 border-l border-slate-300 flex flex-col items-center py-3 select-none">
+              <button
+                type="button"
+                onClick={() => setRightCanvasCollapsed(false)}
+                className="size-6 bg-white border border-slate-300 flex items-center justify-center text-slate-700 hover:bg-slate-50 cursor-pointer"
+                title="Expand Right Canvas (press ])"
+                aria-label="Expand Right Canvas"
+              >
+                <span className="material-symbols-sharp text-sm">chevron_left</span>
+              </button>
+              <span className="[writing-mode:vertical-rl] text-[10px] font-mono tracking-wider text-slate-500 uppercase mt-4">
+                Kinetic Canvas
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Governed Action Shelf (Pinned Bottom) */}
+        <GovernedActionShelf />
       </div>
-
-      {/* Governed Action Shelf (Pinned Bottom) */}
-      <GovernedActionShelf />
 
       {/* Omnipresent Cmd+K Copilot Dialog */}
       <CopilotCommandBar />
