@@ -1,0 +1,84 @@
+# Promotion to prod-like (F00 US2, FR-007, FR-018). Manual only, and every job is bound to the
+# protected `prod-like` environment, which requires a human approval before any step runs.
+# The approver is never typed in: after the environment gate the job reads the platform's own
+# approvals record for this run and exports the approving user as EIOS_VERIFIED_APPROVER, the only
+# input tools.gates.promote accepts for identity. Promotion also requires the rollback rehearsal
+# evidence (SC-009) to be present in the tree under review.
+# Identity is federated (id-token: write); provider and service account are repository variables.
+name: promote-prod-like
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: promote-prod-like
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: promote-prod-like
+    runs-on: ubuntu-latest
+    timeout-minutes: 60 # [ASSUMPTION]
+    environment: prod-like
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      EIOS_REPOSITORY: ${{ github.repository }}
+      EIOS_RUN_ID: ${{ github.run_id }}
+      EIOS_STATE_BUCKET: ${{ vars.EIOS_STATE_BUCKET }}
+      EIOS_CORE_IMAGE_DIGEST: ${{ vars.EIOS_PROD_LIKE_CORE_IMAGE_DIGEST }}
+      EIOS_EDGE_IMAGE_DIGEST: ${{ vars.EIOS_PROD_LIKE_EDGE_IMAGE_DIGEST }}
+    steps:
+      - uses: actions/checkout@v4 # [SPIKE] pin to commit SHA when CI first runs
+      - uses: astral-sh/setup-uv@v6 # [SPIKE] pin to commit SHA when CI first runs
+      - uses: hashicorp/setup-terraform@v3 # [SPIKE] pin to commit SHA when CI first runs
+      - name: require the rollback rehearsal evidence
+        run: test -s docs/evidence/sc-009-rollback-rehearsal.md
+      - name: read the approver from the platform approvals record
+        run: |
+          set -euo pipefail
+          approver="$(gh api "repos/$EIOS_REPOSITORY/actions/runs/$EIOS_RUN_ID/approvals" \
+            --jq '[.[] | select(.state == "approved") | .user.login] | first // empty')"
+          if [ -z "$approver" ]; then
+            echo "no approved review found for this run; refusing to promote" >&2
+            exit 1
+          fi
+          echo "EIOS_VERIFIED_APPROVER=$approver" >> "$GITHUB_ENV"
+      - name: authenticate with federated identity
+        uses: google-github-actions/auth@v2 # [SPIKE] pin to commit SHA when CI first runs
+        with:
+          workload_identity_provider: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.EIOS_PROD_LIKE_SERVICE_ACCOUNT }}
+      - name: install locked dependencies
+        run: uv sync --frozen
+      - name: red-line suites
+        run: uv run python -m evals.cli run --tier red_line --workflow promote-prod-like
+      - name: initialise the prod-like environment
+        run: terraform -chdir=infra/envs/prod-like init -input=false -backend-config="bucket=$EIOS_STATE_BUCKET"
+      - name: change the prod-like environment
+        run: terraform -chdir=infra/envs/prod-like apply -input=false -auto-approve
+      - name: validation suites
+        run: uv run python -m evals.cli run --tier validation --workflow promote-prod-like
+      - name: promote passed runs
+        run: |
+          set -euo pipefail
+          args=()
+          for digest in "$EIOS_CORE_IMAGE_DIGEST" "$EIOS_EDGE_IMAGE_DIGEST"; do
+            if [ -n "$digest" ]; then
+              args+=(--image-digest "$digest")
+            fi
+          done
+          uv run python -m tools.gates.promote --workflow promote-prod-like "${args[@]}"
+      - name: upload reports and run records
+        if: always()
+        uses: actions/upload-artifact@v4 # [SPIKE] pin to commit SHA when CI first runs
+        with:
+          name: reports-promote-prod-like
+          path: evals/reports/
+          if-no-files-found: ignore

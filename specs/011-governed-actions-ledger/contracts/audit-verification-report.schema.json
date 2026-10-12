@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AuditVerificationReport",
+  "description": "Output report from Continuous Cryptographic Audit Walker verifying hash chain continuity and WORM anchors.",
+  "type": "object",
+  "required": [
+    "report_id",
+    "verified_at",
+    "total_entries",
+    "genesis_hash",
+    "head_hash",
+    "is_valid",
+    "integrity_score",
+    "worm_checkpoints_verified",
+    "audit_duration_ms"
+  ],
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique UUID identifying the audit run"
+    },
+    "verified_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Audit execution timestamp"
+    },
+    "total_entries": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total ledger entries inspected"
+    },
+    "genesis_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Genesis anchor verified at sequence 1"
+    },
+    "head_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Latest chain head hash verified"
+    },
+    "is_valid": {
+      "type": "boolean",
+      "description": "True if 100% unbroken and untampered"
+    },
+    "integrity_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Proportion of valid links (1.0 = perfect integrity)"
+    },
+    "tampered_sequence_id": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Sequence number where corruption was detected, or null"
+    },
+    "failure_reason": {
+      "type": ["string", "null"],
+      "description": "Descriptive diagnostics if tampering or gaps occurred"
+    },
+    "worm_checkpoints_verified": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Count of matched WORM anchor proofs"
+    },
+    "audit_duration_ms": {
+      "type": "number",
+      "minimum": 0.0,
+      "description": "Audit walker traversal latency in milliseconds"
+    }
+  }
+}

@@ -1,0 +1,67 @@
+# Provenance labels (F00 FR-029/FR-030; tool: tools/label_check). Contract:
+# specs/001-platform-foundations/contracts/provenance-labels.md.
+#
+# `tags` must equal the Tag enum in src/eios/common/provenance.py; a missing or extra tag is a
+# config error. `evidence` selects what the scanner checks beside a tag:
+#   brief_citation       a docs/brief/<file> citation with a section reference (checked)
+#   spike_id             a spike id S-NN that resolves to a record or index row (checked)
+#   owner_and_verify_by  owner plus a verify-by note or spike id (documented, not machine-checked)
+#   metric_and_report    metric name plus where it is reported (documented, not machine-checked)
+#   none                 no evidence; must never feed a metric or KPI (documented)
+tags:
+  '[BRIEF]':
+    evidence: brief_citation
+    description: Cited from a requirement source in docs/brief/.
+  '[ASSUMPTION]':
+    evidence: owner_and_verify_by
+    description: A working assumption with an owner and a verify-by note or spike id.
+  '[ILLUSTRATIVE]':
+    evidence: none
+    description: An example value. Never feeds a metric, KPI or decision.
+  '[TARGET]':
+    evidence: metric_and_report
+    description: A commitment to measure, not a claim. Names the metric and where it is reported.
+  '[SPIKE]':
+    evidence: spike_id
+    description: Unverified until the named spike closes with an ADR.
+
+claim_scope:
+  - sentence
+  - table_row
+  - list_item
+
+# Identifiers and notation that are never numeric claims. Keep this to identifiers.
+non_claim_patterns:
+  - '\b(?:FR|NFR|SC|ADR|RL|US|R|S|T|F|P)-?[0-9]{1,4}\b'
+  - '\bv?[0-9]+\.[0-9]+\.[0-9]+\b'
+  - '\b[0-9]{4}-[0-9]{2}-[0-9]{2}(?:T[0-9:.]+Z?)?\b'
+  - '\b[0-9]{2}:[0-9]{2}(?::[0-9]{2})?Z?\b'
+  - '[\w./-]+\.\w+:[0-9]+(?:-[0-9]+)?'
+  - '\blines?\s[0-9]+(?:\s?[-–]\s?[0-9]+)?'
+  - '§\s?[0-9]+(?:\.[0-9]+)*'
+  - '\b(?=[0-9a-f]*[a-f])(?=[0-9a-f]*[0-9])[0-9a-f]{7,40}\b'
+
+numeric_claims:
+  duration_units: [ms, s, sec, second, min, minute, h, hr, hour, day, week, month, year]
+  units: [clients, customers, partners, affiliates, accounts, users, transactions, trades, alerts, cases, records, rows, events, requests, calls, tokens, orders, deposits, withdrawals, referrals, edges, nodes, prompts, KPIs]
+
+scope:
+  include: ['specs/**/*.md', 'docs/**/*.md']
+  # docs/brief/ is the source of requirements, not a governed document.
+  exclude: [docs/brief/, 'docs/evidence/**', evals/reports/]
+
+# Prototype and non-authoritative paths (CLAUDE.md); excluded and listed in every report.
+prototype_excluded: [FEIOS/, DESIGN.MD, DESIGN_PLAN.md]
+
+brief_root: docs/brief
+spike_dir: docs/adr
+spike_index: docs/spikes_and_adrs.md
+
+# Structured files whose numeric leaves must carry a valid tag.
+structured_rules:
+  - kind: yaml_verification
+    glob: 'config/llm_gateway.*.yaml'
+    verification_key: verification
+  - kind: csv_tag_column
+    glob: docs/cost_model.csv
+    tag_column: tag

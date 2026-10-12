@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SynthesisScenarioResult",
+  "type": "object",
+  "required": [
+    "scenario_name",
+    "propagated_deltas",
+    "confidence_intervals",
+    "mitigation_options",
+    "assumptions_applied",
+    "execution_time_ms"
+  ],
+  "properties": {
+    "scenario_name": { "type": "string" },
+    "propagated_deltas": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    },
+    "confidence_intervals": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "number" },
+        "minItems": 2,
+        "maxItems": 2
+      }
+    },
+    "mitigation_options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "action_type",
+          "target_cohort",
+          "estimated_cost_usd",
+          "estimated_revenue_recovered_usd",
+          "roi_ratio",
+          "confidence"
+        ],
+        "properties": {
+          "action_type": { "type": "string" },
+          "target_cohort": { "type": "string" },
+          "estimated_cost_usd": { "type": "number" },
+          "estimated_revenue_recovered_usd": { "type": "number" },
+          "roi_ratio": { "type": "number" },
+          "confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+        }
+      }
+    },
+    "assumptions_applied": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "execution_time_ms": { "type": "number" }
+  }
+}

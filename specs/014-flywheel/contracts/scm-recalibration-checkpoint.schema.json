@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SCMRecalibrationCheckpoint",
+  "description": "Immutable versioned snapshot of recalibrated Structural Causal Model DAG edge weights.",
+  "type": "object",
+  "required": [
+    "checkpoint_id",
+    "version",
+    "timestamp",
+    "edge_weights",
+    "baseline_residuals_mae",
+    "recalibrated_residuals_mae",
+    "is_acyclic",
+    "provenance_seed"
+  ],
+  "properties": {
+    "checkpoint_id": { "type": "string" },
+    "version": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "edge_weights": {
+      "type": "object",
+      "additionalProperties": { "type": "number" }
+    },
+    "baseline_residuals_mae": { "type": "number", "minimum": 0 },
+    "recalibrated_residuals_mae": { "type": "number", "minimum": 0 },
+    "is_acyclic": { "type": "boolean" },
+    "provenance_seed": { "type": "string" }
+  },
+  "additionalProperties": false
+}

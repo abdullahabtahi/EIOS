@@ -1,0 +1,25 @@
+# Cost model linkage and staleness (F00 FR-038; tool: tools/cost_check).
+# Contract: specs/001-platform-foundations/contracts/cost-model.md.
+#
+# staleness_threshold_days: a price_verified_on date older than this many days is reported as a
+# warning (never a failure) in evals/reports/cost_check.json. [TARGET] a commitment to re-verify
+# prices at least this often; the metric is the count of stale-price warnings per run.
+staleness_threshold_days: 90
+
+# gateways: for each gateway configuration, which cost-model driver backs each token price key.
+# Keys are the price keys of schemas/llm-gateway-config.schema.json; an unknown key, an unknown
+# driver or a missing file is a config error (exit 2). A gateway price with no entry here fails
+# the check; an entry whose gateway sets no price passes.
+gateways:
+  config/llm_gateway.dev.yaml:
+    prices.input_per_unit: model tokens input
+    prices.output_per_unit: model tokens output
+  config/llm_gateway.stage.yaml:
+    prices.input_per_unit: model tokens input
+    prices.output_per_unit: model tokens output
+  config/llm_gateway.prod-like.yaml:
+    prices.input_per_unit: model tokens input
+    prices.output_per_unit: model tokens output
+
+verification:
+  staleness_threshold_days: "[TARGET]"

@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ServiceGoldenSignals",
+  "description": "Standardized Four Golden Signals exported across all core platform services.",
+  "type": "object",
+  "required": [
+    "service_name",
+    "timestamp",
+    "requests_per_second",
+    "latency_p50_ms",
+    "latency_p90_ms",
+    "latency_p95_ms",
+    "latency_p99_ms",
+    "error_rate_pct",
+    "saturation_pct",
+    "is_saturated"
+  ],
+  "properties": {
+    "service_name": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "requests_per_second": { "type": "number", "minimum": 0 },
+    "latency_p50_ms": { "type": "number", "minimum": 0 },
+    "latency_p90_ms": { "type": "number", "minimum": 0 },
+    "latency_p95_ms": { "type": "number", "minimum": 0 },
+    "latency_p99_ms": { "type": "number", "minimum": 0 },
+    "error_rate_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+    "saturation_pct": { "type": "number", "minimum": 0, "maximum": 100 },
+    "is_saturated": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

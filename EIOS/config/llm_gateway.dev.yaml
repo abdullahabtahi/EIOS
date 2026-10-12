@@ -1,0 +1,21 @@
+# LLM gateway configuration, dev and CI. Validated against schemas/llm-gateway-config.schema.json.
+# Every configured value carries a verification tag under `verification`.
+# The stub provider makes no network calls; nothing here is a real model, price or limit.
+environment: dev
+provider: stub
+model_id: stub-model # [ILLUSTRATIVE] a label for the stub; no real model is selected (ADR-002 open)
+prices: # [ILLUSTRATIVE] makes trace cost derivation testable; not a real tariff
+  input_per_unit: 1.0
+  output_per_unit: 2.0
+  currency: USD
+  unit: 1000 tokens
+rate_limits: # [ILLUSTRATIVE] passed through to the provider unchanged
+  requests_per_minute: 60
+daily_token_cap: 100000 # [ASSUMPTION] dev guard rail; replaced once cost is measured (spike S-01)
+cap_warning_thresholds_percent: [50, 80] # [TARGET] warn at 50% and 80%, block at 100%
+verification:
+  model_id: "[ILLUSTRATIVE]"
+  prices: "[ILLUSTRATIVE]"
+  rate_limits: "[ILLUSTRATIVE]"
+  daily_token_cap: "[ASSUMPTION]"
+  cap_warning_thresholds_percent: "[TARGET]"

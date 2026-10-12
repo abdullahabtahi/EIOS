@@ -1,0 +1,5 @@
+- id: failing-sealed-eval
+  tier: sealed
+  command: python evals/suites/failing_sealed_eval.py
+  owner_feature: F00
+  report: evals/reports/failing-sealed-eval.json

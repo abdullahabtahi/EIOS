@@ -1,0 +1,10 @@
+# Gate quarantine (FR-012). A quarantined gate is recorded as `skipped_with_reason` on the
+# Pipeline Run Record, never silently ignored. The count of quarantined gates is printed in
+# every run summary. An entry past its `expires` date fails the run until it is fixed or removed.
+#
+# Entry shape (all four fields are required):
+#   - gate_id: <id of a row in config/gates.yaml>
+#     owner: <named owner, a person or team>
+#     expires: <ISO date, YYYY-MM-DD; valid through that day>
+#     reason: <why the gate is quarantined>
+[]

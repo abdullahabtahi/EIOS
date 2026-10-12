@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ContractBreachRecord",
+  "description": "Standardized Dead-Letter Queue envelope for malformed or contract-breaching event payloads diverted to eios.l1.dlq.v1.",
+  "type": "object",
+  "required": [
+    "dlq_id",
+    "event_id",
+    "product_name",
+    "breach_timestamp",
+    "breach_type",
+    "field_paths",
+    "error_messages",
+    "raw_payload_bytes",
+    "source_topic"
+  ],
+  "properties": {
+    "dlq_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique UUIDv4 identifying this dead-letter queue record."
+    },
+    "event_id": {
+      "type": "string",
+      "description": "Originating event identifier from incoming metadata, or generated surrogate if missing."
+    },
+    "product_name": {
+      "type": "string",
+      "enum": [
+        "client_360",
+        "client_funnel",
+        "transactions_aml",
+        "trading_activity",
+        "device_network_graph",
+        "partner_360",
+        "partner_referral_tree",
+        "commission_ledger",
+        "partner_engagement_signals",
+        "partner_comms",
+        "financial_pnl",
+        "competitor_benchmarks",
+        "platform_operations",
+        "compliance_cases"
+      ],
+      "description": "Target Layer 1 data product contract that rejected the payload."
+    },
+    "breach_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO8601 UTC timestamp when the contract breach was intercepted."
+    },
+    "breach_type": {
+      "type": "string",
+      "enum": [
+        "SCHEMA_TYPE_ERROR",
+        "MISSING_REQUIRED_FIELD",
+        "NULL_RATE_EXCEEDED",
+        "VALUE_RANGE_VIOLATION",
+        "UNSANITIZED_PAYLOAD",
+        "CORRUPTED_SERIALIZATION"
+      ],
+      "description": "Categorical typology of the validation failure."
+    },
+    "field_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "JSON field paths failing validation (e.g. ['payload.amount', 'payload.client_id'])."
+    },
+    "error_messages": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Detailed validation diagnostic messages produced by Pydantic / contract validator."
+    },
+    "raw_payload_bytes": {
+      "type": "string",
+      "contentEncoding": "base64",
+      "description": "Verbatim raw byte payload preserved for zero-loss compliance and downstream replay."
+    },
+    "source_topic": {
+      "type": "string",
+      "description": "Ingestion channel or Pub/Sub topic where message was received."
+    },
+    "ingestion_metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "description": "Optional transport headers, client IP, or correlation IDs."
+    }
+  },
+  "additionalProperties": false
+}

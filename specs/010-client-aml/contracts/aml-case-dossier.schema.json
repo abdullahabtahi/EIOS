@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "AMLCaseDossierResponse",
+  "type": "object",
+  "required": [
+    "case_id",
+    "client_id",
+    "as_of",
+    "kyc_tier",
+    "composite_risk_score",
+    "priority_tier",
+    "recommended_action",
+    "total_deposit_usd",
+    "total_withdrawal_usd",
+    "citations",
+    "statutory_references",
+    "narrative_summary"
+  ],
+  "properties": {
+    "case_id": { "type": "string" },
+    "client_id": { "type": "string" },
+    "as_of": { "type": "string", "format": "date-time" },
+    "kyc_tier": { "type": "string" },
+    "kyc_approved_at": { "type": ["string", "null"], "format": "date-time" },
+    "composite_risk_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "priority_tier": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"] },
+    "recommended_action": { "type": "string" },
+    "total_deposit_usd": { "type": "number", "minimum": 0.0 },
+    "total_withdrawal_usd": { "type": "number", "minimum": 0.0 },
+    "net_trading_pl_usd": { "type": "number" },
+    "deposit_withdrawal_ratio": { "type": "number", "minimum": 0.0 },
+    "mule_ring_id": { "type": ["string", "null"] },
+    "mule_ring_size": { "type": "integer", "minimum": 0 },
+    "citations": { "type": "array", "items": { "type": "string" } },
+    "statutory_references": { "type": "array", "items": { "type": "string" } },
+    "narrative_summary": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DisasterRecoveryDrillReport",
+  "description": "Verification report for an automated Disaster Recovery failover drill certifying RPO and RTO.",
+  "type": "object",
+  "required": [
+    "drill_id",
+    "backup_snapshot_id",
+    "drill_timestamp",
+    "status",
+    "rpo_achieved_minutes",
+    "rto_achieved_seconds",
+    "rpo_target_met",
+    "rto_target_met",
+    "restored_ledger_records",
+    "restored_graph_nodes",
+    "cryptographic_chain_valid",
+    "worm_root_hash"
+  ],
+  "properties": {
+    "drill_id": { "type": "string" },
+    "backup_snapshot_id": { "type": "string" },
+    "drill_timestamp": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": ["INITIATED", "TEARDOWN_COMPLETE", "RESTORING", "AUDITING", "COMPLETED", "FAILED"]
+    },
+    "rpo_achieved_minutes": { "type": "number", "minimum": 0 },
+    "rto_achieved_seconds": { "type": "number", "minimum": 0 },
+    "rpo_target_met": { "type": "boolean" },
+    "rto_target_met": { "type": "boolean" },
+    "restored_ledger_records": { "type": "integer", "minimum": 0 },
+    "restored_graph_nodes": { "type": "integer", "minimum": 0 },
+    "cryptographic_chain_valid": { "type": "boolean" },
+    "worm_root_hash": { "type": "string" }
+  },
+  "additionalProperties": false
+}

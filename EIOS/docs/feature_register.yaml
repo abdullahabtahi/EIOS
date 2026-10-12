@@ -1,0 +1,21 @@
+# Feature register: every feature F00..F15 and whether it is complete (FR-033).
+# Shape: `features` is a list of {id: F<NN>, name: <spec-dir style name>, complete: <bool>}.
+# `tools/readiness` reads `complete` to decide whether a `depends_on_features` entry is met.
+# Flip `complete` to true only when the feature's exit criteria have passed.
+features:
+  - {id: F00, name: foundations, complete: true}
+  - {id: F01, name: synthetic-foundry, complete: false}
+  - {id: F02, name: contracts-ingestion, complete: false}
+  - {id: F03, name: ontology-metrics, complete: false}
+  - {id: F04, name: eval-harness, complete: false}
+  - {id: F05, name: synthesis-engine, complete: false}
+  - {id: F06, name: conversational-analytics, complete: false}
+  - {id: F07, name: churn-radar, complete: false}
+  - {id: F08, name: partner-fraud, complete: false}
+  - {id: F09, name: client-aml, complete: false}
+  - {id: F10, name: governed-actions-ledger, complete: false}
+  - {id: F11, name: cockpit, complete: false}
+  - {id: F12, name: observability-sre, complete: false}
+  - {id: F13, name: flywheel, complete: false}
+  - {id: F14, name: hardening-dr, complete: false}
+  - {id: F15, name: portfolio-pack, complete: false}

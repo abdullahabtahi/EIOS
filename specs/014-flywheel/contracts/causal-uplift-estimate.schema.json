@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CausalUpliftEstimate",
+  "description": "Doubly Robust AIPW Average Treatment Effect estimate and Causal-Evidence Gate verification status.",
+  "type": "object",
+  "required": [
+    "estimate_id",
+    "target_metric",
+    "intervention_type",
+    "sample_size",
+    "treatment_count",
+    "control_count",
+    "ate_aipw",
+    "standard_error",
+    "ci_lower",
+    "ci_upper",
+    "p_value",
+    "is_significant",
+    "causal_gate_passed",
+    "placebo_effect",
+    "refuter_stability_pct",
+    "evaluated_at"
+  ],
+  "properties": {
+    "estimate_id": { "type": "string" },
+    "target_metric": { "type": "string" },
+    "intervention_type": { "type": "string" },
+    "sample_size": { "type": "integer", "minimum": 4 },
+    "treatment_count": { "type": "integer", "minimum": 1 },
+    "control_count": { "type": "integer", "minimum": 1 },
+    "ate_aipw": { "type": "number" },
+    "standard_error": { "type": "number", "minimum": 0 },
+    "ci_lower": { "type": "number" },
+    "ci_upper": { "type": "number" },
+    "p_value": { "type": "number", "minimum": 0, "maximum": 1 },
+    "is_significant": { "type": "boolean" },
+    "causal_gate_passed": { "type": "boolean" },
+    "placebo_effect": { "type": "number" },
+    "refuter_stability_pct": { "type": "number", "minimum": 0 },
+    "evaluated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

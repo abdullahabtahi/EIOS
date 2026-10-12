@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MorningBriefingDossier",
+  "description": "Synthesized executive morning briefing covering 4 business horizons.",
+  "type": "object",
+  "required": [
+    "briefing_id",
+    "generated_at",
+    "horizons",
+    "risks",
+    "opportunities",
+    "is_cached_fallback"
+  ],
+  "properties": {
+    "briefing_id": {
+      "type": "string",
+      "description": "Unique briefing identifier, e.g. brf_20261009_0600"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Generation timestamp"
+    },
+    "horizons": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "horizon_name",
+          "headline",
+          "primary_metric_id",
+          "observed_value",
+          "delta_period_pct",
+          "provenance"
+        ],
+        "properties": {
+          "horizon_name": {
+            "type": "string",
+            "enum": ["Competitive", "Partner", "Client", "Financial"]
+          },
+          "headline": {
+            "type": "string"
+          },
+          "primary_metric_id": {
+            "type": "string"
+          },
+          "observed_value": {
+            "type": "number"
+          },
+          "delta_period_pct": {
+            "type": "number"
+          },
+          "provenance": {
+            "$ref": "provenance-metadata.schema.json"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "risks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "risk_id",
+          "title",
+          "severity",
+          "exposure_usd",
+          "provenance"
+        ],
+        "properties": {
+          "risk_id": { "type": "string" },
+          "title": { "type": "string" },
+          "severity": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+          "exposure_usd": { "type": "number" },
+          "provenance": { "$ref": "provenance-metadata.schema.json" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "opportunities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "opportunity_id",
+          "title",
+          "projected_upside_usd",
+          "recommended_action_type"
+        ],
+        "properties": {
+          "opportunity_id": { "type": "string" },
+          "title": { "type": "string" },
+          "projected_upside_usd": { "type": "number" },
+          "recommended_action_type": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "is_cached_fallback": {
+      "type": "boolean",
+      "description": "True if served as replay fallback during outage"
+    }
+  },
+  "additionalProperties": false
+}

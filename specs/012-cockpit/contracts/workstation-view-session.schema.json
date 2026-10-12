@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WorkstationViewSession",
+  "description": "Active operator session binding identity claims to persona workstation tabs and filter states.",
+  "type": "object",
+  "required": [
+    "session_id",
+    "operator_id",
+    "role",
+    "active_tab",
+    "applied_filters",
+    "last_active_at"
+  ],
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique UUID for the active browser session"
+    },
+    "operator_id": {
+      "type": "string",
+      "description": "Authenticated operator username or IdP subject"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "EXECUTIVE",
+        "AML_INVESTIGATOR",
+        "PARTNER_MANAGER",
+        "COMPLIANCE_AUDITOR",
+        "DATA_OPERATIONS"
+      ],
+      "description": "Active persona role controlling RBAC and layout"
+    },
+    "active_tab": {
+      "type": "string",
+      "enum": [
+        "EXECUTIVE_SYNTHESIS",
+        "AML_TRIAGE_DOSSIER",
+        "PARTNER_CHURN_RADAR",
+        "COMPLIANCE_LEDGER",
+        "DATA_OPS_BOARD"
+      ],
+      "description": "Currently active workstation tab"
+    },
+    "applied_filters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "Active triage facet filters"
+    },
+    "last_active_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last activity timestamp"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,11 @@
+# [TARGET] fixture staleness threshold, in days
+staleness_threshold_days: 0
+gateways:
+  config/llm_gateway.dev.yaml:
+    prices.input_per_unit: model tokens input
+    prices.output_per_unit: model tokens output
+  config/llm_gateway.stage.yaml:
+    prices.input_per_unit: model tokens input
+    prices.output_per_unit: model tokens output
+verification:
+  staleness_threshold_days: "[TARGET]"

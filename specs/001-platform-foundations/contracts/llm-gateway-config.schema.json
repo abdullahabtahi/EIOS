@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eios/llm-gateway-config.schema.json",
+  "title": "LLM Gateway Configuration",
+  "description": "Per-environment gateway configuration. No default model. Every value that could drift from reality carries a verification tag; [SPIKE] means unverified until spike S-01 closes.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["environment", "provider", "daily_token_cap", "verification"],
+  "properties": {
+    "environment": { "enum": ["dev", "stage", "prod-like"] },
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Provider label. F00 accepts only the stub provider."
+    },
+    "model_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Absent in dev/CI stub runs. Required in stage and prod-like; startup fails if missing there. There is no default."
+    },
+    "prices": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input_per_unit", "output_per_unit", "currency", "unit"],
+      "properties": {
+        "input_per_unit": { "type": "number", "minimum": 0 },
+        "output_per_unit": { "type": "number", "minimum": 0 },
+        "currency": { "type": "string", "minLength": 3, "maxLength": 3 },
+        "unit": { "type": "string", "minLength": 1, "description": "Billing unit, e.g. a fixed token count." }
+      }
+    },
+    "rate_limits": {
+      "type": "object",
+      "additionalProperties": { "type": "integer", "minimum": 1 }
+    },
+    "daily_token_cap": { "type": "integer", "minimum": 1 },
+    "cap_warning_thresholds_percent": {
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1, "maximum": 99 },
+      "uniqueItems": true,
+      "description": "Warning thresholds before the block at 100%. Values are [TARGET]."
+    },
+    "verification": {
+      "type": "object",
+      "description": "Tag per configured value. A configured value without its tag is rejected at load.",
+      "additionalProperties": false,
+      "required": ["daily_token_cap"],
+      "properties": {
+        "model_id": { "$ref": "#/$defs/tag" },
+        "prices": { "$ref": "#/$defs/tag" },
+        "rate_limits": { "$ref": "#/$defs/tag" },
+        "daily_token_cap": { "$ref": "#/$defs/tag" },
+        "cap_warning_thresholds_percent": { "$ref": "#/$defs/tag" }
+      }
+    }
+  },
+  "allOf": [
+    { "if": { "required": ["model_id"] }, "then": { "required": ["verification"], "properties": { "verification": { "required": ["model_id"] } } } },
+    { "if": { "required": ["prices"] }, "then": { "properties": { "verification": { "required": ["prices"] } } } },
+    { "if": { "required": ["rate_limits"] }, "then": { "properties": { "verification": { "required": ["rate_limits"] } } } }
+  ],
+  "$defs": {
+    "tag": { "enum": ["[BRIEF]", "[ASSUMPTION]", "[ILLUSTRATIVE]", "[TARGET]", "[SPIKE]"] }
+  }
+}

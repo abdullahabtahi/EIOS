@@ -1,0 +1,334 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EIOS Ontology MCP (OMCP) Tool Surface Contracts",
+  "description": "Defines the 13 canonical OMCP tools through which reasoning agents interact with the Kinetic Ontology and Governed Metric Registry.",
+  "tools": [
+    {
+      "name": "get_metric",
+      "description": "Deterministic retrieval of governed enterprise business metrics from hot state. LLMs MUST NEVER calculate metrics; call this tool instead.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "metric_id": {"type": "string", "description": "Canonical metric identifier (e.g. net_deposit_volume_usd, partner_churn_rate)"},
+          "grain": {"type": "string", "description": "Aggregation grain (e.g. region, partner, total)"},
+          "filters": {"type": "object", "description": "Key-value dimensional filters"},
+          "period": {"type": "string", "description": "Time window (e.g. last_24h, last_7d, last_28d)"},
+          "as_of": {"type": "string", "format": "date-time", "description": "Point-in-time calculation anchor"}
+        },
+        "required": ["metric_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "metric_id": {"type": "string"},
+          "value": {"type": "number"},
+          "unit": {"type": "string"},
+          "grain": {"type": "string"},
+          "filters_applied": {"type": "object"},
+          "period": {"type": "string"},
+          "definition_version": {"type": "string"},
+          "as_of": {"type": "string", "format": "date-time"},
+          "source_product": {"type": "string"},
+          "execution_duration_ms": {"type": "number"}
+        },
+        "required": ["metric_id", "value", "unit", "definition_version", "as_of"]
+      }
+    },
+    {
+      "name": "list_metrics",
+      "description": "List all active governed metrics available in the registry with descriptions, owner roles, and grains.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "domain": {"type": "string", "description": "Optional domain filter (financial, client, partner, operational)"}
+        }
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "metrics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "metric_id": {"type": "string"},
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+                "domain": {"type": "string"},
+                "unit": {"type": "string"},
+                "grain": {"type": "array", "items": {"type": "string"}},
+                "owner_role": {"type": "string"},
+                "freshness_sla": {"type": "string"}
+              },
+              "required": ["metric_id", "name", "unit", "owner_role"]
+            }
+          }
+        },
+        "required": ["metrics"]
+      }
+    },
+    {
+      "name": "get_entity",
+      "description": "Retrieve an Ontology object by type and ID with server-side security marking enforcement.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "type": {"type": "string", "description": "Ontology Object Type (e.g. ClientAccount, Partner, Case)"},
+          "id": {"type": "string", "description": "Entity primary key identifier"}
+        },
+        "required": ["type", "id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "type": {"type": "string"},
+          "id": {"type": "string"},
+          "properties": {"type": "object"},
+          "markings": {"type": "array", "items": {"type": "string"}},
+          "links_summary": {"type": "object"}
+        },
+        "required": ["type", "id", "properties"]
+      }
+    },
+    {
+      "name": "traverse_graph",
+      "description": "Traverse the in-memory property graph with optional Hub Suppression to isolate fraud rings and referral trees.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "seed_ids": {"type": "array", "items": {"type": "string"}, "description": "Starting entity identifiers"},
+          "hops": {"type": "integer", "minimum": 1, "maximum": 3, "default": 2},
+          "edge_types": {"type": "array", "items": {"type": "string"}, "description": "Filter by link types"},
+          "suppress_hubs": {"type": "boolean", "default": true, "description": "Mask hub nodes (degree >= 5) to prevent supernode explosion"}
+        },
+        "required": ["seed_ids"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "nodes": {"type": "array", "items": {"type": "object"}},
+          "edges": {"type": "array", "items": {"type": "object"}},
+          "communities": {"type": "array", "items": {"type": "object"}},
+          "hub_flags": {"type": "object"}
+        },
+        "required": ["nodes", "edges"]
+      }
+    },
+    {
+      "name": "propose_action",
+      "description": "Propose an operational action intent. NON-AUTONOMOUS: generates a Cloud KMS signed Action Intent Token requiring human approval.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "action_type": {
+            "type": "string",
+            "enum": ["FreezeAccount", "HoldWithdrawal", "ClawbackCommission", "SuspendPartner", "LaunchRetentionPlaybook", "EscalateToMLRO", "FileSARDraft"]
+          },
+          "parameters": {"type": "object", "description": "Action type specific parameters"},
+          "evidence_refs": {"type": "array", "items": {"type": "string"}, "description": "Trace or entity citation references"}
+        },
+        "required": ["action_type", "parameters", "evidence_refs"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "intent_id": {"type": "string"},
+          "action_type": {"type": "string"},
+          "severity": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH"]},
+          "status": {"type": "string", "enum": ["PENDING"]},
+          "nonce": {"type": "string"},
+          "issued_at": {"type": "string", "format": "date-time"},
+          "expires_at": {"type": "string", "format": "date-time"},
+          "signature": {"type": "string"},
+          "kms_key_id": {"type": "string"}
+        },
+        "required": ["intent_id", "action_type", "severity", "status", "nonce", "expires_at", "signature"]
+      }
+    },
+    {
+      "name": "get_intent_status",
+      "description": "Check the current lifecycle and approval status of a proposed Action Intent Token.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "intent_id": {"type": "string", "description": "UUID of the proposed Action Intent"}
+        },
+        "required": ["intent_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "intent_id": {"type": "string"},
+          "status": {"type": "string", "enum": ["PENDING", "APPROVED", "REJECTED", "EXECUTED", "EXPIRED"]},
+          "approvers": {"type": "array", "items": {"type": "string"}},
+          "ledger_seq": {"type": "integer"}
+        },
+        "required": ["intent_id", "status"]
+      }
+    },
+    {
+      "name": "get_partner_signals",
+      "description": "Retrieve daily behavioral engagement signals and change-point markers for a partner.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "partner_id": {"type": "string"},
+          "window_days": {"type": "integer", "default": 28}
+        },
+        "required": ["partner_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "partner_id": {"type": "string"},
+          "signals": {"type": "array", "items": {"type": "object"}},
+          "change_points": {"type": "array", "items": {"type": "object"}},
+          "churn_hazard_score": {"type": "number"}
+        },
+        "required": ["partner_id", "signals"]
+      }
+    },
+    {
+      "name": "get_ring_evidence",
+      "description": "Retrieve structural and timing evidence for an identified collusion or fraud ring.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ring_id": {"type": "string"}
+        },
+        "required": ["ring_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "ring_id": {"type": "string"},
+          "members": {"type": "array", "items": {"type": "string"}},
+          "shared_attributes": {"type": "array", "items": {"type": "string"}},
+          "timing_stats": {"type": "object"},
+          "estimated_loss_usd": {"type": "number"}
+        },
+        "required": ["ring_id", "members", "timing_stats"]
+      }
+    },
+    {
+      "name": "get_causal_chain",
+      "description": "Retrieve structural causal model DAG edges, effect intervals, and refutation gate status for an outcome metric.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "outcome_metric": {"type": "string"},
+          "window": {"type": "string", "default": "last_90d"}
+        },
+        "required": ["outcome_metric"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "outcome_metric": {"type": "string"},
+          "edges": {"type": "array", "items": {"type": "object"}},
+          "gate_verdict": {"type": "string", "enum": ["PASS", "FAIL"]},
+          "model_version": {"type": "string"}
+        },
+        "required": ["outcome_metric", "edges", "gate_verdict"]
+      }
+    },
+    {
+      "name": "run_scenario",
+      "description": "Simulate parametric shock propagation across the structural causal graph.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "shock_spec": {"type": "object", "description": "Metric deltas (e.g. competitor_payout_rate +0.05)"}
+        },
+        "required": ["shock_spec"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "propagated_deltas": {"type": "object"},
+          "confidence_intervals": {"type": "object"},
+          "assumptions": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["propagated_deltas", "confidence_intervals"]
+      }
+    },
+    {
+      "name": "get_forecast",
+      "description": "Retrieve statistical forecast with 100% additive driver attribution decomposition.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "metric_id": {"type": "string"},
+          "horizon_days": {"type": "integer", "default": 30}
+        },
+        "required": ["metric_id"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "metric_id": {"type": "string"},
+          "point_estimate": {"type": "number"},
+          "ci_lower": {"type": "number"},
+          "ci_upper": {"type": "number"},
+          "driver_attribution": {"type": "object", "description": "Component percentages summing to 100%"}
+        },
+        "required": ["metric_id", "point_estimate", "driver_attribution"]
+      }
+    },
+    {
+      "name": "get_briefing",
+      "description": "Retrieve structured daily executive briefing object.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "date": {"type": "string", "format": "date"}
+        },
+        "required": ["date"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "briefing_id": {"type": "string"},
+          "date": {"type": "string"},
+          "insights": {"type": "array", "items": {"type": "object"}},
+          "risks": {"type": "array", "items": {"type": "object"}},
+          "opportunities": {"type": "array", "items": {"type": "object"}}
+        },
+        "required": ["briefing_id", "date", "insights"]
+      }
+    },
+    {
+      "name": "search_comms",
+      "description": "Search partner communication messages (marked untrusted data).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "partner_id": {"type": "string"},
+          "query": {"type": "string"}
+        },
+        "required": ["partner_id", "query"]
+      },
+      "output_schema": {
+        "type": "object",
+        "properties": {
+          "partner_id": {"type": "string"},
+          "passages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message_id": {"type": "string"},
+                "channel": {"type": "string"},
+                "sentiment": {"type": "string"},
+                "text": {"type": "string"},
+                "is_untrusted": {"type": "boolean", "default": true}
+              },
+              "required": ["message_id", "text", "is_untrusted"]
+            }
+          }
+        },
+        "required": ["partner_id", "passages"]
+      }
+    }
+  ]
+}

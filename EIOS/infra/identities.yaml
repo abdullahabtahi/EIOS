@@ -1,0 +1,97 @@
+# Service identities: one row per service per environment (FR-013..FR-020, Constitution VI).
+# service: skeleton_edge | skeleton_core | pipeline | eval_harness | release_candidate
+# environment: dev | stage | prod-like
+# roles: explicit role names only (no wildcards, no project-wide owner/editor/viewer)
+# can_read_eval_truth: true only for eval_harness and pipeline
+# impersonable_by: who may mint tokens for the identity; release_candidate is reachable only
+#   through attribute-restricted impersonation by workflow=release-candidate.yml
+# tools.infra_checks verifies this file and the Terraform in infra/envs agree.
+identities:
+- service: skeleton_edge
+  environment: dev
+  roles: &id001
+  - roles/cloudtrace.agent
+  - roles/logging.logWriter
+  - roles/monitoring.metricWriter
+  can_read_eval_truth: false
+  impersonable_by: &id002 []
+- service: skeleton_core
+  environment: dev
+  roles: &id003
+  - roles/cloudtrace.agent
+  - roles/logging.logWriter
+  - roles/monitoring.metricWriter
+  can_read_eval_truth: false
+  impersonable_by: &id004 []
+- service: pipeline
+  environment: dev
+  roles: &id005
+  - roles/logging.logWriter
+  - roles/run.developer
+  can_read_eval_truth: true
+  impersonable_by: &id006
+  - repository=ci_repository
+- service: eval_harness
+  environment: dev
+  roles: &id007
+  - roles/logging.logWriter
+  can_read_eval_truth: true
+  impersonable_by: &id008
+  - repository=ci_repository
+- service: release_candidate
+  environment: dev
+  roles: &id009
+  - roles/logging.logWriter
+  can_read_eval_truth: false
+  impersonable_by: &id010
+  - workflow=release-candidate.yml
+- service: skeleton_edge
+  environment: stage
+  roles: *id001
+  can_read_eval_truth: false
+  impersonable_by: *id002
+- service: skeleton_core
+  environment: stage
+  roles: *id003
+  can_read_eval_truth: false
+  impersonable_by: *id004
+- service: pipeline
+  environment: stage
+  roles: *id005
+  can_read_eval_truth: true
+  impersonable_by: *id006
+- service: eval_harness
+  environment: stage
+  roles: *id007
+  can_read_eval_truth: true
+  impersonable_by: *id008
+- service: release_candidate
+  environment: stage
+  roles: *id009
+  can_read_eval_truth: false
+  impersonable_by: *id010
+- service: skeleton_edge
+  environment: prod-like
+  roles: *id001
+  can_read_eval_truth: false
+  impersonable_by: *id002
+- service: skeleton_core
+  environment: prod-like
+  roles: *id003
+  can_read_eval_truth: false
+  impersonable_by: *id004
+- service: pipeline
+  environment: prod-like
+  roles: *id005
+  can_read_eval_truth: true
+  impersonable_by: *id006
+- service: eval_harness
+  environment: prod-like
+  roles: *id007
+  can_read_eval_truth: true
+  impersonable_by: *id008
+- service: release_candidate
+  environment: prod-like
+  roles: *id009
+  can_read_eval_truth: false
+  impersonable_by: *id010

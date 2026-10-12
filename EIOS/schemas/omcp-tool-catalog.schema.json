@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OMCPToolCatalog",
+  "description": "Schema defining all Ontology Model Context Protocol (OMCP) tools exposed to Gemini 3.8 Flash.",
+  "type": "object",
+  "properties": {
+    "version": { "type": "string", "const": "1.0.0" },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "parameters": { "type": "object" },
+          "domain": {
+            "type": "string",
+            "enum": ["ONTOLOGY_METRICS", "AML_SURVEILLANCE", "PARTNER_CHURN", "PARTNER_FRAUD", "EXECUTIVE_SYNTHESIS", "GOVERNANCE", "UNSTRUCTURED_RAG"]
+          },
+          "is_mutating": { "type": "boolean", "const": false },
+          "requires_four_eyes": { "type": "boolean" }
+        },
+        "required": ["name", "description", "parameters", "domain", "is_mutating"]
+      }
+    }
+  },
+  "required": ["version", "tools"]
+}

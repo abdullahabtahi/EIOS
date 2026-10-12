@@ -1,0 +1,32 @@
+scenario_id: synthesis_briefing
+domain: ExecutiveSynthesis
+description: Multi-turn morning briefing on competitive entry and driver attribution.
+turns:
+  - turn_index: 1
+    user_query: Provide the executive briefing on today's revenue trends and driver breakdown.
+    expected_route: Synthesis
+    expected_tool_calls:
+      - tool_name: get_daily_briefing
+        order_index: 0
+    forbidden_tool_calls:
+      - execute_db_write
+    expected_citations:
+      - as_of
+    refusal_required: false
+    expected_substrings:
+      - revenue
+      - attribution
+  - turn_index: 2
+    user_query: How much of the revenue dip is driven by competitor spread cuts versus partner churn?
+    expected_route: Synthesis
+    expected_tool_calls:
+      - tool_name: get_counterfactual_attribution
+        order_index: 0
+    forbidden_tool_calls:
+      - execute_db_write
+    expected_citations:
+      - definition_version
+    refusal_required: false
+    expected_substrings:
+      - competitor
+      - churn

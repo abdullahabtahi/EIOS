@@ -1,0 +1,5 @@
+- id: failing-validation
+  tier: validation
+  command: python evals/suites/failing_validation.py
+  owner_feature: F00
+  report: evals/reports/failing-validation.json

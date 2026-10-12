@@ -1,0 +1,11 @@
+driver,unit,quantity,unit_price,price_source,price_verified_on,tag,reconciliation
+model tokens input,1000 tokens,,,spike S-01 (docs/adr/S-01-llm-availability-and-pricing.md): price not yet verified,,[SPIKE],pending
+model tokens output,1000 tokens,,,spike S-01 (docs/adr/S-01-llm-availability-and-pricing.md): price not yet verified,,[SPIKE],pending
+compute,vCPU-hour,,,,,[ASSUMPTION],pending
+container registry storage,GB-month,,,,,[ASSUMPTION],pending
+object storage,GB-month,,,,,[ASSUMPTION],pending
+document-store operations,operation,,,,,[ASSUMPTION],pending
+key management,key operation,,,,,[ASSUMPTION],pending
+logging and tracing,GB ingested,,,,,[ASSUMPTION],pending
+scanning,scan,,,,,[ASSUMPTION],pending
+CI minutes,minute,,,,,[ASSUMPTION],pending

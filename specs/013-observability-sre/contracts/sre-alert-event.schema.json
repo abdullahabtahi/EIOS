@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SREAlertEvent",
+  "description": "Alert notification emitted by multi-window multi-burn-rate SRE policies and system monitors.",
+  "type": "object",
+  "required": [
+    "alert_id",
+    "policy_name",
+    "severity",
+    "service_name",
+    "burn_rate",
+    "message",
+    "triggered_at",
+    "is_active"
+  ],
+  "properties": {
+    "alert_id": { "type": "string" },
+    "policy_name": { "type": "string" },
+    "severity": {
+      "type": "string",
+      "enum": ["PAGE_CRITICAL_SEV1", "TICKET_HIGH_SEV2", "TICKET_MEDIUM_SEV3", "INFO"]
+    },
+    "sli_name": { "type": ["string", "null"] },
+    "service_name": { "type": "string" },
+    "burn_rate": { "type": "number", "minimum": 0 },
+    "message": { "type": "string" },
+    "triggered_at": { "type": "string", "format": "date-time" },
+    "is_active": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

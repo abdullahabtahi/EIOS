@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SoakTestTelemetryReport",
+  "description": "Telemetry and SLO compliance report from an accelerated multi-horizon operational soak simulation.",
+  "type": "object",
+  "required": [
+    "soak_id",
+    "simulated_days",
+    "execution_duration_seconds",
+    "total_events_ingested",
+    "total_queries_served",
+    "total_actions_processed",
+    "initial_memory_mb",
+    "peak_memory_mb",
+    "final_memory_mb",
+    "memory_slope_mb_per_k_events",
+    "is_leak_free",
+    "latency_p50_ms",
+    "latency_p95_ms",
+    "latency_p99_ms",
+    "slo_error_budgets_healthy"
+  ],
+  "properties": {
+    "soak_id": { "type": "string" },
+    "simulated_days": { "type": "number", "minimum": 1 },
+    "execution_duration_seconds": { "type": "number", "minimum": 0 },
+    "total_events_ingested": { "type": "integer", "minimum": 0 },
+    "total_queries_served": { "type": "integer", "minimum": 0 },
+    "total_actions_processed": { "type": "integer", "minimum": 0 },
+    "initial_memory_mb": { "type": "number", "minimum": 0 },
+    "peak_memory_mb": { "type": "number", "minimum": 0 },
+    "final_memory_mb": { "type": "number", "minimum": 0 },
+    "memory_slope_mb_per_k_events": { "type": "number" },
+    "is_leak_free": { "type": "boolean" },
+    "latency_p50_ms": { "type": "number", "minimum": 0 },
+    "latency_p95_ms": { "type": "number", "minimum": 0 },
+    "latency_p99_ms": { "type": "number", "minimum": 0 },
+    "slo_error_budgets_healthy": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

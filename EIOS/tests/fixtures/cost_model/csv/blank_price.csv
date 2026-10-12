@@ -1,0 +1,4 @@
+driver,unit,quantity,unit_price,price_source,price_verified_on,tag,reconciliation
+model tokens input,1000 tokens,,,fixture price sheet (spike S-01),,[SPIKE],pending
+model tokens output,1000 tokens,,,fixture price sheet (spike S-01),,[SPIKE],pending
+compute,vCPU-hour,100,,,,[ASSUMPTION],pending

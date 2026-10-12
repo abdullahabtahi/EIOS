@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WithdrawalRiskAssessmentResponse",
+  "type": "object",
+  "required": [
+    "assessment_id",
+    "withdrawal_id",
+    "client_id",
+    "amount_usd",
+    "risk_score",
+    "recommendation",
+    "decision_latency_ms",
+    "evaluated_at"
+  ],
+  "properties": {
+    "assessment_id": { "type": "string" },
+    "withdrawal_id": { "type": "string" },
+    "client_id": { "type": "string" },
+    "amount_usd": { "type": "number", "minimum": 0.0 },
+    "risk_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "recommendation": { "type": "string", "enum": ["ALLOW", "PROPOSE_HOLD", "PROPOSE_FREEZE"] },
+    "decision_latency_ms": { "type": "number", "minimum": 0.0 },
+    "intent_id": { "type": ["string", "null"] },
+    "evaluated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

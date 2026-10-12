@@ -1,0 +1,385 @@
+import { mergeProps } from '@base-ui/react/merge-props';
+import { useRender } from '@base-ui/react/use-render';
+import { type VariantProps, cva } from 'class-variance-authority';
+import * as React from 'react';
+
+import { cn } from '@/lib/utils';
+
+const badgePadding = {
+  icon: { sm: 'pl-1 pr-2', default: 'pl-1 pr-2' },
+  dot: { sm: 'pl-1 pr-2', default: 'px-2' },
+  label: { sm: 'px-2', default: 'px-2' },
+} as const;
+
+function getBadgePadding(
+  size: 'sm' | 'default',
+  withIcon: boolean,
+  withDot: boolean,
+) {
+  const mode = withIcon ? 'icon' : withDot ? 'dot' : 'label';
+
+  return badgePadding[mode][size];
+}
+
+const badgeVariants = cva(
+  'inline-flex items-center justify-center w-fit whitespace-nowrap shrink-0 rounded-full [&>svg]:size-4 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden',
+  {
+    variants: {
+      variant: {
+        'high-emphasis': 'bg-fill-active text-fg-primary-inverse',
+        'brand-accent': 'bg-brand-accents-qb-accent text-mist-50',
+        alternative: 'bg-fill-muted text-fg-secondary',
+        error: 'bg-status-error text-fg-primary-inverse',
+        warning: 'bg-status-warning text-fg-primary-inverse',
+        success: 'bg-status-success text-fg-primary-inverse',
+      },
+      size: {
+        sm: 'h-5 label-small-primary min-w-5',
+        default: 'h-6 label-small-primary min-w-6',
+      },
+      outline: {
+        true: 'bg-fill-active-inverse text-fg-primary outline outline-solid outline-1',
+      },
+      // Declared so compoundVariants can match on them; they add no classes on
+      // their own (icon/dot-derived spacing is handled in the Badge function).
+      withIcon: { true: '', false: '' },
+      withDot: { true: '', false: '' },
+    },
+    compoundVariants: [
+      {
+        variant: 'high-emphasis',
+        outline: true,
+        className: 'outline-stroke-primary',
+      },
+      // A leading icon/dot softens the high-emphasis outline from
+      // Border/Primary to Border/Secondary (Figma Icon+Label / Dot+Label).
+      {
+        variant: 'high-emphasis',
+        outline: true,
+        withIcon: true,
+        className: 'outline-stroke-secondary',
+      },
+      {
+        variant: 'high-emphasis',
+        outline: true,
+        withDot: true,
+        className: 'outline-stroke-secondary',
+      },
+      {
+        variant: 'brand-accent',
+        outline: true,
+        className: 'outline-stroke-status-focus',
+      },
+      {
+        variant: 'alternative',
+        outline: true,
+        className: 'outline-stroke-secondary text-fg-secondary bg-fill-muted',
+      },
+      {
+        variant: 'error',
+        outline: true,
+        className: 'outline-stroke-status-error',
+      },
+      {
+        variant: 'warning',
+        outline: true,
+        className: 'outline-stroke-status-warning',
+      },
+      {
+        variant: 'success',
+        outline: true,
+        className: 'outline-stroke-status-success',
+      },
+      {
+        outline: true,
+        size: 'sm',
+        className: 'outline-[0.5px]',
+      },
+    ],
+    defaultVariants: {
+      variant: 'high-emphasis',
+      size: 'default',
+      outline: false,
+    },
+  },
+);
+
+export type BadgeProps = useRender.ComponentProps<'span'> &
+  Omit<VariantProps<typeof badgeVariants>, 'withIcon' | 'withDot'> & {
+    withIcon?: boolean;
+    withDot?: boolean;
+  };
+
+function Badge({
+  className,
+  variant,
+  size = 'default',
+  outline,
+  withIcon = false,
+  withDot = false,
+  render,
+  ...props
+}: BadgeProps) {
+  const resolvedSize = size ?? 'default';
+
+  return useRender({
+    defaultTagName: 'span',
+    props: mergeProps<'span'>(
+      {
+        className: cn(
+          badgeVariants({
+            variant,
+            size: resolvedSize,
+            outline,
+            withIcon,
+            withDot,
+          }),
+          getBadgePadding(resolvedSize, withIcon, withDot),
+          withIcon && (resolvedSize === 'sm' && outline ? 'gap-0.5' : 'gap-1'),
+          className,
+        ),
+      } as React.ComponentProps<'span'>,
+      props,
+    ),
+    render,
+    state: {
+      slot: 'badge',
+      variant,
+      size: resolvedSize,
+      outline: outline ? true : undefined,
+    },
+  });
+}
+
+const numericBadgeShell =
+  'inline-flex items-center justify-center w-fit whitespace-nowrap shrink-0 overflow-hidden focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] transition-[color,box-shadow]';
+
+const numericBadgeVariants = cva(
+  'shadow-elevation-0 rounded-full outline outline-solid',
+  {
+    variants: {
+      variant: {
+        primary: 'bg-fill-active  text-fg-primary-inverse',
+        secondary: 'bg-fill-muted text-fg-primary',
+        accent: 'bg-brand-accents-qb-accent text-fg-primary-inverse',
+      },
+      size: {
+        sm: 'h-4 min-w-4 px-0.5 paragraph-small-emphasised outline-1',
+        default: 'h-5 min-w-5 px-1 paragraph-regular-emphasised-600 outline-1',
+        lg: 'h-6 min-w-6 px-1 paragraph-regular-emphasised-600 outline-2',
+      },
+      outline: {
+        false: 'outline-stroke-active-inverse',
+        true: 'bg-fill-primary-inverse text-fg-primary',
+      },
+    },
+    compoundVariants: [
+      {
+        variant: 'primary',
+        outline: true,
+        className: 'outline-stroke-active',
+      },
+      {
+        variant: 'secondary',
+        outline: true,
+        className: 'outline-stroke-tertiary',
+      },
+      {
+        variant: 'accent',
+        outline: true,
+        className: 'outline-brand-accents-qb-accent',
+      },
+      {
+        outline: true,
+        size: 'default',
+        className: 'outline-2',
+      },
+    ],
+    defaultVariants: {
+      variant: 'primary',
+      size: 'default',
+      outline: false,
+    },
+  },
+);
+
+type NumericBadgeProps = useRender.ComponentProps<'span'> & {
+  variant?: 'primary' | 'secondary' | 'accent';
+  size?: 'sm' | 'default' | 'lg';
+  outline?: boolean;
+};
+
+function NumericBadge({
+  className,
+  variant = 'primary',
+  size = 'default',
+  outline = false,
+  render,
+  ...props
+}: NumericBadgeProps) {
+  return useRender({
+    defaultTagName: 'span',
+    props: mergeProps<'span'>(
+      {
+        className: cn(
+          numericBadgeShell,
+          numericBadgeVariants({ variant, size, outline }),
+          className,
+        ),
+      } as React.ComponentProps<'span'>,
+      props,
+    ),
+    render,
+    state: {
+      slot: 'badge',
+      variant,
+      size,
+      outline: outline ? true : undefined,
+    },
+  });
+}
+
+const statusBadgeRootVariants = cva(
+  'box-border inline-flex shrink-0 items-center justify-center rounded-full',
+  {
+    variants: {
+      size: {
+        sm: 'size-2',
+        default: 'size-3',
+        lg: 'size-4',
+        xl: 'size-5',
+      },
+    },
+    defaultVariants: {
+      size: 'default',
+    },
+  },
+);
+
+type StatusBadgeDotVariant =
+  | 'neutral'
+  | 'neutral-brand'
+  | 'error'
+  | 'warning'
+  | 'success';
+
+type StatusBadgeDotSize = 'sm' | 'default' | 'lg' | 'xl';
+
+const statusBadgeCoreVariants = cva('box-content shrink-0 rounded-full', {
+  variants: {
+    variant: {
+      neutral: 'bg-fill-active',
+      'neutral-brand': 'bg-brand-accents-qb-accent',
+      error: 'bg-status-error',
+      warning: 'bg-status-warning',
+      success: 'bg-status-success',
+    },
+    size: {
+      sm: 'size-1.5',
+      default: 'size-2',
+      lg: 'size-3',
+      xl: 'size-4',
+    },
+    outline: {
+      false: 'border-0',
+      true: 'border-0 bg-transparent outline outline-solid outline-1 outline-offset-[-1px]',
+    },
+  },
+  compoundVariants: [
+    {
+      outline: true,
+      size: 'lg',
+      className: 'outline-2 outline-offset-[-2px]',
+    },
+    {
+      outline: true,
+      size: 'xl',
+      className: 'outline-2 outline-offset-[-2px]',
+    },
+    {
+      outline: true,
+      variant: 'neutral',
+      className: 'outline-stroke-active',
+    },
+    {
+      outline: true,
+      variant: 'neutral-brand',
+      className: 'outline-stroke-status-focus',
+    },
+    {
+      outline: true,
+      variant: 'error',
+      className: 'outline-stroke-status-error',
+    },
+    {
+      outline: true,
+      variant: 'warning',
+      className: 'outline-stroke-status-warning',
+    },
+    {
+      outline: true,
+      variant: 'success',
+      className: 'outline-stroke-status-success',
+    },
+  ],
+  defaultVariants: {
+    variant: 'neutral',
+    size: 'default',
+    outline: false,
+  },
+});
+
+const statusBadgeRingVariants = cva(
+  'border-stroke-active-inverse box-content inline-flex shrink-0 items-center justify-center rounded-full border-solid',
+  {
+    variants: {
+      size: {
+        sm: 'size-1.5 border',
+        default: 'size-2 border',
+        lg: 'size-3 border-2',
+        xl: 'size-4 border-2',
+      },
+    },
+    defaultVariants: {
+      size: 'default',
+    },
+  },
+);
+
+type StatusBadgeProps = Omit<React.ComponentProps<'span'>, 'variant'> & {
+  variant?: StatusBadgeDotVariant;
+  size?: StatusBadgeDotSize;
+  outline?: boolean;
+};
+
+function StatusBadge({
+  className,
+  variant = 'neutral',
+  size = 'default',
+  outline = false,
+  ...props
+}: StatusBadgeProps) {
+  return (
+    <span
+      data-slot="status-badge"
+      className={cn(statusBadgeRootVariants({ size }), className)}
+      {...props}>
+      <span className={statusBadgeRingVariants({ size })}>
+        <span
+          className={cn(statusBadgeCoreVariants({ variant, size, outline }))}
+        />
+      </span>
+    </span>
+  );
+}
+
+export {
+  Badge,
+  NumericBadge,
+  StatusBadge,
+  badgeVariants,
+  numericBadgeVariants,
+  statusBadgeCoreVariants,
+  statusBadgeRingVariants,
+  statusBadgeRootVariants,
+};

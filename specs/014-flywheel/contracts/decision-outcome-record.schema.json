@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DecisionOutcomeRecord",
+  "description": "Multi-horizon action decision record tracking proposal propensity score and 30d/60d/90d realized outcomes.",
+  "type": "object",
+  "required": [
+    "decision_id",
+    "intent_id",
+    "timestamp",
+    "service_name",
+    "action_type",
+    "entity_type",
+    "entity_id",
+    "propensity_score",
+    "treatment_assigned",
+    "predicted_impact_30d",
+    "status_30d",
+    "predicted_impact_60d",
+    "status_60d",
+    "predicted_impact_90d",
+    "status_90d",
+    "provenance_hash"
+  ],
+  "properties": {
+    "decision_id": { "type": "string" },
+    "intent_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "service_name": { "type": "string" },
+    "action_type": { "type": "string" },
+    "entity_type": { "type": "string" },
+    "entity_id": { "type": "string" },
+    "propensity_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "treatment_assigned": { "type": "boolean" },
+    "covariates": { "type": "object" },
+    "predicted_impact_30d": { "type": "number" },
+    "actual_impact_30d": { "type": ["number", "null"] },
+    "residual_30d": { "type": ["number", "null"] },
+    "status_30d": {
+      "type": "string",
+      "enum": ["PENDING", "RECORDED", "RECONCILED"]
+    },
+    "predicted_impact_60d": { "type": "number" },
+    "actual_impact_60d": { "type": ["number", "null"] },
+    "residual_60d": { "type": ["number", "null"] },
+    "status_60d": {
+      "type": "string",
+      "enum": ["PENDING", "RECORDED", "RECONCILED"]
+    },
+    "predicted_impact_90d": { "type": "number" },
+    "actual_impact_90d": { "type": ["number", "null"] },
+    "residual_90d": { "type": ["number", "null"] },
+    "status_90d": {
+      "type": "string",
+      "enum": ["PENDING", "RECORDED", "RECONCILED"]
+    },
+    "provenance_hash": { "type": "string" }
+  },
+  "additionalProperties": false
+}

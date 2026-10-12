@@ -1,0 +1,5 @@
+- id: resilience-failing-restart
+  tier: validation
+  command: python evals/suites/resilience_failing_restart.py
+  owner_feature: F00
+  report: evals/reports/resilience-failing-restart.json

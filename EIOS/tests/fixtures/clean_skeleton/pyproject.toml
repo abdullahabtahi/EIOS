@@ -1,0 +1,41 @@
+[project]
+name = "clean-skeleton"
+version = "0.0.0"
+description = "Minimal project that passes every F00 blocking gate (test fixture)"
+requires-python = ">=3.14"
+# One trivial pinned dependency so the vulnerability audit and the SBOM have a lockfile entry to
+# list. The code does not import it.
+dependencies = ["packaging>=26.0"]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "--import-mode=importlib --strict-markers"
+
+[tool.coverage.run]
+source = ["src/skeleton"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 80
+
+[tool.mypy]
+strict = true
+mypy_path = "src"
+explicit_package_bases = true
+namespace_packages = true
+files = ["src", "tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "."]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]

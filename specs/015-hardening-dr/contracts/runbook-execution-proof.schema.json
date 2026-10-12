@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RunbookExecutionProof",
+  "description": "Certified execution proof of an automated production runbook incident triage and remediation.",
+  "type": "object",
+  "required": [
+    "proof_id",
+    "runbook_id",
+    "runbook_title",
+    "trigger_signal",
+    "diagnosis_summary",
+    "mitigation_applied",
+    "time_to_mitigate_seconds",
+    "resolution_status",
+    "post_incident_audit_verified",
+    "executed_at"
+  ],
+  "properties": {
+    "proof_id": { "type": "string" },
+    "runbook_id": { "type": "string" },
+    "runbook_title": { "type": "string" },
+    "trigger_signal": { "type": "string" },
+    "diagnosis_summary": { "type": "string" },
+    "mitigation_applied": { "type": "string" },
+    "time_to_mitigate_seconds": { "type": "number", "minimum": 0 },
+    "resolution_status": {
+      "type": "string",
+      "enum": ["RESOLVED", "ESCALATED", "FAILED"]
+    },
+    "post_incident_audit_verified": { "type": "boolean" },
+    "executed_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

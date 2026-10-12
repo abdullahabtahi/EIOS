@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ExecutionReceipt",
+  "description": "Simulated Core Write-Back execution receipt with idempotency verification.",
+  "type": "object",
+  "required": [
+    "receipt_id",
+    "intent_id",
+    "idempotency_key",
+    "external_transaction_id",
+    "action_type",
+    "status",
+    "simulated_latency_ms",
+    "executed_at"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID uniquely identifying the execution receipt"
+    },
+    "intent_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "UUID of the executed ActionIntentToken"
+    },
+    "idempotency_key": {
+      "type": "string",
+      "description": "Unique key preventing duplicate mutation execution"
+    },
+    "external_transaction_id": {
+      "type": "string",
+      "description": "Simulated external core banking / gateway transaction identifier"
+    },
+    "action_type": {
+      "type": "string",
+      "description": "Type of action committed"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["COMMITTED", "REJECTED", "ABORTED"],
+      "description": "Final commit disposition"
+    },
+    "simulated_latency_ms": {
+      "type": "number",
+      "minimum": 0.0,
+      "description": "Simulated core system execution latency"
+    },
+    "executed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of execution commit"
+    },
+    "side_effects": {
+      "type": "object",
+      "description": "Simulated balance adjustments, status flags, and downstream mutations"
+    },
+    "compensation_intent_id": {
+      "type": ["string", "null"],
+      "description": "Linked compensation intent UUID if execution aborted"
+    }
+  }
+}

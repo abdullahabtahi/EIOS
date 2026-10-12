@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LedgerEntry",
+  "description": "Cryptographically chained atomic ledger record (ADR-017).",
+  "type": "object",
+  "required": [
+    "ledger_seq",
+    "prev_hash",
+    "current_hash",
+    "event_type",
+    "entity_id",
+    "payload_digest",
+    "payload",
+    "recorded_at"
+  ],
+  "properties": {
+    "ledger_seq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Strictly monotonic, 1-indexed sequence counter"
+    },
+    "prev_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 digest of preceding record, or genesis anchor for sequence 1"
+    },
+    "current_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 digest of prev_hash || ledger_seq || payload_digest"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "PROPOSAL_CREATED",
+        "APPROVAL_RECORDED",
+        "ACTION_EXECUTED",
+        "ACTION_ABORTED",
+        "ACTION_REJECTED",
+        "COMPENSATION_RECORDED"
+      ],
+      "description": "Classification of ledger lifecycle event"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "Primary entity ID referenced in event"
+    },
+    "payload_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 digest of canonical RFC 8785 JSON of payload"
+    },
+    "payload": {
+      "type": "object",
+      "description": "Canonical event payload data"
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Commit timestamp into upstream sequencer"
+    },
+    "worm_checkpoint_seq": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Linked WORM checkpoint sequence if entry forms an anchor"
+    }
+  }
+}

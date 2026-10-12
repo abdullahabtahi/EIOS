@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eios.enterprise/schemas/cockpit-ui-contract.schema.json",
+  "title": "CockpitUiContract",
+  "description": "JSON Schema contract governing the complete client-state payload for the Institutional Operator Cockpit across all 15 platform subsystems.",
+  "type": "object",
+  "required": [
+    "session",
+    "triage_queue",
+    "active_dossier",
+    "kinetic_canvas",
+    "governed_action_shelf",
+    "fallback_state"
+  ],
+  "properties": {
+    "session": {
+      "type": "object",
+      "required": ["session_id", "active_role", "operator_id", "clearance_level", "timestamp"],
+      "properties": {
+        "session_id": { "type": "string" },
+        "active_role": {
+          "type": "string",
+          "enum": ["executive", "aml_investigator", "partner_manager", "compliance_auditor", "data_operations"]
+        },
+        "operator_id": { "type": "string" },
+        "clearance_level": { "type": "string", "enum": ["LEVEL_1", "LEVEL_2", "LEVEL_3_EXECUTIVE"] },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "triage_queue": {
+      "type": "object",
+      "required": ["total_count", "items"],
+      "properties": {
+        "total_count": { "type": "integer", "minimum": 0 },
+        "selected_item_id": { "type": ["string", "null"] },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "title", "entity_id", "priority_score", "severity", "status", "timestamp"],
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "subtitle": { "type": "string" },
+              "entity_id": { "type": "string" },
+              "priority_score": { "type": "number", "minimum": 0, "maximum": 1 },
+              "severity": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"] },
+              "status": { "type": "string", "enum": ["OPEN", "INVESTIGATING", "STAGED", "RESOLVED", "DISMISSED"] },
+              "timestamp": { "type": "string", "format": "date-time" }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "active_dossier": {
+      "type": "object",
+      "required": ["dossier_id", "entity_id", "headline", "sections", "as_of_timestamp"],
+      "properties": {
+        "dossier_id": { "type": "string" },
+        "entity_id": { "type": "string" },
+        "headline": { "type": "string" },
+        "executive_summary": { "type": "string" },
+        "sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["section_id", "title", "narrative_text", "metrics"],
+            "properties": {
+              "section_id": { "type": "string" },
+              "title": { "type": "string" },
+              "narrative_text": { "type": "string" },
+              "citations": { "type": "array", "items": { "type": "string" } },
+              "metrics": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "metric_id",
+                    "formatted_value",
+                    "semantic_definition_version",
+                    "as_of_timestamp",
+                    "origin_engine",
+                    "steward_role",
+                    "citation"
+                  ],
+                  "properties": {
+                    "metric_id": { "type": "string" },
+                    "formatted_value": { "type": "string" },
+                    "raw_value": { "type": ["number", "string"] },
+                    "semantic_definition_version": { "type": "string" },
+                    "as_of_timestamp": { "type": "string", "format": "date-time" },
+                    "origin_engine": { "type": "string" },
+                    "steward_role": { "type": "string" },
+                    "citation": {
+                      "type": "string",
+                      "enum": ["[BRIEF]", "[ASSUMPTION]", "[ILLUSTRATIVE]", "[TARGET]", "[SPIKE]"]
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              }
+            },
+            "additionalProperties": true
+          }
+        },
+        "as_of_timestamp": { "type": "string", "format": "date-time" },
+        "is_cached_snapshot": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "kinetic_canvas": {
+      "type": "object",
+      "required": ["canvas_type", "payload"],
+      "properties": {
+        "canvas_type": {
+          "type": "string",
+          "enum": ["CAUSAL_DAG", "TOPOLOGICAL_GRAPH", "CHURN_RADAR", "LEDGER_TIMELINE", "OPERATIONS_SLO"]
+        },
+        "payload": { "type": "object" }
+      },
+      "additionalProperties": true
+    },
+    "governed_action_shelf": {
+      "type": "object",
+      "required": ["staged_count", "actions"],
+      "properties": {
+        "staged_count": { "type": "integer", "minimum": 0 },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "intent_id",
+              "action_type",
+              "target_entity_id",
+              "severity",
+              "lifecycle_state",
+              "kms_signature",
+              "requires_four_eyes"
+            ],
+            "properties": {
+              "intent_id": { "type": "string" },
+              "action_type": { "type": "string" },
+              "target_entity_id": { "type": "string" },
+              "severity": { "type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"] },
+              "lifecycle_state": {
+                "type": "string",
+                "enum": ["STAGED", "PENDING_SECOND_EYE", "COMMITTED", "REJECTED", "EXPIRED"]
+              },
+              "kms_signature": {
+                "type": "object",
+                "required": ["key_id", "algorithm", "signature_digest", "verified"],
+                "properties": {
+                  "key_id": { "type": "string" },
+                  "algorithm": { "type": "string" },
+                  "signature_digest": { "type": "string" },
+                  "verified": { "type": "boolean" }
+                }
+              },
+              "requires_four_eyes": { "type": "boolean" },
+              "initiator_officer_id": { "type": "string" },
+              "second_officer_id": { "type": ["string", "null"] }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "fallback_state": {
+      "type": "object",
+      "required": ["is_active", "badge_label"],
+      "properties": {
+        "is_active": { "type": "boolean" },
+        "badge_label": { "type": "string" },
+        "cached_timestamp": { "type": ["string", "null"] },
+        "outage_reason": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "copilot_command_bar": {
+      "type": "object",
+      "properties": {
+        "is_active": { "type": "boolean" },
+        "active_query": { "type": "string" },
+        "last_auditor_status": { "type": "string", "enum": ["PASS", "BLOCKED", "IDLE"] }
+      },
+      "additionalProperties": true
+    },
+    "flywheel_status": {
+      "type": "object",
+      "properties": {
+        "total_feedback_events": { "type": "integer" },
+        "uncalibrated_discrepancies": { "type": "integer" },
+        "calibration_drift_detected": { "type": "boolean" }
+      },
+      "additionalProperties": true
+    },
+    "dr_proofs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["runbook_id", "runbook_name", "verification_status"],
+        "properties": {
+          "runbook_id": { "type": "string" },
+          "runbook_name": { "type": "string" },
+          "verification_status": { "type": "string", "enum": ["PASS", "FAIL"] },
+          "kms_keyring_rotation_status": { "type": "string" },
+          "backup_checkpoint_hash": { "type": "string" }
+        },
+        "additionalProperties": true
+      }
+    },
+    "red_line_gates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["gate_id", "name", "status"],
+        "properties": {
+          "gate_id": { "type": "string" },
+          "name": { "type": "string" },
+          "status": { "type": "string", "enum": ["PASS", "FAIL"] },
+          "margin_delta": { "type": "number" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

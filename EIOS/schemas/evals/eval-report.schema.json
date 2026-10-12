@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EvalReport",
+  "description": "Schema for machine-readable evaluation reports emitted by the EIOS Evaluation Harness under evals/reports/.",
+  "type": "object",
+  "properties": {
+    "suite_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+$",
+      "description": "Identifier of the evaluation suite that ran."
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "git_sha": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$",
+      "description": "Full 40-character Git commit SHA of the evaluated codebase."
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["contract", "eval_smoke", "red_line", "validation", "sealed"]
+    },
+    "passed": {
+      "type": "boolean",
+      "description": "True if all gating criteria and zero-tolerance tests passed."
+    },
+    "summary": {
+      "type": "string",
+      "description": "Human-readable summary of the test execution and key findings."
+    },
+    "seed_manifest": {
+      "type": "object",
+      "properties": {
+        "tier": {"type": "string"},
+        "seeds": {
+          "type": "array",
+          "items": {"type": "integer"}
+        },
+        "dataset_hash": {"type": "string"},
+        "spec_version": {"type": "string"}
+      },
+      "required": ["tier", "seeds", "dataset_hash"]
+    },
+    "red_line_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "test_id": {
+            "type": "string",
+            "enum": ["RL-1", "RL-2", "RL-3", "RL-4", "RL-5", "RL-6", "RL-7"]
+          },
+          "name": {"type": "string"},
+          "passed": {"type": "boolean"},
+          "total_evaluated": {"type": "integer"},
+          "violations_detected": {"type": "integer"},
+          "tolerance": {"type": "integer", "enum": [0]},
+          "execution_time_ms": {"type": "number"}
+        },
+        "required": ["test_id", "passed", "total_evaluated", "violations_detected", "tolerance"]
+      }
+    },
+    "baseline_comparisons": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "module": {"type": "string"},
+          "metric_name": {"type": "string"},
+          "baseline_method": {"type": "string"},
+          "candidate_model": {"type": "string"},
+          "baseline_value": {"type": "number"},
+          "candidate_value": {"type": "number"},
+          "absolute_delta": {"type": "number"},
+          "relative_lift_pct": {"type": "number"},
+          "pre_registered_target": {"type": "string"},
+          "target_met": {"type": "boolean"},
+          "confidence_interval": {
+            "type": "object",
+            "properties": {
+              "lower": {"type": "number"},
+              "median": {"type": "number"},
+              "upper": {"type": "number"},
+              "confidence_level": {"type": "number"}
+            },
+            "required": ["lower", "median", "upper"]
+          }
+        },
+        "required": ["module", "metric_name", "baseline_method", "candidate_model", "baseline_value", "candidate_value", "target_met"]
+      }
+    },
+    "latency_metrics": {
+      "type": "object",
+      "additionalProperties": {"type": "number"}
+    },
+    "hardware_and_cost": {
+      "type": "object",
+      "properties": {
+        "peak_memory_mb": {"type": "number"},
+        "cpu_seconds": {"type": "number"},
+        "total_tokens": {"type": "integer"},
+        "estimated_cost_usd": {"type": "number"}
+      }
+    }
+  },
+  "required": [
+    "suite_id",
+    "timestamp",
+    "git_sha",
+    "tier",
+    "passed",
+    "summary",
+    "seed_manifest"
+  ]
+}

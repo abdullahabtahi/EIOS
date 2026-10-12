@@ -1,0 +1,135 @@
+[project]
+name = "eios"
+description = "EIOS platform foundations (F00): gates, environments, LLM gateway, labels, decisions, observability"
+requires-python = ">=3.14"
+version = "0.0.0"
+dependencies = [
+    "cryptography>=43.0.0",
+    "duckdb>=1.1.0",
+    "faker>=24.0.0",
+    "fastapi>=0.142.2",
+    "google-cloud-pubsub>=2.19.0",
+    "google-genai>=0.1.0",
+    "httpx>=0.28.1",
+    "jsonschema>=4.26.0",
+    "langchain-core>=0.3.0",
+    "langchain-google-vertexai>=2.0.0",
+    "langgraph>=0.2.0",
+    "networkx>=3.2.0",
+    "numpy>=1.26.0",
+    "opentelemetry-api>=1.45.0",
+    "opentelemetry-sdk>=1.45.0",
+    "polars>=0.20.0",
+    "pyarrow>=15.0.0",
+    "pydantic>=2.13.5",
+    "pyyaml>=6.0.3",
+    "scikit-learn>=1.5.0",
+    "tqdm>=4.66.0",
+    "uvicorn>=0.54.0",
+]
+
+[project.optional-dependencies]
+cloud = [
+    "google-cloud-firestore>=2.34.0",
+    "google-cloud-secret-manager>=2.31.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+addopts = "--import-mode=importlib --strict-markers -ra"
+# Fixture projects are inputs to the gate proofs, never collected by the outer run.
+norecursedirs = ["tests/fixtures", ".*", "build", "dist", "node_modules", "venv", "__pycache__"]
+markers = [
+    "requires_network: needs outbound network access",
+    "requires_emulator: needs a local cloud-service emulator",
+    "requires_cloud: needs a real cloud project",
+]
+
+[tool.coverage.run]
+source = ["src/eios", "tools", "services"]
+branch = true
+
+[tool.coverage.report]
+# [TARGET] minimum line coverage, enforced by the coverage gate
+fail_under = 80
+show_missing = true
+skip_covered = true
+
+[tool.mypy]
+strict = true
+mypy_path = "src"
+explicit_package_bases = true
+namespace_packages = true
+files = ["src", "tools", "services", "tests"]
+exclude = ["^tests/fixtures/"]
+
+[[tool.mypy.overrides]]
+# Optional cloud client libraries are imported lazily and are not installed in dev.
+module = ["google.cloud.*", "google.api_core.*", "google.auth.*", "hcl2", "hcl2.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+src = ["src", "."]
+# Only the Python platform is linted; the website prototype is a separate toolchain.
+extend-exclude = [".github", "web-prototype", "docs", "tests/fixtures"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "C90", "PLR0912", "PLR0913", "PLR0915", "TID"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"]
+"evals/**" = ["S101", "S105", "S106"]
+# The one place telemetry SDK classes may be imported (T194); everything else uses the API.
+"src/eios/common/otel.py" = ["TID251"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+# [TARGET] function ceilings, mirrored in docs/conventions.md
+max-statements = 50
+max-branches = 12
+max-args = 7
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+# Telemetry SDK classes are imported only in src/eios/common/otel.py (per-file ignore below).
+"opentelemetry.sdk".msg = "Telemetry SDK: import it only in src/eios/common/otel.py; use opentelemetry.trace elsewhere."
+# Vendor LLM SDK imports are forbidden outside src/eios/llm_gateway/providers/ (ADR-002 is open).
+# [SPIKE] Equals vendor_sdk_modules in config/open_decisions.yaml (a test enforces it).
+"ai21".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"anthropic".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"cohere".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"google.cloud.aiplatform".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"google.genai".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"google.generativeai".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"groq".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"langchain_anthropic".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"langchain_cohere".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"langchain_google_genai".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"langchain_google_vertexai".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"langchain_mistralai".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"langchain_openai".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"mistralai".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"openai".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+"vertexai".msg = "Vendor SDK: import it only in src/eios/llm_gateway/providers/ (ADR-002 is open)."
+
+[dependency-groups]
+dev = [
+    "mypy>=2.4.0",
+    "pip-audit>=2.10.1",
+    "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
+    "pytest-xdist>=3.8.0",
+    "python-hcl2>=8.1.4",
+    "ruff>=0.16.10",
+    "types-jsonschema>=4.26.0.20260518",
+    "types-pyyaml>=6.0.12.20260906",
+]

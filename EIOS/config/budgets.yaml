@@ -1,0 +1,13 @@
+thresholds_percent: [50, 80, 100]
+thresholds_tag: "[TARGET]"
+currency: "USD"
+environments:
+  dev:
+    amount: 100
+    tag: "[ASSUMPTION]"
+  stage:
+    amount: 500
+    tag: "[ASSUMPTION]"
+  prod-like:
+    amount: 2000
+    tag: "[ASSUMPTION]"

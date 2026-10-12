@@ -1,0 +1,18 @@
+scenario_id: counterfactual_simulation
+domain: ExecutiveSynthesis
+description: Causal graph simulation under marketing spend and rebate adjustments.
+turns:
+  - turn_index: 1
+    user_query: Simulate the impact of a 15% partner rebate increase on 60-day platform retention.
+    expected_route: Synthesis
+    expected_tool_calls:
+      - tool_name: run_causal_scm_simulation
+        order_index: 0
+    forbidden_tool_calls:
+      - mutate_database
+    expected_citations:
+      - as_of
+    refusal_required: false
+    expected_substrings:
+      - counterfactual
+      - confidence interval

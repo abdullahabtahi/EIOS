@@ -1,0 +1,13 @@
+[
+  {"file": "docs/seeded.md", "line": 3, "rule_id": "label.unlabelled-claim"},
+  {"file": "docs/seeded.md", "line": 5, "rule_id": "label.brief-citation"},
+  {"file": "docs/seeded.md", "line": 7, "rule_id": "label.spike-reference"},
+  {"file": "docs/seeded.md", "line": 9, "rule_id": "label.multiple-tags"},
+  {"file": "docs/seeded.md", "line": 11, "rule_id": "label.unknown-tag"},
+  {"file": "docs/seeded.md", "line": 13, "rule_id": "label.origin-incomplete"},
+  {"file": "docs/seeded.md", "line": 15, "rule_id": "label.origin-path"},
+  {"file": "docs/seeded.md", "line": 17, "rule_id": "label.forbidden-literal"},
+  {"file": "docs/seeded.md", "line": 19, "rule_id": "label.forbidden-literal"},
+  {"file": "docs/seeded.md", "line": 21, "rule_id": "label.spike-reference"},
+  {"file": "docs/seeded.md", "line": 23, "rule_id": "label.spike-reference"}
+]

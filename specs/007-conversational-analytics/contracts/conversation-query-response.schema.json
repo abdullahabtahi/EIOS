@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConversationQueryResponse",
+  "description": "Schema for audited conversational analytics responses conforming to EIOS Principle I.",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": "string",
+      "description": "Unique session thread identifier."
+    },
+    "turn_index": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonically increasing turn sequence index."
+    },
+    "route": {
+      "type": "string",
+      "enum": ["Synthesis", "SentinelAML", "ChurnRadar", "PartnerFraud"],
+      "description": "Domain specialist agent responsible for the query."
+    },
+    "response_markdown": {
+      "type": "string",
+      "description": "Audited executive prose output with citations."
+    },
+    "citations": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Entity IDs and data product references cited in the narrative."
+    },
+    "evidence_ledger": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "tool_name": { "type": "string" },
+          "entity_id": { "type": ["string", "null"] },
+          "metric_name": { "type": "string" },
+          "value": { "type": ["number", "string"] },
+          "unit": { "type": ["string", "null"] },
+          "as_of": { "type": "string" },
+          "definition_version": { "type": "string" }
+        },
+        "required": ["tool_name", "metric_name", "value", "as_of", "definition_version"]
+      },
+      "description": "Structured tool outputs backing quantitative assertions."
+    },
+    "staged_recommendation": {
+      "type": ["object", "null"],
+      "description": "Non-autonomous recommendation card and draft action intent proposal if applicable."
+    },
+    "is_replay_fallback": {
+      "type": "boolean",
+      "description": "True if output was served from circuit-breaker cached replay."
+    },
+    "turn_latency_ms": {
+      "type": "number",
+      "description": "Total round-trip turn execution time in milliseconds."
+    },
+    "reflection_cycles_used": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3,
+      "description": "Number of coordinator arbitration cycles executed."
+    }
+  },
+  "required": [
+    "session_id",
+    "turn_index",
+    "route",
+    "response_markdown",
+    "citations",
+    "evidence_ledger",
+    "is_replay_fallback",
+    "turn_latency_ms",
+    "reflection_cycles_used"
+  ],
+  "additionalProperties": false
+}

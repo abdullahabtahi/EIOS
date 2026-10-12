@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SARDraftDocument",
+  "description": "Structured regulator-ready Suspicious Activity Report draft pre-populated with verified citations.",
+  "type": "object",
+  "required": [
+    "sar_id",
+    "case_id",
+    "regulator_template_id",
+    "subject_entity_id",
+    "pseudonymized_cluster_key",
+    "narrative_summary",
+    "cited_metric_ids",
+    "statutory_citations",
+    "created_at",
+    "investigator_id"
+  ],
+  "properties": {
+    "sar_id": { "type": "string" },
+    "case_id": { "type": "string" },
+    "regulator_template_id": { "type": "string" },
+    "subject_entity_id": { "type": "string" },
+    "pseudonymized_cluster_key": {
+      "type": "string",
+      "pattern": "^tok_id_cluster_[0-9a-f]{16}$"
+    },
+    "narrative_summary": { "type": "string" },
+    "cited_metric_ids": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "statutory_citations": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "investigator_id": { "type": "string" }
+  },
+  "additionalProperties": false
+}

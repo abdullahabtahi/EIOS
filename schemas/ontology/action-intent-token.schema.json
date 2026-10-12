@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ActionIntentToken",
+  "description": "Cryptographically signed, single-use, nonce-bound mutation intent emitted by the Governed Action Intent Hub (Constitution Principle II).",
+  "type": "object",
+  "properties": {
+    "intent_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique UUIDv4 identifying this action proposal."
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "FreezeAccount",
+        "HoldWithdrawal",
+        "ClawbackCommission",
+        "SuspendPartner",
+        "LaunchRetentionPlaybook",
+        "EscalateToMLRO",
+        "FileSARDraft"
+      ]
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Action type specific payload, validated against the Action Type schema."
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "description": "Array of entity IDs or trace evidence references justifying the action."
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "description": "HIGH severity requires four-eyes approval (2 distinct approvers)."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PENDING", "APPROVED", "REJECTED", "EXECUTED", "EXPIRED"],
+      "default": "PENDING"
+    },
+    "nonce": {
+      "type": "string",
+      "description": "Cryptographically secure 128-bit hex nonce preventing replay attacks."
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Expiration timestamp (standard 15 minutes after issuance)."
+    },
+    "requester_agent_id": {
+      "type": "string",
+      "description": "Identifier of the agent that proposed the action."
+    },
+    "kms_key_id": {
+      "type": "string",
+      "description": "Resource identifier of the Cloud KMS ECDSA P-256 key version used for signing."
+    },
+    "signature": {
+      "type": "string",
+      "description": "Base64-encoded ASN.1 DER ECDSA P-256 signature over the canonical JSON payload."
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "approver_id": {"type": "string"},
+          "approver_role": {"type": "string"},
+          "approved_at": {"type": "string", "format": "date-time"},
+          "comment": {"type": "string"}
+        },
+        "required": ["approver_id", "approver_role", "approved_at"]
+      }
+    }
+  },
+  "required": [
+    "intent_id",
+    "action_type",
+    "parameters",
+    "evidence_refs",
+    "severity",
+    "status",
+    "nonce",
+    "issued_at",
+    "expires_at",
+    "signature"
+  ]
+}

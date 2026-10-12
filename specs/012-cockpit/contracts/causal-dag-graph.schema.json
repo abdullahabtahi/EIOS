@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CausalDAGGraph",
+  "description": "Interactive causal network representation with DoWhy refuter test verification status.",
+  "type": "object",
+  "required": [
+    "dag_version",
+    "nodes",
+    "edges",
+    "as_of"
+  ],
+  "properties": {
+    "dag_version": {
+      "type": "string",
+      "description": "Version of the cached structural causal model, e.g. scm_v2.1"
+    },
+    "as_of": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Batch calculation timestamp"
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "node_id",
+          "label",
+          "domain",
+          "current_value",
+          "provenance"
+        ],
+        "properties": {
+          "node_id": { "type": "string" },
+          "label": { "type": "string" },
+          "domain": {
+            "type": "string",
+            "enum": ["Competitive", "Partner", "Client", "Financial"]
+          },
+          "current_value": { "type": "number" },
+          "provenance": { "$ref": "provenance-metadata.schema.json" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_node_id",
+          "target_node_id",
+          "weight",
+          "refuter"
+        ],
+        "properties": {
+          "source_node_id": { "type": "string" },
+          "target_node_id": { "type": "string" },
+          "weight": { "type": "number" },
+          "refuter": {
+            "type": "object",
+            "required": [
+              "is_causal_verified",
+              "confidence",
+              "placebo_effect",
+              "placebo_p_value",
+              "status_label"
+            ],
+            "properties": {
+              "is_causal_verified": { "type": "boolean" },
+              "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+              "placebo_effect": { "type": "number" },
+              "placebo_p_value": { "type": "number" },
+              "status_label": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,116 @@
+# Pull-request pipeline (F00 US1, FR-004, FR-005). One matrix entry per `pr`-stage gate in
+# config/gates.yaml, in the same order as `make check` (tools.gates.local); the parity test keeps
+# them equal. The job is named by the gate id, so every gate is its own required status check
+# (see docs/runbooks/branch-protection.md). fail-fast is off so every gate runs even when
+# another fails (run-all-then-fail). The `gate` job holds no cloud credentials. The `plan` job
+# (T093) shows the infrastructure change of each environment with a read-only federated identity;
+# it never changes anything and is skipped for pull requests from forks.
+name: pr
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: ${{ matrix.gate }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30 # [ASSUMPTION]
+    defaults:
+      run:
+        working-directory: EIOS
+    strategy:
+      fail-fast: false
+      matrix:
+        gate:
+          - lint
+          - types
+          - coverage
+          - contract
+          - eval_smoke
+          - red_line
+          - vuln_scan
+          - secret_scan
+          - iac_plan
+          - infra_policy
+          - open_decision_check
+          - label_check
+          - adr_check
+    env:
+      EIOS_REQUIRE_TFLINT: "1"
+    steps:
+      - uses: actions/checkout@v4 # [SPIKE] pin to commit SHA when CI first runs
+      - uses: astral-sh/setup-uv@v6 # [SPIKE] pin to commit SHA when CI first runs
+      - uses: hashicorp/setup-terraform@v3 # [SPIKE] pin to commit SHA when CI first runs
+      - uses: terraform-linters/setup-tflint@v4 # [SPIKE] pin to commit SHA when CI first runs
+      - name: install locked dependencies
+        run: uv sync --frozen
+      - name: run gate
+        run: uv run python -m tools.gates.run_gate ${{ matrix.gate }}
+      - name: upload reports and run records
+        if: always()
+        uses: actions/upload-artifact@v4 # [SPIKE] pin to commit SHA when CI first runs
+        with:
+          name: reports-${{ matrix.gate }}
+          path: EIOS/evals/reports/
+          if-no-files-found: ignore
+
+  frontend:
+    name: frontend-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: EIOS/web-prototype
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: EIOS/web-prototype/package-lock.json
+      - name: install dependencies
+        run: npm ci
+      - name: lint
+        run: npm run lint
+      - name: test
+        run: npm run test
+
+  plan:
+    name: plan-${{ matrix.environment }}
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 30 # [ASSUMPTION]
+    defaults:
+      run:
+        working-directory: EIOS
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        environment:
+          - dev
+          - stage
+          - prod-like
+    env:
+      EIOS_STATE_BUCKET: ${{ vars.EIOS_STATE_BUCKET }}
+    steps:
+      - uses: actions/checkout@v4 # [SPIKE] pin to commit SHA when CI first runs
+      - uses: hashicorp/setup-terraform@v3 # [SPIKE] pin to commit SHA when CI first runs
+      - name: authenticate with read-only federated identity
+        uses: google-github-actions/auth@v2 # [SPIKE] pin to commit SHA when CI first runs
+        with:
+          workload_identity_provider: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.EIOS_PLAN_SERVICE_ACCOUNT }}
+      - name: initialise
+        run: terraform -chdir=infra/envs/${{ matrix.environment }} init -input=false -backend-config="bucket=$EIOS_STATE_BUCKET"
+      - name: show the planned change
+        run: terraform -chdir=infra/envs/${{ matrix.environment }} plan -input=false -lock=false -no-color

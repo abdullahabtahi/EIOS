@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "KineticNetworkGraph",
+  "description": "Kinetic network graph with dynamic hub suppression and multi-hop entity relationships.",
+  "type": "object",
+  "required": [
+    "graph_id",
+    "seed_entity_id",
+    "nodes",
+    "edges",
+    "total_uncollapsed_entities"
+  ],
+  "properties": {
+    "graph_id": { "type": "string" },
+    "seed_entity_id": { "type": "string" },
+    "total_uncollapsed_entities": { "type": "integer" },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "node_id",
+          "node_type",
+          "label",
+          "degree",
+          "is_hub_suppressed",
+          "collapsed_node_count"
+        ],
+        "properties": {
+          "node_id": { "type": "string" },
+          "node_type": {
+            "type": "string",
+            "enum": [
+              "CLIENT_ACCOUNT",
+              "PARTNER_ACCOUNT",
+              "PAYMENT_AGENT",
+              "IP_ADDRESS",
+              "DEVICE_FINGERPRINT",
+              "COLLAPSED_CLUSTER_HUB"
+            ]
+          },
+          "label": { "type": "string" },
+          "degree": { "type": "integer" },
+          "is_hub_suppressed": { "type": "boolean" },
+          "collapsed_node_count": { "type": "integer" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "edges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "source_node_id",
+          "target_node_id",
+          "edge_type"
+        ],
+        "properties": {
+          "source_node_id": { "type": "string" },
+          "target_node_id": { "type": "string" },
+          "edge_type": { "type": "string" },
+          "transaction_volume_usd": { "type": ["number", "null"] },
+          "matched_timing_seconds": { "type": ["number", "null"] }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

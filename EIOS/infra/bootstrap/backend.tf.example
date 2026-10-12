@@ -1,0 +1,8 @@
+# Copy to backend.tf only after the first apply has created the state bucket, then run:
+#   terraform init -migrate-state -backend-config="bucket=<state_bucket_name output>"
+# The bucket name is deliberately not written here.
+terraform {
+  backend "gcs" {
+    prefix = "bootstrap"
+  }
+}

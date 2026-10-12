@@ -1,0 +1,252 @@
+# Open decisions (F00, tool `tools/open_decision_check`, gate `open_decision_check`).
+#
+# While a decision is open, no code, configuration or infrastructure may assume its outcome.
+# This file is the only place a decision is described; the tool names none.
+#
+# Structure of one entry under `decisions` (fixed: later features add entries, never fields):
+#   adr:           the ADR id, as written in the ADR index of docs/spikes_and_adrs.md
+#   rules:         list of {id, kind, ...parameters}; `id` is unique within the decision.
+#                  Rule kinds (registry: tools/open_decision_check/rules.py):
+#                    import_root         - `modules`: dotted Python import roots not to be imported
+#                    bound_value         - `patterns`: regular expressions that must not match a line
+#                    manifest_dependency - `names`: dependency names (`*` globs) that must not be
+#                                          declared in package.json, package-lock.json,
+#                                          pyproject.toml, requirements*.txt, uv.lock, poetry.lock,
+#                                          yarn.lock or pnpm-lock.yaml
+#                    file_pattern        - `patterns`: path globs; a matching file is the finding
+#                    route_definition    - `decorators` (and `registrations`): HTTP route
+#                                          registrations in Python files
+#                    spec_text           - `candidates`: names a sentence of prose must not state
+#                                          as settled (verbs and qualifiers: top-level `spec_text`)
+#                  Every rule may carry `include` / `exclude` path globs (`**` spans directories);
+#                  without `include` it reads the default `scan` scope. A finding carries the id `open_decision.<adr>.<rule id>`, a file and a line.
+#   allowed_paths: repo-relative paths (a file, or a directory with every file beneath it)
+#                  where the rules do not apply
+#   lifted_when:   {lifted, adr_status}. The rules stop applying only when `lifted` is true here
+#                  AND the ADR index shows `adr_status` (Accepted) for the ADR. A `lifted` flag
+#                  without that status is itself a finding and the rules stay enforced.
+#
+# Top-level `scan` chooses which files are read. The default scope (rules without their own
+# `include`) is `include` (file suffixes ".py" or exact names "Dockerfile") minus `exclude`
+# (repo-relative paths); prose trees are outside it, so only `spec_text` rules read them.
+# `exclude_all` paths are skipped by every rule. `prototype_paths` are skipped by every rule too
+# and are listed in the tool's output and report: the website prototype is not an input to any
+# decision (ADR-009), and no code or document in it counts as binding one. `FEIOS` names the
+# prototype when this repository is nested in the planning workspace.
+#
+# Top-level `spec_text` holds the verbs and qualifiers shared by every `spec_text` rule: a
+# sentence is flagged when it names a candidate and a decisive verb and carries no qualifier.
+#
+# Tags: every list below is [SPIKE] until the named spike closes with an ADR.
+
+scan:
+  include: [.py, .yaml, .yml, .json, .toml, .tf, .tfvars, .sh, Dockerfile]
+  exclude:
+    - docs
+  exclude_all:
+    - tests/fixtures
+  prototype_paths:
+    - FEIOS
+    - DESIGN.MD
+    - DESIGN_PLAN.md
+    - web-prototype
+
+spec_text:
+  include: ['specs/**/*.md', 'docs/**/*.md']
+  verbs:
+    - use
+    - uses
+    - used
+    - using
+    - choose
+    - chose
+    - chosen
+    - select
+    - selected
+    - adopt
+    - adopts
+    - adopted
+    - decided
+    - standardise on
+    - standardize on
+    - built on
+    - built with
+    - powered by
+    - runs on
+    - implemented with
+    - implemented in
+  qualifiers:
+    - candidate
+    - candidates
+    - option
+    - options
+    - open
+    - alternative
+    - alternatives
+    - versus
+    - vs
+    - whether
+    - if
+    - unless
+    - until
+    - pending
+    - undecided
+    - spike
+    - might
+    - may
+    - could
+    - lean
+
+decisions:
+  # Gateway abstraction and model selection. Closes with spike S-01. [SPIKE]
+  - adr: ADR-002
+    rules:
+      # Import roots of commercial LLM SDKs known when F00 was implemented. [SPIKE] Incomplete
+      # until S-01 closes. The ruff banned-API table in pyproject.toml must list the same
+      # modules (checked by tests/unit/tools/repo_checks/test_no_hardcoded_llm_literals.py).
+      - id: vendor_sdk_modules
+        kind: import_root
+        modules:
+          - ai21
+          - anthropic
+          - cohere
+          - google.cloud.aiplatform
+          - google.genai
+          - google.generativeai
+          - groq
+          - langchain_anthropic
+          - langchain_cohere
+          - langchain_google_genai
+          - langchain_google_vertexai
+          - langchain_mistralai
+          - langchain_openai
+          - mistralai
+          - openai
+          - vertexai
+      # Model-identifier shapes. Kept equal to the `llm-model-identifier-*` entries of
+      # config/forbidden_literals.yaml. [SPIKE]
+      - id: model_identifier_patterns
+        kind: bound_value
+        patterns:
+          - '(?i)\bgpt-[0-9]'
+          - '(?i)\bclaude-(?:[0-9]|opus|sonnet|haiku|instant)'
+          - '(?i)\bgemini-(?:[0-9]|pro|flash|ultra|nano)'
+          - '(?i)\b(?:llama|mixtral|mistral)-?[0-9]|\bcommand-r\b'
+          - '(?i)\btext-embedding-[0-9a-z]'
+          - '(?i)\bpublishers/[a-z0-9-]+/models/'
+          - '(?i)\bo[134]-(?:mini|preview|pro)\b'
+      # The one candidate the docs name (S-01: the v2 plan pinned it unverified). [SPIKE]
+      - id: model_stated_as_settled
+        kind: spec_text
+        candidates: [Gemini, google-genai]
+    allowed_paths:
+      - src/eios/llm_gateway/providers/
+      - config/
+    lifted_when:
+      lifted: false
+      adr_status: Accepted
+
+  # Metric engine. Closes with spike S-02 (Cube Core vs a lightweight registry over DuckDB).
+  # A "registry contract" is the invariant of the decision, not its outcome, so nothing here
+  # bans generic words. [SPIKE]
+  - adr: ADR-003
+    rules:
+      # Cube Core packages and clients. [SPIKE] Incomplete until S-02 closes.
+      - id: engine_manifest_dependencies
+        kind: manifest_dependency
+        names: ['@cubejs-backend/*', '@cubejs-client/*', 'cubejs', 'cubejs-*']
+      # Cube data-model files. [SPIKE] Incomplete until S-02 closes.
+      - id: engine_schema_files
+        kind: file_pattern
+        patterns: ['**/cube.js', '**/cube.py', '**/cubes/*.yml', '**/cubes/*.yaml']
+      # Cube client import roots. [SPIKE]
+      - id: engine_imports
+        kind: import_root
+        modules: [cubejs, cubejs_client]
+      - id: engine_stated_as_settled
+        kind: spec_text
+        candidates: ['Cube Core', 'lightweight metric registry']
+    allowed_paths: []
+    lifted_when:
+      lifted: false
+      adr_status: Accepted
+
+  # Frontend stack and design system. Closes with ADR-009 (S-03 checks the design-system package
+  # named in the v2 plan). FEIOS/web-prototype is excluded by `prototype_paths`. [SPIKE]
+  - adr: ADR-009
+    rules:
+      # Frontend frameworks and tooling, and design-system packages. [SPIKE] Incomplete until
+      # ADR-009 closes.
+      - id: frontend_manifest_dependencies
+        kind: manifest_dependency
+        names:
+          - react
+          - react-dom
+          - next
+          - vue
+          - nuxt
+          - svelte
+          - '@sveltejs/*'
+          - '@angular/*'
+          - vite
+          - '@quantumblack/*'
+          - quantumblack*
+          - tailwindcss
+          - '@chakra-ui/*'
+          - '@mui/*'
+          - '@mantine/*'
+      - id: frontend_config_files
+        kind: file_pattern
+        patterns:
+          - '**/next.config.*'
+          - '**/nuxt.config.*'
+          - '**/svelte.config.*'
+          - '**/vite.config.*'
+          - '**/angular.json'
+      - id: frontend_stated_as_settled
+        kind: spec_text
+        candidates: [React, Next.js, Vue, Svelte, Angular, Vite, QuantumBlack]
+    allowed_paths: []
+    lifted_when:
+      lifted: false
+      adr_status: Accepted
+
+  # API surface: GraphQL + SSE vs REST + SSE. Decided with ADR-009. The skeleton services keep
+  # only their health and forward routes. [SPIKE]
+  - adr: ADR-014
+    rules:
+      - id: graphql_schema_files
+        kind: file_pattern
+        patterns: ['**/*.graphql', '**/*.gql', '**/*.graphqls']
+      # GraphQL server and client packages. [SPIKE] Incomplete until ADR-014 closes.
+      - id: graphql_manifest_dependencies
+        kind: manifest_dependency
+        names:
+          - graphql
+          - graphql-*
+          - '@apollo/*'
+          - apollo-server*
+          - ariadne
+          - graphene
+          - graphene-*
+          - strawberry-graphql
+          - type-graphql
+          - '@nestjs/graphql'
+      - id: graphql_imports
+        kind: import_root
+        modules: [graphene, graphql, ariadne, strawberry]
+      # Route decorators and registrations of the Python API frameworks. Business-resource
+      # routes bind the API-style decision; the allowed paths hold the health and forward routes.
+      - id: business_resource_routes
+        kind: route_definition
+        decorators: [get, post, put, patch, delete, head, options, route, api_route, websocket]
+        registrations: [add_api_route, add_route, add_url_rule, APIRoute, Route]
+      - id: api_style_stated_as_settled
+        kind: spec_text
+        candidates: [GraphQL, REST]
+    allowed_paths:
+      - services/skeleton_edge/app.py
+      - services/skeleton_core/app.py
+    lifted_when:
+      lifted: false
+      adr_status: Accepted

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClientQualityProfileResponse",
+  "type": "object",
+  "required": [
+    "partner_id",
+    "total_referred_clients",
+    "fast_withdrawal_count_72h",
+    "micro_trade_only_count",
+    "median_holding_duration_hours",
+    "turnover_to_deposit_ratio",
+    "cpa_bounty_collected_usd",
+    "client_quality_index",
+    "abuse_probability",
+    "status"
+  ],
+  "properties": {
+    "partner_id": { "type": "string" },
+    "total_referred_clients": { "type": "integer", "minimum": 0 },
+    "fast_withdrawal_count_72h": { "type": "integer", "minimum": 0 },
+    "micro_trade_only_count": { "type": "integer", "minimum": 0 },
+    "median_holding_duration_hours": { "type": "number", "minimum": 0.0 },
+    "turnover_to_deposit_ratio": { "type": "number", "minimum": 0.0 },
+    "cpa_bounty_collected_usd": { "type": "number", "minimum": 0.0 },
+    "client_quality_index": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "abuse_probability": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "status": {
+      "type": "string",
+      "enum": ["NORMAL", "MONITORING", "HIGH_BONUS_ABUSE_RISK"]
+    }
+  },
+  "additionalProperties": false
+}

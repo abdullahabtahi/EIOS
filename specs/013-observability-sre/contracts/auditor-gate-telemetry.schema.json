@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AuditorGateTelemetry",
+  "description": "Telemetry verifying adherence to Constitution Principle I (zero hallucinated business metrics).",
+  "type": "object",
+  "required": [
+    "audit_id",
+    "trace_id",
+    "correlation_id",
+    "text_hash",
+    "total_claims_checked",
+    "verified_claims_count",
+    "unverified_claims_count",
+    "verdict",
+    "citation_references",
+    "evaluated_at"
+  ],
+  "properties": {
+    "audit_id": { "type": "string" },
+    "trace_id": { "type": "string" },
+    "correlation_id": { "type": "string" },
+    "text_hash": { "type": "string" },
+    "total_claims_checked": { "type": "integer", "minimum": 0 },
+    "verified_claims_count": { "type": "integer", "minimum": 0 },
+    "unverified_claims_count": { "type": "integer", "minimum": 0 },
+    "verdict": {
+      "type": "string",
+      "enum": ["PASSED", "MASKED", "REJECTED"]
+    },
+    "citation_references": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "evaluated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

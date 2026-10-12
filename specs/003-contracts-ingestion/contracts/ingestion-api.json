@@ -1,0 +1,137 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Deriv EIOS Layer 1 Contract Gateway & Ingestion API",
+    "version": "1.0.0",
+    "description": "High-throughput streaming ingestion router, health probes, and Data Quality monitoring endpoints."
+  },
+  "paths": {
+    "/v1/events/ingest": {
+      "post": {
+        "summary": "Ingest single event or micro-batch",
+        "description": "Accepts operational events across 14 Layer 1 data products, evaluates Pydantic contracts, routes breaches to DLQ, and buffers valid records into in-memory DuckDB hot state.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  { "$ref": "#/components/schemas/DataProductEvent" },
+                  {
+                    "type": "array",
+                    "items": { "$ref": "#/components/schemas/DataProductEvent" }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted for ingestion processing",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["status", "accepted_count", "rejected_count", "receipt_id"],
+                  "properties": {
+                    "status": { "type": "string", "enum": ["ACCEPTED", "PARTIAL_BREACH", "REJECTED"] },
+                    "accepted_count": { "type": "integer" },
+                    "rejected_count": { "type": "integer" },
+                    "receipt_id": { "type": "string" },
+                    "breach_summary": {
+                      "type": "array",
+                      "items": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Malformed JSON envelope" },
+          "429": { "description": "Rate limited / backpressure applied" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/v1/dq/status": {
+      "get": {
+        "summary": "Data Quality & Freshness SLA status",
+        "description": "Returns real-time data freshness, breach counters, null rates, and operational degradation status across all 14 Layer 1 data products.",
+        "responses": {
+          "200": {
+            "description": "Current platform Data Quality status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["overall_status", "as_of_ts", "products"],
+                  "properties": {
+                    "overall_status": { "type": "string", "enum": ["HEALTHY", "DEGRADED", "CRITICAL"] },
+                    "as_of_ts": { "type": "string", "format": "date-time" },
+                    "products": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "$ref": "#/components/schemas/DataQualityReport"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "summary": "Container readiness probe",
+        "description": "Asserts whether DuckDB hot-state warm-start rehydration is complete and all 14 data product contracts are compiled and loaded.",
+        "responses": {
+          "200": { "description": "Container ready to serve traffic" },
+          "503": { "description": "Rehydration in progress or contract loading failed" }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "summary": "Container liveness probe",
+        "description": "Confirms the HTTP server event loop and Pub/Sub background workers are responsive.",
+        "responses": {
+          "200": { "description": "Container live" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DataProductEvent": {
+        "type": "object",
+        "required": ["event_id", "product_name", "schema_version", "event_timestamp", "tenant_id", "payload"],
+        "properties": {
+          "event_id": { "type": "string" },
+          "product_name": { "type": "string" },
+          "schema_version": { "type": "string" },
+          "event_timestamp": { "type": "string", "format": "date-time" },
+          "tenant_id": { "type": "string" },
+          "payload": { "type": "object" },
+          "source_metadata": { "type": "object" }
+        }
+      },
+      "DataQualityReport": {
+        "type": "object",
+        "required": ["status", "freshness_lag_seconds", "freshness_sla_seconds", "breach_count_1h", "breach_rate_1h"],
+        "properties": {
+          "status": { "type": "string", "enum": ["HEALTHY", "DEGRADED", "CRITICAL"] },
+          "freshness_lag_seconds": { "type": "number" },
+          "freshness_sla_seconds": { "type": "number" },
+          "breach_count_1h": { "type": "integer" },
+          "breach_rate_1h": { "type": "number" },
+          "null_rate_map": { "type": "object", "additionalProperties": { "type": "number" } },
+          "last_rehydration_ts": { "type": "string", "format": "date-time" },
+          "rehydration_duration_ms": { "type": "number" }
+        }
+      }
+    }
+  }
+}

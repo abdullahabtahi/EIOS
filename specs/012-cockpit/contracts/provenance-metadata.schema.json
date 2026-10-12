@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ProvenanceMetadata",
+  "description": "Deterministic provenance record bound to every scalar metric rendered across cards and dossiers.",
+  "type": "object",
+  "required": [
+    "metric_id",
+    "definition_version",
+    "as_of_timestamp",
+    "computation_source",
+    "owner_role",
+    "is_replayed"
+  ],
+  "properties": {
+    "metric_id": {
+      "type": "string",
+      "description": "Canonical metric identifier, e.g. net_revenue_usd"
+    },
+    "definition_version": {
+      "type": "string",
+      "description": "Semantic layer definition version, e.g. v1.4.0"
+    },
+    "as_of_timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Exact timestamp of source data freshness"
+    },
+    "computation_source": {
+      "type": "string",
+      "description": "Origin engine, e.g. SemanticRegistry.DuckDB"
+    },
+    "owner_role": {
+      "type": "string",
+      "description": "Governing persona steward, e.g. Finance Lead"
+    },
+    "formula_summary": {
+      "type": ["string", "null"],
+      "description": "Human-readable formula summary"
+    },
+    "is_replayed": {
+      "type": "boolean",
+      "description": "True if value was loaded from fallback cache during outage"
+    }
+  },
+  "additionalProperties": false
+}

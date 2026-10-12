@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "EntityInvestigationDossier",
+  "description": "Unified 1-screen AML investigation record linking KYC declarations, discrepancies, and syndicate linkages.",
+  "type": "object",
+  "required": [
+    "case_id",
+    "entity_id",
+    "identity_cluster_key",
+    "composite_risk_score",
+    "kyc",
+    "discrepancy",
+    "syndicate_ring_size",
+    "dowhy_refuter_confirmed",
+    "is_withdrawal_held"
+  ],
+  "properties": {
+    "case_id": { "type": "string" },
+    "entity_id": { "type": "string" },
+    "identity_cluster_key": {
+      "type": "string",
+      "pattern": "^tok_id_cluster_[0-9a-f]{16}$"
+    },
+    "composite_risk_score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "kyc": {
+      "type": "object",
+      "required": [
+        "declared_monthly_income_usd",
+        "employment_status",
+        "country_of_residence",
+        "kyc_approval_timestamp"
+      ],
+      "properties": {
+        "declared_monthly_income_usd": { "type": "number" },
+        "employment_status": { "type": "string" },
+        "country_of_residence": { "type": "string", "minLength": 2, "maxLength": 2 },
+        "kyc_approval_timestamp": { "type": "string", "format": "date-time" }
+      },
+      "additionalProperties": false
+    },
+    "discrepancy": {
+      "type": "object",
+      "required": [
+        "realized_deposit_volume_30d_usd",
+        "discrepancy_multiplier",
+        "crypto_usdt_deposit_ratio",
+        "provenance"
+      ],
+      "properties": {
+        "realized_deposit_volume_30d_usd": { "type": "number" },
+        "discrepancy_multiplier": { "type": "number" },
+        "crypto_usdt_deposit_ratio": { "type": "number", "minimum": 0, "maximum": 1 },
+        "provenance": { "$ref": "provenance-metadata.schema.json" }
+      },
+      "additionalProperties": false
+    },
+    "syndicate_ring_size": { "type": "integer", "minimum": 1 },
+    "dowhy_refuter_confirmed": { "type": "boolean" },
+    "is_withdrawal_held": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

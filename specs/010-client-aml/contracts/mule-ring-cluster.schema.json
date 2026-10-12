@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MuleRingClusterResponse",
+  "type": "object",
+  "required": [
+    "cluster_id",
+    "member_client_ids",
+    "shared_payment_tokens",
+    "shared_device_tokens",
+    "shared_ip_tokens",
+    "suppressed_hub_tokens",
+    "cluster_size",
+    "total_volume_usd",
+    "is_syndicate",
+    "plain_language_explanation"
+  ],
+  "properties": {
+    "cluster_id": { "type": "string" },
+    "member_client_ids": { "type": "array", "items": { "type": "string" } },
+    "shared_payment_tokens": { "type": "array", "items": { "type": "string" } },
+    "shared_device_tokens": { "type": "array", "items": { "type": "string" } },
+    "shared_ip_tokens": { "type": "array", "items": { "type": "string" } },
+    "suppressed_hub_tokens": { "type": "array", "items": { "type": "string" } },
+    "cluster_size": { "type": "integer", "minimum": 1 },
+    "total_volume_usd": { "type": "number", "minimum": 0.0 },
+    "is_syndicate": { "type": "boolean" },
+    "plain_language_explanation": { "type": "string" }
+  },
+  "additionalProperties": false
+}

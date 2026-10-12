@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RoundTripStructuringAlertsResponse",
+  "type": "object",
+  "required": [
+    "alerts",
+    "total_detected",
+    "window_hours",
+    "evaluated_at"
+  ],
+  "properties": {
+    "alerts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "event_id",
+          "client_id",
+          "deposit_amount_usd",
+          "withdrawal_amount_usd",
+          "trade_count",
+          "net_pl_usd",
+          "market_risk_pct",
+          "holding_duration_seconds",
+          "hours_since_kyc",
+          "typology_risk_score"
+        ],
+        "properties": {
+          "event_id": { "type": "string" },
+          "client_id": { "type": "string" },
+          "deposit_txn_id": { "type": "string" },
+          "withdrawal_txn_id": { "type": "string" },
+          "deposit_amount_usd": { "type": "number", "minimum": 0.0 },
+          "withdrawal_amount_usd": { "type": "number", "minimum": 0.0 },
+          "trade_count": { "type": "integer", "minimum": 0 },
+          "net_pl_usd": { "type": "number" },
+          "market_risk_pct": { "type": "number", "minimum": 0.0 },
+          "holding_duration_seconds": { "type": "number", "minimum": 0.0 },
+          "hours_since_kyc": { "type": "number", "minimum": 0.0 },
+          "typology_risk_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+        }
+      }
+    },
+    "total_detected": { "type": "integer", "minimum": 0 },
+    "window_hours": { "type": "number", "minimum": 0.0 },
+    "evaluated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

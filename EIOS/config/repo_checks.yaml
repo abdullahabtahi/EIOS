@@ -1,0 +1,16 @@
+# Repo-hygiene checks run by `python -m tools.repo_checks` (the `lint` gate's third command).
+# A missing file means every check enabled with the defaults below.
+checks:
+  file_size: true
+  forbidden_literals: true
+  frozen_models: true
+  pinned_deps: true
+
+file_size:
+  ceiling: 800 # [TARGET] maximum lines per source file
+
+# Repo-relative paths (a file or a directory) skipped by every check. These mirror ruff's
+# `extend-exclude`: the website prototype is a separate toolchain.
+exclude:
+  - .github
+  - web-prototype

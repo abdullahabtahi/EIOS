@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eios.internal/schemas/v1/eval-ground-truth.json",
+  "title": "EvalGroundTruthManifest",
+  "description": "Schema for ground-truth files deposited in the isolated Eval-Only GCS Bucket.",
+  "type": "object",
+  "properties": {
+    "manifest_id_ref": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "seed_tier": {
+      "type": "string",
+      "enum": ["dev", "validation", "sealed"]
+    },
+    "module_a": {
+      "type": "object",
+      "required": ["syndicates", "round_trip_tx_ids", "benign_hub_ips"],
+      "properties": {
+        "syndicates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["syndicate_id", "member_count", "client_ids", "shared_devices", "shared_ips"],
+            "properties": {
+              "syndicate_id": { "type": "string" },
+              "member_count": { "type": "integer" },
+              "client_ids": { "type": "array", "items": { "type": "string" } },
+              "shared_devices": { "type": "array", "items": { "type": "string" } },
+              "shared_ips": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "round_trip_tx_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "benign_hub_ips": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "module_b": {
+      "type": "object",
+      "required": ["partner_rings", "mirror_trading_pairs", "traffic_fraud_partner_ids", "hard_negatives"],
+      "properties": {
+        "partner_rings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["ring_id", "master_partners", "sub_affiliates", "recycled_clients"],
+            "properties": {
+              "ring_id": { "type": "string" },
+              "master_partners": { "type": "array", "items": { "type": "string" } },
+              "sub_affiliates": { "type": "array", "items": { "type": "string" } },
+              "recycled_clients": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "mirror_trading_pairs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["client_a", "client_b", "symbol", "timing_correlation"],
+            "properties": {
+              "client_a": { "type": "string" },
+              "client_b": { "type": "string" },
+              "symbol": { "type": "string" },
+              "timing_correlation": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+            }
+          }
+        },
+        "traffic_fraud_partner_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "hard_negatives": {
+          "type": "object",
+          "required": ["legitimate_hedgers", "ib_portfolios", "high_volume_referrers"],
+          "properties": {
+            "legitimate_hedgers": { "type": "array", "items": { "type": "string" } },
+            "ib_portfolios": { "type": "array", "items": { "type": "string" } },
+            "high_volume_referrers": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "module_c": {
+      "type": "object",
+      "required": ["seasonal_dip_partner_ids", "cohort_events"],
+      "properties": {
+        "seasonal_dip_partner_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "cohort_events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["cohort_id", "region", "partner_ids", "trigger_date"],
+            "properties": {
+              "cohort_id": { "type": "string" },
+              "region": { "type": "string" },
+              "partner_ids": { "type": "array", "items": { "type": "string" } },
+              "trigger_date": { "type": "string", "format": "date" }
+            }
+          }
+        }
+      }
+    },
+    "synthesis": {
+      "type": "object",
+      "required": ["causal_dag", "forecast_driver_split"],
+      "properties": {
+        "causal_dag": {
+          "type": "object",
+          "required": ["edges"],
+          "properties": {
+            "edges": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["from_node", "to_node", "true_effect", "is_placebo"],
+                "properties": {
+                  "from_node": { "type": "string" },
+                  "to_node": { "type": "string" },
+                  "true_effect": { "type": "number" },
+                  "is_placebo": { "type": "boolean" },
+                  "refuter_p_value_expected": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "forecast_driver_split": {
+          "type": "object",
+          "required": ["miss_id", "drivers", "sum_percentage"],
+          "properties": {
+            "miss_id": { "type": "string" },
+            "drivers": {
+              "type": "object",
+              "additionalProperties": { "type": "number" }
+            },
+            "sum_percentage": {
+              "type": "number",
+              "const": 100.0
+            }
+          }
+        }
+      }
+    }
+  },
+  "required": ["manifest_id_ref", "seed_tier", "module_a", "module_b", "module_c", "synthesis"],
+  "additionalProperties": false
+}

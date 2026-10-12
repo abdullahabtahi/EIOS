@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ErrorBudgetStatus",
+  "description": "Computed rolling 28-day error budget state, burn rates, and release freeze status.",
+  "type": "object",
+  "required": [
+    "sli_name",
+    "window_days",
+    "total_events",
+    "compliant_events",
+    "failed_events",
+    "compliance_percentage",
+    "target_percentage",
+    "budget_remaining_pct",
+    "burn_rate_1h",
+    "burn_rate_6h",
+    "burn_rate_24h",
+    "status",
+    "is_frozen"
+  ],
+  "properties": {
+    "sli_name": { "type": "string" },
+    "window_days": { "type": "integer", "minimum": 1 },
+    "total_events": { "type": "integer", "minimum": 0 },
+    "compliant_events": { "type": "integer", "minimum": 0 },
+    "failed_events": { "type": "integer", "minimum": 0 },
+    "compliance_percentage": { "type": "number", "minimum": 0, "maximum": 100 },
+    "target_percentage": { "type": "number", "minimum": 0, "maximum": 100 },
+    "budget_remaining_pct": { "type": "number" },
+    "burn_rate_1h": { "type": "number", "minimum": 0 },
+    "burn_rate_6h": { "type": "number", "minimum": 0 },
+    "burn_rate_24h": { "type": "number", "minimum": 0 },
+    "status": {
+      "type": "string",
+      "enum": ["HEALTHY", "WARNING", "FEATURE_FREEZE"]
+    },
+    "is_frozen": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CohortAlertsResponse",
+  "description": "OMCP response payload for get_high_risk_cohorts tool",
+  "type": "object",
+  "properties": {
+    "cohorts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "cohort_id": {
+            "type": "string"
+          },
+          "region_id": {
+            "type": "string"
+          },
+          "partner_count": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "affected_partner_ids": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "aggregate_value_at_risk_usd": {
+            "type": "number",
+            "minimum": 0.0
+          },
+          "p_value": {
+            "type": "number",
+            "minimum": 0.0,
+            "maximum": 1.0
+          },
+          "common_driver": {
+            "type": "string"
+          },
+          "recommended_playbook": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "cohort_id",
+          "region_id",
+          "partner_count",
+          "affected_partner_ids",
+          "aggregate_value_at_risk_usd",
+          "p_value",
+          "common_driver",
+          "recommended_playbook"
+        ]
+      }
+    }
+  },
+  "required": ["cohorts"]
+}

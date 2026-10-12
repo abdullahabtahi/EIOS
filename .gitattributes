@@ -1,0 +1,17 @@
+# Enforce LF line endings across all platforms (macOS, Linux, Windows)
+* text=auto eol=lf
+
+# Explicit binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.pdf binary
+*.duckdb binary
+*.parquet binary
+*.pyc binary

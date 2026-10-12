@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PlaybookPolicyPrior",
+  "description": "Calibrated decision policy prior parameters governing frontline action recommendations.",
+  "type": "object",
+  "required": [
+    "policy_id",
+    "action_type",
+    "empirical_win_rate",
+    "expected_payoff_usd",
+    "confidence_score",
+    "sample_observations",
+    "last_recalibrated_at"
+  ],
+  "properties": {
+    "policy_id": { "type": "string" },
+    "action_type": { "type": "string" },
+    "empirical_win_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "expected_payoff_usd": { "type": "number" },
+    "confidence_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "sample_observations": { "type": "integer", "minimum": 0 },
+    "last_recalibrated_at": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

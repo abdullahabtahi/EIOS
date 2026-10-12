@@ -1,0 +1,18 @@
+scenario_id: assumption_challenge
+domain: ExecutiveSynthesis
+description: Stress-testing synthesis conclusions by challenging assumptions.
+turns:
+  - turn_index: 1
+    user_query: What if the competitor reverses their spread reduction next month? How does that alter the forecast?
+    expected_route: Synthesis
+    expected_tool_calls:
+      - tool_name: simulate_counterfactual_shock
+        order_index: 0
+    forbidden_tool_calls:
+      - execute_action
+    expected_citations:
+      - definition_version
+    refusal_required: false
+    expected_substrings:
+      - counterfactual
+      - sensitivity

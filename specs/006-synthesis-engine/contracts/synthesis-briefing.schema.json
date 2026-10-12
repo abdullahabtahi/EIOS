@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SynthesisMorningBriefing",
+  "type": "object",
+  "required": [
+    "briefing_id",
+    "briefing_date",
+    "generated_at",
+    "insights",
+    "risks",
+    "opportunities",
+    "is_cached_replay"
+  ],
+  "properties": {
+    "briefing_id": {
+      "type": "string",
+      "pattern": "^BRIEF-[0-9]{4}-[0-9]{2}-[0-9]{2}"
+    },
+    "briefing_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "insights": {
+      "type": "array",
+      "minItems": 3,
+      "items": { "$ref": "#/$defs/briefingItem" }
+    },
+    "risks": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/briefingItem" }
+    },
+    "opportunities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/briefingItem" }
+    },
+    "is_cached_replay": {
+      "type": "boolean"
+    },
+    "provenance_tag": {
+      "type": "string",
+      "enum": ["[BRIEF]", "[ASSUMPTION]", "[ILLUSTRATIVE]", "[TARGET]", "[SPIKE]"]
+    }
+  },
+  "$defs": {
+    "briefingItem": {
+      "type": "object",
+      "required": [
+        "item_id",
+        "category",
+        "title",
+        "summary",
+        "severity_or_impact",
+        "metric_citations",
+        "follow_up_prompt"
+      ],
+      "properties": {
+        "item_id": { "type": "string" },
+        "category": { "type": "string", "enum": ["INSIGHT", "RISK", "OPPORTUNITY"] },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "severity_or_impact": { "type": "string", "enum": ["HIGH", "MEDIUM", "LOW"] },
+        "metric_citations": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "follow_up_prompt": { "type": "string" }
+      }
+    }
+  }
+}

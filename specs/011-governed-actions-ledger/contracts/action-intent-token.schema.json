@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ActionIntentToken",
+  "description": "Governed Action Intent Token proposal with Cloud KMS ECDSA P-256 signature and Four-Eyes state.",
+  "type": "object",
+  "required": [
+    "intent_id",
+    "action_type",
+    "parameters",
+    "evidence_refs",
+    "severity",
+    "status",
+    "nonce",
+    "issued_at",
+    "expires_at",
+    "requester_agent_id",
+    "kms_key_id",
+    "signature",
+    "requires_dual_approval"
+  ],
+  "properties": {
+    "intent_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique UUID identifying the action intent proposal"
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "FreezeAccount",
+        "HoldWithdrawal",
+        "ClawbackCommission",
+        "SuspendPartner",
+        "LaunchRetentionPlaybook",
+        "EscalateToMLRO",
+        "FileSARDraft",
+        "AdjustPartnerTier",
+        "ReviewSpreadPricing",
+        "LaunchRetentionCampaign"
+      ],
+      "description": "Canonical action type"
+    },
+    "parameters": {
+      "type": "object",
+      "description": "Validated parameters matching canonical action specification"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Evidentiary citations proving the necessity of the proposed action"
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH"],
+      "description": "Risk severity classification"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["PENDING", "APPROVED", "REJECTED", "EXECUTED", "ABORTED", "EXPIRED"],
+      "description": "Current lifecycle state of the token"
+    },
+    "nonce": {
+      "type": "string",
+      "minLength": 16,
+      "description": "Single-use cryptographic nonce preventing replay attacks"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp when the token was created"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC timestamp after which the token is invalid (15 min lifespan)"
+    },
+    "requester_agent_id": {
+      "type": "string",
+      "description": "Identifier of the agent or service proposing the mutation"
+    },
+    "kms_key_id": {
+      "type": "string",
+      "description": "Cloud KMS asymmetric key ID used for signing"
+    },
+    "signature": {
+      "type": "string",
+      "description": "Base64 ASN.1 DER ECDSA P-256 signature over canonical RFC 8785 JSON"
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["approver_id", "approver_role", "approved_at"],
+        "properties": {
+          "approver_id": { "type": "string" },
+          "approver_role": { "type": "string" },
+          "approved_at": { "type": "string", "format": "date-time" },
+          "comment": { "type": "string" },
+          "override_applied": { "type": "boolean" },
+          "override_reason": { "type": ["string", "null"] }
+        }
+      },
+      "description": "Recorded human approver signatures"
+    },
+    "propensity_score": {
+      "type": ["number", "null"],
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Proposing agent propensity score e(X)"
+    },
+    "causal_context": {
+      "type": "object",
+      "description": "Covariate vector at proposal time for AIPW debiasing"
+    },
+    "requires_dual_approval": {
+      "type": "boolean",
+      "description": "True if Four-Eyes dual approval is legally mandatory"
+    },
+    "policy_tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Governance policy tags (e.g. DUAL_APPROVAL_MANDATORY, FAST_PATH_ELIGIBLE)"
+    },
+    "ledger_seq": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Assigned monotonic integer sequence number in atomic ledger"
+    },
+    "execution_receipt_id": {
+      "type": ["string", "null"],
+      "description": "Linked execution receipt ID upon commit"
+    }
+  }
+}

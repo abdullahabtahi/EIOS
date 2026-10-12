@@ -1,0 +1,86 @@
+"""Google GenAI unified client implementation under LLM Gateway providers (ADR-002 compliant)."""
+
+from __future__ import annotations
+
+import logging
+import os
+from typing import Any, Dict, Optional
+from google import genai
+from google.genai import types
+
+_LOG = logging.getLogger("eios.llm_gateway.providers.gemini_client")
+
+DEFAULT_PROJECT = "spatial-cat-489006-a4"
+DEFAULT_LOCATION = "us-central1"
+DEFAULT_MODEL = "gemini-3.8-flash"
+FALLBACK_MODEL = "gemini-3.7-flash"
+
+
+class GeminiClientManager:
+    """Manages Vertex AI client connections, model fallbacks, and context caching."""
+
+    def __init__(
+        self,
+        project: Optional[str] = None,
+        location: Optional[str] = None,
+        model_id: Optional[str] = None,
+        offline_mode: bool = False,
+    ) -> None:
+        self.project = project or os.getenv("GOOGLE_CLOUD_PROJECT", DEFAULT_PROJECT)
+        self.location = location or os.getenv("GOOGLE_CLOUD_LOCATION", DEFAULT_LOCATION)
+        self.model_id = model_id or os.getenv("EIOS_GEMINI_MODEL", DEFAULT_MODEL)
+        self.fallback_model_id = FALLBACK_MODEL
+        self.offline_mode = offline_mode or (os.getenv("EIOS_OFFLINE_REPLAY", "0") == "1")
+        self._client: Optional[genai.Client] = None
+        self._active_cache_name: Optional[str] = None
+
+    def get_client(self) -> Optional[genai.Client]:
+        """Initializes and returns the unified google.genai client."""
+        if self.offline_mode:
+            return None
+
+        if self._client is None:
+            try:
+                self._client = genai.Client(
+                    vertexai=True,
+                    project=self.project,
+                    location=self.location,
+                )
+                _LOG.info("Initialized client for project=%s in location=%s", self.project, self.location)
+            except Exception as e:
+                _LOG.warning("Failed to initialize client, falling back to offline replay: %s", e)
+                self.offline_mode = True
+                return None
+
+        return self._client
+
+    def ensure_context_cache(self, system_instruction: str, ontology_schema_text: str) -> Optional[str]:
+        """Creates or returns a cached context bundle on the backend provider."""
+        if self.offline_mode or not self.get_client():
+            return None
+
+        if self._active_cache_name:
+            return self._active_cache_name
+
+        try:
+            client = self.get_client()
+            if client is None:
+                return None
+
+            cache = client.caches.create(
+                model=self.model_id,
+                config=types.CreateCachedContentConfig(
+                    contents=[
+                        f"SYSTEM INSTRUCTIONS:\n{system_instruction}\n\n"
+                        f"ONTOLOGY & SEMANTIC REGISTRY SCHEMAS:\n{ontology_schema_text}"
+                    ],
+                    ttl="7200s",
+                    display_name="feios_sovereign_context_cache",
+                ),
+            )
+            self._active_cache_name = cache.name
+            _LOG.info("Successfully established context cache: %s", self._active_cache_name)
+            return self._active_cache_name
+        except Exception as e:
+            _LOG.warning("Context caching initialization encountered an error (continuing without cache): %s", e)
+            return None

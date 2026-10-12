@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChurnRadarScatter",
+  "description": "Dataset powering partner retention analysis and optimal intervention windows.",
+  "type": "object",
+  "required": [
+    "as_of",
+    "partners"
+  ],
+  "properties": {
+    "as_of": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "partners": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "partner_id",
+          "realized_volume_30d_usd",
+          "churn_hazard_probability",
+          "quadrant",
+          "days_to_intervention_deadline",
+          "primary_root_cause",
+          "login_decay_pct",
+          "ftd_decay_pct",
+          "provenance"
+        ],
+        "properties": {
+          "partner_id": { "type": "string" },
+          "realized_volume_30d_usd": { "type": "number" },
+          "churn_hazard_probability": { "type": "number", "minimum": 0, "maximum": 1 },
+          "quadrant": {
+            "type": "string",
+            "enum": [
+              "HIGH_VALUE_HIGH_RISK",
+              "HIGH_VALUE_STABLE",
+              "LOW_VALUE_HIGH_RISK",
+              "LOW_VALUE_STABLE"
+            ]
+          },
+          "days_to_intervention_deadline": { "type": "integer" },
+          "primary_root_cause": { "type": "string" },
+          "login_decay_pct": { "type": "number" },
+          "ftd_decay_pct": { "type": "number" },
+          "provenance": { "$ref": "provenance-metadata.schema.json" }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

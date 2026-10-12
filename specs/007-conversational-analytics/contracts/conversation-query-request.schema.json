@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ConversationQueryRequest",
+  "description": "Schema for incoming natural language queries to the Layer 3 Conversational Analytics engine.",
+  "type": "object",
+  "properties": {
+    "session_id": {
+      "type": ["string", "null"],
+      "description": "Optional conversation session ID. If omitted, a new session is initialized."
+    },
+    "user_query": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The user's natural language input string."
+    },
+    "user_role": {
+      "type": "string",
+      "enum": ["Executive", "Investigator", "PartnerManager", "ComplianceOfficer", "PublicAgent"],
+      "default": "Executive",
+      "description": "Authenticated user security role for markings and RBAC enforcement."
+    },
+    "context_filters": {
+      "type": "object",
+      "description": "Optional domain or temporal filter constraints.",
+      "additionalProperties": true
+    }
+  },
+  "required": ["user_query"],
+  "additionalProperties": false
+}

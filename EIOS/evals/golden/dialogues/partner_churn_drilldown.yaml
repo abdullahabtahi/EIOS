@@ -1,0 +1,30 @@
+scenario_id: partner_churn_drilldown
+domain: PartnerChurnRadar
+description: Drilldown into high-value affiliate partner disengagement risks and intervention.
+turns:
+  - turn_index: 1
+    user_query: Which tier-1 affiliate partners show significant disengagement risk in the last 14 days?
+    expected_route: ChurnRadar
+    expected_tool_calls:
+      - tool_name: list_at_risk_partners
+        order_index: 0
+    forbidden_tool_calls:
+      - direct_db_mutate
+    expected_citations:
+      - P-
+    refusal_required: false
+    expected_substrings:
+      - risk score
+  - turn_index: 2
+    user_query: What is the recommended retention playbook for partner P-102?
+    expected_route: ChurnRadar
+    expected_tool_calls:
+      - tool_name: get_retention_playbook
+        order_index: 0
+    forbidden_tool_calls:
+      - execute_action
+    expected_citations:
+      - P-102
+    refusal_required: false
+    expected_substrings:
+      - playbook

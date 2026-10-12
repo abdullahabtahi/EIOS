@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReferralRingAttributionResponse",
+  "type": "object",
+  "required": [
+    "ring_id",
+    "master_partner_id",
+    "total_affiliated_partners",
+    "total_referred_clients",
+    "hierarchy_depth",
+    "total_ring_commission_usd",
+    "flagged_abuse_commission_usd",
+    "ring_risk_score",
+    "top_violating_sub_partners",
+    "nodes"
+  ],
+  "properties": {
+    "ring_id": { "type": "string" },
+    "master_partner_id": { "type": "string" },
+    "total_affiliated_partners": { "type": "integer", "minimum": 1 },
+    "total_referred_clients": { "type": "integer", "minimum": 0 },
+    "hierarchy_depth": { "type": "integer", "minimum": 1, "maximum": 3 },
+    "total_ring_commission_usd": { "type": "number", "minimum": 0.0 },
+    "flagged_abuse_commission_usd": { "type": "number", "minimum": 0.0 },
+    "ring_risk_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+    "top_violating_sub_partners": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "partner_id",
+          "tier_level",
+          "direct_referred_clients",
+          "direct_commission_usd",
+          "sub_affiliate_count",
+          "is_root_master"
+        ],
+        "properties": {
+          "partner_id": { "type": "string" },
+          "parent_partner_id": { "type": ["string", "null"] },
+          "tier_level": { "type": "integer", "minimum": 1, "maximum": 3 },
+          "direct_referred_clients": { "type": "integer", "minimum": 0 },
+          "direct_commission_usd": { "type": "number", "minimum": 0.0 },
+          "sub_affiliate_count": { "type": "integer", "minimum": 0 },
+          "is_root_master": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

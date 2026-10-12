@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SecurityThreatDrillResult",
+  "description": "Verification report for a STRIDE threat model security evaluation and red-line defense drill.",
+  "type": "object",
+  "required": [
+    "drill_id",
+    "stride_category",
+    "attack_vector",
+    "target_component",
+    "bypass_attempted",
+    "attack_blocked",
+    "mitigation_verified",
+    "audit_event_logged",
+    "timestamp"
+  ],
+  "properties": {
+    "drill_id": { "type": "string" },
+    "stride_category": {
+      "type": "string",
+      "enum": [
+        "SPOOFING",
+        "TAMPERING",
+        "REPUDIATION",
+        "INFORMATION_DISCLOSURE",
+        "DENIAL_OF_SERVICE",
+        "ELEVATION_OF_PRIVILEGE"
+      ]
+    },
+    "attack_vector": { "type": "string" },
+    "target_component": { "type": "string" },
+    "bypass_attempted": { "type": "boolean" },
+    "attack_blocked": { "type": "boolean" },
+    "mitigation_verified": { "type": "string" },
+    "audit_event_logged": { "type": "boolean" },
+    "timestamp": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

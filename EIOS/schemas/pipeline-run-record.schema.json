@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eios/pipeline-run-record.schema.json",
+  "title": "Pipeline Run Record",
+  "description": "Structured evidence for one pipeline run. Approver identity comes only from verified identity claims, never from request bodies.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["run_id", "commit_ref", "workflow", "state", "gate_results", "correlation_id", "started_at"],
+  "properties": {
+    "run_id": { "type": "string", "minLength": 1 },
+    "commit_ref": { "type": "string", "minLength": 1, "description": "Revision id, or a content hash when no git repository exists." },
+    "workflow": { "enum": ["pr", "promote-stage", "promote-prod-like", "release-candidate"] },
+    "state": { "enum": ["started", "gates_running", "passed", "failed", "promoted"] },
+    "gate_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["gate_id", "outcome"],
+        "properties": {
+          "gate_id": { "type": "string", "minLength": 1 },
+          "outcome": { "enum": ["pass", "fail", "skipped_with_reason"] },
+          "reason": { "type": "string", "minLength": 1 },
+          "report_ref": { "type": "string" }
+        },
+        "if": { "properties": { "outcome": { "const": "skipped_with_reason" } }, "required": ["outcome"] },
+        "then": { "required": ["reason"] }
+      }
+    },
+    "artefact_digests": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "sbom_ref": { "type": "string" },
+    "approver": { "type": "string", "minLength": 1 },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "started_at": { "type": "string", "format": "date-time" },
+    "finished_at": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "description": "A failed run is never promoted: promoted requires every gate to have passed.",
+      "if": { "properties": { "state": { "const": "promoted" } }, "required": ["state"] },
+      "then": {
+        "properties": {
+          "gate_results": { "items": { "properties": { "outcome": { "enum": ["pass", "skipped_with_reason"] } } } }
+        }
+      }
+    },
+    {
+      "description": "Release candidates must reference an SBOM.",
+      "if": { "properties": { "workflow": { "const": "release-candidate" } }, "required": ["workflow"] },
+      "then": { "required": ["sbom_ref"] }
+    },
+    {
+      "description": "Production-like promotion records who approved it.",
+      "if": { "properties": { "workflow": { "const": "promote-prod-like" }, "state": { "const": "promoted" } }, "required": ["workflow", "state"] },
+      "then": { "required": ["approver"] }
+    }
+  ]
+}

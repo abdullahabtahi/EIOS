@@ -1,0 +1,5 @@
+environment: stage
+provider: stub
+daily_token_cap: 1000
+verification:
+  daily_token_cap: "[ASSUMPTION]"

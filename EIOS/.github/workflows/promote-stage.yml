@@ -1,0 +1,69 @@
+# Promotion to stage (F00 US2, FR-007). Runs on every merge to the main line; there is no manual
+# path and no pull-request trigger, so stage is only ever changed by code that passed review and
+# the pull-request gates. Order: Red-Line suites, plan-then-change of the stage environment,
+# validation-tier suites against it, then the run records are promoted by tools.gates.promote.
+# A failed step stops the job, so a failed run is never promoted.
+# Identity is federated (id-token: write); the provider and service account are repository
+# variables (placeholders until the identity pool exists, see infra/bootstrap). No stored keys.
+name: promote-stage
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: promote-stage
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    name: promote-stage
+    runs-on: ubuntu-latest
+    timeout-minutes: 60 # [ASSUMPTION]
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      EIOS_STATE_BUCKET: ${{ vars.EIOS_STATE_BUCKET }}
+      EIOS_CORE_IMAGE_DIGEST: ${{ vars.EIOS_STAGE_CORE_IMAGE_DIGEST }}
+      EIOS_EDGE_IMAGE_DIGEST: ${{ vars.EIOS_STAGE_EDGE_IMAGE_DIGEST }}
+    steps:
+      - uses: actions/checkout@v4 # [SPIKE] pin to commit SHA when CI first runs
+      - uses: astral-sh/setup-uv@v6 # [SPIKE] pin to commit SHA when CI first runs
+      - uses: hashicorp/setup-terraform@v3 # [SPIKE] pin to commit SHA when CI first runs
+      - name: authenticate with federated identity
+        uses: google-github-actions/auth@v2 # [SPIKE] pin to commit SHA when CI first runs
+        with:
+          workload_identity_provider: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.EIOS_STAGE_SERVICE_ACCOUNT }}
+      - name: install locked dependencies
+        run: uv sync --frozen
+      - name: red-line suites
+        run: uv run python -m evals.cli run --tier red_line --workflow promote-stage
+      - name: initialise the stage environment
+        run: terraform -chdir=infra/envs/stage init -input=false -backend-config="bucket=$EIOS_STATE_BUCKET"
+      - name: change the stage environment
+        run: terraform -chdir=infra/envs/stage apply -input=false -auto-approve
+      - name: validation suites
+        run: uv run python -m evals.cli run --tier validation --workflow promote-stage
+      - name: promote passed runs
+        run: |
+          set -euo pipefail
+          args=()
+          for digest in "$EIOS_CORE_IMAGE_DIGEST" "$EIOS_EDGE_IMAGE_DIGEST"; do
+            if [ -n "$digest" ]; then
+              args+=(--image-digest "$digest")
+            fi
+          done
+          uv run python -m tools.gates.promote --workflow promote-stage "${args[@]}"
+      - name: upload reports and run records
+        if: always()
+        uses: actions/upload-artifact@v4 # [SPIKE] pin to commit SHA when CI first runs
+        with:
+          name: reports-promote-stage
+          path: evals/reports/
+          if-no-files-found: ignore

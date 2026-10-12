@@ -1,0 +1,11 @@
+# LLM gateway configuration, stage. Validated against schemas/llm-gateway-config.schema.json.
+# The absence of model_id is intentional: ADR-002 (model and provider selection) is open, so this
+# environment must fail startup rather than fall back to a default model. Set model_id, prices,
+# rate limits and their verification tags in the same change that closes ADR-002.
+environment: stage
+provider: stub
+daily_token_cap: 100000 # [ASSUMPTION] placeholder guard rail until spike S-01 measures cost
+cap_warning_thresholds_percent: [50, 80] # [TARGET] warn at 50% and 80%, block at 100%
+verification:
+  daily_token_cap: "[ASSUMPTION]"
+  cap_warning_thresholds_percent: "[TARGET]"

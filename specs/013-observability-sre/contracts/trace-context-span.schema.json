@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TraceContextSpan",
+  "description": "Distributed tracing span record conforming to W3C TraceContext standards with correlation identity.",
+  "type": "object",
+  "required": [
+    "trace_id",
+    "span_id",
+    "correlation_id",
+    "service_name",
+    "operation_name",
+    "start_time",
+    "status"
+  ],
+  "properties": {
+    "trace_id": {
+      "type": "string",
+      "minLength": 32,
+      "maxLength": 32,
+      "pattern": "^[0-9a-fA-F]{32}$"
+    },
+    "span_id": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 16,
+      "pattern": "^[0-9a-fA-F]{16}$"
+    },
+    "parent_span_id": {
+      "type": ["string", "null"],
+      "minLength": 16,
+      "maxLength": 16
+    },
+    "correlation_id": { "type": "string" },
+    "service_name": { "type": "string" },
+    "operation_name": { "type": "string" },
+    "start_time": { "type": "string", "format": "date-time" },
+    "end_time": { "type": ["string", "null"], "format": "date-time" },
+    "duration_ms": { "type": ["number", "null"], "minimum": 0 },
+    "status": {
+      "type": "string",
+      "enum": ["OK", "ERROR", "UNSET"]
+    },
+    "attributes": { "type": "object" },
+    "events": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  },
+  "additionalProperties": false
+}

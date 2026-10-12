@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "WORMAnchorCheckpoint",
+  "description": "Immutable WORM chain-head anchor checkpoint record (simulating GCS Object Retention Compliance Mode).",
+  "type": "object",
+  "required": [
+    "checkpoint_seq",
+    "chain_head_seq",
+    "chain_head_hash",
+    "locked_at",
+    "retention_until",
+    "compliance_mode",
+    "lock_signature"
+  ],
+  "properties": {
+    "checkpoint_seq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Monotonic checkpoint sequence number"
+    },
+    "chain_head_seq": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Highest ledger_seq locked at checkpoint creation"
+    },
+    "chain_head_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 hash digest of chain head locked into WORM storage"
+    },
+    "locked_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when WORM compliance lock was activated"
+    },
+    "retention_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Expiration timestamp of WORM retention lock (minimum 7 years)"
+    },
+    "compliance_mode": {
+      "type": "boolean",
+      "const": true,
+      "description": "True indicates non-revocable compliance lock active"
+    },
+    "lock_signature": {
+      "type": "string",
+      "description": "KMS signature over the anchor checkpoint data"
+    }
+  }
+}

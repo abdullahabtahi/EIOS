@@ -1,0 +1,13 @@
+environment: dev
+provider: stub
+model_id: stub-model
+prices:
+  input_per_unit: 1.0
+  output_per_unit: 2.0
+  currency: USD
+  unit: 1000 tokens
+daily_token_cap: 1000
+verification:
+  model_id: "[ILLUSTRATIVE]"
+  prices: "[ASSUMPTION]"
+  daily_token_cap: "[ASSUMPTION]"

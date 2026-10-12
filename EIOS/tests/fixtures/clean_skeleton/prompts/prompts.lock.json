@@ -1,0 +1,9 @@
+{
+  "prompts": [
+    {
+      "id": "smoke-echo",
+      "version": "v1",
+      "sha256": "be4649ebc09f4c0ebbc4aec1da1d4263ab4549eb3e385c9105b74e4419d451ee"
+    }
+  ]
+}

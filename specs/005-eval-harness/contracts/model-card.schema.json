@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ModelCardMetadata",
+  "description": "JSON Schema validating metadata frontmatter or structured payloads for Model Cards emitted by the Evaluation Harness.",
+  "type": "object",
+  "properties": {
+    "model_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9_-]+$"
+    },
+    "model_name": {"type": "string"},
+    "version": {"type": "string"},
+    "owner_role": {"type": "string"},
+    "model_type": {
+      "type": "string",
+      "enum": ["gradient_boosted", "discrete_time_hazard", "causal_dag", "sentence_embedding", "isolation_forest", "rule_baseline"]
+    },
+    "created_at": {"type": "string", "format": "date-time"},
+    "intended_use": {"type": "string"},
+    "out_of_scope_use": {"type": "string"},
+    "data_splits": {
+      "type": "object",
+      "properties": {
+        "dev_seeds": {"type": "array", "items": {"type": "integer"}},
+        "validation_seeds": {"type": "array", "items": {"type": "integer"}},
+        "sealed_seeds": {"type": "array", "items": {"type": "integer"}}
+      },
+      "required": ["dev_seeds", "validation_seeds", "sealed_seeds"]
+    },
+    "metrics_vs_baseline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "metric": {"type": "string"},
+          "baseline": {"type": "number"},
+          "candidate": {"type": "number"},
+          "delta": {"type": "number"},
+          "target": {"type": "string"},
+          "target_met": {"type": "boolean"}
+        },
+        "required": ["metric", "baseline", "candidate", "delta", "target_met"]
+      }
+    },
+    "calibration": {
+      "type": "object",
+      "properties": {
+        "brier_score": {"type": "number"},
+        "reliability_slope": {"type": "number"}
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "fallback_class": {"type": "string"}
+  },
+  "required": [
+    "model_id",
+    "model_name",
+    "version",
+    "owner_role",
+    "model_type",
+    "data_splits",
+    "metrics_vs_baseline",
+    "fallback_class"
+  ]
+}

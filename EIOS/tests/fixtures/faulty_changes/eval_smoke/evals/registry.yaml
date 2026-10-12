@@ -1,0 +1,5 @@
+- id: failing-eval-smoke
+  tier: eval_smoke
+  command: python evals/suites/failing_eval_smoke.py
+  owner_feature: F00
+  report: evals/reports/failing-eval-smoke.json

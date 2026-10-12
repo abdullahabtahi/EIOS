@@ -1,0 +1,19 @@
+scenario_id: executive_pnl_attribution
+domain: ExecutiveSynthesis
+description: Comprehensive PnL decomposition across fee cuts, churn, and volume shifts.
+turns:
+  - turn_index: 1
+    user_query: Provide the quarterly net revenue decomposition across the three driver branches.
+    expected_route: Synthesis
+    expected_tool_calls:
+      - tool_name: get_pnl_attribution_matrix
+        order_index: 0
+    forbidden_tool_calls:
+      - execute_action
+    expected_citations:
+      - definition_version
+      - as_of
+    refusal_required: false
+    expected_substrings:
+      - decomposition
+      - 100%

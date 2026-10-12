@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "DataProductSLAStatus",
+  "description": "Operational health record displayed on the Data Platform & Operations Board.",
+  "type": "object",
+  "required": [
+    "product_name",
+    "contract_schema_version",
+    "row_count",
+    "null_check_pass_rate",
+    "last_ingestion_timestamp",
+    "freshness_sla_seconds",
+    "status",
+    "is_degraded"
+  ],
+  "properties": {
+    "product_name": { "type": "string" },
+    "contract_schema_version": { "type": "string" },
+    "row_count": { "type": "integer", "minimum": 0 },
+    "null_check_pass_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+    "last_ingestion_timestamp": { "type": "string", "format": "date-time" },
+    "freshness_sla_seconds": { "type": "integer", "minimum": 0 },
+    "status": {
+      "type": "string",
+      "enum": ["HEALTHY", "DEGRADED", "BREACHED"]
+    },
+    "is_degraded": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

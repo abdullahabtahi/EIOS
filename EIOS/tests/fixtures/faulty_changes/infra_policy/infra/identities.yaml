@@ -1,0 +1,105 @@
+identities:
+- service: skeleton_edge
+  environment: dev
+  roles: &id001
+  - roles/logging.logWriter
+  can_read_eval_truth: false
+  impersonable_by: &id002 []
+- service: skeleton_core
+  environment: dev
+  roles:
+  - roles/*
+  can_read_eval_truth: false
+  impersonable_by: []
+- service: pipeline
+  environment: dev
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: true
+  impersonable_by:
+  - repository=ci_repository
+- service: eval_harness
+  environment: dev
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: true
+  impersonable_by:
+  - repository=ci_repository
+- service: release_candidate
+  environment: dev
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: false
+  impersonable_by:
+  - workflow=release-candidate.yml
+- service: skeleton_edge
+  environment: stage
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: false
+  impersonable_by: []
+- service: skeleton_core
+  environment: stage
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: false
+  impersonable_by: []
+- service: pipeline
+  environment: stage
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: true
+  impersonable_by:
+  - repository=ci_repository
+- service: eval_harness
+  environment: stage
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: true
+  impersonable_by:
+  - repository=ci_repository
+- service: release_candidate
+  environment: stage
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: false
+  impersonable_by:
+  - workflow=release-candidate.yml
+- service: skeleton_edge
+  environment: prod-like
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: false
+  impersonable_by: []
+- service: skeleton_core
+  environment: prod-like
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: false
+  impersonable_by: []
+- service: pipeline
+  environment: prod-like
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: true
+  impersonable_by:
+  - repository=ci_repository
+- service: eval_harness
+  environment: prod-like
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: true
+  impersonable_by:
+  - repository=ci_repository
+- service: release_candidate
+  environment: prod-like
+  roles:
+  - roles/logging.logWriter
+  can_read_eval_truth: false
+  impersonable_by:
+  - workflow=release-candidate.yml
+- service: skeleton_edge
+  environment: dev
+  roles: *id001
+  can_read_eval_truth: false
+  impersonable_by: *id002

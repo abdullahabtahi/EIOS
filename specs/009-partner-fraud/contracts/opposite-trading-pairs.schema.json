@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "OppositeTradingPairsResponse",
+  "type": "object",
+  "required": ["pairs", "total_pairs_flagged", "aggregate_volume_usd", "aggregate_commission_usd"],
+  "properties": {
+    "pairs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "pair_id",
+          "account_a",
+          "partner_a",
+          "account_b",
+          "partner_b",
+          "symbol",
+          "co_occurrence_count",
+          "timing_correlation_pct",
+          "directional_type",
+          "size_symmetry_score",
+          "combined_net_pl_usd",
+          "total_commission_extracted_usd",
+          "zero_sum_ratio",
+          "collusion_confidence"
+        ],
+        "properties": {
+          "pair_id": { "type": "string" },
+          "account_a": { "type": "string" },
+          "partner_a": { "type": "string" },
+          "account_b": { "type": "string" },
+          "partner_b": { "type": "string" },
+          "symbol": { "type": "string" },
+          "co_occurrence_count": { "type": "integer", "minimum": 1 },
+          "timing_correlation_pct": { "type": "number", "minimum": 0.0, "maximum": 100.0 },
+          "directional_type": { "type": "string", "enum": ["OPPOSITE", "MIRROR", "UNCORRELATED"] },
+          "size_symmetry_score": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+          "combined_net_pl_usd": { "type": "number" },
+          "total_commission_extracted_usd": { "type": "number", "minimum": 0.0 },
+          "zero_sum_ratio": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+          "collusion_confidence": { "type": "number", "minimum": 0.0, "maximum": 1.0 }
+        },
+        "additionalProperties": false
+      }
+    },
+    "total_pairs_flagged": { "type": "integer", "minimum": 0 },
+    "aggregate_volume_usd": { "type": "number", "minimum": 0.0 },
+    "aggregate_commission_usd": { "type": "number", "minimum": 0.0 }
+  },
+  "additionalProperties": false
+}

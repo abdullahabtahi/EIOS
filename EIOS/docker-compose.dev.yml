@@ -1,0 +1,10 @@
+# Local development services. Not used in CI or deployed environments.
+# [SPIKE] The emulator image reference below is unverified and deliberately not version-pinned;
+# confirm and pin it (and the pinned_deps policy for images) before relying on it. The emulator
+# needs no credentials; clients reach it through FIRESTORE_EMULATOR_HOST=localhost:8080.
+services:
+  firestore-emulator:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
+    command: gcloud emulators firestore start --host-port=0.0.0.0:8080
+    ports:
+      - "127.0.0.1:8080:8080"

@@ -1,0 +1,9 @@
+# Provenance-label allowlist (tools/label_check; request process in docs/conventions.md).
+#
+# Entry shape:
+#   - path: docs/example.md       repo-relative POSIX path of the governed document
+#     literal: some text          substring of the offending line that is exempted
+#     reason: why this is safe    required, never blank (a blank reason is a config error)
+#
+# An entry that suppresses nothing is reported as `label.allowlist-stale`.
+entries: []

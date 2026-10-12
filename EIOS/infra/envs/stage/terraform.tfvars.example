@@ -1,0 +1,10 @@
+# Copy to terraform.tfvars (which is git-ignored and never committed) and replace every value.
+# All values below are placeholders, not real identifiers.
+project_id                  = "REPLACE_ME_project_id"
+region                      = "REPLACE_ME_region"
+workload_identity_pool_name = "REPLACE_ME_pool_name_from_bootstrap_output"
+ci_repository               = "REPLACE_ME_owner/REPLACE_ME_repository"
+
+# Images by digest, set after the first image is pushed (see docs/runbooks/bootstrap.md).
+# skeleton_core_image = "REPLACE_ME_registry_path/skeleton-core@sha256:REPLACE_ME_digest"
+# skeleton_edge_image = "REPLACE_ME_registry_path/skeleton-edge@sha256:REPLACE_ME_digest"

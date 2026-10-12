@@ -1,0 +1,5 @@
+- id: broken-data-contract
+  tier: contract
+  command: python evals/suites/broken_data_contract.py
+  owner_feature: F00
+  report: evals/reports/broken-data-contract.json

@@ -1,0 +1,78 @@
+# Forbidden literals (F00 repo check `tools/repo_checks/forbidden_literals.py`).
+#
+# Entry shape:
+#   - id: short-kebab-id          unique; named in the finding, never the matched text
+#     regex: '<python regex>'     searched per line in every text file in the repository
+#     allowlist: [paths]          repo-relative POSIX paths exempt for this pattern only:
+#                                 an exact file, a directory (matches everything beneath it),
+#                                 or an fnmatch glob such as docs/*.md
+#     reason: why this literal is forbidden
+#
+# The three llm-* entries (ADR-002 stays open, FR-035): model identifiers, prices and provider
+# names live only in config/ and in the provider adapters. The shapes are [SPIKE] until spike
+# S-01 closes; the model shapes are kept behaviourally equal to the `model_identifier_patterns`
+# rule in config/open_decisions.yaml (checked by
+# tests/unit/tools/repo_checks/test_no_hardcoded_llm_literals.py).
+# Prose (docs, specs, markdown) discusses these names and is allowed.
+patterns:
+  - id: llm-model-identifier
+    regex: '(?i)(?:\bgpt-[0-9]|\bclaude-(?:[0-9]|opus|sonnet|haiku|instant)|\bgemini-(?:[0-9]|pro|flash|ultra|nano)|\b(?:llama|mixtral|mistral)-?[0-9]|\bcommand-r\b|\btext-embedding-[0-9a-z]|\bpublishers/[a-z0-9-]+/models/|\bo[134]-(?:mini|preview|pro)\b)'
+    allowlist:
+      - config/
+      - src/eios/llm_gateway/providers/
+      - docs/
+      - specs/
+      - "*.md"
+    reason: A model identifier is a gateway decision (ADR-002, open); it lives in config/ only.
+
+  - id: llm-price-shape
+    regex: '(?i)(?:\$\s?[0-9][0-9.,]*\s*(?:/|per)\s*(?:1\s?M|1,?000|million|thousand|M|K)\b|\b[a-z_]*price_per_[a-z_]*tok[a-z_]*|\b(?:input|output)_(?:token_)?price\b)'
+    allowlist:
+      - config/
+      - src/eios/llm_gateway/providers/
+      - docs/
+      - specs/
+      - "*.md"
+    reason: A per-token price is gateway configuration (ADR-002, open); it lives in config/ only.
+
+  - id: llm-provider-name
+    regex: '(?i)\b(?:openai|anthropic|cohere|mistral\s?ai|vertex\s?ai|ai21|groq|azure\s+openai)\b'
+    allowlist:
+      - config/
+      - src/eios/llm_gateway/providers/
+      - docs/
+      - specs/
+      - "*.md"
+      - pyproject.toml
+      - uv.lock
+    reason: A provider name is a gateway decision (ADR-002, open); it lives in config/ only.
+
+  # label_check also applies these classes to the governed documents (tools/label_check).
+  - id: competitor-brand
+    regex: '\b(?:eToro|Robinhood|Plus500|Interactive Brokers|IG Group|Saxo|Binance|Coinbase|Revolut)\b' # [ASSUMPTION] illustrative list, extend on review
+    allowlist:
+      - tests/
+    reason: Real brand names must not appear as competitors (CLAUDE.md labelling regime).
+
+  - id: version-pin
+    regex: '\b[A-Za-z][\w.-]*(?:==|~=)[0-9]+(?:\.[0-9]+)+|\bmodel[ -]?v?[0-9]+\.[0-9]+\b'
+    allowlist:
+      - pyproject.toml
+      - uv.lock
+      - tests/
+    reason: Unverified library and model version pins are [SPIKE] until a spike closes; read versions from uv.lock.
+
+  - id: secret-cloud-access-key
+    regex: '\b(?:AKIA|ASIA)[0-9A-Z]{16}\b'
+    allowlist: []
+    reason: A credential-shaped string; use an environment variable or the secret manager.
+
+  - id: secret-api-key
+    regex: '\bAIza[0-9A-Za-z_-]{35}\b'
+    allowlist: []
+    reason: A credential-shaped string; use an environment variable or the secret manager.
+
+  - id: secret-private-key
+    regex: '-----BEGIN (?:[A-Z0-9]+ )*PRIVATE KEY(?: BLOCK)?-----'
+    allowlist: []
+    reason: A private key block; keys live in the secret manager or KMS only.

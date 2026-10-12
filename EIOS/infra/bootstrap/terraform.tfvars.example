@@ -1,0 +1,17 @@
+# Copy to terraform.tfvars (git-ignored, never committed) and replace every value.
+# All values below are placeholders, not real identifiers.
+region             = "REPLACE_ME_region"
+billing_account_id = "REPLACE_ME_billing_account_id"
+
+# Set exactly one of these two.
+parent_org_id = "REPLACE_ME_numeric_org_id"
+# parent_folder_id = "REPLACE_ME_numeric_folder_id"
+
+control_project_id = "REPLACE_ME_control_project_id"
+environment_project_ids = {
+  dev       = "REPLACE_ME_dev_project_id"
+  stage     = "REPLACE_ME_stage_project_id"
+  prod-like = "REPLACE_ME_prod_like_project_id"
+}
+
+ci_repository = "REPLACE_ME_owner/REPLACE_ME_repository"

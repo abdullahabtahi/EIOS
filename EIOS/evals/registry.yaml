@@ -1,0 +1,80 @@
+# Gate hook registry (F04 Evaluation Harness & Anti-Circularity Benchmark Framework).
+# Registered evaluation suites across contract, eval_smoke, red_line, validation, and sealed tiers.
+#
+- id: eval-smoke
+  tier: eval_smoke
+  command: python -m evals.suites.redlines.runner
+  owner_feature: F04
+  report: evals/reports/red_line_summary.json
+
+- id: redline-hallucination
+  tier: red_line
+  command: python -m evals.suites.redlines.test_rl1_hallucination
+  owner_feature: F04
+  report: evals/reports/rl_hallucination.json
+
+- id: redline-citation
+  tier: red_line
+  command: python -m evals.suites.redlines.test_rl2_citation
+  owner_feature: F04
+  report: evals/reports/rl_citation.json
+
+- id: redline-causal-gate
+  tier: red_line
+  command: python -m evals.suites.redlines.test_rl3_causal_gate
+  owner_feature: F04
+  report: evals/reports/rl_causal_gate.json
+
+- id: redline-no-autonomous-write
+  tier: red_line
+  command: python -m evals.suites.redlines.test_rl4_no_autonomous_write
+  owner_feature: F04
+  report: evals/reports/rl_no_autonomous_write.json
+
+- id: redline-pii-leakage
+  tier: red_line
+  command: python -m evals.suites.redlines.test_rl5_pii_leakage
+  owner_feature: F04
+  report: evals/reports/rl_pii_leakage.json
+
+- id: redline-prompt-injection
+  tier: red_line
+  command: python -m evals.suites.redlines.test_rl6_prompt_injection
+  owner_feature: F04
+  report: evals/reports/rl_prompt_injection.json
+
+- id: redline-action-intent
+  tier: red_line
+  command: python -m evals.suites.redlines.test_rl7_action_intent
+  owner_feature: F04
+  report: evals/reports/rl_action_intent.json
+
+- id: baseline-benchmarks
+  tier: validation
+  command: python -m evals.suites.baselines.runner
+  owner_feature: F04
+  report: evals/reports/baseline_benchmarks.json
+
+- id: splits-validation
+  tier: validation
+  command: python -m evals.suites.splits.runner
+  owner_feature: F04
+  report: evals/reports/splits_validation.json
+
+- id: dialogue-evals
+  tier: validation
+  command: python -m evals.golden.trajectory_eval
+  owner_feature: F04
+  report: evals/reports/dialogue_evals.json
+
+- id: synthesis-validation
+  tier: validation
+  command: python -m pytest tests/synthesis/ -q
+  owner_feature: F05
+  report: evals/reports/synthesis_validation.json
+
+- id: sealed-holdout
+  tier: sealed
+  command: python -m evals.suites.splits.runner --tier sealed
+  owner_feature: F04
+  report: evals/reports/splits_sealed.json

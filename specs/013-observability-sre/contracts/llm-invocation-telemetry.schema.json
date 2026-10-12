@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LLMInvocationTelemetry",
+  "description": "Per-call telemetry for language model calls capturing tokens, financial cost, and latency.",
+  "type": "object",
+  "required": [
+    "call_id",
+    "trace_id",
+    "correlation_id",
+    "prompt_id",
+    "prompt_version",
+    "model_id",
+    "prompt_tokens",
+    "completion_tokens",
+    "cached_tokens",
+    "duration_ms",
+    "cost_usd",
+    "timestamp"
+  ],
+  "properties": {
+    "call_id": { "type": "string" },
+    "trace_id": { "type": "string" },
+    "correlation_id": { "type": "string" },
+    "prompt_id": { "type": "string" },
+    "prompt_version": { "type": "string" },
+    "model_id": { "type": "string" },
+    "prompt_tokens": { "type": "integer", "minimum": 0 },
+    "completion_tokens": { "type": "integer", "minimum": 0 },
+    "cached_tokens": { "type": "integer", "minimum": 0 },
+    "duration_ms": { "type": "number", "minimum": 0 },
+    "cost_usd": { "type": "number", "minimum": 0 },
+    "timestamp": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

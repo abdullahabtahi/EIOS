@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://eios.internal/schemas/v1/foundry-manifest.json",
+  "title": "FoundryRunManifest",
+  "description": "Cryptographic provenance and seed specification for deterministic Layer 0 Foundry runs.",
+  "type": "object",
+  "properties": {
+    "manifest_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for this generation run."
+    },
+    "manifest_version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Semantic version of the manifest format."
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Master PRNG integer seed initializing SeedSequence."
+    },
+    "seed_tier": {
+      "type": "string",
+      "enum": ["dev", "validation", "sealed"],
+      "description": "Target evaluation tier. 'sealed' is restricted to CI release candidates."
+    },
+    "git_sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Exact 40-character Git commit hash of the generator codebase."
+    },
+    "spec_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 hash of the feature specification."
+    },
+    "generator_versions": {
+      "type": "object",
+      "required": [
+        "gen_client",
+        "gen_aml",
+        "gen_partner",
+        "gen_financial",
+        "gen_competitive",
+        "gen_operational",
+        "gen_causal_truth"
+      ],
+      "properties": {
+        "gen_client": { "type": "string" },
+        "gen_aml": { "type": "string" },
+        "gen_partner": { "type": "string" },
+        "gen_financial": { "type": "string" },
+        "gen_competitive": { "type": "string" },
+        "gen_operational": { "type": "string" },
+        "gen_causal_truth": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "dataset_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 Merkle root of all emitted Parquet output files."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO-8601 generation completion timestamp."
+    }
+  },
+  "required": [
+    "manifest_id",
+    "manifest_version",
+    "seed",
+    "seed_tier",
+    "git_sha",
+    "spec_hash",
+    "generator_versions",
+    "dataset_hash",
+    "generated_at"
+  ],
+  "additionalProperties": false
+}

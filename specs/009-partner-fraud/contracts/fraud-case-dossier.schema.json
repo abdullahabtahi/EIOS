@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PartnerFraudCaseDossierResponse",
+  "type": "object",
+  "required": [
+    "case_id",
+    "partner_id",
+    "primary_typology",
+    "fraud_risk_score",
+    "total_exposure_usd",
+    "confidence_level",
+    "implicated_accounts",
+    "evidence_refs",
+    "narrative_summary",
+    "recommended_action",
+    "status"
+  ],
+  "properties": {
+    "case_id": {
+      "type": "string",
+      "description": "Unique deterministic fraud case identifier"
+    },
+    "partner_id": {
+      "type": "string",
+      "description": "Target partner / affiliate under investigation"
+    },
+    "master_partner_id": {
+      "type": ["string", "null"],
+      "description": "Root master partner if part of a sub-affiliate ring"
+    },
+    "primary_typology": {
+      "type": "string",
+      "enum": [
+        "OPPOSITE_TRADING_SYNDICATE",
+        "MIRROR_TRADING_RING",
+        "BONUS_CPA_HARVESTING",
+        "MULTI_TIER_COMMISSION_FRAUD",
+        "CLIENT_RECYCLING",
+        "BOT_TRAFFIC_FUNNEL"
+      ]
+    },
+    "fraud_risk_score": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Composite fraud severity score"
+    },
+    "total_exposure_usd": {
+      "type": "number",
+      "minimum": 0.0,
+      "description": "Estimated financial exposure / illicit commissions extracted"
+    },
+    "confidence_level": {
+      "type": "string",
+      "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"]
+    },
+    "implicated_accounts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "List of referred client accounts involved in the fraudulent activity"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Lineage pointers to underlying trade/comms/transaction data products"
+    },
+    "narrative_summary": {
+      "type": "string",
+      "description": "Executive compliance investigation briefing (sanitized via Egress Gate)"
+    },
+    "recommended_action": {
+      "type": "string",
+      "enum": ["ClawbackCommission", "SuspendPartner", "AdjustPartnerTier", "ReviewAudit"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["OPEN", "UNDER_REVIEW", "ACTIONED", "DISMISSED"]
+    },
+    "created_at": {
+      "type": "string",
+      "description": "ISO timestamp of case creation"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ChaosExperimentRecord",
+  "description": "Lifecycle record and recovery verification metrics for an injected chaos experiment.",
+  "type": "object",
+  "required": [
+    "experiment_id",
+    "injection_type",
+    "target_subsystem",
+    "timestamp",
+    "status",
+    "detection_latency_ms",
+    "recovery_latency_ms",
+    "fallback_activated",
+    "assertions_passed"
+  ],
+  "properties": {
+    "experiment_id": { "type": "string" },
+    "injection_type": { "type": "string" },
+    "target_subsystem": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "parameters": { "type": "object" },
+    "status": {
+      "type": "string",
+      "enum": ["INJECTED", "DETECTED", "MITIGATED", "FAILED"]
+    },
+    "detection_latency_ms": { "type": "number", "minimum": 0 },
+    "recovery_latency_ms": { "type": "number", "minimum": 0 },
+    "fallback_activated": { "type": "boolean" },
+    "assertions_passed": { "type": "boolean" },
+    "error_message": { "type": ["string", "null"] }
+  },
+  "additionalProperties": false
+}

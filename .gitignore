@@ -1,0 +1,147 @@
+# ==============================================================================
+# Git Ignore - Real-Time Enterprise Intelligence Operating System (FEIOS / EIOS)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Operating System & Filesystem
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ------------------------------------------------------------------------------
+# IDEs, Editors & Local Tooling
+# ------------------------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.bak
+*.tmp
+*.log
+
+# Claude Code / Codex local settings (keep shared settings.json committed)
+.claude/*.local.json
+.codex/
+
+# Automated plugin skills & hooks (keep .github/workflows for CI/CD)
+.github/skills/
+.github/agents/
+.github/hooks/
+
+# ------------------------------------------------------------------------------
+# Scratch, Cloned Reference Repos & Local Session Artifacts
+# ------------------------------------------------------------------------------
+scratch/
+.impeccable/
+.impeccable-repo/
+.qb-design-system/
+payload.json
+seed_output.txt
+
+# Spec Kit machine-local state
+.specify/feature.json
+.specify/extensions/*/local-config.yml
+
+# ------------------------------------------------------------------------------
+# Security & Credentials (STRICT - NEVER COMMIT)
+# ------------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.crt
+*.cert
+service-account*.json
+credentials.json
+client_secret*.json
+
+# ------------------------------------------------------------------------------
+# Python (Backend & Microservices)
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python testing, typecheck & lint caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+nosetests.xml
+
+# ------------------------------------------------------------------------------
+# Node.js & Next.js (Web Prototype)
+# ------------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js build & export artifacts
+.next/
+out/
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# Frontend coverage
+coverage/
+
+# ------------------------------------------------------------------------------
+# Terraform & Cloud Infrastructure
+# ------------------------------------------------------------------------------
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# ------------------------------------------------------------------------------
+# Generated Test & Evaluation Reports
+# ------------------------------------------------------------------------------
+evals/reports/*
+!evals/reports/.gitkeep
+**/evals/reports/*
+!**/evals/reports/.gitkeep

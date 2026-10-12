@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BlackboardState",
+  "description": "Schema for the shared multi-agent blackboard memory state (ADR-016).",
+  "type": "object",
+  "properties": {
+    "session_id": { "type": "string" },
+    "user_role": { "type": "string" },
+    "turns": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "entity_anchors": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "evidence_ledger": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "active_hypotheses": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "reflection_cycle": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "compliance_hold": { "type": "boolean" },
+    "pending_action_proposals": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  },
+  "required": [
+    "session_id",
+    "user_role",
+    "turns",
+    "entity_anchors",
+    "evidence_ledger",
+    "active_hypotheses",
+    "reflection_cycle",
+    "compliance_hold"
+  ],
+  "additionalProperties": false
+}

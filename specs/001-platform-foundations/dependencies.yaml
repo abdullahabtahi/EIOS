@@ -1,0 +1,5 @@
+# Feature dependency declaration (schemas/feature-dependencies.schema.json); read by tools/readiness.
+feature: F00
+depends_on_features: []
+depends_on_spikes: []
+depends_on_adrs: []

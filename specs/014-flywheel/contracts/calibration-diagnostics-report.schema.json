@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CalibrationDiagnosticsReport",
+  "description": "Model calibration health report summarizing Expected Calibration Error (ECE), Brier score, and drift flags.",
+  "type": "object",
+  "required": [
+    "report_id",
+    "model_id",
+    "timestamp",
+    "sample_count",
+    "expected_calibration_error",
+    "brier_score",
+    "reliability_bins",
+    "is_drift_detected"
+  ],
+  "properties": {
+    "report_id": { "type": "string" },
+    "model_id": { "type": "string" },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "sample_count": { "type": "integer", "minimum": 0 },
+    "expected_calibration_error": { "type": "number", "minimum": 0, "maximum": 1 },
+    "brier_score": { "type": "number", "minimum": 0, "maximum": 1 },
+    "reliability_bins": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "is_drift_detected": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

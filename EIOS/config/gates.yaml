@@ -1,0 +1,130 @@
+# Blocking quality gates (F00, FR-004). One definition, run identically locally
+# (`make check`) and in the pipeline (.github/workflows/pr.yml).
+#
+# Row shape (data-model.md "Quality Gate"):
+#   id           unique, kebab/snake id; also the required status-check name
+#   blocking     always true in F00
+#   stage        pr | merge | promote | release_candidate
+#   threshold    optional; substituted for {threshold} in commands
+#   proof_fixture  overlay under tests/fixtures/faulty_changes/ that must make this gate fail
+#   command      list of argv strings, run in order from the repository root; every one must
+#                exit 0. A leading `python` means the interpreter running the runner.
+#                Commands see PYTHONPATH=<tool root> so `python -m tools.*` / `evals.cli`
+#                resolve even when the target repo root is a different tree.
+#
+# Later features append rows here; they never edit runner code.
+gates:
+  - id: lint
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/lint
+    command:
+      - python -m ruff check .
+      - python -m ruff format --check .
+      - python -m tools.repo_checks
+
+  - id: types
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/types
+    command:
+      - python -m mypy
+
+  - id: coverage
+    blocking: true
+    stage: pr
+    threshold: 80 # [TARGET]
+    proof_fixture: tests/fixtures/faulty_changes/coverage
+    command:
+      - python -m pytest -q -n auto --cov --cov-fail-under={threshold}
+
+  - id: contract
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/contract
+    command:
+      - python -m evals.cli run --tier contract
+
+  - id: eval_smoke
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/eval_smoke
+    command:
+      - python -m evals.cli run --tier eval_smoke
+
+  - id: red_line
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/red_line
+    command:
+      - python -m evals.cli run --tier red_line
+
+  - id: vuln_scan
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/vuln_scan
+    command:
+      - python -m tools.gates.vuln_scan
+
+  - id: secret_scan
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/secret_scan
+    command:
+      - python -m tools.gates.secret_scan
+
+  - id: iac_plan
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/iac_plan
+    command:
+      - python -m tools.gates.iac_check
+
+  - id: infra_policy
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/infra_policy
+    command:
+      - python -m tools.infra_checks
+
+  - id: open_decision_check
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/open_decision_check
+    command:
+      - python -m tools.open_decision_check
+
+  - id: label_check
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/label_check
+    command:
+      - python -m tools.label_check
+
+  - id: adr_check
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/adr_check
+    command:
+      - python -m tools.adr_check
+
+  - id: validation
+    blocking: true
+    stage: promote
+    proof_fixture: tests/fixtures/faulty_changes/validation
+    command:
+      - python -m evals.cli run --tier validation --workflow promote-stage
+
+  - id: resilience
+    blocking: true
+    stage: promote
+    proof_fixture: tests/fixtures/faulty_changes/resilience
+    command:
+      - python -m evals.cli run --tier validation --id-prefix resilience- --workflow promote-stage
+
+  - id: sealed_eval
+    blocking: true
+    stage: release_candidate
+    proof_fixture: tests/fixtures/faulty_changes/sealed_eval
+    command:
+      - python -m evals.cli run --tier sealed --workflow release-candidate --generate-sbom

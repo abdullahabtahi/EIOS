@@ -1,0 +1,9 @@
+# Rollback settings (F00, FR-010, SC-009). Read only by tools/gates/rollback.py.
+#
+# time_bound_seconds is a commitment to MEASURE, not a claim: the number below is a placeholder
+# until the rollback rehearsal fixes it in task T100 (evidence in
+# docs/evidence/sc-009-rollback-rehearsal.md). The code never hard-codes a bound.
+time_bound_seconds: 600 # [TARGET] placeholder, decided in T100
+time_bound_tag: "[TARGET]"
+# Feature flag set when a rollback happens so dependants can degrade to cached output.
+flag: rollback_active

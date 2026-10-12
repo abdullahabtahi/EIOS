@@ -1,0 +1,15 @@
+# Minimal open-decision config for the clean skeleton: one open decision, one rule.
+scan:
+  include: [.py]
+  exclude: []
+
+decisions:
+  - adr: ADR-002
+    rules:
+      - id: vendor_sdk_modules
+        kind: import_root
+        modules: [skeleton_vendor_sdk]
+    allowed_paths: [src/skeleton/providers]
+    lifted_when:
+      lifted: false
+      adr_status: Accepted

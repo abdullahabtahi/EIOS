@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SynthesisForecastResult",
+  "type": "object",
+  "required": [
+    "metric_id",
+    "horizon_days",
+    "point_estimate",
+    "ci_lower",
+    "ci_upper",
+    "baseline_mase",
+    "driver_attributions",
+    "total_attribution_percentage"
+  ],
+  "properties": {
+    "metric_id": { "type": "string" },
+    "horizon_days": { "type": "integer", "minimum": 1 },
+    "historical_points": {
+      "type": "array",
+      "items": { "type": "number" }
+    },
+    "forecast_points": {
+      "type": "array",
+      "items": { "type": "number" }
+    },
+    "point_estimate": { "type": "number" },
+    "ci_lower": { "type": "number" },
+    "ci_upper": { "type": "number" },
+    "baseline_mase": { "type": "number" },
+    "driver_attributions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["driver_metric", "absolute_impact", "percentage", "direction"],
+        "properties": {
+          "driver_metric": { "type": "string" },
+          "absolute_impact": { "type": "number" },
+          "percentage": { "type": "number", "minimum": 0.0, "maximum": 100.0 },
+          "direction": { "type": "string", "enum": ["POSITIVE", "NEGATIVE"] }
+        }
+      }
+    },
+    "total_attribution_percentage": {
+      "type": "number",
+      "minimum": 99.999,
+      "maximum": 100.001
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PartnerSignalsResponse",
+  "description": "OMCP response payload for get_partner_signals tool",
+  "type": "object",
+  "properties": {
+    "partner_id": {
+      "type": "string"
+    },
+    "tier": {
+      "type": "string",
+      "enum": ["TIER_1", "TIER_2", "TIER_3", "VIP_MASTER"]
+    },
+    "region_id": {
+      "type": "string"
+    },
+    "value_at_risk_usd": {
+      "type": "number",
+      "minimum": 0.0
+    },
+    "hazard_probability_30d": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0
+    },
+    "priority_score": {
+      "type": "number",
+      "minimum": 0.0
+    },
+    "risk_tier": {
+      "type": "string",
+      "enum": ["HIGH", "MEDIUM", "LOW"]
+    },
+    "intervention_window": {
+      "type": "string",
+      "enum": ["OPTIMAL", "LATE_STAGE", "EARLY_WATCH", "STABLE"]
+    },
+    "change_point_detected": {
+      "type": "boolean"
+    },
+    "top_contributing_signals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "signal_family": {
+            "type": "string",
+            "enum": ["BEHAVIORAL", "COMMUNICATION", "RELATIONSHIP", "FINANCIAL", "COMPETITIVE"]
+          },
+          "metric_name": {
+            "type": "string"
+          },
+          "observed_value": {
+            "type": "number"
+          },
+          "baseline_value": {
+            "type": "number"
+          },
+          "relative_delta": {
+            "type": "number"
+          },
+          "citation_ref": {
+            "type": "string"
+          }
+        },
+        "required": ["signal_family", "metric_name", "observed_value", "relative_delta", "citation_ref"]
+      }
+    },
+    "explanation": {
+      "type": "object",
+      "properties": {
+        "narrative": {
+          "type": "string"
+        },
+        "citations": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "is_replay": {
+          "type": "boolean"
+        }
+      },
+      "required": ["narrative", "citations"]
+    }
+  },
+  "required": [
+    "partner_id",
+    "hazard_probability_30d",
+    "priority_score",
+    "risk_tier",
+    "intervention_window",
+    "change_point_detected",
+    "top_contributing_signals",
+    "explanation"
+  ]
+}

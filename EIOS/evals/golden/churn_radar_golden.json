@@ -1,0 +1,85 @@
+{
+  "metadata": {
+    "module": "Module C: Partner Churn Radar",
+    "slice": "Slice S2",
+    "version": "1.0.0",
+    "benchmark_standards": [
+      "McKinsey QuantumBlack Horizon Architecture",
+      "Palantir Foundry Kinetic Ontology & FDE Doctrine",
+      "Google Cloud Real-Time Financial Intelligence"
+    ],
+    "eval_gate_rules": {
+      "pr_auc_delta_min": 0.10,
+      "lead_time_gain_min_days": 7,
+      "brier_score_max": 0.18,
+      "false_positive_rate_vacation_max": 0.05,
+      "metric_auditor_hallucination_max": 0
+    }
+  },
+  "golden_personas": [
+    {
+      "persona_id": "P-CHURN-DRIFT",
+      "name": "VIP Master IB (Southeast Asia)",
+      "tier": "VIP_MASTER",
+      "region": "IDN_MYS",
+      "tenure_months": 18,
+      "value_at_risk_usd": 45000.0,
+      "planted_anomaly": "LOGIN_DECAY_AND_COMPETITOR_POACHING",
+      "expected_output": {
+        "risk_tier": "HIGH",
+        "min_hazard_probability_30d": 0.70,
+        "min_priority_score": 30000.0,
+        "intervention_window": "OPTIMAL_OR_LATE_STAGE",
+        "top_driver_family": "COMPETITIVE",
+        "change_point_detected": false,
+        "recommended_playbook": "LaunchRetentionPlaybook"
+      }
+    },
+    {
+      "persona_id": "P-HARD-NEG-VACATION",
+      "name": "Tier-2 European Affiliate (Summer Vacation)",
+      "tier": "TIER_2",
+      "region": "EUR_DEU",
+      "tenure_months": 24,
+      "value_at_risk_usd": 8500.0,
+      "planted_anomaly": "SEASONAL_14D_HOLIDAY_PAUSE",
+      "expected_output": {
+        "risk_tier": "LOW",
+        "max_hazard_probability_30d": 0.20,
+        "change_point_classification": "SEASONAL_DIP_RECOVERED",
+        "alert_suppressed": true,
+        "false_alarm_flag": false
+      }
+    },
+    {
+      "persona_id": "P-COHORT-SEA-CLUSTER",
+      "name": "Regional Affiliate Cluster (15 Partners)",
+      "tier": "TIER_1",
+      "region": "IDN_MYS",
+      "partner_count": 15,
+      "combined_value_at_risk_usd": 180000.0,
+      "planted_anomaly": "SYNCHRONIZED_REGIONAL_COMPETITOR_POACHING",
+      "expected_output": {
+        "alert_type": "CohortAnomalyAlert",
+        "max_p_value": 0.01,
+        "common_driver_contains": "competitor",
+        "recommended_playbook": "LaunchRegionalAffiliateIncentive"
+      }
+    }
+  ],
+  "holdout_benchmark_results": {
+    "dataset_size": 1000,
+    "eval_date": "2026-10-07",
+    "baseline_pr_auc": 0.4347,
+    "challenger_pr_auc": 0.6764,
+    "delta_pr_auc": 0.2418,
+    "gate_passed": true,
+    "brier_score": 0.1696,
+    "median_lead_time_days": 19,
+    "baseline_lead_time_days": 11,
+    "lead_time_gain_days": 8,
+    "vacation_class_fpr": 0.0,
+    "auditor_citation_coverage_pct": 100.0,
+    "auditor_hallucination_count": 0
+  }
+}

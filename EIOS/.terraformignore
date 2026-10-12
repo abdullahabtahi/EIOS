@@ -1,0 +1,22 @@
+# Files Terraform must not package or upload when a configuration directory is archived.
+# Local working state and provider caches
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+.terraform.tfstate.lock.info
+
+# Variable files hold environment-specific values and are never committed or shipped.
+# The reviewed examples (*.tfvars.example) are deliberately not matched by these patterns.
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+
+# Plans may embed resolved values
+*.tfplan
+tfplan
+
+# Not ignored on purpose: .terraform.lock.hcl. It records provider checksums and is committed
+# so every machine and CI run resolves the same provider build.

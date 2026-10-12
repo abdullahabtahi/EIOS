@@ -1,0 +1,5 @@
+- id: failing-red-line
+  tier: red_line
+  command: python evals/suites/failing_red_line.py
+  owner_feature: F00
+  report: evals/reports/failing-red-line.json

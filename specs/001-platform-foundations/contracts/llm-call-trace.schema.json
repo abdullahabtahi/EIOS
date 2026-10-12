@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eios/llm-call-trace.schema.json",
+  "title": "LLM Call Trace",
+  "description": "One record per gateway call, whatever the outcome. Carries no raw secrets. Cost is derived from configured prices, never invented.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "trace_id",
+    "correlation_id",
+    "prompt_id",
+    "prompt_version",
+    "config_identity",
+    "tokens_in",
+    "tokens_out",
+    "cost",
+    "latency_ms",
+    "outcome",
+    "recorded_at"
+  ],
+  "properties": {
+    "trace_id": { "type": "string", "minLength": 1 },
+    "correlation_id": { "type": "string", "minLength": 1 },
+    "prompt_id": { "type": "string", "minLength": 1 },
+    "prompt_version": { "type": "string", "minLength": 1 },
+    "config_identity": { "type": "string", "minLength": 1, "description": "Content hash of the configuration used." },
+    "tokens_in": { "type": "integer", "minimum": 0 },
+    "tokens_out": { "type": "integer", "minimum": 0 },
+    "cost": { "type": ["number", "null"], "minimum": 0, "description": "Null when no prices are configured." },
+    "latency_ms": { "type": "integer", "minimum": 0 },
+    "outcome": { "enum": ["ok", "replay", "unavailable", "cap_reached"] },
+    "replay_original_at": { "type": "string", "format": "date-time" },
+    "recorded_at": { "type": "string", "format": "date-time" }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "outcome": { "const": "replay" } }, "required": ["outcome"] },
+      "then": { "required": ["replay_original_at"] },
+      "else": { "not": { "required": ["replay_original_at"] } }
+    }
+  ]
+}
