@@ -22,6 +22,7 @@ concurrency:
 jobs:
   release-candidate:
     name: release-candidate
+    if: vars.EIOS_WORKLOAD_IDENTITY_PROVIDER != '' && vars.EIOS_RELEASE_CANDIDATE_SERVICE_ACCOUNT != ''
     runs-on: ubuntu-latest
     timeout-minutes: 90 # [ASSUMPTION]
     defaults:

@@ -20,6 +20,7 @@ concurrency:
 jobs:
   promote:
     name: promote-prod-like
+    if: vars.EIOS_WORKLOAD_IDENTITY_PROVIDER != '' && vars.EIOS_PROD_LIKE_SERVICE_ACCOUNT != ''
     runs-on: ubuntu-latest
     timeout-minutes: 60 # [ASSUMPTION]
     environment: prod-like

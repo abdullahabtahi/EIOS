@@ -84,7 +84,7 @@ jobs:
 
   plan:
     name: plan-${{ matrix.environment }}
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.head.repo.full_name == github.repository && vars.EIOS_WORKLOAD_IDENTITY_PROVIDER != '' && vars.EIOS_PLAN_SERVICE_ACCOUNT != ''
     runs-on: ubuntu-latest
     timeout-minutes: 30 # [ASSUMPTION]
     defaults:
