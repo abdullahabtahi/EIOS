@@ -81,30 +81,30 @@ export function CausalDagCanvas() {
         <div>
           <div className="flex items-center gap-2">
             <span className="material-symbols-sharp text-base text-emerald-700">insights</span>
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wide text-slate-900">
+            <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
               Interactive 4-Domain Causal Directed Acyclic Graph (DAG)
             </h3>
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5 font-sans">
+          <p className="text-label text-slate-500 mt-0.5 font-sans">
             Constitution Principle III: Refuter-passed causal vectors vs observational correlations.
           </p>
         </div>
 
         {/* Legend */}
-        <div className="flex items-center gap-3 text-[10px] font-mono">
-          <span className="flex items-center gap-1.5 text-[#0D8050]">
-            <span className="w-5 h-0.5 bg-[#0F9960] inline-block" />
+        <div className="flex items-center gap-3 text-label font-mono">
+          <span className="flex items-center gap-1.5 text-cx-ok">
+            <span className="w-5 h-0.5 bg-cx-ok-solid inline-block" />
             Solid: Verified Causal (p &gt; 0.05)
           </span>
-          <span className="flex items-center gap-1.5 text-[#A66321]">
-            <span className="w-5 h-0.5 border-t border-dashed border-[#D9822B] inline-block" />
+          <span className="flex items-center gap-1.5 text-cx-warn">
+            <span className="w-5 h-0.5 border-t border-dashed border-cx-warn-solid inline-block" />
             Dashed: Correlation Only
           </span>
         </div>
       </div>
 
       {/* SVG Canvas */}
-      <div className="relative w-full h-64 bg-slate-50 border border-[#D8E1E8] overflow-hidden">
+      <div className="relative w-full h-64 bg-slate-50 border border-cx-line overflow-hidden">
         <svg className="w-full h-full" viewBox="0 0 700 240">
           <defs>
             <marker
@@ -148,7 +148,7 @@ export function CausalDagCanvas() {
               className="group-hover:stroke-emerald-800 transition-colors"
             />
             <rect x="210" y="66" width="90" height="16" fill="#f0fdf4" stroke="#86efac" strokeWidth="1" />
-            <text x="255" y="78" fill="#065f46" fontSize="9" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
+            <text x="255" y="78" fill="#065f46" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
               β=-9.16 (p=0.42)
             </text>
           </g>
@@ -169,7 +169,7 @@ export function CausalDagCanvas() {
               className="group-hover:stroke-emerald-800 transition-colors"
             />
             <rect x="458" y="66" width="70" height="16" fill="#f0fdf4" stroke="#86efac" strokeWidth="1" />
-            <text x="493" y="78" fill="#065f46" fontSize="9" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
+            <text x="493" y="78" fill="#065f46" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
               β=+0.18 (p=0.38)
             </text>
           </g>
@@ -189,7 +189,7 @@ export function CausalDagCanvas() {
               className="group-hover:stroke-amber-700 transition-colors"
             />
             <rect x="180" y="146" width="130" height="16" fill="#fffbeb" stroke="#fcd34d" strokeWidth="1" />
-            <text x="245" y="158" fill="#92400e" fontSize="9" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
+            <text x="245" y="158" fill="#92400e" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
               Correlation (refuter fail)
             </text>
           </g>
@@ -199,7 +199,7 @@ export function CausalDagCanvas() {
           <g transform="translate(60, 45)">
             <rect width="130" height="70" fill="#ffffff" stroke="#0284c7" strokeWidth="2" />
             <rect width="130" height="18" fill="#e0f2fe" />
-            <text x="8" y="13" fill="#0369a1" fontSize="9" fontWeight="bold" fontFamily="monospace">
+            <text x="8" y="13" fill="#0369a1" fontSize="10" fontWeight="bold" fontFamily="monospace">
               COMPETITIVE
             </text>
             <text x="8" y="36" fill="#0f172a" fontSize="10" fontWeight="bold">
@@ -214,7 +214,7 @@ export function CausalDagCanvas() {
           <g transform="translate(320, 45)">
             <rect width="130" height="70" fill="#ffffff" stroke="#059669" strokeWidth="2" />
             <rect width="130" height="18" fill="#d1fae5" />
-            <text x="8" y="13" fill="#065f46" fontSize="9" fontWeight="bold" fontFamily="monospace">
+            <text x="8" y="13" fill="#065f46" fontSize="10" fontWeight="bold" fontFamily="monospace">
               PARTNER FLOW
             </text>
             <text x="8" y="36" fill="#0f172a" fontSize="10" fontWeight="bold">
@@ -229,7 +229,7 @@ export function CausalDagCanvas() {
           <g transform="translate(540, 45)">
             <rect width="130" height="70" fill="#ffffff" stroke="#10b981" strokeWidth="2" />
             <rect width="130" height="18" fill="#ecfdf5" />
-            <text x="8" y="13" fill="#047857" fontSize="9" fontWeight="bold" fontFamily="monospace">
+            <text x="8" y="13" fill="#047857" fontSize="10" fontWeight="bold" fontFamily="monospace">
               FINANCIAL
             </text>
             <text x="8" y="36" fill="#0f172a" fontSize="10" fontWeight="bold">
@@ -244,7 +244,7 @@ export function CausalDagCanvas() {
           <g transform="translate(320, 150)">
             <rect width="130" height="60" fill="#ffffff" stroke="#d97706" strokeWidth="1.5" />
             <rect width="130" height="16" fill="#fef3c7" />
-            <text x="8" y="12" fill="#92400e" fontSize="9" fontWeight="bold" fontFamily="monospace">
+            <text x="8" y="12" fill="#92400e" fontSize="10" fontWeight="bold" fontFamily="monospace">
               CLIENT CHURN
             </text>
             <text x="8" y="32" fill="#0f172a" fontSize="10" fontWeight="bold">
@@ -264,15 +264,15 @@ export function CausalDagCanvas() {
             <span className="font-bold text-slate-900">
               Edge: {selectedEdge.source} → {selectedEdge.target}
             </span>
-            <div className="text-[11px] text-slate-600 mt-0.5">
+            <div className="text-label text-slate-600 mt-0.5">
               Placebo Refuter p={selectedEdge.placeboRefuterPValue} (threshold &gt; 0.05) | Confidence={Math.round(selectedEdge.confidence * 100)}%
             </div>
           </div>
           <span
-            className={`px-2 py-0.5 font-bold text-[10px] ${
+            className={`px-2 py-0.5 font-bold text-label ${
               selectedEdge.status === 'VERIFIED_CAUSAL'
-                ? 'bg-[#EDF7ED] text-[#0D8050] border border-[#C3E6D0]'
-                : 'bg-[#FAF5EC] text-[#A66321] border border-[#EAD8B5]'
+                ? 'bg-cx-ok-bg text-cx-ok border border-cx-ok-line'
+                : 'bg-cx-warn-bg text-cx-warn border border-cx-warn-line'
             }`}
           >
             {selectedEdge.status}

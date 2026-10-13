@@ -183,7 +183,7 @@ describe('AppNavRail: content', () => {
 
   it('shows operator identity and live pipeline telemetry', () => {
     renderRail();
-    expect(within(rail()).getByTestId('nav-pipeline-status')).toHaveTextContent(/Synced/);
+    expect(within(rail()).getByTestId('nav-pipeline-status')).toHaveTextContent(/Pipeline:\s*(Live|Syncing)/);
     expect(within(rail()).getByTestId('nav-pipeline-status')).toHaveTextContent(/RTT/);
     expect(within(rail()).getByTestId('nav-operator-name')).not.toBeEmptyDOMElement();
   });

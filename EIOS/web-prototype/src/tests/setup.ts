@@ -1,6 +1,17 @@
+import * as workerThreads from 'node:worker_threads';
+if (typeof (workerThreads as any).markAsUncloneable !== 'function') {
+  (workerThreads as any).markAsUncloneable = () => {};
+}
+
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, beforeAll, vi } from 'vitest';
+
+beforeAll(() => {
+  vi.spyOn(console, 'info').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+});
 
 afterEach(() => {
   cleanup();

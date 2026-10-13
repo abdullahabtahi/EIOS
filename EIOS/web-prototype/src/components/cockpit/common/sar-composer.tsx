@@ -87,35 +87,35 @@ export function SarComposer({ draft = DEFAULT_DRAFT, onSave }: SarComposerProps)
         <div>
           <div className="flex items-center gap-2">
             <span className="material-symbols-sharp text-base text-amber-700">gavel</span>
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wide text-slate-900">
+            <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
               Near-Final SAR Draft Narrative Composer
             </h3>
           </div>
-          <div className="text-[11px] font-mono text-slate-500 mt-0.5">
+          <div className="text-label font-mono text-slate-500 mt-0.5">
             Case: <span className="font-bold text-slate-800">{draft.caseId}</span> | Subject: {draft.subjectAccountId}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 bg-[#FAF5EC] text-[#A66321] border border-[#EAD8B5] font-mono text-[10px] font-bold">
+          <span className="px-2 py-0.5 bg-cx-warn-bg text-cx-warn border border-cx-warn-line font-mono text-label font-bold">
             STATUS: {draft.status}
           </span>
-          <span className="text-[10px] font-mono text-[#5C7080]">
+          <span className="text-label font-mono text-cx-muted">
             Turnover: ${draft.totalTurnover.toLocaleString()}
           </span>
         </div>
       </div>
 
       {/* Statutory Citations Banner */}
-      <div className="p-2.5 bg-[#F5F8FA] border border-[#D8E1E8] space-y-1">
-        <span className="text-[10px] font-mono font-bold uppercase text-[#5C7080] block">
+      <div className="p-2.5 bg-cx-sub border border-cx-line space-y-1">
+        <span className="text-label font-mono font-bold uppercase text-cx-muted block">
           Statutory Normalization Citations:
         </span>
         <div className="flex flex-wrap gap-1.5">
           {draft.statutoryCitations.map((cite, i) => (
             <span
               key={i}
-              className="text-[10px] font-mono bg-white text-[#394B59] px-1.5 py-0.2 border border-[#D8E1E8]"
+              className="text-label font-mono bg-white text-cx-ink-soft px-1.5 py-0.2 border border-cx-line"
             >
               {cite}
             </span>
@@ -125,25 +125,25 @@ export function SarComposer({ draft = DEFAULT_DRAFT, onSave }: SarComposerProps)
 
       {/* Narrative Editor Area */}
       <div className="space-y-1.5">
-        <div className="flex items-center justify-between text-xs font-semibold text-[#182026]">
+        <div className="flex items-center justify-between text-xs font-semibold text-cx-ink">
           <label htmlFor="sar-narrative-textarea">Suspicious Activity Description (FinCEN Compliant Narrative):</label>
-          <span className="text-[10px] font-mono text-[#5C7080]">{narrative.length} chars</span>
+          <span className="text-label font-mono text-cx-muted">{narrative.length} chars</span>
         </div>
         <textarea
           id="sar-narrative-textarea"
           rows={6}
           value={narrative}
           onChange={(e) => setNarrative(e.target.value)}
-          className="w-full p-3 bg-white border border-[#D8E1E8] text-[#182026] text-xs font-mono focus:outline-none focus:border-[#106BA3] rounded-none leading-relaxed"
+          className="w-full p-3 bg-white border border-cx-line text-cx-ink text-xs font-mono focus:outline-none focus:border-cx-accent rounded-none leading-relaxed"
         />
       </div>
 
       {/* Action Controls */}
-      <div className="flex items-center justify-between pt-2 border-t border-[#E1E8ED]">
+      <div className="flex items-center justify-between pt-2 border-t border-cx-line-soft">
         <button
           type="button"
           onClick={handleSaveDraft}
-          className="px-3 py-1.5 border border-[#D8E1E8] bg-[#F5F8FA] hover:bg-[#EBF1F5] text-[#182026] text-xs font-medium rounded-none transition-colors cursor-pointer"
+          className="px-3 py-1.5 border border-cx-line bg-cx-sub hover:bg-cx-sub-2 text-cx-ink text-xs font-medium rounded-none transition-colors cursor-pointer"
         >
           {isSaved ? 'Draft Saved ✓' : 'Save Draft Narrative'}
         </button>
@@ -151,7 +151,7 @@ export function SarComposer({ draft = DEFAULT_DRAFT, onSave }: SarComposerProps)
         <button
           type="button"
           onClick={handleStageFiling}
-          className="px-4 py-1.5 bg-[#CD4246] hover:bg-[#A82A2A] text-white font-semibold text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
+          className="px-4 py-1.5 bg-cx-bad-solid hover:bg-cx-bad text-white font-semibold text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
         >
           <span className="material-symbols-sharp text-sm">security</span>
           Stage Official SAR Filing (Four-Eyes Required)

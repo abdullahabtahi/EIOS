@@ -90,9 +90,8 @@ describe('Tripartite Shell Layout & Navigation (User Story 1)', () => {
     // Header Nav elements
     expect(screen.getByText(/OPERATOR COCKPIT/i)).toBeInTheDocument();
     
-    // Diagnostics tab hosts Principle VIII Fallback & Outage Verification
-    const diagTab = screen.getByRole('tab', { name: /Diagnostics/i });
-    fireEvent.click(diagTab);
+    // System status (opened from the header pipeline chip) hosts Principle VIII Fallback & Outage Verification
+    fireEvent.click(screen.getByTestId('header-pipeline-status'));
     expect(screen.getByRole('button', { name: /Simulate Outage/i })).toBeInTheDocument();
 
     // Left Triage Rail
@@ -109,8 +108,7 @@ describe('Tripartite Shell Layout & Navigation (User Story 1)', () => {
       </CockpitProvider>
     );
 
-    const diagTab = screen.getByRole('tab', { name: /Diagnostics/i });
-    fireEvent.click(diagTab);
+    fireEvent.click(screen.getByTestId('header-pipeline-status'));
     const outageToggle = screen.getByRole('button', { name: /Simulate Outage/i });
     fireEvent.click(outageToggle);
 

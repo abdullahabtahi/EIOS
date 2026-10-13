@@ -112,16 +112,16 @@ export function PartnerTree() {
         <div>
           <div className="flex items-center gap-2">
             <span className="material-symbols-sharp text-base text-blue-600">account_tree</span>
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wide text-slate-900">
+            <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
               3-Tier Sub-Affiliate Hierarchy & Mirror Trading Detection
             </h3>
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <p className="text-label text-slate-500 mt-0.5">
             Network tracing of multi-level rebate dispersion and collusion rings.
           </p>
         </div>
 
-        <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-300 font-mono text-[10px] font-bold">
+        <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-300 font-mono text-label font-bold">
           COLLUSION CORRELATION: 0.88 (&ge; 0.85 ALERT)
         </span>
       </div>
@@ -133,11 +133,11 @@ export function PartnerTree() {
             <span className="material-symbols-sharp text-base text-rose-600">warning</span>
             <span>Mirror Trading Ring Detected: 88.0% Timing Co-occurrence</span>
           </div>
-          <p className="text-[11px] text-rose-900 font-sans leading-relaxed">
+          <p className="text-label text-rose-900 font-sans leading-relaxed">
             Sub-affiliates <strong>PTR-882-C1</strong> and <strong>PTR-882-C2</strong> executed identical offset orders within 40ms of master client orders, extracting $142,390 USD in rebates.
           </p>
           {/* Timing Co-occurrence Progress Bar */}
-          <div className="flex items-center gap-2 pt-0.5 text-[10px]">
+          <div className="flex items-center gap-2 pt-0.5 text-label">
             <span className="text-slate-600 font-mono">Co-occurrence:</span>
             <div className="w-48 h-2 bg-rose-200 rounded-none overflow-hidden relative">
               <div className="h-full bg-rose-600" style={{ width: '88%' }} />
@@ -145,7 +145,7 @@ export function PartnerTree() {
               <div className="absolute top-0 bottom-0 left-[85%] w-0.5 bg-rose-950" title="Alert Threshold (85%)" />
             </div>
             <span className="text-rose-700 font-bold">88.0%</span>
-            <span className="text-slate-400 text-[9px] font-sans">(Threshold: 85.0%)</span>
+            <span className="text-slate-400 text-label font-sans">(Threshold: 85.0%)</span>
           </div>
         </div>
 
@@ -160,7 +160,7 @@ export function PartnerTree() {
       </div>
 
       {/* 3-Tier Tree Visualizer */}
-      <div className="p-3 bg-[#F8FAFC] border border-slate-200 space-y-2 text-xs font-mono">
+      <div className="p-3 bg-cx-wash border border-slate-200 space-y-2 text-xs font-mono">
         {/* Tier 1 Node */}
         <div
           onClick={() => selectEntity(MOCK_TREE.partnerId)}
@@ -170,6 +170,8 @@ export function PartnerTree() {
             <button
               type="button"
               onClick={(e) => toggleCollapse(MOCK_TREE.partnerId, e)}
+              aria-expanded={!collapsedNodes.has(MOCK_TREE.partnerId)}
+              aria-label={`${collapsedNodes.has(MOCK_TREE.partnerId) ? 'Expand' : 'Collapse'} ${MOCK_TREE.name}`}
               className="p-0.5 hover:bg-slate-100 cursor-pointer text-slate-500"
             >
               <span className="material-symbols-sharp text-sm">
@@ -178,14 +180,14 @@ export function PartnerTree() {
             </button>
             <span className="size-2 rounded-full bg-blue-600 inline-block" />
             <span className="font-bold text-slate-900 group-hover:text-blue-600">{MOCK_TREE.name}</span>
-            <span className="text-[10px] bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.2 font-bold">
+            <span className="text-label bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.2 font-bold">
               TIER 1 SUPER
             </span>
-            <span className="text-[10px] text-slate-400 font-mono">[{MOCK_TREE.partnerId}]</span>
+            <span className="text-label text-slate-400 font-mono">[{MOCK_TREE.partnerId}]</span>
           </div>
           <div className="text-right">
             <span className="font-bold text-slate-900">${MOCK_TREE.monthlyCommissionUsd.toLocaleString()}/mo</span>
-            <span className="text-slate-400 text-[10px] block">{MOCK_TREE.subAffiliatesCount} Sub-affiliates</span>
+            <span className="text-slate-400 text-label block">{MOCK_TREE.subAffiliatesCount} Sub-affiliates</span>
           </div>
         </div>
 
@@ -203,6 +205,8 @@ export function PartnerTree() {
                       <button
                         type="button"
                         onClick={(e) => toggleCollapse(child.partnerId, e)}
+                        aria-expanded={!collapsedNodes.has(child.partnerId)}
+                        aria-label={`${collapsedNodes.has(child.partnerId) ? 'Expand' : 'Collapse'} ${child.name}`}
                         className="p-0.5 hover:bg-slate-100 cursor-pointer text-slate-500"
                       >
                         <span className="material-symbols-sharp text-sm">
@@ -214,15 +218,15 @@ export function PartnerTree() {
                     )}
                     <span className="size-2 rounded-full bg-slate-600 inline-block" />
                     <span className="font-medium text-slate-900 group-hover:text-blue-600">{child.name}</span>
-                    <span className="text-[10px] bg-slate-100 text-slate-700 px-1 py-0.2 border border-slate-200">
+                    <span className="text-label bg-slate-100 text-slate-700 px-1 py-0.2 border border-slate-200">
                       TIER 2
                     </span>
-                    <span className="text-[10px] text-slate-400">[{child.partnerId}]</span>
+                    <span className="text-label text-slate-400">[{child.partnerId}]</span>
                   </div>
                   <div className="text-right">
                     <span className="font-bold text-slate-800">${child.monthlyCommissionUsd.toLocaleString()}/mo</span>
                     {child.subAffiliatesCount ? (
-                      <span className="text-slate-400 text-[9px] block">{child.subAffiliatesCount} downlines</span>
+                      <span className="text-slate-400 text-label block">{child.subAffiliatesCount} downlines</span>
                     ) : null}
                   </div>
                 </div>
@@ -238,19 +242,19 @@ export function PartnerTree() {
                       >
                         <div className="flex items-center gap-2">
                           <span className="size-1.5 rounded-full bg-amber-600 inline-block" />
-                          <span className="text-[11px] font-semibold text-slate-900 group-hover:text-amber-700">
+                          <span className="text-label font-semibold text-slate-900 group-hover:text-amber-700">
                             {subChild.name}
                           </span>
-                          <span className="text-[9px] bg-amber-200 text-amber-900 border border-amber-300 px-1.5 py-0.2 font-bold tracking-wider">
+                          <span className="text-label bg-amber-200 text-amber-900 border border-amber-300 px-1.5 py-0.2 font-bold tracking-wider">
                             RING SUSPECT
                           </span>
-                          <span className="text-[10px] text-slate-400">[{subChild.partnerId}]</span>
+                          <span className="text-label text-slate-400">[{subChild.partnerId}]</span>
                         </div>
                         <div className="text-right">
-                          <span className="text-[11px] font-bold text-amber-900 block">
+                          <span className="text-label font-bold text-amber-900 block">
                             ${subChild.monthlyCommissionUsd.toLocaleString()}/mo
                           </span>
-                          <span className="text-[9px] text-rose-600 font-bold block">40ms sync execution</span>
+                          <span className="text-label text-rose-600 font-bold block">40ms sync execution</span>
                         </div>
                       </div>
                     ))}

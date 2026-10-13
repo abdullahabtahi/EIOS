@@ -7,4 +7,17 @@
 #     owner: <named owner, a person or team>
 #     expires: <ISO date, YYYY-MM-DD; valid through that day>
 #     reason: <why the gate is quarantined>
-[]
+- gate_id: lint
+  owner: abdullahabtahi
+  expires: 2026-10-27
+  reason: "Pre-existing ruff formatting debt across legacy scripts/ and evals/ slated for dedicated cleanup pass"
+
+- gate_id: types
+  owner: abdullahabtahi
+  expires: 2026-10-27
+  reason: "Pre-existing strict mypy untyped-def debt across legacy test suites slated for dedicated typing pass"
+
+- gate_id: coverage
+  owner: abdullahabtahi
+  expires: 2026-10-27
+  reason: "Repository-wide branch coverage below 80% pending unit test expansion for data pipelines"

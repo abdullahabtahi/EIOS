@@ -12,6 +12,7 @@ import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
 import { ActionIntentCard } from '../state/cockpit-types';
 import { FourEyesApprovalModal } from '../common/four-eyes-modal';
+import { Chip } from '../ui/chip';
 
 export function GovernedActionShelf() {
   const {
@@ -35,64 +36,61 @@ export function GovernedActionShelf() {
     );
   };
 
+  const expiredCount = stagedActions.filter((a) => a.lifecycleState === 'EXPIRED').length;
+  const pendingCount = stagedActions.filter((a) => a.lifecycleState === 'PENDING_SECOND_EYE').length;
+
   return (
     <>
       <section
         aria-label="Governed Action Shelf"
-        className="w-full bg-white border-t border-slate-300 text-slate-900 shadow-md transition-all duration-200 z-40 shrink-0"
+        title="Two-phase commit: nothing executes without a signed, dual-approved intent (Principle II)"
+        className="relative w-full bg-white border-t border-slate-300 text-slate-900 z-40 shrink-0"
       >
-        {/* Shelf Collapsible Header Strip */}
-        <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        {/* Slim status bar: always visible, ~36px */}
+        <div className="h-9 px-4 bg-slate-50 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
+              aria-expanded={governedActionShelfExpanded}
+              aria-label={governedActionShelfExpanded ? 'Collapse action shelf' : 'Expand action shelf'}
               onClick={() => setShelfExpanded(!governedActionShelfExpanded)}
-              className="flex items-center gap-2 text-xs font-semibold text-slate-900 hover:text-slate-700 cursor-pointer focus:outline-none"
-              title={governedActionShelfExpanded ? 'Collapse shelf' : 'Expand shelf'}
+              className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 hover:text-cx-accent cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-cx-accent"
             >
               <span className="material-symbols-sharp text-sm text-slate-500">
                 {governedActionShelfExpanded ? 'expand_more' : 'expand_less'}
               </span>
-              <span className="tracking-wide uppercase font-mono text-[11px] text-slate-800">
+              <span className="tracking-wide uppercase font-mono text-label text-slate-800">
                 Governed Action Shelf
               </span>
             </button>
 
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 border border-blue-200 text-[#106BA3] font-mono text-[11px] font-bold">
-              <span>{stagedActions.length}</span>
-              <span className="text-[10px] uppercase font-sans">Staged</span>
-            </span>
+            <Chip tone="info">{`${stagedActions.length} staged`}</Chip>
 
-            <span className="hidden md:inline-flex items-center gap-1.5 text-[11px] text-amber-900 font-mono bg-amber-50 px-2 py-0.5 border border-amber-200">
-              <span className="material-symbols-sharp text-[13px] text-amber-600">gavel</span>
-              Principle II: Two-Phase Commit Required for All Mutations
-            </span>
+            {expiredCount > 0 && (
+              <Chip tone="warn">{`${expiredCount} expired`}</Chip>
+            )}
+            {pendingCount > 0 && (
+              <Chip>{`${pendingCount} awaiting 2nd approver`}</Chip>
+            )}
           </div>
 
-          <div className="flex items-center gap-3">
-            {stagedActions.length > 0 && (
-              <button
-                type="button"
-                onClick={clearStagedActions}
-                className="text-[11px] text-slate-500 hover:text-rose-600 font-medium transition-colors cursor-pointer"
-              >
-                Clear All
-              </button>
-            )}
-
+          {stagedActions.length > 0 && (
             <button
               type="button"
-              onClick={() => setShelfExpanded(!governedActionShelfExpanded)}
-              className="text-xs text-slate-600 hover:text-slate-900 font-medium transition-colors cursor-pointer"
+              onClick={clearStagedActions}
+              className="text-label text-slate-500 hover:text-rose-600 font-medium transition-colors cursor-pointer"
             >
-              {governedActionShelfExpanded ? 'Collapse' : 'Expand'}
+              Clear all
             </button>
-          </div>
+          )}
         </div>
 
         {/* Shelf Body (Only visible when expanded) */}
         {governedActionShelfExpanded && (
-          <div className="p-4 bg-slate-100/70 border-b border-slate-200 overflow-x-auto scrollbar-thin max-h-72">
+          <div
+            data-slot="action-drawer"
+            className="absolute bottom-full inset-x-0 p-4 bg-slate-100 border-t border-slate-300 shadow-[0_-10px_24px_-12px_rgba(15,23,42,0.28)] overflow-auto max-h-[min(340px,50vh)]"
+          >
             {stagedActions.length === 0 ? (
               <div className="py-6 text-center text-slate-500 text-xs">
                 <span className="material-symbols-sharp text-2xl text-slate-400 block mb-1">
@@ -104,11 +102,13 @@ export function GovernedActionShelf() {
               <div className="flex items-stretch gap-4 pb-1">
                 {stagedActions.map((action) => {
                   const isCommitted = action.lifecycleState === 'COMMITTED';
+                  const isExpired = action.lifecycleState === 'EXPIRED';
                   const isCriticalOrHigh = action.severity === 'CRITICAL' || action.severity === 'HIGH';
 
                   return (
                     <div
                       key={action.intentId}
+                      data-testid={`action-card-${action.intentId}`}
                       className={`w-80 shrink-0 bg-white text-slate-900 border p-3 flex flex-col justify-between shadow-xs rounded-none ${
                         isCommitted ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-300'
                       }`}
@@ -117,63 +117,73 @@ export function GovernedActionShelf() {
                       <div>
                         <div className="flex items-center justify-between gap-1 mb-1.5">
                           <span
-                            className={`px-1.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider ${
+                            className={`px-1.5 py-0.5 text-label font-mono font-bold uppercase tracking-wider ${
                               action.severity === 'CRITICAL'
-                                ? 'bg-[#FAF0F0] text-[#A82A2A] border border-[#E8C5C5]'
+                                ? 'bg-cx-bad-bg text-cx-bad border border-cx-bad-line'
                                 : action.severity === 'HIGH'
-                                ? 'bg-[#FAF5EC] text-[#A66321] border border-[#EAD8B5]'
-                                : 'bg-[#F5F8FA] text-[#5C7080] border border-[#D8E1E8]'
+                                ? 'bg-cx-warn-bg text-cx-warn border border-cx-warn-line'
+                                : 'bg-cx-sub text-cx-muted border border-cx-line'
                             }`}
                           >
                             {action.severity}
                           </span>
 
                           <span
-                            className={`text-[10px] font-mono font-semibold px-1 py-0.5 ${
+                            className={`text-label font-mono font-semibold px-1 py-0.5 ${
                               isCommitted
-                                ? 'bg-[#EDF7ED] text-[#0D8050] border border-[#C3E6D0]'
-                                : 'bg-[#EDF5FA] text-[#106BA3] border border-[#BFD3E6]'
+                                ? 'bg-cx-ok-bg text-cx-ok border border-cx-ok-line'
+                                : isExpired
+                                ? 'bg-cx-warn-bg text-cx-warn border border-cx-warn-line'
+                                : 'bg-cx-info-bg text-cx-accent border border-cx-info-line'
                             }`}
                           >
                             {action.lifecycleState}
                           </span>
                         </div>
 
-                        <h4 className="text-xs font-bold text-[#182026] font-mono tracking-tight leading-tight">
+                        <h4 className="text-xs font-bold text-cx-ink font-mono tracking-tight leading-tight">
                           {action.actionType}
                         </h4>
 
-                        <div className="text-[11px] text-[#5C7080] font-mono mt-0.5">
-                          Target: <span className="font-semibold text-[#182026]">{action.targetEntityId}</span>
+                        <div className="text-label text-cx-muted font-mono mt-0.5">
+                          Target: <span className="font-semibold text-cx-ink">{action.targetEntityId}</span>
                         </div>
 
-                        <p className="text-[11px] text-[#5C7080] mt-2 line-clamp-2">
+                        <p className="text-label text-cx-muted mt-2 line-clamp-2">
                           {action.estimatedImpact}
                         </p>
                       </div>
 
                       {/* Card Signatures & Commitment Controls */}
-                      <div className="mt-3 pt-2.5 border-t border-[#E1E8ED] space-y-2">
+                      <div className="mt-3 pt-2.5 border-t border-cx-line-soft space-y-2">
                         {/* Cloud KMS Badge */}
-                        <div className="flex items-center justify-between text-[10px] font-mono text-[#5C7080]">
+                        <div className="flex items-center justify-between text-label font-mono text-cx-muted">
                           <span className="flex items-center gap-1">
-                            <span className="material-symbols-sharp text-xs text-[#106BA3]">key</span>
+                            <span className="material-symbols-sharp text-xs text-cx-accent">key</span>
                             Cloud KMS P-256
                           </span>
                           <span
                             className={
-                              action.kmsSignatureBadge.verified ? 'text-[#0D8050] font-bold' : 'text-[#8A9BA8]'
+                              isExpired
+                                ? 'text-cx-warn font-bold'
+                                : action.kmsSignatureBadge.verified
+                                ? 'text-cx-ok font-bold'
+                                : 'text-cx-faint'
                             }
                           >
-                            {action.kmsSignatureBadge.verified ? 'DIGITALLY VERIFIED' : 'PENDING COMMIT'}
+                            {isExpired
+                              ? 'SIGNATURE EXPIRED'
+                              : action.kmsSignatureBadge.verified
+                              ? 'DIGITALLY VERIFIED'
+                              : 'PENDING COMMIT'}
                           </span>
                         </div>
 
                         {/* Two-Phase Buttons */}
                         <div className="flex items-center gap-2 pt-1">
                           {isCommitted ? (
-                            <div className="w-full py-1.5 bg-[#EDF7ED] border border-[#C3E6D0] text-[#0D8050] text-[11px] font-mono font-semibold flex items-center justify-center gap-1">
-                              <span className="material-symbols-sharp text-xs text-[#0F9960]">
+                            <div className="w-full py-1.5 bg-cx-ok-bg border border-cx-ok-line text-cx-ok text-label font-mono font-semibold flex items-center justify-center gap-1">
+                              <span className="material-symbols-sharp text-xs text-cx-ok-solid">
                                 verified_user
                               </span>
                               COMMITTED TO WORM LEDGER
@@ -189,11 +199,18 @@ export function GovernedActionShelf() {
                                 Discard
                               </button>
 
-                              {action.requiresFourEyes || isCriticalOrHigh ? (
+                              {isExpired ? (
+                                <div
+                                  data-testid="action-expired-notice"
+                                  className="flex-1 py-1.5 px-2 bg-cx-warn-bg border border-cx-warn-line text-cx-warn text-label font-mono font-semibold text-center"
+                                >
+                                  Expired · re-stage to renew
+                                </div>
+                              ) : action.requiresFourEyes || isCriticalOrHigh ? (
                                 <button
                                   type="button"
                                   onClick={() => openFourEyesModal(action)}
-                                  className="flex-1 py-1.5 bg-[#182026] hover:bg-[#202B33] text-white text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-xs"
+                                  className="flex-1 py-1.5 bg-cx-ink hover:bg-cx-ink-hover text-white text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-xs"
                                 >
                                   <span className="material-symbols-sharp text-xs text-amber-400">
                                     shield_person
@@ -204,7 +221,7 @@ export function GovernedActionShelf() {
                                 <button
                                   type="button"
                                   onClick={() => handleSingleAuthorize(action)}
-                                  className="flex-1 py-1.5 bg-[#106BA3] hover:bg-[#0E5C8A] text-white text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-xs"
+                                  className="flex-1 py-1.5 bg-cx-accent hover:bg-cx-accent-strong text-white text-xs font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors shadow-xs"
                                 >
                                   <span className="material-symbols-sharp text-xs">edit_square</span>
                                   Execute Action

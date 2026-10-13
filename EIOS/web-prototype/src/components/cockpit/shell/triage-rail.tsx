@@ -10,6 +10,8 @@
 
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
+import { countBySeverity, formatAge } from '../state/triage-meta';
+import { Chip, type ChipTone } from '../ui/chip';
 import { useKeyboardTriage } from './use-keyboard-triage';
 
 const SEVERITIES: Array<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'> = [
@@ -20,7 +22,17 @@ const SEVERITIES: Array<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'> = [
   'LOW',
 ];
 
-export function TriageRail() {
+const PILL_LABEL: Record<string, string> = { ALL: 'ALL', CRITICAL: 'CRIT', HIGH: 'HIGH', MEDIUM: 'MED', LOW: 'LOW' };
+
+const STATUS_TONE: Record<string, ChipTone> = {
+  OPEN: 'neutral',
+  INVESTIGATING: 'info',
+  STAGED: 'warn',
+  RESOLVED: 'ok',
+  DISMISSED: 'neutral',
+};
+
+export function TriageRail({ onCollapse }: { onCollapse?: () => void } = {}) {
   const {
     state,
     filteredTriageItems,
@@ -28,6 +40,17 @@ export function TriageRail() {
     setSearchQuery,
     setSeverityFilter,
   } = useCockpit();
+
+  // Counts reflect the text search but not the severity filter, so every pill stays meaningful.
+  const counts = React.useMemo(() => {
+    const q = state.triageSearchQuery.trim().toLowerCase();
+    const searched = q
+      ? state.triageItems.filter((i) =>
+          [i.title, i.subtitle, i.entityId, ...i.tags].some((t) => t.toLowerCase().includes(q)),
+        )
+      : state.triageItems;
+    return countBySeverity(searched);
+  }, [state.triageItems, state.triageSearchQuery]);
 
   // Mount keyboard velocity navigation (j/k/x/e/f)
   useKeyboardTriage(filteredTriageItems);
@@ -42,17 +65,25 @@ export function TriageRail() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="material-symbols-sharp text-sm text-slate-700">playlist_play</span>
-            <span className="text-[11px] font-bold font-mono uppercase tracking-wider text-slate-900">
+            <span className="text-label font-bold font-mono uppercase tracking-wider text-slate-900">
               Triage Signals
             </span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="px-1 py-0.2 bg-slate-100 text-slate-600 text-[9px] font-mono border border-slate-300" title="Keyboard hotkeys: j/k move, x select, e hold, f sar">
-              j/k/e/f
-            </span>
-            <span className="px-1.5 py-0.2 bg-slate-200 text-slate-800 text-[10px] font-mono font-bold">
+            <span className="px-1.5 py-0.2 bg-slate-200 text-slate-800 text-label font-mono font-bold whitespace-nowrap" title="Keyboard: j/k move, x select, e hold, f file SAR">
               {filteredTriageItems.length} active
             </span>
+            {onCollapse && (
+              <button
+                type="button"
+                onClick={onCollapse}
+                title="Collapse Left Rail (press [)"
+                aria-label="Collapse Left Rail"
+                className="ml-1 size-6 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-cx-accent"
+              >
+                <span className="material-symbols-sharp text-base">chevron_left</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -71,21 +102,28 @@ export function TriageRail() {
         </div>
 
         {/* Severity Filter Pills */}
-        <div className="flex items-center gap-1 overflow-x-auto text-[10px] font-mono">
+        <div className="flex items-center gap-1 overflow-x-auto text-label font-mono">
           {SEVERITIES.map((sev) => {
             const isActive = state.triageSeverityFilter === sev;
+            const count = counts[sev as keyof typeof counts];
             return (
               <button
                 key={sev}
                 type="button"
+                aria-label={`${sev} ${count}`}
+                title={`${sev}: ${count}`}
+                aria-pressed={isActive}
                 onClick={() => setSeverityFilter(sev)}
-                className={`px-2 py-0.5 rounded-none border transition-colors cursor-pointer shrink-0 font-mono text-[10px] ${
+                className={`min-h-6 px-1.5 py-0.5 rounded-none border transition-colors cursor-pointer shrink-0 font-mono text-label flex items-center gap-1.5 ${
                   isActive
-                    ? 'bg-[#182026] border-[#182026] text-white font-bold'
-                    : 'bg-[#F5F8FA] hover:bg-[#EBF1F5] border-[#D8E1E8] text-[#5C7080]'
+                    ? 'bg-cx-ink border-cx-ink text-white font-bold'
+                    : count === 0
+                    ? 'bg-cx-sub border-cx-line text-cx-faint'
+                    : 'bg-cx-sub hover:bg-cx-sub-2 border-cx-line text-cx-muted'
                 }`}
               >
-                {sev}
+                <span aria-hidden="true">{PILL_LABEL[sev]}</span>
+                <span aria-hidden="true" className="tabular-nums opacity-80">{count}</span>
               </button>
             );
           })}
@@ -93,10 +131,10 @@ export function TriageRail() {
       </div>
 
       {/* Triage Items Scrollable List */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin divide-y divide-[#E1E8ED]">
+      <div className="flex-1 overflow-y-auto scrollbar-thin divide-y divide-cx-line-soft">
         {filteredTriageItems.length === 0 ? (
-          <div className="p-6 text-center text-[#8A9BA8] text-xs">
-            <span className="material-symbols-sharp text-2xl text-[#CED9E0] block mb-1">
+          <div className="p-6 text-center text-cx-faint text-xs">
+            <span className="material-symbols-sharp text-2xl text-cx-line-strong block mb-1">
               search_off
             </span>
             No signals match current filters.
@@ -114,53 +152,52 @@ export function TriageRail() {
                 type="button"
                 onClick={() => selectTriageItem(item.id)}
                 aria-current={isSelected ? 'true' : undefined}
-                className={`w-full text-left p-3 border-l-2 border-l-transparent transition-colors cursor-pointer block outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#106BA3] ${
+                className={`w-full text-left p-3 border-l-2 border-l-transparent transition-colors cursor-pointer block outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent ${
                   isSelected
-                    ? 'bg-[#E8F1F8] shadow-[inset_0_1px_0_rgba(16,107,163,0.28),inset_0_-1px_0_rgba(16,107,163,0.28)]'
-                    : 'bg-white hover:bg-[#F9FBFC]'
+                    ? 'bg-cx-select shadow-[inset_0_1px_0_rgba(16,107,163,0.28),inset_0_-1px_0_rgba(16,107,163,0.28)]'
+                    : 'bg-white hover:bg-cx-hover'
                 }`}
               >
                 {/* Severity & Score Header */}
                 <div className="flex items-center justify-between gap-1 mb-1">
                   <span
-                    className={`px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider border ${
+                    className={`px-1.5 py-0.5 text-label font-mono font-bold uppercase tracking-wider border ${
                       isCritical
-                        ? 'bg-[#FAF0F0] text-[#A82A2A] border-[#E8C5C5]'
+                        ? 'bg-cx-bad-bg text-cx-bad border-cx-bad-line'
                         : isHigh
-                        ? 'bg-[#FAF5EC] text-[#A66321] border-[#EAD8B5]'
+                        ? 'bg-cx-warn-bg text-cx-warn border-cx-warn-line'
                         : isMedium
-                        ? 'bg-[#F0F4FA] text-[#215DB0] border-[#C7D7EE]'
-                        : 'bg-[#F5F8FA] text-[#5C7080] border-[#D8E1E8]'
+                        ? 'bg-cx-info-bg-2 text-cx-info border-cx-info-line-2'
+                        : 'bg-cx-sub text-cx-muted border-cx-line'
                     }`}
                   >
                     {item.severity}
                   </span>
 
-                  <span className="text-[10px] font-mono text-[#5C7080] tabular-nums">
+                  <span className="text-label font-mono text-cx-muted tabular-nums">
                     P={(item.priorityScore ?? 0).toFixed(2)}
                   </span>
                 </div>
 
                 {/* Title & Subtitle */}
-                <div className={`text-xs font-bold leading-snug truncate ${isSelected ? 'text-[#0E5A8A]' : 'text-[#182026]'}`}>
+                <div className={`text-xs font-bold leading-snug truncate ${isSelected ? 'text-cx-accent-strong' : 'text-cx-ink'}`}>
                   {item.title}
                 </div>
-                <div className="text-[11px] text-[#5C7080] truncate mt-0.5 leading-normal">
+                <div className="text-label text-cx-muted truncate mt-0.5 leading-normal">
                   {item.subtitle}
                 </div>
 
-                {/* Entity ID & Metric Pills (Entity Tag) */}
-                <div className="mt-2 flex items-center justify-between gap-1 text-[10px] font-mono">
-                  <span className="text-[#394B59] bg-[#F5F8FA] px-1.5 py-0.5 border border-[#D8E1E8] font-medium tracking-tight truncate uppercase">
+                {/* Entity tag (left); lifecycle status + age relative to the data as-of time (right) */}
+                <div className="mt-2 flex items-center justify-between gap-2 text-label font-mono">
+                  <span className="text-cx-ink-soft bg-cx-sub px-1.5 py-0.5 border border-cx-line font-medium tracking-tight truncate uppercase">
                     {item.entityId}
                   </span>
-
-                  {item.metricsSummary &&
-                    Object.entries(item.metricsSummary).slice(0, 1).map(([key, val]) => (
-                      <span key={key} className="text-[#182026] font-semibold truncate tabular-nums">
-                        {String(val)}
-                      </span>
-                    ))}
+                  <span className="flex items-center gap-1.5 shrink-0 text-cx-muted">
+                    {item.status !== 'OPEN' && <Chip tone={STATUS_TONE[item.status] ?? 'neutral'}>{item.status}</Chip>}
+                    <span title={`Raised ${item.timestamp}`} className="tabular-nums">
+                      {formatAge(item.timestamp, state.asOfTimestamp)}
+                    </span>
+                  </span>
                 </div>
 
                 {/* Tags */}
@@ -169,7 +206,7 @@ export function TriageRail() {
                     {(item.tags ?? []).map((tag) => (
                       <span
                         key={tag}
-                        className="text-[9px] font-mono text-[#8A9BA8] bg-[#F5F8FA] px-1 py-0.2"
+                        className="text-label font-mono text-cx-faint bg-cx-sub px-1 py-0.2"
                       >
                         #{tag}
                       </span>

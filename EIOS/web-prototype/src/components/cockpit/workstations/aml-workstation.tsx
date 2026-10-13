@@ -15,7 +15,7 @@ import { MetricProvenanceBadge } from '../common/metric-provenance';
 
 export function AmlWorkstationView() {
   return (
-    <div className="space-y-6 select-none text-slate-900 pb-10">
+    <div className="space-y-6 text-slate-900 pb-10">
       {/* Surface 1: Relational Graph with CGNAT Hub Suppression (Anchor: panel-graph) */}
       <div
         role="tabpanel"
@@ -47,38 +47,38 @@ export function AmlWorkstationView() {
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <div className="flex items-center gap-2">
               <span className="material-symbols-sharp text-base text-rose-600">shield_with_heart</span>
-              <h3 className="text-xs font-bold font-mono uppercase tracking-wide text-slate-900">
+              <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
                 One-Screen Evidence Dossier: ACC-88219 (LatAm Primary)
               </h3>
             </div>
-            <span className="text-[10px] font-mono bg-rose-100 text-rose-800 px-1.5 py-0.5 border border-rose-200 font-bold">
+            <span className="text-label font-mono bg-rose-100 text-rose-800 px-1.5 py-0.5 border border-rose-200 font-bold">
               SEVERITY: CRITICAL (SCORE: 0.94)
             </span>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
             <div className="p-3 bg-slate-50 border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">Total 30D Turnover</span>
+              <span className="text-label text-slate-500 block">Total 30D Turnover</span>
               <div className="text-base font-bold text-slate-900 mt-0.5">$1,420,000</div>
-              <span className="text-[10px] text-rose-600 font-semibold block mt-0.5">4.8x KYC Baseline</span>
+              <span className="text-label text-rose-600 font-semibold block mt-0.5">4.8x KYC Baseline</span>
             </div>
 
             <div className="p-3 bg-slate-50 border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">Round-Trip Loss/Profit</span>
+              <span className="text-label text-slate-500 block">Round-Trip Loss/Profit</span>
               <div className="text-base font-bold text-amber-700 mt-0.5">3.8x Ratio</div>
-              <span className="text-[10px] text-slate-500 block mt-0.5">Structuring Pattern</span>
+              <span className="text-label text-slate-500 block mt-0.5">Structuring Pattern</span>
             </div>
 
             <div className="p-3 bg-slate-50 border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">Tick Alignment</span>
+              <span className="text-label text-slate-500 block">Tick Alignment</span>
               <div className="text-base font-bold text-rose-700 mt-0.5">99.2%</div>
-              <span className="text-[10px] text-slate-500 block mt-0.5">Mirror Trade Match</span>
+              <span className="text-label text-slate-500 block mt-0.5">Mirror Trade Match</span>
             </div>
 
             <div className="p-3 bg-slate-50 border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">Hardware Fingerprint</span>
+              <span className="text-label text-slate-500 block">Hardware Fingerprint</span>
               <div className="text-sm font-bold text-slate-800 mt-0.5">DEV-F89A</div>
-              <span className="text-[10px] text-purple-700 font-semibold block mt-0.5">2 Linked Accounts</span>
+              <span className="text-label text-purple-700 font-semibold block mt-0.5">2 Linked Accounts</span>
             </div>
           </div>
 

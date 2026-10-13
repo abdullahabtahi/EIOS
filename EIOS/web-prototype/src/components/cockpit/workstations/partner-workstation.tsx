@@ -26,7 +26,7 @@ export function PartnerWorkstationView() {
   const { state, selectEntity } = useCockpit();
 
   return (
-    <div className="space-y-6 select-none text-slate-900 pb-10">
+    <div className="space-y-6 text-slate-900 pb-10">
       {/* Surface 1: 2D Churn Hazard Radar (Anchor: panel-radar) */}
       <div
         role="tabpanel"

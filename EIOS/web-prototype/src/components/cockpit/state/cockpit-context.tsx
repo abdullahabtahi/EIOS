@@ -13,6 +13,7 @@ import React, {
   useReducer,
   useEffect,
   useCallback,
+  useRef,
   useMemo,
 } from 'react';
 import {
@@ -55,6 +56,8 @@ export interface CockpitState {
   activeDrProofs: DisasterRecoveryProof[];
   activeRedLineGates: RedLineGateStatus[];
   activeFlywheelStatus: FlywheelDiagnosticStatus | null;
+  /** Role-specific canvas payload exactly as delivered; null until the active role has loaded. */
+  canvasPayload: WorkstationApiResponse['canvasPayload'] | null;
 
   // Governed Action Shelf (Two-Phase Commit)
   stagedActions: ActionIntentCard[];
@@ -120,8 +123,10 @@ const initialState: CockpitState = {
   activeDrProofs: initialData.drProofs ?? [],
   activeRedLineGates: initialData.redLineGates ?? [],
   activeFlywheelStatus: initialData.flywheelStatus ?? null,
+  canvasPayload: null,
   stagedActions: initialData.stagedActionCards ?? [],
-  governedActionShelfExpanded: true,
+  // Collapsed by default: the shelf is a slim bar until an operator stages or opens it.
+  governedActionShelfExpanded: false,
   fourEyesPendingAction: null,
   whatIfParams: initialWhatIfParams,
   copilotCommandOpen: false,
@@ -130,7 +135,8 @@ const initialState: CockpitState = {
   isSimulatedOutage: false,
   asOfTimestamp: initialData.asOfTimestamp,
   systemLatencyMs: 14,
-  isLoading: false,
+  // True until the first workstation response lands, so the UI never claims "Live" unproven.
+  isLoading: true,
   error: null,
 };
 
@@ -142,6 +148,7 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
       return {
         ...state,
         activeRole: normalized,
+        canvasPayload: null,
         isLoading: true,
         error: null,
       };
@@ -303,6 +310,7 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
         activeDrProofs: resp?.drProofs ?? state.activeDrProofs,
         activeRedLineGates: resp?.redLineGates ?? state.activeRedLineGates,
         activeFlywheelStatus: resp?.flywheelStatus ?? state.activeFlywheelStatus,
+        canvasPayload: resp?.canvasPayload ?? null,
         stagedActions: resp?.stagedActionCards && resp.stagedActionCards.length > 0 ? resp.stagedActionCards : state.stagedActions,
         systemLatencyMs: resp?.session?.systemLatencyMs ?? 18,
         error: null,
@@ -438,6 +446,7 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
           activeDrProofs: fallback.drProofs ?? [],
           activeRedLineGates: fallback.redLineGates ?? [],
           activeFlywheelStatus: fallback.flywheelStatus ?? null,
+          canvasPayload: fallback.canvasPayload,
         };
       } else {
         const liveFallback = getFallbackWorkstationData(state.activeRole);
@@ -450,6 +459,7 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
           systemLatencyMs: 14,
           triageItems: liveFallback.triageItems,
           activeDossier: liveFallback.activeDossier ?? null,
+          canvasPayload: null,
         };
       }
     }
@@ -487,19 +497,32 @@ const CockpitContext = createContext<CockpitContextValue | null>(null);
 export function CockpitProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(cockpitReducer, initialState);
 
+  // Latest-request-wins: every new load (role change, outage toggle) aborts the previous
+  // one and invalidates its response, so a slow stale reply can never overwrite the
+  // workstation the operator is actually looking at.
+  const requestSeq = useRef(0);
+  const inFlight = useRef<AbortController | null>(null);
+
   // Fetch workstation data whenever activeRole changes (unless simulated outage is active)
   const fetchWorkstation = useCallback(async (role: PersonaRole, isOutage: boolean) => {
+    const seq = ++requestSeq.current;
+    inFlight.current?.abort();
+    inFlight.current = null;
+
     if (isOutage) {
       const fallback = simulateOutageFallbackState(role);
       dispatch({ type: 'LOAD_WORKSTATION_SUCCESS', payload: fallback });
       return;
     }
 
+    const controller = new AbortController();
+    inFlight.current = controller;
     dispatch({ type: 'LOAD_WORKSTATION_START' });
     try {
       const res = await fetch(`/api/cockpit/workstations/${role}`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
+        signal: controller.signal,
       });
 
       if (!res.ok) {
@@ -507,8 +530,11 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data: WorkstationApiResponse = await res.json();
+      if (seq !== requestSeq.current) return;
       dispatch({ type: 'LOAD_WORKSTATION_SUCCESS', payload: data });
-    } catch {
+    } catch (err) {
+      // A superseded request is not a failure; the newer request owns the state.
+      if (seq !== requestSeq.current || (err instanceof DOMException && err.name === 'AbortError')) return;
       // Deterministic fallback under failure (Principle VIII)
       const fallback = getFallbackWorkstationData(role);
       dispatch({

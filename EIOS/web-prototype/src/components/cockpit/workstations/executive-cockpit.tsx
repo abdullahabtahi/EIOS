@@ -93,7 +93,7 @@ export function ExecutiveCockpitView() {
   const { stageAction, state } = useCockpit();
 
   return (
-    <div className="space-y-6 select-none text-slate-900 pb-10">
+    <div className="space-y-6 text-slate-900 pb-10">
       {/* Surface 1: Causal DAG Canvas (Anchor: panel-dag) */}
       <div
         role="tabpanel"
@@ -125,11 +125,11 @@ export function ExecutiveCockpitView() {
           <div className="flex items-center justify-between border-b border-slate-200 pb-2">
             <div className="flex items-center gap-2">
               <span className="material-symbols-sharp text-base text-blue-600">wb_twilight</span>
-              <h3 className="text-xs font-bold font-mono uppercase tracking-wide text-slate-900">
+              <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
                 Executive Morning Briefing: 4 Causal Horizons
               </h3>
             </div>
-            <span className="text-[10px] font-mono text-slate-500">
+            <span className="text-label font-mono text-slate-500">
               Synthesized across 15 Subsystems (F001–F015)
             </span>
           </div>
@@ -141,7 +141,7 @@ export function ExecutiveCockpitView() {
                 className="p-3.5 bg-white border border-slate-200 shadow-xs flex flex-col justify-between rounded-none space-y-2"
               >
                 <div>
-                  <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                  <div className="flex items-center justify-between text-label font-mono mb-1">
                     <span className="font-bold text-blue-700 bg-blue-50 px-1 py-0.2 border border-blue-100">
                       {h.id === 'COMPETITIVE' ? 'COMPETITIVE' : h.id === 'PARTNER' ? 'PARTNER FLOW' : h.id === 'CLIENT' ? 'CLIENT RETENTION' : 'FINANCIAL METRICS'}
                     </span>
@@ -150,7 +150,7 @@ export function ExecutiveCockpitView() {
                   <h4 className="text-xs font-bold text-slate-900 tracking-tight leading-snug">
                     {h.title}
                   </h4>
-                  <p className="text-[11px] text-slate-600 font-sans mt-1 leading-relaxed">
+                  <p className="text-label text-slate-600 font-sans mt-1 leading-relaxed">
                     {h.summary}
                   </p>
                 </div>
@@ -175,11 +175,11 @@ export function ExecutiveCockpitView() {
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <div className="flex items-center gap-2">
               <span className="material-symbols-sharp text-base text-slate-800">balance</span>
-              <h3 className="text-xs font-bold font-mono uppercase tracking-wide text-slate-900">
+              <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
                 Strategic Trade-off Analysis & Countermeasures
               </h3>
             </div>
-            <span className="text-[10px] font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 border border-slate-200">
+            <span className="text-label font-mono bg-slate-100 text-slate-700 px-1.5 py-0.5 border border-slate-200">
               DoWhy Refuter Calibrated
             </span>
           </div>
@@ -206,15 +206,15 @@ export function ExecutiveCockpitView() {
               <div key={idx} className="p-3 bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold font-mono text-slate-900">{item.action}</span>
-                  <span className="text-[10px] font-mono text-emerald-800 font-bold bg-emerald-50 px-1 border border-emerald-200">
+                  <span className="text-label font-mono text-emerald-800 font-bold bg-emerald-50 px-1 border border-emerald-200">
                     Confidence: {item.conf}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-[11px] font-mono">
+                <div className="grid grid-cols-2 gap-2 text-label font-mono">
                   <div className="text-emerald-700 font-semibold">{item.ret}</div>
                   <div className="text-amber-800 font-semibold">{item.risk}</div>
                 </div>
-                <div className="text-[10px] text-slate-500 font-sans">Sensitivity: {item.sens}</div>
+                <div className="text-label text-slate-500 font-sans">Sensitivity: {item.sens}</div>
                 <button
                   type="button"
                   onClick={() => {

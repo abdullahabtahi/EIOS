@@ -95,22 +95,22 @@ export function PartnerGenAiBattlecards() {
   return (
     <section
       aria-label="GenAI Partner Churn Battlecards"
-      className="bg-white border border-slate-200 p-4 shadow-sm space-y-4 select-none text-slate-900"
+      className="bg-white border border-slate-200 p-4 shadow-sm space-y-4 text-slate-900"
     >
       {/* Header with Sovereign AIP Badge */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-sharp text-base text-[#106BA3]">psychology</span>
-          <h3 className="text-xs font-bold font-mono uppercase tracking-wide text-slate-900">
+          <span className="material-symbols-sharp text-base text-cx-accent">psychology</span>
+          <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
             EIOS Partner Intelligence &amp; Retention Battlecards
           </h3>
-          <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 text-slate-800 font-mono text-[10px] font-semibold rounded-xs shadow-2xs flex items-center gap-1.5">
-            <span className="size-1.5 rounded-full bg-[#106BA3] inline-block" />
+          <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 text-slate-800 font-mono text-label font-semibold rounded-xs shadow-2xs flex items-center gap-1.5">
+            <span className="size-1.5 rounded-full bg-cx-accent inline-block" />
             AIP Logic • Gemini 3.8 Flash (Dual-Verified)
           </span>
         </div>
 
-        <div className="text-[10px] font-mono text-slate-500 flex items-center gap-2">
+        <div className="text-label font-mono text-slate-500 flex items-center gap-2">
           <span className="px-1.5 py-0.2 bg-slate-100 border border-slate-200 font-bold">
             LATAM DESK
           </span>
@@ -120,12 +120,12 @@ export function PartnerGenAiBattlecards() {
 
       {/* Triangulated Attrition Diagnosis Box */}
       <div className="p-3.5 bg-slate-50 border border-slate-200 text-xs font-sans space-y-1.5">
-        <div className="flex items-center justify-between text-slate-900 font-mono text-[11px] font-bold">
+        <div className="flex items-center justify-between text-slate-900 font-mono text-label font-bold">
           <span className="flex items-center gap-1.5">
-            <span className="material-symbols-sharp text-sm text-[#106BA3]">troubleshoot</span>
+            <span className="material-symbols-sharp text-sm text-cx-accent">troubleshoot</span>
             Cross-Channel Attrition Diagnosis
           </span>
-          <span className="text-[10px] text-slate-500 font-normal">
+          <span className="text-label text-slate-500 font-normal">
             Triangulated: Support Tickets • Cashier Latency • Competitor Spreads
           </span>
         </div>
@@ -141,7 +141,7 @@ export function PartnerGenAiBattlecards() {
             <span className="material-symbols-sharp text-sm text-emerald-700">chat</span>
             Actionable WhatsApp &amp; Telegram Outreach Battlecards
           </span>
-          <span className="text-[10px] font-normal text-slate-500">
+          <span className="text-label font-normal text-slate-500">
             Causal SCM Pre-Approved Concession Bounds
           </span>
         </div>
@@ -157,24 +157,24 @@ export function PartnerGenAiBattlecards() {
               >
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-1">
-                    <span className="font-mono font-bold text-slate-900 text-[11px] leading-snug">
+                    <span className="font-mono font-bold text-slate-900 text-label leading-snug">
                       {card.title}
                     </span>
-                    <span className="text-[9px] font-mono px-1 py-0.2 bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0 font-bold">
+                    <span className="text-label font-mono px-1 py-0.2 bg-emerald-50 text-emerald-800 border border-emerald-200 shrink-0 font-bold">
                       +{card.projected_lift_pct}% LIFT
                     </span>
                   </div>
 
-                  <span className="text-[10px] font-mono text-[#106BA3] font-semibold block">
+                  <span className="text-label font-mono text-cx-accent font-semibold block">
                     Strategic Angle: {card.angle}
                   </span>
 
                   {/* WhatsApp Message Preview */}
-                  <div className="p-2.5 bg-[#F8FAFC] border border-slate-200 rounded-xs text-[11px] font-sans text-slate-800 leading-relaxed italic relative">
+                  <div className="p-2.5 bg-cx-wash border border-slate-200 rounded-xs text-label font-sans text-slate-800 leading-relaxed italic relative">
                     &ldquo;{card.whatsapp_script}&rdquo;
                   </div>
 
-                  <div className="text-[10px] font-mono text-slate-500 space-y-0.5 pt-1 border-t border-slate-200">
+                  <div className="text-label font-mono text-slate-500 space-y-0.5 pt-1 border-t border-slate-200">
                     <div className="flex justify-between">
                       <span>Deal Cost:</span>
                       <span className="font-bold text-slate-700">
@@ -187,7 +187,7 @@ export function PartnerGenAiBattlecards() {
                         +${card.net_margin_usd != null ? card.net_margin_usd.toLocaleString() : '0'} USD
                       </span>
                     </div>
-                    <div className="text-[9px] text-slate-500 italic mt-0.5">
+                    <div className="text-label text-slate-500 italic mt-0.5">
                       {card.concession_bound}
                     </div>
                   </div>
@@ -213,7 +213,7 @@ export function PartnerGenAiBattlecards() {
                   <button
                     type="button"
                     onClick={() => handleStageAction(card)}
-                    className="py-1.5 px-3 bg-[#106BA3] hover:bg-[#0D5582] text-white font-bold border border-[#0D5582] transition-colors flex items-center gap-1 cursor-pointer text-xs shadow-2xs"
+                    className="py-1.5 px-3 bg-cx-accent hover:bg-cx-accent-strong text-white font-bold border border-cx-accent-strong transition-colors flex items-center gap-1 cursor-pointer text-xs shadow-2xs"
                     title="Stage this concession into the Two-Phase Commit Outbox"
                   >
                     <span className="material-symbols-sharp text-xs">bolt</span>
@@ -230,10 +230,10 @@ export function PartnerGenAiBattlecards() {
       <div className="p-3.5 bg-slate-50 border border-slate-200 space-y-3 font-mono text-xs">
         <div className="flex items-center justify-between border-b border-slate-200 pb-2">
           <div className="flex items-center gap-2 font-bold text-slate-900 text-xs">
-            <span className="material-symbols-sharp text-sm text-[#106BA3]">finance_mode</span>
+            <span className="material-symbols-sharp text-sm text-cx-accent">finance_mode</span>
             <span>Counterfactual Deal Simulator (AIP Concession Matrix)</span>
           </div>
-          <span className="text-[10px] text-slate-500 font-normal">
+          <span className="text-label text-slate-500 font-normal">
             DoWhy SCM Refuter Guardrails (p &gt; 0.05 Required)
           </span>
         </div>
@@ -248,7 +248,7 @@ export function PartnerGenAiBattlecards() {
               if (e.key === 'Enter') handleRunWhatIf();
             }}
             placeholder="Simulate concession scenario (e.g. Offer 50% synthetics revenue share with 2h DP2P VIP SLA)..."
-            className="flex-1 px-3 py-1.5 bg-white border border-slate-300 text-xs font-sans text-slate-900 focus:outline-none focus:border-[#106BA3] rounded-none"
+            className="flex-1 px-3 py-1.5 bg-white border border-slate-300 text-xs font-sans text-slate-900 focus:outline-none focus:border-cx-accent rounded-none"
           />
           <button
             type="button"
@@ -264,7 +264,7 @@ export function PartnerGenAiBattlecards() {
         </div>
 
         {/* Quick Institutional Scenario Presets */}
-        <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
+        <div className="flex items-center gap-1.5 flex-wrap text-label">
           <span className="text-slate-500 font-semibold">Institutional Presets:</span>
           {[
             '+15% Synthetics Rev-Share Bump',
@@ -294,7 +294,7 @@ export function PartnerGenAiBattlecards() {
                 <span className="material-symbols-sharp text-xs text-emerald-600">verified</span>
                 Verdict: {whatIfResult.verdict}
               </span>
-              <span className="text-[10px] text-slate-500">
+              <span className="text-label text-slate-500">
                 Refuter P-Value: {whatIfResult.causal_refuter_p_value} (Valid &gt; 0.05)
               </span>
             </div>
@@ -303,22 +303,22 @@ export function PartnerGenAiBattlecards() {
               {whatIfResult.governed_decision_rationale}
             </p>
 
-            <div className="grid grid-cols-3 gap-2 text-[11px] pt-1 border-t border-slate-100">
+            <div className="grid grid-cols-3 gap-2 text-label pt-1 border-t border-slate-100">
               <div className="p-2 bg-slate-50 border border-slate-100">
-                <span className="text-[9px] text-slate-500 block uppercase">Projected Lift</span>
+                <span className="text-label text-slate-500 block uppercase">Projected Lift</span>
                 <span className="font-bold text-emerald-700 text-sm mt-0.5">
                   +{whatIfResult.projected_retention_lift_pct}%
                 </span>
               </div>
               <div className="p-2 bg-slate-50 border border-slate-100">
-                <span className="text-[9px] text-slate-500 block uppercase">Concession Cost</span>
+                <span className="text-label text-slate-500 block uppercase">Concession Cost</span>
                 <span className="font-bold text-slate-800 text-sm mt-0.5">
                   ${whatIfResult.estimated_deal_cost_usd?.toLocaleString()} USD
                 </span>
               </div>
               <div className="p-2 bg-slate-50 border border-slate-100">
-                <span className="text-[9px] text-slate-500 block uppercase">Net Retained Margin</span>
-                <span className="font-bold text-[#106BA3] text-sm mt-0.5">
+                <span className="text-label text-slate-500 block uppercase">Net Retained Margin</span>
+                <span className="font-bold text-cx-accent text-sm mt-0.5">
                   +${whatIfResult.projected_net_margin_usd?.toLocaleString()} USD
                 </span>
               </div>

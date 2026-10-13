@@ -21,6 +21,63 @@
   --color-chrome-active: rgb(255 255 255 / 0.1);
   --color-chrome-accent: #5aa9dc;
 
+  /** Cockpit type scale: nothing below 11px; section titles use Inter, data/IDs stay mono. */
+  --text-label: 11px;
+  --text-label--line-height: 16px;
+  --text-title: 13px;
+  --text-title--line-height: 18px;
+
+  /** Cockpit semantic palette (cx-*). One name per role; consolidate near-duplicates here, not in components. */
+  --color-cx-ink: #182026;
+  --color-cx-ink-deep: #0f172a;
+  --color-cx-muted: #5c7080;
+  --color-cx-faint: #8a9ba8;
+  --color-cx-ink-soft: #394b59;
+  --color-cx-ink-hover: #202b33;
+  --color-cx-ink-line: #1e293b;
+  --color-cx-line: #d8e1e8;
+  --color-cx-line-soft: #e1e8ed;
+  --color-cx-line-strong: #ced9e0;
+  --color-cx-canvas: #f4f6f8;
+  --color-cx-sub: #f5f8fa;
+  --color-cx-sub-2: #ebf1f5;
+  --color-cx-wash: #f8fafc;
+  --color-cx-hover: #f9fbfc;
+  --color-cx-wash-0: #fcfdfe;
+  --color-cx-wash-2: #f1f5f9;
+  --color-cx-wash-3: #f0f2f5;
+  --color-cx-select: #e8f1f8;
+  --color-cx-accent: #106ba3;
+  --color-cx-accent-strong: #0e5c8a;
+  --color-cx-info-bg: #edf5fa;
+  --color-cx-info-bg-2: #f0f4fa;
+  --color-cx-info-line: #bfd3e6;
+  --color-cx-info-line-2: #c7d7ee;
+  --color-cx-info: #215db0;
+  --color-cx-info-solid: #2563eb;
+  --color-cx-info-soft: #5c98d6;
+  --color-cx-ok: #0d8050;
+  --color-cx-ok-solid: #0f9960;
+  --color-cx-ok-strong: #15803d;
+  --color-cx-ok-bg: #edf7ed;
+  --color-cx-ok-bg-2: #f0fdf4;
+  --color-cx-ok-line: #c3e6d0;
+  --color-cx-ok-line-2: #bbf7d0;
+  --color-cx-warn: #a66321;
+  --color-cx-warn-solid: #d9822b;
+  --color-cx-warn-solid-2: #d97706;
+  --color-cx-warn-bg: #faf5ec;
+  --color-cx-warn-bg-2: #fdf3d9;
+  --color-cx-warn-line: #ead8b5;
+  --color-cx-bad: #a82a2a;
+  --color-cx-bad-solid: #cd4246;
+  --color-cx-bad-solid-2: #e11d48;
+  --color-cx-bad-bg: #faf0f0;
+  --color-cx-bad-line: #e8c5c5;
+  --color-cx-studio: #080c14;
+  --color-cx-studio-2: #0b1120;
+  --color-cx-studio-accent: #38bdf8;
+
   /** Font Tokens */
   --font-display: 'Inter', sans-serif;
   --font-headings: 'Inter', sans-serif;
@@ -966,3 +1023,13 @@
   outline-offset: 1px;
 }
 
+/* Cockpit interaction targets: WCAG 2.2 AA (2.5.8) minimum 24px.
+   :where() keeps specificity at zero, so any explicit component size still wins. */
+@layer base {
+  [data-cockpit-shell] :where(button, [role='tab'], select) {
+    min-height: 24px;
+  }
+  [data-cockpit-shell] :where(button:has(> .material-symbols-sharp:only-child)) {
+    min-width: 24px;
+  }
+}

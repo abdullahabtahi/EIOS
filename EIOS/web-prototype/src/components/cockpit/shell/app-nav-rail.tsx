@@ -14,6 +14,14 @@ import { Icon } from '@/components/ui/icon';
 import { useCockpit } from '../state/cockpit-context';
 import { APP_NAV_ITEMS, CURRENT_APP_NAV_ID } from './app-nav-items';
 import { useNavReveal } from './use-nav-reveal';
+import { getPipelineStatus, type PipelineTone } from '../state/pipeline-status';
+
+const TONE_DOT: Record<PipelineTone, string> = {
+  ok: 'bg-emerald-400',
+  warn: 'bg-amber-400',
+  bad: 'bg-red-400',
+  neutral: 'bg-slate-400',
+};
 
 const ROW =
   'group/row w-full flex items-center text-left text-xs outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-chrome-accent';
@@ -21,7 +29,7 @@ const ICON_COL = 'w-12 shrink-0 flex items-center justify-center';
 const LABEL =
   'flex-1 min-w-0 pr-3 whitespace-nowrap opacity-0 transition-opacity duration-150 group-data-[state=expanded]/rail:opacity-100 motion-reduce:transition-none';
 const KBD =
-  'px-1 py-0.5 bg-white/8 border border-white/15 text-[9px] font-mono text-slate-300 leading-none';
+  'px-1 py-0.5 bg-white/8 border border-white/15 text-label font-mono text-slate-300 leading-none';
 
 function isTypingTarget(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
@@ -59,10 +67,10 @@ function NavRows({ onSelectCurrent }: { onSelectCurrent: () => void }) {
               <span className={`${LABEL} flex items-center gap-2`}>
                 <span className="flex-1 min-w-0">
                   <span className="block truncate">{item.label}</span>
-                  <span className="block truncate text-[10px] font-normal text-slate-400">{item.description}</span>
+                  <span className="block truncate text-label font-normal text-slate-400">{item.description}</span>
                 </span>
                 {!item.available && (
-                  <span className="px-1 py-0.5 border border-white/20 text-[9px] font-mono font-bold tracking-wider text-slate-300 leading-none">
+                  <span className="px-1 py-0.5 border border-white/20 text-label font-mono font-bold tracking-wider text-slate-300 leading-none">
                     SOON
                   </span>
                 )}
@@ -77,7 +85,8 @@ function NavRows({ onSelectCurrent }: { onSelectCurrent: () => void }) {
 
 function RailFooter({ onCommandBar, onShortcuts }: { onCommandBar: () => void; onShortcuts?: () => void }) {
   const { state } = useCockpit();
-  const replaying = state.isSimulatedOutage;
+  const pipeline = getPipelineStatus(state);
+  const replaying = pipeline.label === 'Replay';
   const footerRow = `${ROW} h-10 cursor-pointer text-slate-200 hover:bg-chrome-hover hover:text-white`;
 
   return (
@@ -107,24 +116,24 @@ function RailFooter({ onCommandBar, onShortcuts }: { onCommandBar: () => void; o
       <div className="h-14 flex items-center border-t border-chrome-line">
         <span className={ICON_COL}>
           <span className="relative">
-            <span className="size-7 bg-white/10 border border-white/15 text-white flex items-center justify-center font-mono font-bold text-[10px]">
+            <span className="size-7 bg-white/10 border border-white/15 text-white flex items-center justify-center font-mono font-bold text-label">
               {state.operator.officerId.slice(0, 2)}
             </span>
             <span
-              className={`absolute -right-1 -bottom-1 size-2 rounded-full border-2 border-cockpit-rail ${replaying ? 'bg-amber-400' : 'bg-emerald-400'}`}
-              title={replaying ? 'Pipeline: Replay (cached)' : 'Pipeline: Synced'}
+              className={`absolute -right-1 -bottom-1 size-2 rounded-full border-2 border-cockpit-rail ${TONE_DOT[pipeline.tone]}`}
+              title={`Pipeline: ${pipeline.label}`}
             />
           </span>
         </span>
         <span className={`${LABEL} text-left`}>
-          <span data-testid="nav-operator-name" className="block truncate text-[11px] font-bold text-white leading-tight">
+          <span data-testid="nav-operator-name" className="block truncate text-label font-bold text-white leading-tight">
             {state.operator.name}
           </span>
-          <span className="block truncate text-[9px] font-mono uppercase tracking-wider text-slate-400 leading-tight">
+          <span className="block truncate text-label font-mono uppercase tracking-wider text-slate-400 leading-tight">
             {state.operator.clearanceLevel.replace(/_/g, ' ')}
           </span>
-          <span data-testid="nav-pipeline-status" className="block truncate text-[9px] font-mono text-slate-300 leading-tight mt-0.5">
-            Pipeline: <span className="font-semibold text-white">{replaying ? 'Replay' : 'Synced'}</span>
+          <span data-testid="nav-pipeline-status" className="block truncate text-label font-mono text-slate-300 leading-tight mt-0.5">
+            Pipeline: <span className="font-semibold text-white">{pipeline.label}</span>
             <span className="mx-1 text-slate-600">|</span>
             RTT: <span className="font-semibold tabular-nums text-white">{replaying ? '—' : `${state.systemLatencyMs}ms`}</span>
           </span>
