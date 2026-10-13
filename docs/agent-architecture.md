@@ -163,9 +163,9 @@ Deriv's licensing entities are from third-party listings and are recorded as `[A
 - **024**: the corpus in section 5.
 - **025**: adds `get_cohort_trend` and the event-driven path in section 4 beyond the hot state.
 
-## 8. Open questions for you
+## 8. Decisions recorded 2026-10-14
 
-1. Confirm the use case for the corpus (citing rules and red flags in AML dispositions and SARs) or redirect it.
-2. FATF Recommendations: please download the PDF manually, or tell me to leave it out for v1.
-3. Reuse terms (D-3): are you comfortable proceeding privately and revisiting before any public excerpting?
-4. Overnight pre-assembled dossiers for the top-ranked alerts: should they join the lighthouse scope (they change M1 the most), or stay a later phase?
+1. **Corpus use case**: confirmed (cite the applicable rule and red-flag typology in AML dispositions and SAR drafts, per jurisdiction).
+2. **FATF Recommendations**: left out of v1 (user).
+3. **Reuse terms**: not a blocker for this non-commercial prototype (user); the manifest still records them as unverified and the corpus is not redistributed.
+4. **Overnight pre-assembled dossiers**: **deferred to after spec 021** (my decision, the user asked me to choose). Reasons: (a) lighthouse M1 has no measured baseline yet, and adding the largest M1 lever before the baseline would make any before-and-after comparison unattributable; (b) it needs the deployed event-driven data path (data-strategy R1, spec 025) to be honest rather than fixture-backed; (c) it should reuse the typed tool port and the reference-answer renderer, which only exist after specs 023 and 021. It gets its own spec (029, ambient dossiers) once the ADK runtime proves faithful answers on the baseline.

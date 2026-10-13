@@ -10,6 +10,9 @@
 # federal work. Nothing here is a legal opinion. Open item D-3: confirm reuse terms before any public deployment
 # shows more than short attributed excerpts.
 #
+# User decision 2026-10-14: this is a non-commercial prototype, so reuse terms are not a blocker; `licence_state` stays
+# `unverified` as an honest record, and the corpus is still not redistributed.
+#
 # Deriv's licensing entities below come from third-party listings (not a regulator register) and MUST be
 # verified against each regulator's public register before they are relied on: [ASSUMPTION].
 
@@ -132,8 +135,8 @@ documents:
     licence_state: unverified
     serves: [aml_investigator, executive]
     use: Baseline standard cited by both regulators (Recommendation 20 on suspicious transaction reporting; Recommendation 10 on customer due diligence)
-    status: manual_download_needed
-    note: Scripted download returned HTTP 403 (access control); not worked around. Save the PDF as raw/FATF-REC.pdf and record its sha256 here
+    status: deferred_by_user
+    note: Scripted download returned HTTP 403 (access control) and was not worked around. User decision 2026-10-14: leave out of v1. To add later, save the PDF as raw/FATF-REC.pdf and record its sha256 here
 
 deferred:
   - item: FATF high-risk and increased-monitoring jurisdiction lists
