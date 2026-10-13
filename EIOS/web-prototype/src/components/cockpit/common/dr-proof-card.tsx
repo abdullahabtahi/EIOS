@@ -10,6 +10,7 @@
 
 import * as React from 'react';
 import { DisasterRecoveryProof } from '../state/cockpit-types';
+import { formatUtcTimestamp } from '@/lib/utils';
 
 interface DrProofCardProps {
   proof?: DisasterRecoveryProof;
@@ -81,7 +82,7 @@ export function DrProofCard({ proof = DEFAULT_PROOF, onVerify }: DrProofCardProp
         <div className="p-2.5 bg-slate-50 border border-slate-200">
           <span className="text-label text-slate-500 block uppercase">Last Verified At</span>
           <span className="font-bold text-slate-800 text-label block mt-0.5">
-            {new Date(lastVerified).toISOString().replace('T', ' ').slice(0, 19)} UTC
+            {formatUtcTimestamp(lastVerified)}
           </span>
           <span className="text-label text-slate-400 block mt-0.5">Automated Heartbeat</span>
         </div>

@@ -58,3 +58,23 @@ def test_untracked_local_files_are_not_flagged(tmp_path: Path) -> None:
 def test_without_git_it_falls_back_to_walking_the_tree(tmp_path: Path) -> None:
     root = _repo(tmp_path, {"infra/tfplan": "x"}, track=False)
     assert [f.file for f in check_forbidden_artifacts(root)] == ["infra/tfplan"]
+
+
+def test_standalone_subcommand_fails_on_a_tracked_plan_and_writes_its_own_report(
+    tmp_path: Path,
+) -> None:
+    """The plan/state/key guard runs as its own gate, so quarantining lint cannot switch it off."""
+    import json
+
+    from tools.repo_checks.runner import main
+
+    clean = _repo(tmp_path / "clean", {"infra/main.tf": "# ok\n"})
+    assert main(["forbidden-artifacts", "--repo-root", str(clean)]) == 0
+
+    leaked = _repo(
+        tmp_path / "leaked", {"infra/main.tf": "# ok\n", "infra/tfplan": "state snapshot"}
+    )
+    assert main(["forbidden-artifacts", "--repo-root", str(leaked)]) == 1
+    report = json.loads((leaked / "evals/reports/forbidden_artifacts.json").read_text())
+    assert [f["file"] for f in report["findings"]] == ["infra/tfplan"]
+    assert main(["forbidden-artifacts", "--repo-root", str(leaked / "missing")]) == 2

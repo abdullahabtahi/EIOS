@@ -14,6 +14,7 @@ import { DrProofCard } from '../common/dr-proof-card';
 import { buildOperationsView, type OpsStatus, type OpsTone } from '../state/operations-view-model';
 import { Chip, type ChipTone } from '../ui/chip';
 import { PanelHeader } from '../ui/panel-header';
+import { authFetch } from '@/lib/auth/token';
 
 const STATUS_TONE: Record<OpsStatus, ChipTone> = { HEALTHY: 'ok', DEGRADED: 'warn', BREACHED: 'bad' };
 const STATUS_BAR: Record<OpsStatus, string> = {
@@ -30,7 +31,7 @@ export function OperationsBoardView() {
 
   const redriveRecord = async (id: string) => {
     try {
-      const res = await fetch('/api/v1/ops/dlq/redrive', {
+      const res = await authFetch('/api/v1/ops/dlq/redrive', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dlq_id: id }),

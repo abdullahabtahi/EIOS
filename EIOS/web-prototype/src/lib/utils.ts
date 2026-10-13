@@ -52,3 +52,10 @@ const twMerge = extendTailwindMerge<'typography'>({
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+/** `2026-10-10T09:42:15Z` -> `2026-10-10 09:42:15 UTC`; an unparseable value is returned unchanged. */
+export function formatUtcTimestamp(iso: string): string {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return iso;
+  return `${parsed.toISOString().slice(0, 19).replace('T', ' ')} UTC`;
+}
