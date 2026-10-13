@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import re
 import string
 from datetime import UTC, datetime
@@ -31,8 +32,16 @@ NON_METRIC_PATTERNS = [
     re.compile(r"\bversion\s+\d+(?:\.\d+){1,3}\b", re.IGNORECASE),
 ]
 
-# Matches any identifier code containing letters and digits like CR84920, AP1029, Tier1, VIP_Spread_Rebate_Tier1
+# Matches any identifier-shaped token containing letters and digits like CR84920, AP1029, Tier1, Q3
 ALPHANUMERIC_IDENTIFIER_PATTERN = re.compile(r"\b[A-Za-z0-9_]*[A-Za-z]+[-_]?[0-9]+[A-Za-z0-9_]*\b")
+
+# An identifier-shaped token is exempt from the numeric audit only when it is grounded (a tool produced it or
+# the operator typed it) or is a short structural code such as Q3, P1 or Tier1. Everything else keeps its
+# digits visible to the gate, otherwise "USD9999999" or "x500" would launder an arbitrary figure past Principle I.
+MAX_UNGROUNDED_IDENTIFIER_DIGITS = 2
+CURRENCY_OR_UNIT_PREFIX = re.compile(
+    r"^(?:USDT?|EUR|GBP|JPY|AUD|CAD|CHF|CNY|BTC|ETH|BPS|PCT)(?=\d)", re.IGNORECASE
+)
 
 
 class ConversationAuditorBridge:
@@ -49,13 +58,28 @@ class ConversationAuditorBridge:
                 exemptions.append(match.group(0))
         return exemptions
 
+    @staticmethod
+    def _evidence_text(tool_trace: list[dict[str, Any]], query: str) -> str:
+        """Lower-cased text of everything an identifier may legitimately come from: tool outputs and the query."""
+        outputs = json.dumps([call.get("output", {}) for call in tool_trace], default=str)
+        return f"{outputs}\n{query}".lower()
+
+    @staticmethod
+    def _is_exempt_identifier(token: str, evidence: str) -> bool:
+        if token.lower() in evidence:
+            return True
+        if CURRENCY_OR_UNIT_PREFIX.match(token):
+            return False
+        return sum(ch.isdigit() for ch in token) <= MAX_UNGROUNDED_IDENTIFIER_DIGITS
+
     def audit_turn(
         self,
         narrative_text: str,
         tool_trace: list[dict[str, Any]],
         trace_id: str = "tr_turn",
+        query: str = "",
     ) -> AuditorRecord:
-        """Audits an agent turn against tool outputs while exempting statutory citations and identifier codes."""
+        """Audits an agent turn against tool outputs, exempting statutory citations and grounded identifiers."""
         exemptions = self.extract_statutory_citations(narrative_text)
 
         # Mask statutory citations with pure alphabet tokens (no digits!)
@@ -69,11 +93,20 @@ class ConversationAuditorBridge:
         for idx, pat in enumerate(NON_METRIC_PATTERNS):
             masked_text = pat.sub(f"NONMETRICMASK{letters[idx % len(letters)] * 2}", masked_text)
 
-        # Mask alphanumeric codes like Tier1, CR84920, P-882 so identifier digits aren't treated as financial KPIs
-        for idx, match in enumerate(ALPHANUMERIC_IDENTIFIER_PATTERN.finditer(masked_text)):
-            matched_code = match.group(0)
-            tag = letters[idx % len(letters)] * 3
-            masked_text = masked_text.replace(matched_code, f"IDENTIFIERMASK{tag}")
+        # Mask grounded or short structural codes (CR84920 from a tool, Q3, Tier1) so their digits are not read as
+        # KPIs. One pass, so a token that is a substring of another cannot leave digits behind.
+        evidence = self._evidence_text(tool_trace, query)
+        identifier_count = 0
+
+        def mask_identifier(match: re.Match[str]) -> str:
+            nonlocal identifier_count
+            if not self._is_exempt_identifier(match.group(0), evidence):
+                return match.group(0)
+            tag = letters[identifier_count % len(letters)] * 3
+            identifier_count += 1
+            return f"IDENTIFIERMASK{tag}"
+
+        masked_text = ALPHANUMERIC_IDENTIFIER_PATTERN.sub(mask_identifier, masked_text)
 
         # Run verification through the ontology gate
         audit_res = self.auditor.verify_response(masked_text, tool_trace, trace_id=trace_id)

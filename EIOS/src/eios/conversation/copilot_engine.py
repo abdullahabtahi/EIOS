@@ -19,8 +19,6 @@ from eios.conversation.models import (
     SpecialistDomain,
 )
 from eios.conversation.rag_tools import query_policy_search, should_route_to_policy_rag
-from eios.conversation.supervisor import ConversationalSupervisor
-from eios.conversation.telemetry import CopilotTracer
 from eios.conversation.tools import (
     OMCP_TOOLS,
     get_governed_metric,
@@ -98,8 +96,6 @@ class CopilotEngine:
         self.offline_mode = offline_mode or self.client_manager.offline_mode
         self.memories: dict[str, SessionMemoryManager] = {}
         self.checkpointer = ThreadCheckpointer()
-        self.supervisor = ConversationalSupervisor()
-        self.tracer = CopilotTracer()
 
     def _resolve_tool_calls(
         self,
@@ -210,7 +206,9 @@ class CopilotEngine:
                 response = self._resolve_tool_calls(chat, response, tool_traces, citations)
 
                 raw_text = response.text or ""
-                audit_res = self.auditor_bridge.audit_turn(raw_text, tool_traces)
+                audit_res = self.auditor_bridge.audit_turn(
+                    raw_text, tool_traces, query=resolved_query
+                )
 
                 # Bounded self-correction: show the model exactly which figures the auditor could not trace.
                 corrections = 0
@@ -219,7 +217,9 @@ class CopilotEngine:
                     response = chat.send_message(correction_prompt(audit_res.unanchored_tokens))
                     response = self._resolve_tool_calls(chat, response, tool_traces, citations)
                     raw_text = response.text or ""
-                    audit_res = self.auditor_bridge.audit_turn(raw_text, tool_traces)
+                    audit_res = self.auditor_bridge.audit_turn(
+                        raw_text, tool_traces, query=resolved_query
+                    )
 
                 # Ensure queries targeting metrics or entities have non-empty tool traces and citations
                 has_metric_intent = any(
@@ -248,6 +248,8 @@ class CopilotEngine:
                         reflection_cycles_used=corrections,
                         turn_latency_ms=latency_ms,
                         auditor_status=audit_res.status.value,
+                        audit_record=audit_res,
+                        tool_trace_count=len(tool_traces),
                     )
                 fallback_reason = "live response failed audit or lacked mandatory tool grounding"
                 _LOG.warning("%s; falling back to deterministic replay", fallback_reason)
@@ -290,7 +292,7 @@ class CopilotEngine:
                 f"(${int(aml_res['net_deposit_volume_30d_usd']):,} USD) across {aml_res['velocity_transfers_count']} transfers. "
                 f"Under {policy_res['statutory_citation']} and internal AML escalation guidelines, "
                 f"transactions exceeding ${int(policy_res['filing_threshold_usd']):,} USD with unexplained velocity "
-                f"mandate filing FinCEN Form 111. A withdrawal hold of type '{aml_res['recommended_action']}' has been staged."
+                f"mandate filing FinCEN Form 111. A withdrawal hold of type '{aml_res['recommended_action']}' has been proposed for operator review."
             )
             route = SpecialistDomain.SENTINEL_AML
             staged_rec = {
@@ -392,7 +394,7 @@ class CopilotEngine:
                 "4. `inspect_partner_churn`: Runs discrete-time hazard models to evaluate partner churn risk and primary drivers.\n"
                 "5. `run_causal_what_if`: Evaluates DoWhy refuter-tested causal DAGs to simulate market spread shocks across broker tiers.\n"
                 "6. `query_policy_search`: Performs statutory regulatory RAG search over statutory texts (e.g. 31 CFR § 1020.320, MiFID II).\n"
-                "7. `stage_action_intent`: Pre-stages cryptographically signed action tokens into the Governed Action Shelf under Four-Eyes review.\n\n"
+                "7. `stage_action_intent`: Drafts an unsigned action proposal; an operator stages it through the Governed Action Shelf, where it is KMS-signed and held for Four-Eyes review.\n\n"
                 "All metric citations are audited by the Metric Auditor Gate (Principle I: zero hallucinations)."
             )
             route = SpecialistDomain.SYNTHESIS
@@ -443,7 +445,7 @@ class CopilotEngine:
             staged_rec = None
 
         # Verify narrative through Metric Auditor Gate
-        audit_res = self.auditor_bridge.audit_turn(narrative, tool_traces)
+        audit_res = self.auditor_bridge.audit_turn(narrative, tool_traces, query=resolved_query)
         mem.register_turn_entities(turn_index, resolved_query, {})
         self.checkpointer.save_state(
             session_id,
@@ -467,4 +469,6 @@ class CopilotEngine:
             fallback_reason=fallback_reason or "deterministic grounded replay",
             turn_latency_ms=latency_ms,
             auditor_status=audit_res.status.value,
+            audit_record=audit_res,
+            tool_trace_count=len(tool_traces),
         )

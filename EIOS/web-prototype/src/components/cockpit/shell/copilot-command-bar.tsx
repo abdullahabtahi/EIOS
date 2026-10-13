@@ -41,8 +41,19 @@ function getNextTurnId(): string {
   return `turn_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function getNextQueryFallbackId(): string {
-  return `qry_fb_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+/** An operator-readable reason for a failed copilot request. Never an answer. */
+function describeCopilotFailure(status: number | null): string {
+  if (status === null) return 'The Copilot could not be reached. No answer was generated.';
+  if (status === 401) return 'Your session is not authorized for the Copilot (HTTP 401). Sign in again.';
+  if (status === 403) return 'Your role is not permitted to use the Copilot (HTTP 403).';
+  if (status === 503) return 'The EIOS backend is offline. No answer was generated.';
+  return `The Copilot request failed (HTTP ${status}). No answer was generated.`;
+}
+
+class CopilotRequestError extends Error {
+  constructor(readonly status: number) {
+    super(`Copilot query error (HTTP ${status})`);
+  }
 }
 
 function getCurrentTimeLabel(): string {
@@ -102,55 +113,16 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
         }),
       });
 
-      if (!res.ok) {
-        throw new Error(`Copilot query error (HTTP ${res.status})`);
-      }
+      if (!res.ok) throw new CopilotRequestError(res.status);
 
       const data: CopilotQueryResponse = await res.json();
       setHistory((prev) =>
         prev.map((t) => (t.id === turnId ? { ...t, isLoading: false, response: data } : t))
       );
-    } catch {
-      // Deterministic fallback response with Auditor Gate verification
-      const fallbackResponse: CopilotQueryResponse = {
-        queryId: getNextQueryFallbackId(),
-        naturalLanguageQuery: trimmed,
-        responseMarkdown:
-          trimmed.toLowerCase().includes('what can you do') || trimmed.toLowerCase().includes('help')
-            ? 'I am the Enterprise Intelligence Copilot powered by Google Gemini and EIOS governed ontologies. I operate across 5 specialized domains:\n\n' +
-              '• **Executive Cockpit**: Causal DAG inference, DoWhy refuters, and macro spread what-if simulations.\n' +
-              '• **AML Sentinel**: Multi-account discrepancy velocity analysis, FinCEN SAR draft generation, and withdrawal holds.\n' +
-              '• **Churn Radar**: Parametric hazard modeling, partner turnover attribution, and retention playbooks.\n' +
-              '• **Compliance Explorer**: Monotonic WORM hash chain verification, ECDSA P-256 signatures, and statutory audit proofs.\n' +
-              '• **Data Operations**: Pipeline freshness SLOs, Great Expectations assertions, and cluster reconciliation.'
-            : `Deterministic synthesis for role **${state.activeRole}**: Primary metrics confirmed via DuckDB Semantic Layer. Spreads widened 18 bps due to broker tiering adjustments.`,
-        citedMetrics: [
-          {
-            metricId: 'M-LATAM-01',
-            name: 'Spread Shock LatAm',
-            rawValue: 18.2,
-            formattedValue: '+18.2 bps',
-            unit: 'bps',
-            semanticDefinitionVersion: 'v2.4.1 [d8a9f2]',
-            asOfTimestamp: new Date().toISOString(),
-            originEngine: 'duckdb:semantic_layer',
-            stewardRole: 'VP Market Strategy',
-            citation: '[BRIEF]',
-            isCached: false,
-          },
-        ],
-        auditorResult: {
-          auditPassed: true,
-          extractedNumbers: [18, 18.2],
-          anchoredNumbers: [18, 18.2],
-          untraceableNumbers: [],
-          toolTracesCount: 2,
-        },
-        timestamp: new Date().toISOString(),
-      };
-
+    } catch (err) {
+      const status = err instanceof CopilotRequestError ? err.status : null;
       setHistory((prev) =>
-        prev.map((t) => (t.id === turnId ? { ...t, isLoading: false, response: fallbackResponse } : t))
+        prev.map((t) => (t.id === turnId ? { ...t, isLoading: false, error: describeCopilotFailure(status) } : t))
       );
     } finally {
       setIsSubmitting(false);
@@ -180,7 +152,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
               Copilot Command Bar & Auditor Gate
             </DialogTitle>
             <span className="hidden md:inline-block px-1.5 py-0.5 bg-blue-900/60 border border-blue-700 text-blue-300 text-label font-mono">
-              LIVE GEMINI 3.8 FLASH
+              GOVERNED COPILOT
             </span>
           </div>
           <div className="flex items-center gap-2.5 text-label font-mono text-slate-400">
@@ -262,10 +234,30 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                       <span className="material-symbols-sharp text-blue-600 animate-spin text-base">
                         progress_activity
                       </span>
-                      <span>Gemini 3.8 Flash reasoning across OMCP tools & Metric Auditor Gate...</span>
+                      <span>Reasoning across OMCP tools & Metric Auditor Gate...</span>
+                    </div>
+                  ) : turn.error ? (
+                    <div
+                      role="alert"
+                      className="p-3 bg-cx-bad-bg border border-cx-bad-line text-cx-bad flex items-center gap-2 text-xs font-mono"
+                    >
+                      <span className="material-symbols-sharp text-base">error</span>
+                      <span>{turn.error}</span>
                     </div>
                   ) : turn.response ? (
                     <div className="space-y-3 bg-white p-4 border border-slate-200 shadow-2xs">
+                      {turn.response.isReplayFallback && (
+                        <div className="p-2.5 bg-amber-50 border border-amber-300 text-amber-900 flex items-center gap-2 text-xs font-mono">
+                          <span className="material-symbols-sharp text-base">history</span>
+                          <div>
+                            <span className="font-bold tracking-tight">DETERMINISTIC REPLAY</span>
+                            <div className="text-label opacity-90">
+                              Not a live model answer
+                              {turn.response.fallbackReason ? `: ${turn.response.fallbackReason}` : '.'}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       {/* Metric Auditor Gate Status Banner */}
                       {auditPassed ? (
                         anchoredCount > 0 ? (

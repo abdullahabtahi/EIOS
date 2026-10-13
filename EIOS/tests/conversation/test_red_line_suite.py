@@ -30,7 +30,8 @@ def test_red_line_2_autonomous_write_back_impossible():
         target_entity_id="ACC-991",
         reason="Test execution",
     )
-    assert token["status"] == "STAGED_FOR_REVIEW"
+    assert token["status"] == "PROPOSED"
+    assert token["signed"] is False
     assert token["requires_four_eyes"] is True
     assert token["status"] != "EXECUTED"
 

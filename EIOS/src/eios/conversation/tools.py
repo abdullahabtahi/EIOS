@@ -3,10 +3,15 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from datetime import UTC, datetime
 from typing import Any
 
 _LOG = logging.getLogger("eios.conversation.tools")
+
+# These tools return deterministic fixtures, not live engine output. Every result says so, so neither the
+# model nor the operator can mistake a canned value for a governed one. [ILLUSTRATIVE]
+DATA_ORIGIN = "FIXTURE [ILLUSTRATIVE]"
 
 
 def get_governed_metric(metric_id: str, entity_id: str = "") -> dict[str, Any]:
@@ -33,8 +38,12 @@ def get_governed_metric(metric_id: str, entity_id: str = "") -> dict[str, Any]:
         },
     }
 
-    metric_data = metrics_catalog.get(metric_id, {})
-    val = metric_data.get(entity_id, metric_data.get("default", 125000.0))
+    metric_data = metrics_catalog.get(metric_id)
+    if metric_data is None:
+        raise ValueError(f"unknown governed metric '{metric_id}'; known: {sorted(metrics_catalog)}")
+    if entity_id and entity_id not in metric_data:
+        raise ValueError(f"no governed value of '{metric_id}' for entity '{entity_id}'")
+    val = metric_data[entity_id] if entity_id else metric_data["default"]
 
     return {
         "metric_id": metric_id,
@@ -44,6 +53,7 @@ def get_governed_metric(metric_id: str, entity_id: str = "") -> dict[str, Any]:
         "definition_version": "v1.4.0",
         "steward": "FinancialOperationsSteward",
         "as_of": datetime.now(UTC).isoformat(),
+        "data_origin": DATA_ORIGIN,
     }
 
 
@@ -66,6 +76,7 @@ def inspect_aml_entity(entity_id: str) -> dict[str, Any]:
             "average_transfer_usd": 500.0,
             "recommended_action": "HoldWithdrawal",
             "as_of": datetime.now(UTC).isoformat(),
+            "data_origin": DATA_ORIGIN,
         }
 
     return {
@@ -79,6 +90,7 @@ def inspect_aml_entity(entity_id: str) -> dict[str, Any]:
         "average_transfer_usd": 1400.0,
         "recommended_action": "None",
         "as_of": datetime.now(UTC).isoformat(),
+        "data_origin": DATA_ORIGIN,
     }
 
 
@@ -109,6 +121,7 @@ def query_graph_topology(entity_id: str, hub_threshold: int = 100) -> dict[str, 
         "hub_suppressed_count": 2,  # Payment gateway supernode collapsed
         "total_ring_size": 23,
         "as_of": datetime.now(UTC).isoformat(),
+        "data_origin": DATA_ORIGIN,
     }
 
 
@@ -128,6 +141,7 @@ def inspect_partner_churn(partner_id: str) -> dict[str, Any]:
         "sub_affiliate_count": 14,
         "recommended_playbook": "VIP_Spread_Rebate_Tier1",
         "as_of": datetime.now(UTC).isoformat(),
+        "data_origin": DATA_ORIGIN,
     }
 
 
@@ -155,10 +169,14 @@ def run_causal_what_if(shock_param: str, magnitude_pct: float) -> dict[str, Any]
             round(delta_revenue_usd * 0.88, 2),
             round(delta_revenue_usd * 1.12, 2),
         ],
-        "refuter_passed": True,
-        "placebo_p_value": 0.89,
+        # Principle III: causal status is earned by a real placebo refuter run. None was run here, so this
+        # result can only be presented as correlation, whatever the arithmetic above suggests.
+        "refuter_passed": None,
+        "placebo_p_value": None,
+        "causal_status": "CORRELATION_ONLY",
         "baseline_model_version": "SCM_v2.1_DoWhy",
         "as_of": datetime.now(UTC).isoformat(),
+        "data_origin": DATA_ORIGIN,
     }
 
 
@@ -168,33 +186,24 @@ def stage_action_intent(
     reason: str = "",
     parameters: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Stage a high-severity operational action into the Cockpit Action Shelf (Principle II).
+    """Propose an operational action for human review (Principle II). This only drafts a proposal.
 
-    Generates a cryptographically signed ActionIntentToken with Cloud KMS ECDSA P-256 signature,
-    15-minute expiration, and mandatory Four-Eyes approval requirement. Does not execute direct database writes.
+    The proposal is NOT signed, NOT staged and NOT executed. A human operator must stage it through the
+    Governed Action Shelf, where the intent hub signs it with Cloud KMS and enforces Four-Eyes approval.
+    Never tell the operator an action was signed or staged.
     """
-    import hashlib
-    import time
-    from datetime import timedelta
-
     clean_id = target_entity_id.upper().strip()
-    nonce = hashlib.sha256(f"{clean_id}_{time.time()}".encode()).hexdigest()[:16]
-    intent_id = f"act_{nonce[:8]}"
-
     return {
-        "intent_id": intent_id,
+        "proposal_id": f"proposal_{uuid.uuid4().hex[:12]}",
         "action_type": action_type,
         "target_entity_id": clean_id,
         "parameters": parameters or {},
         "reason": reason,
         "severity": "HIGH",
-        "status": "STAGED_FOR_REVIEW",
+        "status": "PROPOSED",
+        "signed": False,
         "requires_four_eyes": True,
-        "nonce": nonce,
-        "issued_at": datetime.now(UTC).isoformat(),
-        "expires_at": (datetime.now(UTC) + timedelta(minutes=15)).isoformat(),
-        "kms_key_id": "projects/spatial-cat-489006-a4/locations/us-central1/keyRings/gov/cryptoKeys/p256",
-        "signature": f"ECDSA_P256_{hashlib.sha256(intent_id.encode()).hexdigest()[:24]}",
+        "next_step": "An operator must stage this proposal through the Governed Action Shelf.",
     }
 
 
