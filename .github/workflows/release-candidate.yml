@@ -4,13 +4,18 @@
 # Order: build the SBOM from the lockfile, run Red-Line and sealed suites under the
 # release-candidate workflow identity (each run record carries the SBOM reference), then promote.
 # Identity is federated (id-token: write); provider and service account are repository variables.
+# Without them the preflight step announces a warning and does nothing (never a silent job skip);
+# once the repository variable EIOS_CD_ENABLED is "true" a missing value fails the run. The tagged
+# commit must be an ancestor of main, so a tag pushed on an unmerged branch cannot cut a candidate.
 name: release-candidate
 
 on:
-  push:
-    tags:
-      - "rc-*"
   workflow_dispatch:
+    inputs:
+      rc_name:
+        description: "Release candidate name (e.g. rc-2026-10-13.1)"
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -22,7 +27,6 @@ concurrency:
 jobs:
   release-candidate:
     name: release-candidate
-    if: vars.EIOS_WORKLOAD_IDENTITY_PROVIDER != '' && vars.EIOS_RELEASE_CANDIDATE_SERVICE_ACCOUNT != ''
     runs-on: ubuntu-latest
     timeout-minutes: 90 # [ASSUMPTION]
     defaults:
@@ -32,27 +36,63 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4 # [SPIKE] pin to commit SHA when CI first runs
-      - uses: astral-sh/setup-uv@v6 # [SPIKE] pin to commit SHA when CI first runs
+      - name: preflight
+        env:
+          EIOS_CD_ENABLED: ${{ vars.EIOS_CD_ENABLED }}
+          WORKLOAD_IDENTITY_PROVIDER: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
+          SERVICE_ACCOUNT: ${{ vars.EIOS_RELEASE_CANDIDATE_SERVICE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          if [ -n "$WORKLOAD_IDENTITY_PROVIDER" ] && [ -n "$SERVICE_ACCOUNT" ]; then
+            echo "CD_CONFIGURED=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          echo "::warning title=release-candidate is not configured::nothing was promoted; set EIOS_WORKLOAD_IDENTITY_PROVIDER and EIOS_RELEASE_CANDIDATE_SERVICE_ACCOUNT"
+          if [ "$EIOS_CD_ENABLED" = "true" ]; then
+            echo "EIOS_CD_ENABLED is true but the cloud configuration is incomplete" >&2
+            exit 1
+          fi
+          echo "CD_CONFIGURED=false" >> "$GITHUB_ENV"
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: env.CD_CONFIGURED == 'true'
+        with:
+          persist-credentials: false
+          fetch-depth: 0 # the main line is needed to prove the tagged commit is on it
+      - name: require the tagged commit to be on the main line
+        if: env.CD_CONFIGURED == 'true'
+        run: |
+          set -euo pipefail
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "$GITHUB_SHA is not on the main line; a release candidate is cut only from merged code" >&2
+            exit 1
+          fi
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        if: env.CD_CONFIGURED == 'true'
       - name: authenticate with federated identity
-        uses: google-github-actions/auth@v2 # [SPIKE] pin to commit SHA when CI first runs
+        if: env.CD_CONFIGURED == 'true'
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         with:
           workload_identity_provider: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.EIOS_RELEASE_CANDIDATE_SERVICE_ACCOUNT }}
       - name: install locked dependencies
+        if: env.CD_CONFIGURED == 'true'
         run: uv sync --frozen
       - name: build the SBOM and run the release-candidate suites
+        if: env.CD_CONFIGURED == 'true'
         run: |
           set -euo pipefail
           sbom_ref="$(uv run python -m tools.gates.sbom | tail -n 1)"
           uv run python -m evals.cli run --tier red_line --workflow release-candidate --sbom-ref "$sbom_ref"
           uv run python -m evals.cli run --tier sealed --workflow release-candidate --sbom-ref "$sbom_ref"
       - name: promote passed runs
+        if: env.CD_CONFIGURED == 'true'
         run: uv run python -m tools.gates.promote --workflow release-candidate
       - name: upload reports, SBOM and run records
-        if: always()
-        uses: actions/upload-artifact@v4 # [SPIKE] pin to commit SHA when CI first runs
+        if: always() && env.CD_CONFIGURED == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: reports-release-candidate
           path: EIOS/evals/reports/
           if-no-files-found: ignore
+          retention-days: 90

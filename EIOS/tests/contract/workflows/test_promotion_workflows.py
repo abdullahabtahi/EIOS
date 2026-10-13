@@ -123,7 +123,7 @@ def test_prod_like_requires_the_rollback_rehearsal_evidence() -> None:
 
 def test_release_candidate_has_its_own_triggers_and_never_runs_on_pull_requests() -> None:
     triggers = set(_triggers(RELEASE))
-    assert triggers <= {"push", "workflow_dispatch"}
+    assert triggers == {"workflow_dispatch"}
     assert "pull_request" not in triggers
 
 
