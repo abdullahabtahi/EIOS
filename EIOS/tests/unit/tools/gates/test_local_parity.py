@@ -12,7 +12,9 @@ from tools.gates.gate_config import load_gates, select_gates
 from tools.gates.local import local_gate_ids
 
 REPO = Path(__file__).resolve().parents[4]
-WORKFLOW = REPO / ".github" / "workflows" / "pr.yml"
+WORKFLOW = (
+    REPO.parent / ".github" / "workflows" / "pr.yml"
+)  # the root .github is the one GitHub runs
 RUN_GATE = re.compile(r"^uv run python -m tools\.gates\.run_gate \$\{\{ matrix\.gate \}\}$")
 
 
@@ -83,18 +85,17 @@ def test_workflow_installs_with_a_frozen_lockfile_and_uploads_reports_always() -
     assert any(s.get("run") == "uv sync --frozen" for s in steps)
     uploads = [s for s in steps if str(s.get("uses", "")).startswith("actions/upload-artifact")]
     assert len(uploads) == 1
-    assert uploads[0]["with"]["path"] == "evals/reports/"
+    assert uploads[0]["with"]["path"] == "EIOS/evals/reports/"  # steps upload from the repo root
     assert "matrix.gate" in uploads[0]["with"]["name"]
     assert "always()" in str(uploads[0]["if"])
 
 
-def test_actions_use_major_version_tags_with_the_pin_spike_comment() -> None:
+def test_actions_are_pinned_to_a_full_commit_sha_with_a_version_comment() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
     uses = [ln for ln in text.splitlines() if "uses:" in ln]
     assert len(uses) >= 5
     for line in uses:
-        assert re.search(r"@v\d+\b", line), line
-        assert "[SPIKE] pin to commit SHA when CI first runs" in line
+        assert re.search(r"@[0-9a-f]{40} # v\d+", line), line
 
 
 def test_each_gate_is_its_own_required_status_check() -> None:

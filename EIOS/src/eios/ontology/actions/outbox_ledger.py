@@ -123,7 +123,9 @@ class PersistentActionOutboxLedger:
             rec = self._records[intent_id]
 
             if rec.state != OutboxState.PENDING_SECONDARY_APPROVAL:
-                raise FourEyesViolationError("Cannot submit secondary approval before primary approval")
+                raise FourEyesViolationError(
+                    "Cannot submit secondary approval before primary approval"
+                )
 
             if secondary_approver_id == rec.initiator_id:
                 raise FourEyesViolationError(

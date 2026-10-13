@@ -21,14 +21,35 @@ Configure the protected branch so that every one of these checks is required and
 | `open_decision_check` | code or configuration that assumes the outcome of a still-open decision (ADR) |
 | `label_check` | an unlabelled or mis-evidenced figure, a missing brief or spike reference, a forbidden literal in the governed docs |
 | `adr_check` | a decision or spike record with a missing field, or disagreeing with the index (missing file, status mismatch, one-way supersession) |
+| `frontend-check` | cockpit lint, type-check (`tsc --noEmit`) and unit-test failures (a separate job in `pr.yml`, not a gate row) |
 
-The list must equal the `pr`-stage ids in `config/gates.yaml`. When a later feature adds a gate row, add the new id here in the same change. `tests/unit/tools/gates/test_local_parity.py` keeps the workflow and the config in step; this table is kept in step by review.
+The list must equal the `pr`-stage ids in `config/gates.yaml` plus `frontend-check`. When a later feature adds a gate row, add the new id here in the same change. `tests/unit/tools/gates/test_local_parity.py` keeps the workflow and the config in step; this table is kept in step by review.
 
 Other branch rules:
 
 - Require pull requests before merging; no direct pushes to the protected branch, including for administrators.
 - Dismiss stale approvals when new commits arrive.
 - Require linear history `[ASSUMPTION]`.
+
+## Applying the rulesets
+
+The required checks and branch rules are kept as code in `.github/rulesets/`, and `tests/contract/workflows/test_repo_governance.py` fails when the check list drifts from `config/gates.yaml`. A repository administrator applies them once (and again whenever a file changes):
+
+```bash
+gh api -X POST repos/<owner>/<repo>/rulesets --input .github/rulesets/main.json
+gh api -X POST repos/<owner>/<repo>/rulesets --input .github/rulesets/rc-tags.json
+# to update an existing ruleset: gh api -X PUT repos/<owner>/<repo>/rulesets/<id> --input ...
+```
+
+- `main.json` requires a pull request, every check above (up to date with `main`), resolved review threads and linear history, forbids force-push and deletion, and has no bypass actor.
+- `required_approving_review_count` is `0` while the repository has a single maintainer (nobody else can approve). Set it to `1` and add the second owner to `.github/CODEOWNERS` as soon as one exists `[TARGET]`.
+- `rc-tags.json` makes `rc-*` tags immutable and creatable by repository administrators only. `release-candidate.yml` also proves the tagged commit is on `main` before it authenticates.
+
+## Cloud pipeline switch (`EIOS_CD_ENABLED`)
+
+`promote-stage` and `release-candidate` never skip silently. Without the cloud repository variables their `preflight` step prints a warning annotation and promotes nothing. Once the identity pool exists, set the repository variable `EIOS_CD_ENABLED` to `true`: from then on a missing variable fails the run instead of warning. `promote-prod-like` always fails when a variable is missing, and runs only from `refs/heads/main`.
+
+Create the GitHub environments `stage` (no reviewers; deployment branches: `main` only) and `prod-like` (required reviewers, prevent self-review, deployment branches: `main` only). The deployer identity is impersonable only under the environment of the same name, so `promote-stage.yml` runs in `environment: stage`.
 
 ## The only permitted bypass
 

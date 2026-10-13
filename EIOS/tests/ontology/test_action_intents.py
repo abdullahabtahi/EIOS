@@ -91,7 +91,9 @@ def test_expired_token_cannot_be_approved():
     )
 
     # Manually expire the token
-    hub._tokens[token.intent_id].expires_at = datetime.now(UTC) - timedelta(minutes=1)
+    expired = hub._tokens[token.intent_id]
+    expired.expires_at = datetime.now(UTC) - timedelta(minutes=1)
+    hub._persist_token(expired)
 
     with pytest.raises(TokenExpiredError):
         hub.approve_action(token.intent_id, approver_id="MGR_1", role="PARTNER_LEAD")

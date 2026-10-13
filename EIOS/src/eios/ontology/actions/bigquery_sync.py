@@ -49,12 +49,18 @@ class BigQueryLedgerExporter:
             "prev_hash": entry.prev_hash,
             "entry_hash": current_hash,
             "current_hash": current_hash,
-            "event_type": entry.event_type.value if hasattr(entry.event_type, "value") else str(entry.event_type),
+            "event_type": entry.event_type.value
+            if hasattr(entry.event_type, "value")
+            else str(entry.event_type),
             "entity_id": entry.entity_id,
             "payload_digest": entry.payload_digest,
             "payload_json": json.dumps(entry.payload, sort_keys=True),
-            "recorded_at": entry.recorded_at.isoformat() if hasattr(entry.recorded_at, "isoformat") else str(entry.recorded_at),
-            "kms_key_version": getattr(entry, "kms_key_version", "projects/feios/cryptoKeys/ledger-v1"),
+            "recorded_at": entry.recorded_at.isoformat()
+            if hasattr(entry.recorded_at, "isoformat")
+            else str(entry.recorded_at),
+            "kms_key_version": getattr(
+                entry, "kms_key_version", "projects/feios/cryptoKeys/ledger-v1"
+            ),
             "ingested_to_bq_at": datetime.now(UTC).isoformat(),
         }
 
@@ -82,7 +88,7 @@ class BigQueryLedgerExporter:
         expected_head_hash: Optional[str] = None,
     ) -> Tuple[bool, List[str]]:
         """Cryptographically verifies monotonic SHA-256 hash chaining of BigQuery records.
-        
+
         Evaluates H_i = SHA-256(prev_hash || ledger_seq || payload_digest).
         Detects tampering, out-of-order sequence injections, and altered payloads.
         """
@@ -113,7 +119,9 @@ class BigQueryLedgerExporter:
                 )
 
             # 3. Cryptographic Recalculation Check
-            computed_hash = hashlib.sha256(f"{prev_hash}{seq}{payload_digest}".encode("utf-8")).hexdigest()
+            computed_hash = hashlib.sha256(
+                f"{prev_hash}{seq}{payload_digest}".encode("utf-8")
+            ).hexdigest()
             if computed_hash != entry_hash:
                 findings.append(
                     f"Cryptographic divergence at seq {seq}: computed hash '{computed_hash}' != stored entry_hash '{entry_hash}' (tampered record!)"

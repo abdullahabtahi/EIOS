@@ -49,7 +49,9 @@ class SimulatedWriteBackSink:
         with self._lock:
             return list(self._execution_history)
 
-    def _compute_simulated_side_effects(self, action_type: str, parameters: dict[str, Any]) -> dict[str, Any]:
+    def _compute_simulated_side_effects(
+        self, action_type: str, parameters: dict[str, Any]
+    ) -> dict[str, Any]:
         """Compute realistic simulated operational mutations."""
         if action_type == "HoldWithdrawal":
             return {
@@ -110,7 +112,9 @@ class SimulatedWriteBackSink:
             # Evaluate fault injection
             if self._fault_mode == FaultMode.NONE:
                 status = ExecutionStatus.COMMITTED
-                side_effects = self._compute_simulated_side_effects(token.action_type, token.parameters)
+                side_effects = self._compute_simulated_side_effects(
+                    token.action_type, token.parameters
+                )
                 comp_intent_id = None
                 simulated_latency = 14.5
             elif self._fault_mode == FaultMode.NETWORK_TIMEOUT:
