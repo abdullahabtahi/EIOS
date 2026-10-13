@@ -1,7 +1,7 @@
 # Runbook: deploy the cockpit (web + API)
 
-Two Cloud Run services in the prod-like project: **cockpit_web** (public; the only public entry point; it signs
-operators in and relays `/api/*` to the API) and **cockpit_api** (private; invoked only by the web service's
+Two Cloud Run services in the prod-like project: **eios** (the web service; public; the only public entry point; it signs
+operators in and relays `/api/*` to the API) and **eios-api** (private; invoked only by the web service's
 identity through `X-Serverless-Authorization`, so the operator's Firebase token in `Authorization` passes through).
 
 ## Architecture in one paragraph

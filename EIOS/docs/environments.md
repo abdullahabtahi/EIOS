@@ -52,7 +52,7 @@ Secret Manager holds containers only; values are added out of band and never app
 
 ## Not verified without a cloud account
 
-Static validation, plus a first apply of the prod-like environment in the hackathon project on 2026-10-13 `[SPIKE]` (stage and dev not yet applied). Unverified until a real project exists: provider behaviour at apply time, org-policy permissions, federation claim mapping, Firestore TTL and database settings, KMS settings and retention-lock behaviour. Tracked as `[ASSUMPTION]` in `docs/runbooks/bootstrap.md`.
+Static validation, plus a first apply of the prod-like environment in the hackathon project (dev and stage not yet applied). Unverified until a real project exists: provider behaviour at apply time, org-policy permissions, federation claim mapping, Firestore TTL and database settings, KMS settings and retention-lock behaviour. Tracked as `[ASSUMPTION]` in `docs/runbooks/bootstrap.md`.
 
 ## Recorded exceptions (hackathon deployment, eios-hackathon-prod)
 - `enforce_guardrails = false`: the deploying identity has no `orgpolicy.policyAdmin`. Service-account-key and public-bucket
