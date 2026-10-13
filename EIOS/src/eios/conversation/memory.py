@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional
-from eios.conversation.models import EvidenceItem, sanitize_for_state_storage
+from typing import Any
+
+from eios.conversation.models import EvidenceItem
 
 
 class SessionMemoryManager:
@@ -13,18 +14,18 @@ class SessionMemoryManager:
     def __init__(self, session_id: str = "sess_default", max_tokens: int = 4000) -> None:
         self.session_id = session_id
         self.max_tokens = max_tokens
-        self._active_anchor: Optional[str] = None
-        self._entity_history: List[str] = []
-        self._turn_history: List[Dict[str, str]] = []
+        self._active_anchor: str | None = None
+        self._entity_history: list[str] = []
+        self._turn_history: list[dict[str, str]] = []
 
     def register_turn_entities(
         self,
         turn_index: int,
         query: str,
-        extracted_entities: Dict[str, str],
+        extracted_entities: dict[str, str],
     ) -> None:
         """Records entities extracted from an inquiry turn, updating the active anchor."""
-        for key, entity_id in extracted_entities.items():
+        for _key, entity_id in extracted_entities.items():
             if entity_id:
                 clean_id = entity_id.strip()
                 self._active_anchor = clean_id
@@ -41,7 +42,7 @@ class SessionMemoryManager:
 
         self._turn_history.append({"turn": str(turn_index), "query": query})
 
-    def get_active_entity_anchor(self) -> Optional[str]:
+    def get_active_entity_anchor(self) -> str | None:
         """Returns the most recent active entity anchor in session memory."""
         return self._active_anchor
 
@@ -67,11 +68,16 @@ class SessionMemoryManager:
         # Replace 'them' -> '<ANCHOR>'
         resolved = re.sub(r"\bthem\b", f"{anchor}", resolved, flags=re.IGNORECASE)
         # Replace 'this entity/partner/account'
-        resolved = re.sub(r"\bthis\s+(?:account|entity|partner|user|trader)\b", anchor, resolved, flags=re.IGNORECASE)
+        resolved = re.sub(
+            r"\bthis\s+(?:account|entity|partner|user|trader)\b",
+            anchor,
+            resolved,
+            flags=re.IGNORECASE,
+        )
 
         return resolved
 
-    def resolve_pronominal_entities(self, query: str, anchors: Optional[Dict[str, str]] = None) -> str:
+    def resolve_pronominal_entities(self, query: str, anchors: dict[str, str] | None = None) -> str:
         """Resolves pronominal references using provided anchors."""
         if not anchors:
             return query
@@ -98,7 +104,7 @@ class SessionMemoryManager:
         finally:
             self._active_anchor = prev_anchor
 
-    def compact_context(self, messages: List[Any], max_tokens: Optional[int] = None) -> List[Any]:
+    def compact_context(self, messages: list[Any], max_tokens: int | None = None) -> list[Any]:
         """Returns compacted message history preserving system message and recent window within token limits."""
         limit = max_tokens or self.max_tokens
         if not messages:
@@ -107,7 +113,11 @@ class SessionMemoryManager:
         # Check if first message is a SystemMessage
         system_msg = None
         other_messages = messages
-        if messages and hasattr(messages[0], "content") and type(messages[0]).__name__ == "SystemMessage":
+        if (
+            messages
+            and hasattr(messages[0], "content")
+            and type(messages[0]).__name__ == "SystemMessage"
+        ):
             system_msg = messages[0]
             other_messages = messages[1:]
 
@@ -115,7 +125,7 @@ class SessionMemoryManager:
         available_tokens = max(10, limit - system_tokens)
 
         # Take from recent to oldest
-        retained: List[Any] = []
+        retained: list[Any] = []
         current_tokens = 0
         for msg in reversed(other_messages):
             msg_tok = len(str(getattr(msg, "content", ""))) // 4
@@ -132,12 +142,12 @@ class SessionMemoryManager:
 
     def merge_evidence(
         self,
-        existing: List[EvidenceItem],
-        new_items: List[EvidenceItem],
-    ) -> List[EvidenceItem]:
+        existing: list[EvidenceItem],
+        new_items: list[EvidenceItem],
+    ) -> list[EvidenceItem]:
         """Merges evidence collections deduplicating by (tool_name, metric_name)."""
         seen: set[tuple[str, str]] = set()
-        result: List[EvidenceItem] = []
+        result: list[EvidenceItem] = []
 
         for item in existing:
             key = (item.tool_name, item.metric_name)

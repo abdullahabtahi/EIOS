@@ -1,27 +1,27 @@
 """FastAPI Ingestion Gateway application, endpoints, and health probes."""
 
 import asyncio
+import logging
 from collections import defaultdict
 from contextlib import asynccontextmanager
-import logging
-from typing import Any, Union
-from uuid import uuid4
-from fastapi import FastAPI, HTTPException, Request, Response, status
+from typing import Any
+
+from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse
 
 from eios.contracts.base import DataProductEnum, DataProductEvent
+from eios.ingestion.circuit_breaker import IngestionCircuitBreaker
 from eios.ingestion.config import IngestionConfig, get_ingestion_config
+from eios.ingestion.dlq import DLQDispatcher
+from eios.ingestion.dq import DQMonitor
+from eios.ingestion.exporter import ParquetLakehouseExporter
+from eios.ingestion.hot_state import HotStateEngine
+from eios.ingestion.processor import IngestionPipeline
 from eios.ingestion.queue import IngestionQueue, get_ingestion_queue
 from eios.ingestion.subscriber import IngestionSubscriber
 from eios.ingestion.validator import ContractValidator
-from eios.ingestion.dlq import DLQDispatcher, BreachType
-from eios.ingestion.circuit_breaker import IngestionCircuitBreaker
-from eios.ingestion.hot_state import HotStateEngine
-from eios.ingestion.warm_start import ParquetWarmStartLoader
 from eios.ingestion.vault import TokenVault
-from eios.ingestion.dq import DQMonitor
-from eios.ingestion.processor import IngestionPipeline
-from eios.ingestion.exporter import ParquetLakehouseExporter
+from eios.ingestion.warm_start import ParquetWarmStartLoader
 
 logger = logging.getLogger("eios.ingestion.router")
 
@@ -56,7 +56,9 @@ async def _drain_worker(app: FastAPI, flush_interval: float = 0.5) -> None:
                 try:
                     app.state.exporter.export_batch(prod, records)
                 except Exception as exc:
-                    logger.error("Failed to export lakehouse batch for %s: %s", prod, exc, exc_info=True)
+                    logger.error(
+                        "Failed to export lakehouse batch for %s: %s", prod, exc, exc_info=True
+                    )
         except asyncio.CancelledError:
             break
         except Exception as exc:
@@ -79,7 +81,7 @@ async def _eviction_worker(app: FastAPI, check_interval: float = 3600.0) -> None
             logger.warning("Error in background eviction worker: %s", exc)
 
 
-def create_ingestion_app(
+def create_ingestion_app(  # noqa: C901, PLR0913, PLR0915
     config: IngestionConfig | None = None,
     queue: IngestionQueue | None = None,
     validator: ContractValidator | None = None,
@@ -98,10 +100,12 @@ def create_ingestion_app(
     app_dlq = dlq_dispatcher or DLQDispatcher(dlq_topic=app_config.dlq_topic_id)
     app_cb = circuit_breaker or IngestionCircuitBreaker()
     app_hot_state = hot_state or HotStateEngine()
-    salt_bytes = getattr(app_config, "token_vault_salt", "deriv-eios-dev-salt-32bytes-secret").encode("utf-8")
+    salt_bytes = getattr(
+        app_config, "token_vault_salt", "deriv-eios-dev-salt-32bytes-secret"
+    ).encode("utf-8")
     app_vault = vault or TokenVault(master_salt=salt_bytes)
     app_dq = dq_monitor or DQMonitor()
-    
+
     app_pipeline = pipeline or IngestionPipeline(
         config=app_config,
         validator=app_validator,
@@ -112,8 +116,10 @@ def create_ingestion_app(
         dq_monitor=app_dq,
         queue=app_queue,
     )
-    
-    app_exporter = exporter or ParquetLakehouseExporter(export_base_dir=app_config.warm_start_data_path)
+
+    app_exporter = exporter or ParquetLakehouseExporter(
+        export_base_dir=app_config.warm_start_data_path
+    )
     subscriber = IngestionSubscriber(config=app_config, queue=app_queue, pipeline=app_pipeline)
 
     @asynccontextmanager
@@ -147,7 +153,7 @@ def create_ingestion_app(
             for prod, records in grouped.items():
                 try:
                     app.state.exporter.export_batch(prod, records)
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
 
     app = FastAPI(
@@ -168,8 +174,10 @@ def create_ingestion_app(
     app.state.is_ready = True
     app.state.warm_start_duration_ms = 0.0
 
-    def _mount_route(app_obj: FastAPI, path_str: str, handler: Any, http_methods: list[str], **kwargs: Any) -> None:
-        getattr(app_obj, "add_api_route")(path_str, handler, methods=http_methods, **kwargs)
+    def _mount_route(
+        app_obj: FastAPI, path_str: str, handler: Any, http_methods: list[str], **kwargs: Any
+    ) -> None:
+        app_obj.add_api_route(path_str, handler, methods=http_methods, **kwargs)
 
     async def healthz():
         """Liveness probe: verifies container and event loop are responsive."""
@@ -191,7 +199,7 @@ def create_ingestion_app(
         """Real-time Data Quality & Freshness SLA monitoring board."""
         return app.state.dq_monitor.get_all_statuses(circuit_breaker=app.state.circuit_breaker)
 
-    async def ingest_events(events_input: Union[DataProductEvent, list[DataProductEvent]]):
+    async def ingest_events(events_input: DataProductEvent | list[DataProductEvent]):
         """Synchronously receive, validate, and buffer events into staging queue or DLQ."""
         if isinstance(events_input, list):
             events = events_input
@@ -211,6 +219,13 @@ def create_ingestion_app(
     _mount_route(app, "/healthz", healthz, ["GET"], tags=["Health"])
     _mount_route(app, "/readyz", readyz, ["GET"], tags=["Health"])
     _mount_route(app, "/v1/dq/status", dq_status, ["GET"], tags=["Data Quality"])
-    _mount_route(app, "/v1/events/ingest", ingest_events, ["POST"], status_code=status.HTTP_202_ACCEPTED, tags=["Ingestion"])
+    _mount_route(
+        app,
+        "/v1/events/ingest",
+        ingest_events,
+        ["POST"],
+        status_code=status.HTTP_202_ACCEPTED,
+        tags=["Ingestion"],
+    )
 
     return app

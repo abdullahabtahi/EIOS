@@ -6,16 +6,16 @@ Authoritative References:
 - specs/009-partner-fraud/research.md §1
 """
 
-from datetime import datetime, timedelta
 import pandas as pd
-import pytest
 
 from eios.fraud.models import DirectionalType
 from eios.fraud.pair_detector import TimeBucketedPairDetector
 from eios.ingestion.hot_state import HotStateEngine
 
 
-def test_time_bucketed_pair_detector_identifies_planted_opposite_pairs(synthetic_trade_log: pd.DataFrame) -> None:
+def test_time_bucketed_pair_detector_identifies_planted_opposite_pairs(
+    synthetic_trade_log: pd.DataFrame,
+) -> None:
     detector = TimeBucketedPairDetector(
         bucket_window_sec=30.0,
         tau_timing_sec=5.0,
@@ -26,7 +26,14 @@ def test_time_bucketed_pair_detector_identifies_planted_opposite_pairs(synthetic
 
     # Must find the planted opposite pair: ACC-OPP-A1 & ACC-OPP-B1
     opp_pair = next(
-        (p for p in pairs if (p.account_a in ["ACC-OPP-A1", "ACC-OPP-B1"] and p.account_b in ["ACC-OPP-A1", "ACC-OPP-B1"])),
+        (
+            p
+            for p in pairs
+            if (
+                p.account_a in ["ACC-OPP-A1", "ACC-OPP-B1"]
+                and p.account_b in ["ACC-OPP-A1", "ACC-OPP-B1"]
+            )
+        ),
         None,
     )
     assert opp_pair is not None, "Planted opposite trading pair was not detected!"
@@ -38,7 +45,14 @@ def test_time_bucketed_pair_detector_identifies_planted_opposite_pairs(synthetic
 
     # Must also detect planted mirror pair: ACC-MIRR-C1 & ACC-MIRR-D1
     mirr_pair = next(
-        (p for p in pairs if (p.account_a in ["ACC-MIRR-C1", "ACC-MIRR-D1"] and p.account_b in ["ACC-MIRR-C1", "ACC-MIRR-D1"])),
+        (
+            p
+            for p in pairs
+            if (
+                p.account_a in ["ACC-MIRR-C1", "ACC-MIRR-D1"]
+                and p.account_b in ["ACC-MIRR-C1", "ACC-MIRR-D1"]
+            )
+        ),
         None,
     )
     assert mirr_pair is not None, "Planted mirror trading pair was not detected!"
@@ -47,7 +61,9 @@ def test_time_bucketed_pair_detector_identifies_planted_opposite_pairs(synthetic
     assert mirr_pair.collusion_confidence >= 0.75
 
 
-def test_time_bucketed_pair_detector_filters_legitimate_hedgers(synthetic_trade_log: pd.DataFrame) -> None:
+def test_time_bucketed_pair_detector_filters_legitimate_hedgers(
+    synthetic_trade_log: pd.DataFrame,
+) -> None:
     """Bounded False Positive Rate on hard-negative legitimate hedgers."""
     detector = TimeBucketedPairDetector(
         bucket_window_sec=30.0,
@@ -60,7 +76,14 @@ def test_time_bucketed_pair_detector_filters_legitimate_hedgers(synthetic_trade_
     # Legitimate hedgers ACC-HEDGE-1 & ACC-HEDGE-2 should either not pass co-occurrence/timing thresholds,
     # or have low collusion confidence (< 0.60)
     hedge_pair = next(
-        (p for p in pairs if (p.account_a in ["ACC-HEDGE-1", "ACC-HEDGE-2"] and p.account_b in ["ACC-HEDGE-1", "ACC-HEDGE-2"])),
+        (
+            p
+            for p in pairs
+            if (
+                p.account_a in ["ACC-HEDGE-1", "ACC-HEDGE-2"]
+                and p.account_b in ["ACC-HEDGE-1", "ACC-HEDGE-2"]
+            )
+        ),
         None,
     )
     if hedge_pair is not None:

@@ -6,7 +6,6 @@ Authoritative References:
 - specs/010-client-aml/spec.md (User Story 5)
 """
 
-import pytest
 from eios.aml.peer_baseline import PeerBaselineEngine
 
 

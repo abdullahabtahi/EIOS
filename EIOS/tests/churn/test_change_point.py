@@ -1,8 +1,8 @@
 """Unit and validation tests for seasonality-aware change-point detection (T019, T022)."""
 
 from datetime import date, timedelta
+
 import pandas as pd
-import pytest
 
 from eios.churn.change_point import SeasonalityChangePointDetector
 
@@ -17,11 +17,13 @@ def test_weekend_market_pauses_masked():
     for d in range(28):
         cur_date = base_date + timedelta(days=d)
         is_weekend = cur_date.weekday() >= 5
-        records.append({
-            "partner_id": "P-NORMAL",
-            "date": cur_date,
-            "volume": 0 if is_weekend else 25,
-        })
+        records.append(
+            {
+                "partner_id": "P-NORMAL",
+                "date": cur_date,
+                "volume": 0 if is_weekend else 25,
+            }
+        )
     df = pd.DataFrame(records)
 
     result = detector.detect_change_point(df, metric_col="volume")
@@ -46,11 +48,13 @@ def test_hard_negative_vacation_suppressed():
         else:
             vol = 30  # Active trading
 
-        records.append({
-            "partner_id": "P-HARD-NEG-VACATION",
-            "date": cur_date,
-            "volume": vol,
-        })
+        records.append(
+            {
+                "partner_id": "P-HARD-NEG-VACATION",
+                "date": cur_date,
+                "volume": vol,
+            }
+        )
     df = pd.DataFrame(records)
 
     result = detector.detect_change_point(df, metric_col="volume")
@@ -80,11 +84,13 @@ def test_structural_churn_drift_detected():
         else:
             vol = 2  # Complete decay
 
-        records.append({
-            "partner_id": "P-CHURN-DRIFT",
-            "date": cur_date,
-            "volume": vol,
-        })
+        records.append(
+            {
+                "partner_id": "P-CHURN-DRIFT",
+                "date": cur_date,
+                "volume": vol,
+            }
+        )
     df = pd.DataFrame(records)
 
     result = detector.detect_change_point(df, metric_col="volume")

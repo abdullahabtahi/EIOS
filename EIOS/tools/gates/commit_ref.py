@@ -71,8 +71,8 @@ def _git_head(repo_root: Path) -> str | None:
         return None
     env = {**os.environ, "GIT_DIR": str(git_dir), "GIT_WORK_TREE": str(repo_root)}
     try:
-        completed = subprocess.run(  # noqa: S603 - fixed argv, no user input
-            ["git", "rev-parse", "HEAD"],  # noqa: S607 - resolved through PATH on purpose
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],  # noqa: S607
             cwd=repo_root,
             env=env,
             capture_output=True,

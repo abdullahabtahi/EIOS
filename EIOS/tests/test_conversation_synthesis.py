@@ -1,7 +1,7 @@
-import pytest
 from langchain_core.messages import HumanMessage
+
 from eios.conversation.specialists.synthesis import SynthesisSpecialist
-from eios.conversation.models import BlackboardState
+
 
 def test_synthesis_no_counterfactual():
     spec = SynthesisSpecialist()
@@ -11,6 +11,7 @@ def test_synthesis_no_counterfactual():
     assert "WARNING" not in str(result["messages"][0].content)
     assert "Executing scenario" not in str(result["messages"][0].content)
 
+
 def test_synthesis_counterfactual_safe():
     spec = SynthesisSpecialist()
     state = {"messages": [HumanMessage(content="What if revenue drops by 2.5 sigma?")]}
@@ -18,6 +19,7 @@ def test_synthesis_counterfactual_safe():
     content = str(result["messages"][0].content)
     assert "Executing scenario" in content
     assert "WARNING" not in content
+
 
 def test_synthesis_counterfactual_extrapolation_warning():
     spec = SynthesisSpecialist()

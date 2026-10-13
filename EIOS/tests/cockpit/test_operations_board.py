@@ -1,12 +1,10 @@
 """Unit and contract tests for Data Platform & Operations Board (User Story 6)."""
 
-from datetime import UTC, datetime, timedelta
 import pytest
 
 from eios.cockpit.operations import (
     DataPlatformOperationsService,
     DataProductHealthStatus,
-    DataProductSLAStatus,
 )
 from eios.cockpit.schemas import validate_contract
 from eios.ontology.metrics.catalog import create_default_registry
@@ -47,7 +45,9 @@ def test_freshness_sla_monitor_and_degraded_propagation():
 
     # Check alert generation
     alerts = svc.get_contract_breach_alerts()
-    assert any(a["product_name"] == "client_transactions" and a["severity"] == "WARNING" for a in alerts)
+    assert any(
+        a["product_name"] == "client_transactions" and a["severity"] == "WARNING" for a in alerts
+    )
 
     # Simulate a critical lag of 700 seconds (> 2x SLA -> BREACHED)
     svc.simulate_sla_delay("client_transactions", delay_seconds=700)
@@ -58,7 +58,10 @@ def test_freshness_sla_monitor_and_degraded_propagation():
     assert breached_tx.is_degraded is True
 
     critical_alerts = svc.get_contract_breach_alerts()
-    assert any(a["product_name"] == "client_transactions" and a["severity"] == "CRITICAL" for a in critical_alerts)
+    assert any(
+        a["product_name"] == "client_transactions" and a["severity"] == "CRITICAL"
+        for a in critical_alerts
+    )
 
 
 def test_identity_cluster_conflict_resolution():

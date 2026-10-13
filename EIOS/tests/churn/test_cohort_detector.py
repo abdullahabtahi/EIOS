@@ -1,7 +1,7 @@
 """Unit tests for Systemic Regional & Cohort Risk Detection (T023 / US4)."""
 
-import pytest
 from datetime import date
+
 from eios.churn.cohort_detector import CohortRiskDetector
 from eios.churn.pipeline import ChurnRadarPipeline
 from eios.ingestion.hot_state import HotStateEngine
@@ -38,7 +38,7 @@ def test_isolated_partner_does_not_trigger_cohort_alert():
     cur = engine.get_cursor()
 
     cur.execute("""
-        INSERT INTO partner_360 VALUES 
+        INSERT INTO partner_360 VALUES
         ('P-ISO-1', 'TIER_1', 'LATAM_BRA', 12, 10000.0, 'MGR-1', 'ACTIVE'),
         ('P-ISO-2', 'TIER_1', 'LATAM_BRA', 12, 10000.0, 'MGR-1', 'ACTIVE'),
         ('P-ISO-3', 'TIER_1', 'LATAM_BRA', 12, 10000.0, 'MGR-1', 'ACTIVE'),
@@ -48,7 +48,7 @@ def test_isolated_partner_does_not_trigger_cohort_alert():
 
     # Only 1 partner is high risk in LATAM_BRA
     cur.execute("""
-        INSERT INTO churn_radar_scores VALUES 
+        INSERT INTO churn_radar_scores VALUES
         ('P-ISO-1', '2026-10-07', 0.85, 8500.0, 'HIGH', 'OPTIMAL', false, 'BEHAVIORAL', 'login_decay', -0.5, 'risk', CURRENT_TIMESTAMP),
         ('P-ISO-2', '2026-10-07', 0.10, 1000.0, 'LOW', 'STABLE', false, 'BEHAVIORAL', 'login_decay', 0.0, 'ok', CURRENT_TIMESTAMP),
         ('P-ISO-3', '2026-10-07', 0.12, 1200.0, 'LOW', 'STABLE', false, 'BEHAVIORAL', 'login_decay', 0.0, 'ok', CURRENT_TIMESTAMP),

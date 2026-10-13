@@ -1,8 +1,7 @@
 """Tests for hierarchical supervisor intent classification and routing (F018, T026)."""
 
-import pytest
-from eios.conversation.supervisor import ConversationalSupervisor
 from eios.conversation.models import SpecialistRoute
+from eios.conversation.supervisor import ConversationalSupervisor
 
 
 def test_supervisor_routes_aml_queries():
@@ -19,7 +18,9 @@ def test_supervisor_routes_partner_churn_queries():
 
 def test_supervisor_routes_compliance_queries():
     sup = ConversationalSupervisor()
-    route = sup.classify_route("Show me the audit proof for WORM compliance under FinCEN guidelines")
+    route = sup.classify_route(
+        "Show me the audit proof for WORM compliance under FinCEN guidelines"
+    )
     assert route == SpecialistRoute.GOVERNANCE_COMPLIANCE
 
 
@@ -35,6 +36,7 @@ def test_supervisor_build_graph_compilation_and_transitions():
     assert graph is not None
 
     from eios.conversation.models import BlackboardState, OperatorRole
+
     state = BlackboardState(
         session_id="sess_1",
         user_role=OperatorRole.EXECUTIVE,
@@ -48,4 +50,3 @@ def test_supervisor_build_graph_compilation_and_transitions():
 
     state.reflection_cycles = 1
     assert sup.evaluate_reflection_transition(state) == "supervisor"
-

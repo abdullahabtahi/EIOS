@@ -8,16 +8,15 @@ Authoritative References:
 - .specify/memory/constitution.md (Principles I, II, IV, VII, VIII)
 """
 
+import uuid
 from datetime import UTC, datetime
 from typing import Any
-import uuid
 
 from eios.aml.models import (
     AMLAlert,
     AMLCaseDossier,
     AMLPriorityTier,
     RoundTripTypology,
-    SARDraft,
 )
 from eios.ingestion.hot_state import HotStateEngine
 
@@ -28,7 +27,7 @@ class AMLDossierAssembler:
     def __init__(self, hot_state: HotStateEngine | None = None) -> None:
         self.hot_state = hot_state
 
-    def assemble_dossier(
+    def assemble_dossier(  # noqa: C901, PLR0912, PLR0913, PLR0915
         self,
         client_id: str,
         kyc_tier: str = "TIER_2_VERIFIED",
@@ -107,7 +106,7 @@ class AMLDossierAssembler:
                     if txn_sums:
                         dep = float(txn_sums[0])
                         wth = float(txn_sums[1])
-            except Exception:
+            except Exception:  # noqa: S110
                 # Hot state query error fallback to provided values
                 pass
 
@@ -179,7 +178,9 @@ class AMLDossierAssembler:
             narrative_parts.append(
                 f"Deposited ${dep:,.2f} USD and requested withdrawal of ${wth:,.2f} USD ({deposit_withdrawal_ratio:.1%} turnover) with net trading P&L of ${n_pl:,.2f} USD."
             )
-        if rt_events or (dep > 0.0 and deposit_withdrawal_ratio >= 0.90 and abs(n_pl) / max(dep, 1.0) <= 0.02):
+        if rt_events or (
+            dep > 0.0 and deposit_withdrawal_ratio >= 0.90 and abs(n_pl) / max(dep, 1.0) <= 0.02
+        ):
             narrative_parts.append(
                 "Activity matches structuring and rapid micro-P&L round-trip laundering typology with negligible market exposure."
             )
@@ -237,7 +238,7 @@ class AMLDossierAssembler:
                         dossier.as_of,
                     ],
                 )
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         return dossier

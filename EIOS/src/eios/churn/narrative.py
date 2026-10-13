@@ -4,9 +4,9 @@ Adheres to Constitution Principle I (Zero metric hallucination) and Principle VI
 (Deterministic cached replay fallback).
 """
 
-from datetime import UTC, datetime
-from typing import Sequence
 import uuid
+from collections.abc import Sequence
+from datetime import UTC, datetime
 
 from eios.churn.models import ChurnExplanationRecord, RiskTier, SignalContribution, SignalFamily
 
@@ -17,7 +17,7 @@ class ChurnNarrativeGenerator:
     def __init__(self) -> None:
         pass
 
-    def generate_narrative(
+    def generate_narrative(  # noqa: PLR0913
         self,
         partner_id: str,
         risk_tier: RiskTier | str,
@@ -33,10 +33,16 @@ class ChurnNarrativeGenerator:
         tier_str = risk_tier.value if isinstance(risk_tier, RiskTier) else str(risk_tier)
         family_str = top_family.value if isinstance(top_family, SignalFamily) else str(top_family)
 
-        citations_list = list(citations) if citations else [
-            "DP6:partner_360",
-            "DP9:partner_engagement_signals" if family_str == "BEHAVIORAL" else "DP10:partner_comms"
-        ]
+        citations_list = (
+            list(citations)
+            if citations
+            else [
+                "DP6:partner_360",
+                "DP9:partner_engagement_signals"
+                if family_str == "BEHAVIORAL"
+                else "DP10:partner_comms",
+            ]
+        )
 
         # Template guarantees all numbers are exact tool values
         narrative = (
@@ -66,7 +72,11 @@ class ChurnNarrativeGenerator:
         all_contributions: Sequence[SignalContribution] | None = None,
     ) -> ChurnExplanationRecord:
         """Constructs narrative directly from a SignalContribution object."""
-        citations = [c.citation_ref for c in all_contributions] if all_contributions else [top_driver.citation_ref]
+        citations = (
+            [c.citation_ref for c in all_contributions]
+            if all_contributions
+            else [top_driver.citation_ref]
+        )
         return self.generate_narrative(
             partner_id=partner_id,
             risk_tier=risk_tier,

@@ -26,7 +26,7 @@ make setup        # uv sync: creates .venv from uv.lock
 make check        # uv run python -m tools.gates.local
 ```
 
-This runs the same thirteen blocking gates, from the same `config/gates.yaml`, as the pull-request pipeline (`.github/workflows/pr.yml`). A test keeps the two in step. Every gate runs even if an earlier one fails; the command exits non-zero when any gate failed.
+This runs the same fourteen blocking gates, from the same `config/gates.yaml`, as the pull-request pipeline (`.github/workflows/pr.yml`). A test keeps the two in step. Every gate runs even if an earlier one fails; the command exits non-zero when any gate failed.
 
 | Gate | What it checks |
 |---|---|

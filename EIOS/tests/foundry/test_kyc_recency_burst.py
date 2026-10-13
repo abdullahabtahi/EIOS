@@ -1,6 +1,5 @@
 """Tests for KYC recency burst suspicious transaction clustering (FR-021)."""
 
-import pytest
 from eios.foundry.generators.aml import AMLDataGenerator
 from eios.foundry.rng import DeterministicRNG
 from eios.foundry.universe import GlobalEntityUniverse

@@ -43,7 +43,7 @@ def compute_propensity_score(
     return round(clipped, 4)
 
 
-from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.linear_model import LogisticRegression, Ridge  # noqa: E402
 
 
 class AIPWEstimator:
@@ -76,12 +76,12 @@ class AIPWEstimator:
         # Handle case where all 'a' are the same
         if len(np.unique(a)) < 2:
             return 0.0
-            
+
         C_val = 1.0 / self.l2_reg if self.l2_reg > 0 else 1e9
-        prop_model = LogisticRegression(C=C_val, penalty='l2', max_iter=1000)
+        prop_model = LogisticRegression(C=C_val, penalty="l2", max_iter=1000)
         prop_model.fit(x_raw, a)
         e_hat = prop_model.predict_proba(x_raw)[:, 1]
-        
+
         # Positivity clipping [0.01, 0.99]
         e_hat = np.clip(e_hat, 0.01, 0.99)
 
@@ -109,4 +109,3 @@ class AIPWEstimator:
 
         tau_aipw = float(np.mean(gamma_1 - gamma_0))
         return tau_aipw
-

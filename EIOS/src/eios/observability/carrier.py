@@ -6,54 +6,48 @@ harmonized with ambient enterprise correlation IDs (X-Correlation-ID) and Contex
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-import re
-from typing import Any, Dict, Optional, Tuple
-import uuid
 
-from opentelemetry import trace
 from opentelemetry.context import Context
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 from eios.common.correlation import (
     CORRELATION_HEADER,
+    correlation_scope,
     current_id,
-    is_valid_correlation_id,
     new_correlation_id,
     resolve_inbound_id,
-    correlation_scope,
 )
 
 W3C_TRACEPARENT_HEADER = "traceparent"
 W3C_TRACESTATE_HEADER = "tracestate"
 W3C_BAGGAGE_HEADER = "baggage"
 
-_TRACEPARENT_PATTERN = re.compile(
-    r"^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$"
-)
+_TRACEPARENT_PATTERN = re.compile(r"^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})$")
 
 _PROPAGATOR = TraceContextTextMapPropagator()
 
 # Task-local baggage store
-_CURRENT_BAGGAGE: ContextVar[Dict[str, str]] = ContextVar("eios_baggage", default={})
+_CURRENT_BAGGAGE: ContextVar[dict[str, str]] = ContextVar("eios_baggage", default={})  # noqa: B039
 
 
 @dataclass(frozen=True)
 class ExtractedContext:
     """Carries distributed context extracted from inbound headers."""
 
-    trace_id: Optional[str]
-    span_id: Optional[str]
-    trace_flags: Optional[str]
+    trace_id: str | None
+    span_id: str | None
+    trace_flags: str | None
     correlation_id: str
-    baggage: Dict[str, str] = field(default_factory=dict)
+    baggage: dict[str, str] = field(default_factory=dict)
     otel_context: Context = field(default_factory=Context)
 
 
-def parse_traceparent(traceparent: str) -> Optional[Tuple[str, str, str, str]]:
+def parse_traceparent(traceparent: str) -> tuple[str, str, str, str] | None:
     """Parses W3C traceparent header into (version, trace_id, parent_id, flags).
 
     Returns None if malformed or non-compliant with W3C specification.
@@ -76,9 +70,9 @@ def format_traceparent(trace_id: str, span_id: str, sampled: bool = True) -> str
     return f"00-{trace_id:0>32}-{span_id:0>16}-{flags}"
 
 
-def parse_baggage(baggage_str: str) -> Dict[str, str]:
+def parse_baggage(baggage_str: str) -> dict[str, str]:
     """Parses W3C baggage header key=value pairs."""
-    items: Dict[str, str] = {}
+    items: dict[str, str] = {}
     if not baggage_str:
         return items
     for entry in baggage_str.split(","):
@@ -99,18 +93,22 @@ def format_baggage(items: Mapping[str, str]) -> str:
     return ",".join(f"{k}={v}" for k, v in items.items() if k and v)
 
 
-def current_baggage() -> Dict[str, str]:
+def current_baggage() -> dict[str, str]:
     """Returns a copy of current task-local baggage."""
     return dict(_CURRENT_BAGGAGE.get())
 
 
 @contextmanager
 def ambient_context_scope(
-    correlation_id: Optional[str] = None,
-    baggage: Optional[Mapping[str, str]] = None,
+    correlation_id: str | None = None,
+    baggage: Mapping[str, str] | None = None,
 ) -> Iterator[None]:
     """Binds correlation ID and ambient baggage to current task."""
-    cid = resolve_inbound_id(correlation_id) if correlation_id else (current_id() or new_correlation_id())
+    cid = (
+        resolve_inbound_id(correlation_id)
+        if correlation_id
+        else (current_id() or new_correlation_id())
+    )
     new_bag = dict(_CURRENT_BAGGAGE.get())
     if baggage:
         new_bag.update(baggage)
@@ -125,18 +123,23 @@ def ambient_context_scope(
 
 
 def inject_context(
-    headers: Optional[Mapping[str, str]] = None,
-    correlation_id: Optional[str] = None,
-    baggage: Optional[Mapping[str, str]] = None,
-) -> Dict[str, str]:
+    headers: Mapping[str, str] | None = None,
+    correlation_id: str | None = None,
+    baggage: Mapping[str, str] | None = None,
+) -> dict[str, str]:
     """Injects W3C traceparent, baggage, and X-Correlation-ID into outbound headers."""
-    carrier: Dict[str, str] = dict(headers or {})
+    carrier: dict[str, str] = dict(headers or {})
 
     # 1. Inject W3C TraceContext from active OpenTelemetry context
     _PROPAGATOR.inject(carrier)
 
     # 2. Resolve correlation ID
-    cid = correlation_id or current_id() or _CURRENT_BAGGAGE.get().get("correlation_id") or new_correlation_id()
+    cid = (
+        correlation_id
+        or current_id()
+        or _CURRENT_BAGGAGE.get().get("correlation_id")
+        or new_correlation_id()
+    )
     carrier[CORRELATION_HEADER] = cid
 
     # 3. Merge baggage

@@ -1,6 +1,5 @@
 """Tests for platform operations telemetry and planted latency shock (FR-045)."""
 
-import pytest
 from eios.foundry.contracts import ContractValidator, OperationalMetricRecord
 from eios.foundry.generators.operational import OperationalDataGenerator
 from eios.foundry.rng import DeterministicRNG

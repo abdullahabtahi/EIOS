@@ -48,7 +48,7 @@ def _run_one(
 ) -> tuple[bool, str]:
     header = "$ " + " ".join(argv)
     try:
-        completed = subprocess.run(  # noqa: S603 - argv comes from reviewed repo configuration
+        completed = subprocess.run(  # noqa: S603
             argv,
             cwd=cwd,
             env=env,

@@ -1,6 +1,5 @@
 """Tests for churn radar time-series signals and seasonal dip hard negatives (FR-035 to FR-041)."""
 
-import pytest
 from eios.foundry.contracts import ContractValidator, WeeklySignalRecord
 from eios.foundry.generators.churn import ChurnDataGenerator
 from eios.foundry.rng import DeterministicRNG

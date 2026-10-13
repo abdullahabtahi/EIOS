@@ -79,7 +79,7 @@ def test_negative_token_counts_are_rejected() -> None:
 
 def test_replay_requires_timezone_aware_timestamps() -> None:
     with pytest.raises(BoundaryValidationError):
-        MemoryReplayStore().put("k", "text", datetime(2026, 1, 1))  # noqa: DTZ001
+        MemoryReplayStore().put("k", "text", datetime(2026, 1, 1))
 
 
 @pytest.mark.parametrize("store_type", ["MemoryCounterStore", "MemoryReplayStore"])

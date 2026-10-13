@@ -7,6 +7,7 @@ Authoritative References:
 
 import json
 from pathlib import Path
+
 import jsonschema
 import pytest
 
@@ -36,30 +37,45 @@ def _load_contract_schema(rel_path: str) -> dict:
 
 
 def test_omcp_get_opposite_trading_pairs_contract(omcp_server: OMCPServer) -> None:
-    schema = _load_contract_schema("specs/009-partner-fraud/contracts/opposite-trading-pairs.schema.json")
-    res = omcp_server.call_tool("get_opposite_trading_pairs", {"partner_id": "P-100"}, caller_role="ComplianceOfficer")
+    schema = _load_contract_schema(
+        "specs/009-partner-fraud/contracts/opposite-trading-pairs.schema.json"
+    )
+    res = omcp_server.call_tool(
+        "get_opposite_trading_pairs", {"partner_id": "P-100"}, caller_role="ComplianceOfficer"
+    )
     jsonschema.validate(instance=res, schema=schema)
     assert res["total_pairs_flagged"] == 1
 
 
 def test_omcp_get_partner_referral_ring_contract(omcp_server: OMCPServer) -> None:
-    schema = _load_contract_schema("specs/009-partner-fraud/contracts/referral-ring-attribution.schema.json")
-    res = omcp_server.call_tool("get_partner_referral_ring", {"partner_id": "P-100"}, caller_role="ComplianceOfficer")
+    schema = _load_contract_schema(
+        "specs/009-partner-fraud/contracts/referral-ring-attribution.schema.json"
+    )
+    res = omcp_server.call_tool(
+        "get_partner_referral_ring", {"partner_id": "P-100"}, caller_role="ComplianceOfficer"
+    )
     jsonschema.validate(instance=res, schema=schema)
     assert res["master_partner_id"] == "P-100"
 
 
 def test_omcp_get_client_quality_profile_contract(omcp_server: OMCPServer) -> None:
-    schema = _load_contract_schema("specs/009-partner-fraud/contracts/client-quality-profile.schema.json")
-    res = omcp_server.call_tool("get_client_quality_profile", {"partner_id": "P-100"}, caller_role="ComplianceOfficer")
+    schema = _load_contract_schema(
+        "specs/009-partner-fraud/contracts/client-quality-profile.schema.json"
+    )
+    res = omcp_server.call_tool(
+        "get_client_quality_profile", {"partner_id": "P-100"}, caller_role="ComplianceOfficer"
+    )
     jsonschema.validate(instance=res, schema=schema)
     assert res["partner_id"] == "P-100"
 
 
 def test_omcp_get_partner_fraud_dossier_contract(omcp_server: OMCPServer) -> None:
-    schema = _load_contract_schema("specs/009-partner-fraud/contracts/fraud-case-dossier.schema.json")
-    res = omcp_server.call_tool("get_partner_fraud_dossier", {"partner_id": "P-100"}, caller_role="ComplianceOfficer")
+    schema = _load_contract_schema(
+        "specs/009-partner-fraud/contracts/fraud-case-dossier.schema.json"
+    )
+    res = omcp_server.call_tool(
+        "get_partner_fraud_dossier", {"partner_id": "P-100"}, caller_role="ComplianceOfficer"
+    )
     jsonschema.validate(instance=res, schema=schema)
     assert res["partner_id"] == "P-100"
     assert res["status"] == "OPEN"
-

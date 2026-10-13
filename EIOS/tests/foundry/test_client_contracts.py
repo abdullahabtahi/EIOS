@@ -1,16 +1,17 @@
 """Tests for client data product contracts (SC-002)."""
 
 import pytest
+
 from eios.foundry.contracts import (
     Client360Record,
-    ContractValidator,
     ContractValidationError,
+    ContractValidator,
     DeviceNetworkEdge,
     FunnelEventRecord,
 )
+from eios.foundry.generators.client import ClientDataGenerator
 from eios.foundry.rng import DeterministicRNG
 from eios.foundry.universe import GlobalEntityUniverse
-from eios.foundry.generators.client import ClientDataGenerator
 
 
 def test_client_data_products_pass_contracts():

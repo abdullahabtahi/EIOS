@@ -8,11 +8,11 @@ and flapping hysteresis suppression.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from enum import Enum
 import threading
-from typing import Any, Dict, List, Optional
 import uuid
+from datetime import UTC, datetime, timedelta
+from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -21,9 +21,9 @@ from eios.observability.slo_engine import SLOMonitoringEngine
 
 
 class SREAlertSeverity(str, Enum):
-    PAGE_CRITICAL_SEV1 = "PAGE_CRITICAL_SEV1" # Immediate pager dispatch
-    TICKET_HIGH_SEV2 = "TICKET_HIGH_SEV2"     # Urgent ticket queue
-    TICKET_MEDIUM_SEV3 = "TICKET_MEDIUM_SEV3" # Standard queue ticket
+    PAGE_CRITICAL_SEV1 = "PAGE_CRITICAL_SEV1"  # Immediate pager dispatch
+    TICKET_HIGH_SEV2 = "TICKET_HIGH_SEV2"  # Urgent ticket queue
+    TICKET_MEDIUM_SEV3 = "TICKET_MEDIUM_SEV3"  # Standard queue ticket
     INFO = "INFO"
 
 
@@ -33,7 +33,7 @@ class SREAlertEvent(BaseModel):
     alert_id: str = Field(..., description="Unique alert UUID")
     policy_name: str = Field(..., description="Triggered alerting policy rule name")
     severity: SREAlertSeverity = Field(..., description="Alert severity level")
-    sli_name: Optional[SLICategory] = Field(None, description="Associated SLI if applicable")
+    sli_name: SLICategory | None = Field(None, description="Associated SLI if applicable")
     service_name: str = Field(..., description="Affected service")
     burn_rate: float = Field(default=0.0, ge=0.0, description="Observed burn rate multiplier")
     message: str = Field(..., description="Human-readable diagnostic summary")
@@ -46,13 +46,13 @@ class SREAlertEngine:
 
     def __init__(
         self,
-        slo_engine: Optional[SLOMonitoringEngine] = None,
+        slo_engine: SLOMonitoringEngine | None = None,
         hysteresis_minutes: int = 15,
     ) -> None:
         self.slo_engine = slo_engine or SLOMonitoringEngine()
         self.hysteresis_minutes = hysteresis_minutes
-        self._alerts: Dict[str, SREAlertEvent] = {}
-        self._last_alert_time: Dict[str, datetime] = {}
+        self._alerts: dict[str, SREAlertEvent] = {}
+        self._last_alert_time: dict[str, datetime] = {}
         self._lock = threading.RLock()
 
     def _should_suppress_alert(self, key: str, timestamp: datetime) -> bool:
@@ -65,30 +65,32 @@ class SREAlertEngine:
             self._last_alert_time[key] = timestamp
             return False
 
-    def evaluate_alerts(
-        self, reference_time: Optional[datetime] = None
-    ) -> List[SREAlertEvent]:
+    def evaluate_alerts(self, reference_time: datetime | None = None) -> list[SREAlertEvent]:
         """Evaluates Google SRE dual-window burn rate conditions across all SLOs."""
-        ref_time = reference_time or datetime.now(timezone.utc)
+        ref_time = reference_time or datetime.now(UTC)
         if ref_time.tzinfo is None:
-            ref_time = ref_time.replace(tzinfo=timezone.utc)
+            ref_time = ref_time.replace(tzinfo=UTC)
 
-        newly_fired: List[SREAlertEvent] = []
+        newly_fired: list[SREAlertEvent] = []
 
         for sli_cat, config in self.slo_engine.catalog.items():
             target_pct = config.target_percentage
 
             # 1. Dual-Window Check for Page SEV-1 (14.4x burn rate)
             # Long window = 1 hour; Short window = 5 minutes
-            burn_1h = self.slo_engine._compute_burn_rate(sli_cat, target_pct, timedelta(hours=1), ref_time)
-            burn_5m = self.slo_engine._compute_burn_rate(sli_cat, target_pct, timedelta(minutes=5), ref_time)
+            burn_1h = self.slo_engine._compute_burn_rate(
+                sli_cat, target_pct, timedelta(hours=1), ref_time
+            )
+            burn_5m = self.slo_engine._compute_burn_rate(
+                sli_cat, target_pct, timedelta(minutes=5), ref_time
+            )
 
             if burn_1h >= 14.4 and burn_5m >= 14.4:
                 policy_key = f"PAGE_SEV1_{sli_cat.value}"
                 if not self._should_suppress_alert(policy_key, ref_time):
                     alert = SREAlertEvent(
                         alert_id=str(uuid.uuid4()),
-                        policy_name=f"Page SEV-1: Rapid Error Budget Consumption (14.4x in 1h)",
+                        policy_name="Page SEV-1: Rapid Error Budget Consumption (14.4x in 1h)",
                         severity=SREAlertSeverity.PAGE_CRITICAL_SEV1,
                         sli_name=sli_cat,
                         service_name=sli_cat.value,
@@ -104,15 +106,19 @@ class SREAlertEngine:
 
             # 2. Dual-Window Check for Ticket SEV-2 (6.0x burn rate)
             # Long window = 6 hours; Short window = 30 minutes
-            burn_6h = self.slo_engine._compute_burn_rate(sli_cat, target_pct, timedelta(hours=6), ref_time)
-            burn_30m = self.slo_engine._compute_burn_rate(sli_cat, target_pct, timedelta(minutes=30), ref_time)
+            burn_6h = self.slo_engine._compute_burn_rate(
+                sli_cat, target_pct, timedelta(hours=6), ref_time
+            )
+            burn_30m = self.slo_engine._compute_burn_rate(
+                sli_cat, target_pct, timedelta(minutes=30), ref_time
+            )
 
             if burn_6h >= 6.0 and burn_30m >= 6.0:
                 policy_key = f"TICKET_SEV2_{sli_cat.value}"
                 if not self._should_suppress_alert(policy_key, ref_time):
                     alert = SREAlertEvent(
                         alert_id=str(uuid.uuid4()),
-                        policy_name=f"Ticket SEV-2: Elevated Error Budget Consumption (6.0x in 6h)",
+                        policy_name="Ticket SEV-2: Elevated Error Budget Consumption (6.0x in 6h)",
                         severity=SREAlertSeverity.TICKET_HIGH_SEV2,
                         sli_name=sli_cat,
                         service_name=sli_cat.value,
@@ -128,15 +134,19 @@ class SREAlertEngine:
 
             # 3. Dual-Window Check for Ticket SEV-3 (1.0x burn rate)
             # Long window = 24 hours; Short window = 2 hours
-            burn_24h = self.slo_engine._compute_burn_rate(sli_cat, target_pct, timedelta(hours=24), ref_time)
-            burn_2h = self.slo_engine._compute_burn_rate(sli_cat, target_pct, timedelta(hours=2), ref_time)
+            burn_24h = self.slo_engine._compute_burn_rate(
+                sli_cat, target_pct, timedelta(hours=24), ref_time
+            )
+            burn_2h = self.slo_engine._compute_burn_rate(
+                sli_cat, target_pct, timedelta(hours=2), ref_time
+            )
 
             if burn_24h >= 1.0 and burn_2h >= 1.0:
                 policy_key = f"TICKET_SEV3_{sli_cat.value}"
                 if not self._should_suppress_alert(policy_key, ref_time):
                     alert = SREAlertEvent(
                         alert_id=str(uuid.uuid4()),
-                        policy_name=f"Ticket SEV-3: Steady Error Budget Consumption (1.0x in 24h)",
+                        policy_name="Ticket SEV-3: Steady Error Budget Consumption (1.0x in 24h)",
                         severity=SREAlertSeverity.TICKET_MEDIUM_SEV3,
                         sli_name=sli_cat,
                         service_name=sli_cat.value,
@@ -158,12 +168,12 @@ class SREAlertEngine:
         actual_seq: int,
         previous_hash: str,
         current_hash: str,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> SREAlertEvent:
         """Immediately emits a Page SEV-1 on cryptographic ledger chain sequence mismatch."""
-        ts = timestamp or datetime.now(timezone.utc)
+        ts = timestamp or datetime.now(UTC)
         if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+            ts = ts.replace(tzinfo=UTC)
 
         alert = SREAlertEvent(
             alert_id=str(uuid.uuid4()),
@@ -185,12 +195,12 @@ class SREAlertEngine:
         service_name: str,
         dlq_depth: int,
         threshold: int = 100,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> SREAlertEvent:
         """Emits Ticket SEV-2 alert when Dead-Letter Queue exceeds capacity threshold."""
-        ts = timestamp or datetime.now(timezone.utc)
+        ts = timestamp or datetime.now(UTC)
         if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+            ts = ts.replace(tzinfo=UTC)
 
         alert = SREAlertEvent(
             alert_id=str(uuid.uuid4()),
@@ -207,7 +217,7 @@ class SREAlertEngine:
             self._alerts[alert.alert_id] = alert
         return alert
 
-    def get_active_alerts(self) -> List[SREAlertEvent]:
+    def get_active_alerts(self) -> list[SREAlertEvent]:
         """Returns all currently firing alert events."""
         with self._lock:
             return [a for a in self._alerts.values() if a.is_active]
@@ -219,9 +229,9 @@ class SREAlertEngine:
                 self._alerts[alert_id].is_active = False
 
 
-def alert_to_contract_dict(alert: SREAlertEvent) -> Dict[str, Any]:
+def alert_to_contract_dict(alert: SREAlertEvent) -> dict[str, Any]:
     """Converts SREAlertEvent to dictionary matching sre-alert-event.schema.json."""
-    data: Dict[str, Any] = {
+    data: dict[str, Any] = {
         "alert_id": alert.alert_id,
         "policy_name": alert.policy_name,
         "severity": alert.severity.value,

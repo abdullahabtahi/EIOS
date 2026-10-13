@@ -1,11 +1,8 @@
 """Tamper-Evidence Verification Drill for BigQuery External Table Records (ADR-007 / ADR-017, T018)."""
 
-from datetime import UTC, datetime
-import pytest
-
+from eios.ontology.actions.bigquery_sync import BigQueryLedgerExporter
 from eios.ontology.actions.models import LedgerEventType
 from eios.ontology.actions.sequencer import LedgerSequencer
-from eios.ontology.actions.bigquery_sync import BigQueryLedgerExporter, BigQueryTamperAlert
 
 
 def test_pristine_ledger_sync_and_lakehouse_verification():
@@ -27,9 +24,7 @@ def test_pristine_ledger_sync_and_lakehouse_verification():
     assert buffered[-1]["ledger_seq"] == 5
 
     # Verification must pass 100% cleanly against the sequencer's head hash
-    is_valid, findings = exporter.verify_lakehouse_integrity(
-        expected_head_hash=sequencer.head_hash
-    )
+    is_valid, findings = exporter.verify_lakehouse_integrity(expected_head_hash=sequencer.head_hash)
     assert is_valid is True
     assert findings == []
 
@@ -49,7 +44,9 @@ def test_tamper_drill_detects_modified_payload():
     tampered_records = exporter.get_buffered_rows()
 
     # Malicious injection / alteration in BigQuery record #2: change payload_digest
-    tampered_records[1]["payload_digest"] = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    tampered_records[1]["payload_digest"] = (
+        "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    )
 
     is_valid, findings = exporter.verify_lakehouse_integrity(tampered_records)
     assert is_valid is False

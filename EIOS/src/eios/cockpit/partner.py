@@ -8,10 +8,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
-from eios.cockpit.provenance import ProvenanceResolver, ProvenanceMetadata
+from eios.cockpit.provenance import ProvenanceMetadata, ProvenanceResolver
 from eios.cockpit.schemas import validate_contract
 
 
@@ -32,20 +33,20 @@ class PartnerChurnItem(BaseModel):
     login_decay_pct: float
     ftd_decay_pct: float
     provenance: ProvenanceMetadata
-    name: Optional[str] = None
-    tier: Optional[str] = "TIER_2_MASTER"
-    region: Optional[str] = "LatAm"
-    cohort: Optional[str] = "LatAm P2P Cashier"
-    historical_drift: Optional[Dict[str, Any]] = None
-    empirical_win_rate: Optional[float] = 0.785
-    primary_driver: Optional[str] = "OPERATIONAL_CASHIER"
+    name: str | None = None
+    tier: str | None = "TIER_2_MASTER"
+    region: str | None = "LatAm"
+    cohort: str | None = "LatAm P2P Cashier"
+    historical_drift: dict[str, Any] | None = None
+    empirical_win_rate: float | None = 0.785
+    primary_driver: str | None = "OPERATIONAL_CASHIER"
 
 
 class ChurnRadarScatter(BaseModel):
     as_of: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    partners: List[PartnerChurnItem]
+    partners: list[PartnerChurnItem]
 
-    def to_contract_dict(self) -> Dict[str, Any]:
+    def to_contract_dict(self) -> dict[str, Any]:
         data = {
             "as_of": self.as_of.isoformat(),
             "partners": [
@@ -88,7 +89,7 @@ class RetentionPlaybookDeal(BaseModel):
 class PartnerWorkstationService:
     """Service providing partner churn radar scatter, referral tree, and playbooks."""
 
-    def __init__(self, provenance_resolver: Optional[ProvenanceResolver] = None) -> None:
+    def __init__(self, provenance_resolver: ProvenanceResolver | None = None) -> None:
         self.provenance_resolver = provenance_resolver or ProvenanceResolver()
 
     def get_churn_radar_scatter(self) -> ChurnRadarScatter:
@@ -112,7 +113,11 @@ class PartnerWorkstationService:
                 cohort="LatAm P2P Cashier",
                 primary_driver="OPERATIONAL_CASHIER",
                 empirical_win_rate=0.785,
-                historical_drift={"tMinus30d": {"pChurn": 0.22, "valueAtRiskUsd": 272800}, "tMinus14d": {"pChurn": 0.55, "valueAtRiskUsd": 682000}, "driftVelocityPct": 254.5},
+                historical_drift={
+                    "tMinus30d": {"pChurn": 0.22, "valueAtRiskUsd": 272800},
+                    "tMinus14d": {"pChurn": 0.55, "valueAtRiskUsd": 682000},
+                    "driftVelocityPct": 254.5,
+                },
                 provenance=p,
             ),
             PartnerChurnItem(
@@ -130,7 +135,11 @@ class PartnerWorkstationService:
                 cohort="LatAm P2P Cashier",
                 primary_driver="OPERATIONAL_CASHIER",
                 empirical_win_rate=0.785,
-                historical_drift={"tMinus30d": {"pChurn": 0.18, "valueAtRiskUsd": 52200}, "tMinus14d": {"pChurn": 0.44, "valueAtRiskUsd": 127600}, "driftVelocityPct": 244.4},
+                historical_drift={
+                    "tMinus30d": {"pChurn": 0.18, "valueAtRiskUsd": 52200},
+                    "tMinus14d": {"pChurn": 0.44, "valueAtRiskUsd": 127600},
+                    "driftVelocityPct": 244.4,
+                },
                 provenance=p,
             ),
             PartnerChurnItem(
@@ -148,7 +157,11 @@ class PartnerWorkstationService:
                 cohort="Nordic Institutional EA",
                 primary_driver="CYCLICAL",
                 empirical_win_rate=0.92,
-                historical_drift={"tMinus30d": {"pChurn": 0.16, "valueAtRiskUsd": 134400}, "tMinus14d": {"pChurn": 0.17, "valueAtRiskUsd": 142800}, "driftVelocityPct": 12.5},
+                historical_drift={
+                    "tMinus30d": {"pChurn": 0.16, "valueAtRiskUsd": 134400},
+                    "tMinus14d": {"pChurn": 0.17, "valueAtRiskUsd": 142800},
+                    "driftVelocityPct": 12.5,
+                },
                 provenance=p,
             ),
             PartnerChurnItem(
@@ -166,7 +179,11 @@ class PartnerWorkstationService:
                 cohort="LatAm P2P Cashier",
                 primary_driver="COMPETITIVE_POACHING",
                 empirical_win_rate=0.64,
-                historical_drift={"tMinus30d": {"pChurn": 0.35, "valueAtRiskUsd": 22750}, "tMinus14d": {"pChurn": 0.65, "valueAtRiskUsd": 42250}, "driftVelocityPct": 140.0},
+                historical_drift={
+                    "tMinus30d": {"pChurn": 0.35, "valueAtRiskUsd": 22750},
+                    "tMinus14d": {"pChurn": 0.65, "valueAtRiskUsd": 42250},
+                    "driftVelocityPct": 140.0,
+                },
                 provenance=p,
             ),
             PartnerChurnItem(
@@ -184,7 +201,11 @@ class PartnerWorkstationService:
                 cohort="SEA Tier-1 Introducers",
                 primary_driver="COMPETITIVE_POACHING",
                 empirical_win_rate=0.71,
-                historical_drift={"tMinus30d": {"pChurn": 0.28, "valueAtRiskUsd": 142800}, "tMinus14d": {"pChurn": 0.52, "valueAtRiskUsd": 265200}, "driftVelocityPct": 164.2},
+                historical_drift={
+                    "tMinus30d": {"pChurn": 0.28, "valueAtRiskUsd": 142800},
+                    "tMinus14d": {"pChurn": 0.52, "valueAtRiskUsd": 265200},
+                    "driftVelocityPct": 164.2,
+                },
                 provenance=p,
             ),
             PartnerChurnItem(
@@ -219,7 +240,11 @@ class PartnerWorkstationService:
                 cohort="SEA P2P Gateway",
                 primary_driver="OPERATIONAL_CASHIER",
                 empirical_win_rate=0.75,
-                historical_drift={"tMinus30d": {"pChurn": 0.31, "valueAtRiskUsd": 117800}, "tMinus14d": {"pChurn": 0.50, "valueAtRiskUsd": 190000}, "driftVelocityPct": 119.3},
+                historical_drift={
+                    "tMinus30d": {"pChurn": 0.31, "valueAtRiskUsd": 117800},
+                    "tMinus14d": {"pChurn": 0.50, "valueAtRiskUsd": 190000},
+                    "driftVelocityPct": 119.3,
+                },
                 provenance=p,
             ),
             PartnerChurnItem(
@@ -288,7 +313,11 @@ class PartnerWorkstationService:
                 cohort="LatAm P2P Cashier",
                 primary_driver="OPERATIONAL_CASHIER",
                 empirical_win_rate=0.785,
-                historical_drift={"tMinus30d": {"pChurn": 0.25, "valueAtRiskUsd": 102500}, "tMinus14d": {"pChurn": 0.58, "valueAtRiskUsd": 237800}, "driftVelocityPct": 216.0},
+                historical_drift={
+                    "tMinus30d": {"pChurn": 0.25, "valueAtRiskUsd": 102500},
+                    "tMinus14d": {"pChurn": 0.58, "valueAtRiskUsd": 237800},
+                    "driftVelocityPct": 216.0,
+                },
                 provenance=p,
             ),
             PartnerChurnItem(
@@ -323,7 +352,11 @@ class PartnerWorkstationService:
                 cohort="LatAm Retail Masters",
                 primary_driver="COMMERCIAL_REBATE",
                 empirical_win_rate=0.74,
-                historical_drift={"tMinus30d": {"pChurn": 0.20, "valueAtRiskUsd": 62000}, "tMinus14d": {"pChurn": 0.41, "valueAtRiskUsd": 127100}, "driftVelocityPct": 190.0},
+                historical_drift={
+                    "tMinus30d": {"pChurn": 0.20, "valueAtRiskUsd": 62000},
+                    "tMinus14d": {"pChurn": 0.41, "valueAtRiskUsd": 127100},
+                    "driftVelocityPct": 190.0,
+                },
                 provenance=p,
             ),
             PartnerChurnItem(
@@ -392,7 +425,11 @@ class PartnerWorkstationService:
                 cohort="SEA Synthetics",
                 primary_driver="COMMERCIAL_REBATE",
                 empirical_win_rate=0.76,
-                historical_drift={"tMinus30d": {"pChurn": 0.22, "valueAtRiskUsd": 79200}, "tMinus14d": {"pChurn": 0.45, "valueAtRiskUsd": 162000}, "driftVelocityPct": 195.5},
+                historical_drift={
+                    "tMinus30d": {"pChurn": 0.22, "valueAtRiskUsd": 79200},
+                    "tMinus14d": {"pChurn": 0.45, "valueAtRiskUsd": 162000},
+                    "driftVelocityPct": 195.5,
+                },
                 provenance=p,
             ),
             PartnerChurnItem(
@@ -444,14 +481,18 @@ class PartnerWorkstationService:
                 cohort="LatAm P2P Cashier",
                 primary_driver="OPERATIONAL_CASHIER",
                 empirical_win_rate=0.785,
-                historical_drift={"tMinus30d": {"pChurn": 0.32, "valueAtRiskUsd": 16640}, "tMinus14d": {"pChurn": 0.61, "valueAtRiskUsd": 31720}, "driftVelocityPct": 156.3},
+                historical_drift={
+                    "tMinus30d": {"pChurn": 0.32, "valueAtRiskUsd": 16640},
+                    "tMinus14d": {"pChurn": 0.61, "valueAtRiskUsd": 31720},
+                    "driftVelocityPct": 156.3,
+                },
                 provenance=p,
             ),
         ]
 
         return ChurnRadarScatter(as_of=now, partners=partners)
 
-    def get_partner_referral_tree(self, partner_id: str = "AP-1029") -> Dict[str, Any]:
+    def get_partner_referral_tree(self, partner_id: str = "AP-1029") -> dict[str, Any]:
         """Returns referral hierarchy and opposite-trading ring detection."""
         return {
             "master_partner_id": partner_id,
@@ -469,7 +510,7 @@ class PartnerWorkstationService:
             ],
         }
 
-    def get_retention_playbooks(self, partner_id: str = "AP-1029") -> List[RetentionPlaybookDeal]:
+    def get_retention_playbooks(self, partner_id: str = "AP-1029") -> list[RetentionPlaybookDeal]:
         """Recommends retention playbooks partitioned by fast-path budget eligibility."""
         return [
             RetentionPlaybookDeal(

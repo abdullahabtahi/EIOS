@@ -1,16 +1,17 @@
 """Circuit breaker monitoring rolling contract breach rates and managing product health status."""
 
+import threading
 from collections import deque
 from dataclasses import dataclass
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime
 from enum import Enum
-import threading
 
 from eios.contracts.base import DataProductEnum
 
 
 class ProductHealthStatus(str, Enum):
     """Health status for a Layer 1 Data Product."""
+
     HEALTHY = "HEALTHY"
     DEGRADED = "DEGRADED"
     CRITICAL = "CRITICAL"
@@ -19,6 +20,7 @@ class ProductHealthStatus(str, Enum):
 @dataclass
 class ProductBreachMetrics:
     """Metrics snapshot for product contract adherence."""
+
     total_events: int
     breach_count: int
     breach_rate: float
@@ -36,7 +38,7 @@ class IngestionCircuitBreaker:
         self.breach_rate_threshold = breach_rate_threshold
         self.window_seconds = window_seconds
         self._lock = threading.Lock()
-        
+
         # Deques of (timestamp, is_breach: bool) per product
         self._events: dict[DataProductEnum, deque[tuple[float, bool]]] = {
             product: deque() for product in DataProductEnum
@@ -51,7 +53,7 @@ class IngestionCircuitBreaker:
 
     def record_success(self, product: DataProductEnum) -> None:
         """Record a successfully validated payload."""
-        now_ts = datetime.now(timezone.utc).timestamp()
+        now_ts = datetime.now(UTC).timestamp()
         with self._lock:
             if product not in self._events:
                 self._events[product] = deque()
@@ -60,7 +62,7 @@ class IngestionCircuitBreaker:
 
     def record_breach(self, product: DataProductEnum) -> None:
         """Record a contract breach."""
-        now_ts = datetime.now(timezone.utc).timestamp()
+        now_ts = datetime.now(UTC).timestamp()
         with self._lock:
             if product not in self._events:
                 self._events[product] = deque()
@@ -69,7 +71,7 @@ class IngestionCircuitBreaker:
 
     def get_metrics(self, product: DataProductEnum) -> ProductBreachMetrics:
         """Compute rolling breach metrics for a given product."""
-        now_ts = datetime.now(timezone.utc).timestamp()
+        now_ts = datetime.now(UTC).timestamp()
         with self._lock:
             if product not in self._events:
                 return ProductBreachMetrics(0, 0, 0.0, ProductHealthStatus.HEALTHY)
@@ -80,7 +82,11 @@ class IngestionCircuitBreaker:
                 return ProductBreachMetrics(0, 0, 0.0, ProductHealthStatus.HEALTHY)
             breaches = sum(1 for _, is_b in q if is_b)
             rate = breaches / total
-            status = ProductHealthStatus.DEGRADED if rate > self.breach_rate_threshold else ProductHealthStatus.HEALTHY
+            status = (
+                ProductHealthStatus.DEGRADED
+                if rate > self.breach_rate_threshold
+                else ProductHealthStatus.HEALTHY
+            )
             return ProductBreachMetrics(total, breaches, rate, status)
 
     def get_status(self, product: DataProductEnum) -> ProductHealthStatus:

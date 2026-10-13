@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterable
 from datetime import UTC, datetime
-from typing import Any, AsyncIterable, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, Query
 from fastapi.sse import EventSourceResponse, ServerSentEvent
@@ -20,7 +21,7 @@ STREAM_PATH = "/api/v1/fraud/stream"
 
 
 @router.get(TREE_PATH)
-def get_fraud_tree(partner_id: str = Query(default="AP-1029")) -> Dict[str, Any]:
+def get_fraud_tree(partner_id: str = Query(default="AP-1029")) -> dict[str, Any]:
     """Returns the 3-layer sub-affiliate directed tree with clawback exposure and churn metrics."""
     tree = partner_svc.get_partner_referral_tree(partner_id=partner_id)
     # Enrich with clawback exposure calculation
@@ -35,7 +36,7 @@ def get_fraud_tree(partner_id: str = Query(default="AP-1029")) -> Dict[str, Any]
 
 
 @router.get(PAIRS_PATH)
-def get_mirror_trading_pairs() -> Dict[str, Any]:
+def get_mirror_trading_pairs() -> dict[str, Any]:
     """Returns detected mirror-trading and opposite-order matching pairs across accounts."""
     now = datetime.now(UTC).isoformat()
     return {

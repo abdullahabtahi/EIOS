@@ -6,9 +6,10 @@ Performs:
 2. Playbook weight recalibration based on observed forward outcomes in decision_outcomes_ledger.
 """
 
-from datetime import UTC, date, datetime
 import logging
+from datetime import date
 from typing import Any
+
 import duckdb
 import numpy as np
 import pandas as pd
@@ -33,7 +34,7 @@ class AIPWCausalEstimator:
         feature_cols: list[str] | None = None,
     ) -> dict[str, Any]:
         """Calculates Average Treatment Effect (ATE) using Doubly Robust AIPW.
-        
+
         Formula:
             tau_i = mu_1(X_i) - mu_0(X_i) + [W_i * (Y_i - mu_1(X_i)) / e(X_i)] - [(1 - W_i) * (Y_i - mu_0(X_i)) / (1 - e(X_i))]
             ATE = (1/N) * sum(tau_i)
@@ -60,7 +61,9 @@ class AIPWCausalEstimator:
             X = df[feature_cols].values
         else:
             # Check for manager override and unobserved proxy features to mitigate confounding
-            confounder_cols = [c for c in ["manager_override_flag", "unobserved_signal_proxy"] if c in df.columns]
+            confounder_cols = [
+                c for c in ["manager_override_flag", "unobserved_signal_proxy"] if c in df.columns
+            ]
             if confounder_cols:
                 extra_covs = df[confounder_cols].values.astype(float)
                 X = np.hstack([e.reshape(-1, 1), extra_covs])
@@ -128,7 +131,8 @@ class PlaybookRecalibrator:
     def record_outcome(self, outcome: DecisionOutcomeRecord) -> None:
         """Persist an observed forward outcome record to decision_outcomes_ledger."""
         cursor = self._get_cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             INSERT OR REPLACE INTO decision_outcomes_ledger (
                 outcome_id, intent_id, partner_id, playbook_id, treatment_assigned,
                 propensity_score, observed_retained_revenue_60d, actual_churn_60d,
@@ -136,20 +140,22 @@ class PlaybookRecalibrator:
             ) VALUES (
                 ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
-        """, (
-            outcome.outcome_id,
-            outcome.intent_id,
-            outcome.partner_id,
-            outcome.playbook_id,
-            outcome.treatment_assigned,
-            outcome.propensity_score,
-            outcome.observed_retained_revenue_60d,
-            outcome.actual_churn_60d,
-            outcome.recorded_at,
-            getattr(outcome, "manager_override_flag", False),
-            getattr(outcome, "override_reason", None),
-            getattr(outcome, "unobserved_signal_proxy", 0.0),
-        ))
+        """,
+            (
+                outcome.outcome_id,
+                outcome.intent_id,
+                outcome.partner_id,
+                outcome.playbook_id,
+                outcome.treatment_assigned,
+                outcome.propensity_score,
+                outcome.observed_retained_revenue_60d,
+                outcome.actual_churn_60d,
+                outcome.recorded_at,
+                getattr(outcome, "manager_override_flag", False),
+                getattr(outcome, "override_reason", None),
+                getattr(outcome, "unobserved_signal_proxy", 0.0),
+            ),
+        )
 
     def recalibrate_playbook_weights(
         self,
@@ -159,7 +165,7 @@ class PlaybookRecalibrator:
         """Compute Doubly Robust ATE for each playbook and derive updated selection probabilities."""
         cursor = self._get_cursor()
         rows = cursor.execute("""
-            SELECT 
+            SELECT
                 playbook_id,
                 treatment_assigned,
                 propensity_score,
@@ -173,14 +179,17 @@ class PlaybookRecalibrator:
             logger.info("No decision outcome records found in ledger.")
             return {}
 
-        df_all = pd.DataFrame(rows, columns=[
-            "playbook_id",
-            "treatment_assigned",
-            "propensity_score",
-            "observed_retained_revenue_60d",
-            "manager_override_flag",
-            "unobserved_signal_proxy",
-        ])
+        df_all = pd.DataFrame(
+            rows,
+            columns=[
+                "playbook_id",
+                "treatment_assigned",
+                "propensity_score",
+                "observed_retained_revenue_60d",
+                "manager_override_flag",
+                "unobserved_signal_proxy",
+            ],
+        )
 
         ates: dict[str, float] = {}
         for pb_id, sub_df in df_all.groupby("playbook_id"):
@@ -196,4 +205,4 @@ class PlaybookRecalibrator:
         exp_z = np.exp(z - np.max(z))
         weights = exp_z / np.sum(exp_z)
 
-        return {pid: round(float(w), 4) for pid, w in zip(pb_ids, weights)}
+        return {pid: round(float(w), 4) for pid, w in zip(pb_ids, weights)}  # noqa: B905

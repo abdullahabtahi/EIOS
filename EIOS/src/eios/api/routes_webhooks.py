@@ -7,13 +7,13 @@ import hmac
 import os
 import time
 from datetime import UTC, datetime
-from typing import Any, Dict, Optional, Set
+from typing import Any
 
 from fastapi import APIRouter, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
-from eios.aml.withdrawal_sentinel import WithdrawalSentinel
 from eios.aml.models import WithdrawalDisposition
+from eios.aml.withdrawal_sentinel import WithdrawalSentinel
 
 router = APIRouter(tags=["Webhooks"])
 sentinel = WithdrawalSentinel()
@@ -39,7 +39,7 @@ def _load_webhook_secret() -> bytes:
 WEBHOOK_SECRET = _load_webhook_secret()
 
 # In-memory replay attack prevention nonce cache
-PROCESSED_NONCES: Set[str] = set()
+PROCESSED_NONCES: set[str] = set()
 
 
 class CashierWithdrawalPayload(BaseModel):
@@ -54,7 +54,7 @@ class CashierWithdrawalPayload(BaseModel):
     market_risk_pct: float = Field(default=0.15, ge=0)
 
 
-def verify_hmac_signature(raw_body: bytes, signature_header: Optional[str]) -> bool:
+def verify_hmac_signature(raw_body: bytes, signature_header: str | None) -> bool:
     """Verifies HMAC SHA-256 signature against cashier shared secret."""
     if not signature_header:
         return False
@@ -67,9 +67,9 @@ def verify_hmac_signature(raw_body: bytes, signature_header: Optional[str]) -> b
 @router.post(CASHIER_WITHDRAWAL_PATH)
 async def handle_cashier_withdrawal_webhook(
     request: Request,
-    x_signature_sha256: Optional[str] = Header(None, alias="X-Signature-SHA256"),
-    x_cashier_signature: Optional[str] = Header(None, alias="X-Cashier-Signature"),
-) -> Dict[str, Any]:
+    x_signature_sha256: str | None = Header(None, alias="X-Signature-SHA256"),
+    x_cashier_signature: str | None = Header(None, alias="X-Cashier-Signature"),
+) -> dict[str, Any]:
     """In-line webhook interceptor returning pre-settlement HOLD / RELEASE decision in < 150ms."""
     start_time = time.perf_counter()
     raw_body = await request.body()

@@ -1,7 +1,7 @@
 """Hub Suppression Filter preventing false merges on shared devices/IPs (ADR-008, US4)."""
 
-from collections import defaultdict
 import threading
+from collections import defaultdict
 
 
 class HubSuppressionFilter:

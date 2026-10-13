@@ -7,10 +7,10 @@ time-based pruning without lock contention.
 
 from __future__ import annotations
 
-from collections import deque
-from datetime import datetime, timezone
 import threading
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, TypeVar
+from collections import deque
+from datetime import UTC, datetime
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -29,24 +29,26 @@ class ServiceLevelIndicatorMeasurement(BaseModel):
     target_threshold: float = Field(..., description="Configured SLA boundary threshold")
     is_compliant: bool = Field(..., description="True if within SLA, False if breached")
     correlation_id: str = Field(..., description="Request or transaction correlation ID")
-    service_name: Optional[str] = Field(None, description="Emitting service name")
-    attributes: Dict[str, Any] = Field(default_factory=dict, description="Additional context attributes")
+    service_name: str | None = Field(None, description="Emitting service name")
+    attributes: dict[str, Any] = Field(
+        default_factory=dict, description="Additional context attributes"
+    )
 
 
-class TimestampedItem(Generic[T]):
+class TimestampedItem(Generic[T]):  # noqa: UP046
     """Wrapper holding an item and its UTC timestamp."""
 
     __slots__ = ("item", "timestamp")
 
     def __init__(self, item: T, timestamp: datetime) -> None:
         if timestamp.tzinfo is None:
-            self.timestamp = timestamp.replace(tzinfo=timezone.utc)
+            self.timestamp = timestamp.replace(tzinfo=UTC)
         else:
-            self.timestamp = timestamp.astimezone(timezone.utc)
+            self.timestamp = timestamp.astimezone(UTC)
         self.item = item
 
 
-class RollingEventBuffer(Generic[T]):
+class RollingEventBuffer(Generic[T]):  # noqa: UP046
     """Thread-safe bounded circular buffer holding timestamped events."""
 
     def __init__(self, max_capacity: int = 50_000) -> None:
@@ -63,22 +65,22 @@ class RollingEventBuffer(Generic[T]):
     def get_window(
         self,
         start_time: datetime,
-        end_time: Optional[datetime] = None,
-    ) -> List[T]:
+        end_time: datetime | None = None,
+    ) -> list[T]:
         """Retrieves items within [start_time, end_time]."""
         if start_time.tzinfo is None:
-            start_time = start_time.replace(tzinfo=timezone.utc)
+            start_time = start_time.replace(tzinfo=UTC)
         else:
-            start_time = start_time.astimezone(timezone.utc)
+            start_time = start_time.astimezone(UTC)
 
         if end_time is not None:
             if end_time.tzinfo is None:
-                end_time = end_time.replace(tzinfo=timezone.utc)
+                end_time = end_time.replace(tzinfo=UTC)
             else:
-                end_time = end_time.astimezone(timezone.utc)
+                end_time = end_time.astimezone(UTC)
 
         with self._lock:
-            result: List[T] = []
+            result: list[T] = []
             for entry in self._deque:
                 if entry.timestamp >= start_time:
                     if end_time is None or entry.timestamp <= end_time:
@@ -88,9 +90,9 @@ class RollingEventBuffer(Generic[T]):
     def prune_older_than(self, cutoff: datetime) -> int:
         """Removes all items with timestamp strictly older than cutoff."""
         if cutoff.tzinfo is None:
-            cutoff = cutoff.replace(tzinfo=timezone.utc)
+            cutoff = cutoff.replace(tzinfo=UTC)
         else:
-            cutoff = cutoff.astimezone(timezone.utc)
+            cutoff = cutoff.astimezone(UTC)
 
         pruned = 0
         with self._lock:
@@ -115,7 +117,7 @@ class SLIEventBufferManager:
 
     def __init__(self, max_capacity_per_sli: int = 100_000) -> None:
         self.max_capacity = max_capacity_per_sli
-        self._buffers: Dict[SLICategory, RollingEventBuffer[ServiceLevelIndicatorMeasurement]] = {}
+        self._buffers: dict[SLICategory, RollingEventBuffer[ServiceLevelIndicatorMeasurement]] = {}
         self._lock = threading.RLock()
 
     def _get_buffer(
@@ -126,9 +128,7 @@ class SLIEventBufferManager:
                 self._buffers[sli_name] = RollingEventBuffer(max_capacity=self.max_capacity)
             return self._buffers[sli_name]
 
-    def record_measurement(
-        self, measurement: ServiceLevelIndicatorMeasurement
-    ) -> None:
+    def record_measurement(self, measurement: ServiceLevelIndicatorMeasurement) -> None:
         """Appends an SLI measurement into its respective category buffer."""
         buf = self._get_buffer(measurement.sli_name)
         buf.append(measurement, measurement.timestamp)
@@ -137,8 +137,8 @@ class SLIEventBufferManager:
         self,
         sli_name: SLICategory,
         start_time: datetime,
-        end_time: Optional[datetime] = None,
-    ) -> List[ServiceLevelIndicatorMeasurement]:
+        end_time: datetime | None = None,
+    ) -> list[ServiceLevelIndicatorMeasurement]:
         """Retrieves measurements for an SLI within a time window."""
         buf = self._get_buffer(sli_name)
         return buf.get_window(start_time, end_time)
@@ -147,8 +147,8 @@ class SLIEventBufferManager:
         self,
         sli_name: SLICategory,
         start_time: datetime,
-        end_time: Optional[datetime] = None,
-    ) -> Tuple[int, int]:
+        end_time: datetime | None = None,
+    ) -> tuple[int, int]:
         """Returns (total_events, compliant_events) in the window."""
         measurements = self.get_measurements(sli_name, start_time, end_time)
         total = len(measurements)
@@ -159,8 +159,8 @@ class SLIEventBufferManager:
         self,
         sli_name: SLICategory,
         start_time: datetime,
-        end_time: Optional[datetime] = None,
-    ) -> List[float]:
+        end_time: datetime | None = None,
+    ) -> list[float]:
         """Returns raw observed values for percentile latency calculations."""
         measurements = self.get_measurements(sli_name, start_time, end_time)
         return [m.observed_value for m in measurements]

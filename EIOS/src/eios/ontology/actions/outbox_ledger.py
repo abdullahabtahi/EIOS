@@ -2,25 +2,19 @@
 
 from __future__ import annotations
 
+import threading
+import uuid
 from datetime import UTC, datetime
 from enum import StrEnum
-import hashlib
-import json
-import threading
-from typing import Any, Dict, List, Optional
-import uuid
 
 from pydantic import BaseModel, Field
 
+from eios.ontology.actions.bigquery_sync import BigQueryLedgerExporter
 from eios.ontology.actions.models import (
-    ActionIntentToken,
     ActionSeverity,
-    ActionStatus,
-    ApprovalRecord,
     LedgerEventType,
 )
 from eios.ontology.actions.sequencer import LedgerSequencer
-from eios.ontology.actions.bigquery_sync import BigQueryLedgerExporter
 
 
 class FourEyesViolationError(Exception):
@@ -44,14 +38,14 @@ class OutboxRecord(BaseModel):
     severity: ActionSeverity
     initiator_id: str
     state: OutboxState
-    primary_approver_id: Optional[str] = None
-    primary_approver_role: Optional[str] = None
-    secondary_approver_id: Optional[str] = None
-    secondary_approver_role: Optional[str] = None
+    primary_approver_id: str | None = None
+    primary_approver_role: str | None = None
+    secondary_approver_id: str | None = None
+    secondary_approver_role: str | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    committed_at: Optional[datetime] = None
-    ledger_seq: Optional[int] = None
-    hash_chain: Optional[str] = None
+    committed_at: datetime | None = None
+    ledger_seq: int | None = None
+    hash_chain: str | None = None
 
 
 class PersistentActionOutboxLedger:
@@ -59,12 +53,12 @@ class PersistentActionOutboxLedger:
 
     def __init__(
         self,
-        sequencer: Optional[LedgerSequencer] = None,
-        bq_exporter: Optional[BigQueryLedgerExporter] = None,
+        sequencer: LedgerSequencer | None = None,
+        bq_exporter: BigQueryLedgerExporter | None = None,
     ) -> None:
         self.sequencer = sequencer or LedgerSequencer()
         self.bq_exporter = bq_exporter or BigQueryLedgerExporter()
-        self._records: Dict[str, OutboxRecord] = {}
+        self._records: dict[str, OutboxRecord] = {}
         self._lock = threading.Lock()
 
     def stage_intent(

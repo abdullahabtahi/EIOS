@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Sequence, Tuple
+from collections.abc import Sequence
+
 import numpy as np
 
 from eios.flywheel.models import DecisionOutcomeRecord
-
 
 DEFAULT_PROPENSITY_EPSILON = 0.01
 
@@ -33,7 +33,7 @@ class CovariateMatrixBuilder:
     def __init__(self, feature_names: Sequence[str] | None = None) -> None:
         self.feature_names = list(feature_names) if feature_names is not None else None
 
-    def fit_feature_names(self, records: Sequence[DecisionOutcomeRecord]) -> List[str]:
+    def fit_feature_names(self, records: Sequence[DecisionOutcomeRecord]) -> list[str]:
         """Discovers sorted distinct numerical feature keys across records."""
         names: set[str] = set()
         for r in records:
@@ -68,7 +68,7 @@ class CovariateMatrixBuilder:
                     val = r.covariates[f]
                     try:
                         matrix[i, j] = float(val)
-                    except (ValueError, TypeError):
+                    except ValueError, TypeError:
                         matrix[i, j] = 0.0
                 else:
                     matrix[i, j] = 0.0
@@ -80,7 +80,7 @@ class CovariateMatrixBuilder:
         records: Sequence[DecisionOutcomeRecord],
         target_horizon: str = "30d",
         epsilon: float = DEFAULT_PROPENSITY_EPSILON,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, List[str]]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, list[str]]:
         """Extracts aligned (Y, W, e, X, valid_ids) for causal estimation.
 
         Returns:
@@ -90,8 +90,8 @@ class CovariateMatrixBuilder:
             X: Covariate matrix
             record_ids: IDs of included records with non-null actuals
         """
-        valid_records: List[DecisionOutcomeRecord] = []
-        outcomes: List[float] = []
+        valid_records: list[DecisionOutcomeRecord] = []
+        outcomes: list[float] = []
 
         for r in records:
             actual: float | None = None
@@ -118,7 +118,9 @@ class CovariateMatrixBuilder:
             )
 
         Y = np.asarray(outcomes, dtype=np.float64)
-        W = np.asarray([1.0 if r.treatment_assigned else 0.0 for r in valid_records], dtype=np.float64)
+        W = np.asarray(
+            [1.0 if r.treatment_assigned else 0.0 for r in valid_records], dtype=np.float64
+        )
         raw_e = np.asarray([r.propensity_score for r in valid_records], dtype=np.float64)
         e = clip_propensity_scores(raw_e, epsilon=epsilon)
         X = self.build_matrix(valid_records)

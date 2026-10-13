@@ -7,8 +7,8 @@ Demonstrates:
 4. Presenting structured DisengagementTheme cards with evidence citations
 """
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # Ensure src is on python path
 src_dir = Path(__file__).resolve().parent.parent / "src"
@@ -58,14 +58,14 @@ def run_pattern_discovery_demo() -> None:
 
     print(f"\n[1] Ingested {len(raw_tickets)} Unstructured Support Communications")
     print("  Sample Raw Ticket (with PII):")
-    print(f"  \"{raw_tickets[0]['text'][:110]}...\"")
+    print(f'  "{raw_tickets[0]["text"][:110]}..."')
 
     # 2. PII Sanitization
     print("\n[2] Executing PII Sanitization Pre-processor...")
     sanitizer = PIISanitizer()
     sanitized_sample = sanitizer.sanitize(raw_tickets[0]["text"])
     print("  ✓ Sanitized Ticket (PII Redacted):")
-    print(f"  \"{sanitized_sample[:130]}...\"")
+    print(f'  "{sanitized_sample[:130]}..."')
 
     # 3. GenAI Pattern Discovery
     print("\n[3] Running PatternDiscoverySpecialist (Clustering & Hypothesis Articulation)...")

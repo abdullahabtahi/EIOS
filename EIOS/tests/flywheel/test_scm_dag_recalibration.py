@@ -1,10 +1,9 @@
 """Tests for User Story 3: Automated SCM DAG Edge-Weight Recalibration."""
 
-from datetime import UTC, datetime
 import pytest
 
-from eios.flywheel.schemas import validate_contract
 from eios.flywheel.models import SCMRecalibrationCheckpoint
+from eios.flywheel.schemas import validate_contract
 
 
 def test_scm_recalibration_reduces_mae():

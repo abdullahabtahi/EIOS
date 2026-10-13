@@ -3,10 +3,11 @@
 import json
 import logging
 from typing import Any
+
 from eios.contracts.base import DataProductEvent
 from eios.ingestion.config import IngestionConfig, get_ingestion_config
-from eios.ingestion.queue import IngestionQueue, get_ingestion_queue
 from eios.ingestion.processor import IngestionPipeline
+from eios.ingestion.queue import IngestionQueue, get_ingestion_queue
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ class IngestionSubscriber:
             if isinstance(raw_data, bytes):
                 raw_data = raw_data.decode("utf-8")
             data_dict = json.loads(raw_data)
-            
+
             event = DataProductEvent.model_validate(data_dict)
             self.pipeline.process_event(event)
             message.ack()
@@ -45,7 +46,7 @@ class IngestionSubscriber:
         """Start background streaming pull with flow control."""
         try:
             from google.cloud import pubsub_v1
-            
+
             self._subscriber_client = pubsub_v1.SubscriberClient()
             subscription_path = self._subscriber_client.subscription_path(
                 self.config.pubsub_project_id,

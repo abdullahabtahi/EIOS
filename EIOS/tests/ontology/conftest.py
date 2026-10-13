@@ -188,4 +188,3 @@ def sample_action_intent_payload():
         "requires_dual_approval": True,
         "policy_tags": ["DUAL_APPROVAL_MANDATORY"],
     }
-

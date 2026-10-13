@@ -1,12 +1,9 @@
 """Tests for User Story 3: Multi-Horizon Accelerated Soak Testing & SLO Compliance."""
 
-from datetime import UTC, datetime
-import pytest
-
 from eios.hardening.models import SoakTestTelemetryReport
 from eios.hardening.schemas import validate_contract
-from eios.hardening.telemetry import MemoryLeakDetector, HardeningTelemetryCollector
 from eios.hardening.soak import AcceleratedSoakTestRunner
+from eios.hardening.telemetry import HardeningTelemetryCollector, MemoryLeakDetector
 
 
 def test_accelerated_soak_execution():

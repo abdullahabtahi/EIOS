@@ -4,10 +4,11 @@ Uses permutation / binomial tail statistical tests to detect synchronized partne
 disengagements by region, preventing alert fatigue and surfacing systemic commercial threats.
 """
 
+import logging
 from collections import Counter
 from datetime import UTC, date, datetime
-import logging
 from typing import Any
+
 import duckdb
 import scipy.stats as stats
 
@@ -41,13 +42,13 @@ class CohortRiskDetector:
         min_cohort_size: int = 3,
     ) -> list[CohortAnomalyAlert]:
         """Scan partners by region and detect statistically significant disengagement clusters.
-        
+
         Args:
             as_of_date: Evaluation date (defaults to today).
             risk_threshold: Hazard probability threshold to classify a partner as high risk.
             alpha: Significance level for permutation / binomial tail test.
             min_cohort_size: Minimum number of high-risk partners required to form a cohort.
-            
+
         Returns:
             List of validated CohortAnomalyAlert records.
         """
@@ -58,7 +59,7 @@ class CohortRiskDetector:
 
         # Query all active partners with latest hazard score and value_at_risk
         query = """
-            SELECT 
+            SELECT
                 p.partner_id,
                 p.region,
                 p.tier,
@@ -68,8 +69,8 @@ class CohortRiskDetector:
                 COALESCE(s.top_driver_family, 'BEHAVIORAL') AS top_driver_family,
                 COALESCE(s.top_driver_metric, 'login_decay') AS top_driver_metric
             FROM partner_360 p
-            LEFT JOIN churn_radar_scores s 
-                ON p.partner_id = s.partner_id 
+            LEFT JOIN churn_radar_scores s
+                ON p.partner_id = s.partner_id
                 AND s.as_of_date = ?
             WHERE p.status = 'ACTIVE'
         """
@@ -119,10 +120,12 @@ class CohortRiskDetector:
             if p_val <= alpha:
                 affected_ids = [p["partner_id"] for p in affected]
                 agg_var = sum(p["value_at_risk"] for p in affected)
-                
+
                 # Determine common driver
                 drivers = [f"{p['top_driver_family']}:{p['top_driver_metric']}" for p in affected]
-                most_common = Counter(drivers).most_common(1)[0][0] if drivers else "BEHAVIORAL:decay"
+                most_common = (
+                    Counter(drivers).most_common(1)[0][0] if drivers else "BEHAVIORAL:decay"
+                )
 
                 driver_desc = f"Synchronized disengagement ({most_common}); competitor regional promotion suspected"
 
@@ -151,18 +154,21 @@ class CohortRiskDetector:
 
         cursor = self._get_cursor()
         for alert in alerts:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO churn_cohort_alerts VALUES (
                     ?, ?, ?, ?, ?, ?, ?, ?, ?
                 )
-            """, (
-                alert.alert_id,
-                alert.region_id,
-                alert.partner_count,
-                alert.aggregate_value_at_risk_usd,
-                alert.p_value,
-                alert.common_driver,
-                alert.recommended_playbook,
-                alert.detected_at,
-                alert.status,
-            ))
+            """,
+                (
+                    alert.alert_id,
+                    alert.region_id,
+                    alert.partner_count,
+                    alert.aggregate_value_at_risk_usd,
+                    alert.p_value,
+                    alert.common_driver,
+                    alert.recommended_playbook,
+                    alert.detected_at,
+                    alert.status,
+                ),
+            )

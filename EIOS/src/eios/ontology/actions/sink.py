@@ -1,12 +1,12 @@
 """Simulated Core Write-Back Sink with Chaos Fault Injection and Idempotency (US3)."""
 
-from datetime import UTC, datetime
-from enum import StrEnum
 import json
 import secrets
 import threading
-from typing import Any
 import uuid
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
 from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.actions.models import (

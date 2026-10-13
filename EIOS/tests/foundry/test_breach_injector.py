@@ -1,10 +1,11 @@
 """Tests for deliberate S-07 contract breach injection (SC-007, T058, T061)."""
 
 import pytest
+
 from eios.foundry.contracts import (
     Client360Record,
-    ContractValidator,
     ContractValidationError,
+    ContractValidator,
     TransactionAMLRecord,
 )
 from eios.foundry.noise.breach_injector import BreachInjector
@@ -29,7 +30,9 @@ def test_breach_injector_triggers_contract_validation_error():
     }
 
     # Inject negative amount breach
-    breached_tx_batch = injector.inject_transaction_breaches([valid_tx], breach_type="NEGATIVE_AMOUNT")
+    breached_tx_batch = injector.inject_transaction_breaches(
+        [valid_tx], breach_type="NEGATIVE_AMOUNT"
+    )
     validator_tx = ContractValidator(TransactionAMLRecord)
 
     with pytest.raises(ContractValidationError):
@@ -48,7 +51,9 @@ def test_breach_injector_triggers_contract_validation_error():
         "email": "test@example.com",
     }
 
-    breached_client_batch = injector.inject_client_breaches([valid_client], breach_type="INVALID_STATUS")
+    breached_client_batch = injector.inject_client_breaches(
+        [valid_client], breach_type="INVALID_STATUS"
+    )
     validator_client = ContractValidator(Client360Record)
 
     with pytest.raises(ContractValidationError):

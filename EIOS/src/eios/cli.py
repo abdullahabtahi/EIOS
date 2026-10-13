@@ -8,7 +8,7 @@ Supported commands:
 import argparse
 import json
 import sys
-from typing import Sequence
+from collections.abc import Sequence
 
 from eios.ontology.auditor.gate import MetricAuditorGate
 from eios.ontology.benchmark import run_benchmark
@@ -23,16 +23,31 @@ def create_parser() -> argparse.ArgumentParser:
     subparsers = parser.add_subparsers(dest="subcommand", help="Platform domain command")
 
     # ontology group
-    ontology_parser = subparsers.add_parser("ontology", help="Kinetic Ontology and Metric Layer commands")
-    ontology_subparsers = ontology_parser.add_subparsers(dest="ontology_command", help="Ontology operation")
+    ontology_parser = subparsers.add_parser(
+        "ontology", help="Kinetic Ontology and Metric Layer commands"
+    )
+    ontology_subparsers = ontology_parser.add_subparsers(
+        dest="ontology_command", help="Ontology operation"
+    )
 
     # eios ontology benchmark
-    ontology_subparsers.add_parser("benchmark", help="Run cold-boot graph rebuild and query benchmarks")
+    ontology_subparsers.add_parser(
+        "benchmark", help="Run cold-boot graph rebuild and query benchmarks"
+    )
 
     # eios ontology audit
-    audit_parser = ontology_subparsers.add_parser("audit", help="Audit agent response text against tool traces")
-    audit_parser.add_argument("--text", required=True, help="Agent narrative text containing numbers to audit")
-    audit_parser.add_argument("--trace", required=False, default="[]", help="JSON string or file path containing tool traces")
+    audit_parser = ontology_subparsers.add_parser(
+        "audit", help="Audit agent response text against tool traces"
+    )
+    audit_parser.add_argument(
+        "--text", required=True, help="Agent narrative text containing numbers to audit"
+    )
+    audit_parser.add_argument(
+        "--trace",
+        required=False,
+        default="[]",
+        help="JSON string or file path containing tool traces",
+    )
 
     return parser
 
@@ -54,7 +69,9 @@ def main(argv: Sequence[str] | None = None) -> int:
             for k, v in results.items():
                 print(f"  {k:28s}: {v}")
             print("=" * 60)
-            passed = results.get("graph_rebuild_passed", False) and results.get("metric_latency_passed", False)
+            passed = results.get("graph_rebuild_passed", False) and results.get(
+                "metric_latency_passed", False
+            )
             return 0 if passed else 1
 
         elif args.ontology_command == "audit":
@@ -66,7 +83,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     if isinstance(traces, dict):
                         traces = [traces]
                 else:
-                    with open(trace_arg, "r") as f:
+                    with open(trace_arg) as f:
                         traces = json.load(f)
             except Exception as e:
                 print(f"Error parsing --trace JSON: {e}", file=sys.stderr)

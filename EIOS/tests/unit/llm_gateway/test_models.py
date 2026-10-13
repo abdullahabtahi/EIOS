@@ -112,7 +112,7 @@ def test_replay_original_at_must_be_timezone_aware() -> None:
             outcome=Outcome.REPLAY,
             content="x",
             trace_id="t",
-            replay_original_at=datetime(2026, 1, 1),  # noqa: DTZ001
+            replay_original_at=datetime(2026, 1, 1),
         )
 
 

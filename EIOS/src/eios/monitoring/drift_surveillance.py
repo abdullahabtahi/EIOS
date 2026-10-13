@@ -6,9 +6,9 @@ to detect feature distribution shifts and model degradation before downstream de
 
 from __future__ import annotations
 
-import math
+from collections.abc import Sequence
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Sequence, Tuple
+
 import numpy as np
 from pydantic import BaseModel, Field
 
@@ -23,8 +23,8 @@ class PSICalculationResult(BaseModel):
     feature_name: str
     psi_score: float
     severity: str
-    bin_counts_expected: List[int]
-    bin_counts_actual: List[int]
+    bin_counts_expected: list[int]
+    bin_counts_actual: list[int]
     is_drift_detected: bool
     evaluated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
@@ -91,14 +91,16 @@ class DriftSurveillanceEngine:
         actual_outcomes: Sequence[int],
     ) -> float:
         """Calculates Brier calibration score: (1/N) * sum((prob - outcome)^2).
-        
+
         Lower is better (0.0 represents perfect probabilistic calibration).
         """
         preds = np.asarray(predicted_probabilities, dtype=float)
         acts = np.asarray(actual_outcomes, dtype=float)
 
         if len(preds) != len(acts):
-            raise ValueError("Predicted probabilities and actual outcomes must have identical length")
+            raise ValueError(
+                "Predicted probabilities and actual outcomes must have identical length"
+            )
 
         brier = float(np.mean((preds - acts) ** 2))
         return round(brier, 4)

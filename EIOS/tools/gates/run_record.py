@@ -45,7 +45,7 @@ class RunState(StrEnum):
 
 
 class Outcome(StrEnum):
-    PASS = "pass"  # noqa: S105 - an outcome label, not a credential
+    PASS = "pass"  # noqa: S105
     FAIL = "fail"
     SKIPPED_WITH_REASON = "skipped_with_reason"
 

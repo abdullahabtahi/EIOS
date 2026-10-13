@@ -6,8 +6,8 @@ Authoritative Reference:
 
 import json
 from pathlib import Path
+
 import jsonschema
-import pytest
 
 
 def get_schema_path(rel_path: str) -> Path:
@@ -70,4 +70,3 @@ def test_aml_case_dossier_assembler_contract_compliance() -> None:
     )
     contract_dict = AMLDossierAssembler.to_contract_dict(dossier)
     jsonschema.validate(instance=contract_dict, schema=schema)
-

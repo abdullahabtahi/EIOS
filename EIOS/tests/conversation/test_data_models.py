@@ -1,20 +1,17 @@
 """Tests for conversational agent data models and serialization (F018, T004)."""
 
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, UTC
+
 from eios.conversation.models import (
-    ConversationSession,
-    BlackboardState,
-    OperatorRole,
-    SpecialistRoute,
-    ProvenanceCitation,
-    CitationType,
-    ToolExecutionTrace,
     ActionIntentToken,
     ActionSeverity,
     ActionStatus,
-    AuditorRecord,
-    AuditorStatus,
+    BlackboardState,
+    ConversationSession,
+    OperatorRole,
+    SpecialistRoute,
     sanitize_for_state_storage,
 )
 
@@ -40,7 +37,7 @@ def test_blackboard_state_reflection_bounded():
     )
     assert state.reflection_cycles == 2
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         # Reflection cycles hard capped at 3
         BlackboardState(reflection_cycles=4)
 
@@ -91,4 +88,3 @@ def test_copilot_tracer():
 
     assert "duration_ms" in meta
     assert meta["auditor_status"] == "PASS"
-

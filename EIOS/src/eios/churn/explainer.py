@@ -8,7 +8,8 @@ anchored to canonical Layer 1 Data Products:
 - DP10: partner_comms
 """
 
-from typing import Sequence
+from collections.abc import Sequence
+
 import pandas as pd
 
 from eios.churn.models import SignalContribution, SignalFamily
@@ -34,72 +35,83 @@ class ChurnSignalExplainer:
         logins_recent = float(row.get("logins_recent", 0))
         logins_prior = float(row.get("logins_prior", 0))
         decay_delta = float(row.get("login_velocity_decay_3w", 0.0))
-        contributions.append(SignalContribution(
-            signal_family=SignalFamily.BEHAVIORAL,
-            metric_name="login_velocity_decay_3w",
-            observed_value=logins_recent,
-            baseline_value=logins_prior,
-            relative_delta=round(decay_delta, 4),
-            hazard_weight=self.weights[SignalFamily.BEHAVIORAL],
-            citation_ref="DP9:partner_engagement_signals",
-        ))
+        contributions.append(
+            SignalContribution(
+                signal_family=SignalFamily.BEHAVIORAL,
+                metric_name="login_velocity_decay_3w",
+                observed_value=logins_recent,
+                baseline_value=logins_prior,
+                relative_delta=round(decay_delta, 4),
+                hazard_weight=self.weights[SignalFamily.BEHAVIORAL],
+                citation_ref="DP9:partner_engagement_signals",
+            )
+        )
 
         # 2. Communication
         neg_tickets = float(row.get("negative_tickets", 0))
         neg_ratio = float(row.get("sentiment_negative_ratio", 0.0))
-        contributions.append(SignalContribution(
-            signal_family=SignalFamily.COMMUNICATION,
-            metric_name="sentiment_negative_ratio",
-            observed_value=neg_tickets,
-            baseline_value=0.0,
-            relative_delta=round(neg_ratio, 4),
-            hazard_weight=self.weights[SignalFamily.COMMUNICATION],
-            citation_ref="DP10:partner_comms",
-        ))
+        contributions.append(
+            SignalContribution(
+                signal_family=SignalFamily.COMMUNICATION,
+                metric_name="sentiment_negative_ratio",
+                observed_value=neg_tickets,
+                baseline_value=0.0,
+                relative_delta=round(neg_ratio, 4),
+                hazard_weight=self.weights[SignalFamily.COMMUNICATION],
+                citation_ref="DP10:partner_comms",
+            )
+        )
 
         # 3. Relationship
         tenure = float(row.get("tenure_months", 0))
         tenure_log = float(row.get("tenure_months_log", 0.0))
-        contributions.append(SignalContribution(
-            signal_family=SignalFamily.RELATIONSHIP,
-            metric_name="tenure_months",
-            observed_value=tenure,
-            baseline_value=12.0,
-            relative_delta=round(tenure_log, 4),
-            hazard_weight=self.weights[SignalFamily.RELATIONSHIP],
-            citation_ref="DP6:partner_360",
-        ))
+        contributions.append(
+            SignalContribution(
+                signal_family=SignalFamily.RELATIONSHIP,
+                metric_name="tenure_months",
+                observed_value=tenure,
+                baseline_value=12.0,
+                relative_delta=round(tenure_log, 4),
+                hazard_weight=self.weights[SignalFamily.RELATIONSHIP],
+                citation_ref="DP6:partner_360",
+            )
+        )
 
         # 4. Financial
         comm_recent = float(row.get("comm_recent", 0.0))
         comm_prior = float(row.get("comm_prior", 0.0))
         comm_velocity = float(row.get("commission_velocity_30d", 0.0))
-        contributions.append(SignalContribution(
-            signal_family=SignalFamily.FINANCIAL,
-            metric_name="commission_velocity_30d",
-            observed_value=comm_recent,
-            baseline_value=comm_prior,
-            relative_delta=round(comm_velocity, 4),
-            hazard_weight=self.weights[SignalFamily.FINANCIAL],
-            citation_ref="DP8:commission_ledger",
-        ))
+        contributions.append(
+            SignalContribution(
+                signal_family=SignalFamily.FINANCIAL,
+                metric_name="commission_velocity_30d",
+                observed_value=comm_recent,
+                baseline_value=comm_prior,
+                relative_delta=round(comm_velocity, 4),
+                hazard_weight=self.weights[SignalFamily.FINANCIAL],
+                citation_ref="DP8:commission_ledger",
+            )
+        )
 
         # 5. Competitive
         comp_flag = float(row.get("competitor_mention_flag", 0.0))
-        contributions.append(SignalContribution(
-            signal_family=SignalFamily.COMPETITIVE,
-            metric_name="competitor_mention_flag",
-            observed_value=comp_flag,
-            baseline_value=0.0,
-            relative_delta=round(comp_flag, 4),
-            hazard_weight=self.weights[SignalFamily.COMPETITIVE],
-            citation_ref="DP10:partner_comms",
-        ))
+        contributions.append(
+            SignalContribution(
+                signal_family=SignalFamily.COMPETITIVE,
+                metric_name="competitor_mention_flag",
+                observed_value=comp_flag,
+                baseline_value=0.0,
+                relative_delta=round(comp_flag, 4),
+                hazard_weight=self.weights[SignalFamily.COMPETITIVE],
+                citation_ref="DP10:partner_comms",
+            )
+        )
 
         return contributions
 
     def get_top_driver(self, contributions: Sequence[SignalContribution]) -> SignalContribution:
         """Determines the single most significant risk driver (highest positive impact)."""
+
         # Sort by (hazard_weight * relative_delta) descending
         def impact_score(c: SignalContribution) -> float:
             if c.signal_family == SignalFamily.COMPETITIVE and c.observed_value > 0:

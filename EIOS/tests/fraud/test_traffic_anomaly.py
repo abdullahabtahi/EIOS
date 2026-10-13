@@ -6,12 +6,12 @@ Authoritative References:
 - specs/009-partner-fraud/research.md §5
 """
 
-import pytest
-
 from eios.fraud.traffic_anomaly import TrafficAnomalyDetector
 
 
-def test_traffic_anomaly_detector_flags_bot_funnels(synthetic_clickstream_funnels: list[dict]) -> None:
+def test_traffic_anomaly_detector_flags_bot_funnels(
+    synthetic_clickstream_funnels: list[dict],
+) -> None:
     detector = TrafficAnomalyDetector(sigma_threshold=3.0)
     signals = detector.evaluate_funnels(synthetic_clickstream_funnels)
 

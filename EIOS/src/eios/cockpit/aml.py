@@ -9,10 +9,11 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
-from eios.cockpit.provenance import ProvenanceResolver, ProvenanceMetadata
+from eios.cockpit.provenance import ProvenanceMetadata, ProvenanceResolver
 from eios.cockpit.schemas import validate_contract
 
 
@@ -38,18 +39,18 @@ class KineticEdge(BaseModel):
     source_node_id: str
     target_node_id: str
     edge_type: str
-    transaction_volume_usd: Optional[float] = None
-    matched_timing_seconds: Optional[float] = None
+    transaction_volume_usd: float | None = None
+    matched_timing_seconds: float | None = None
 
 
 class KineticNetworkGraph(BaseModel):
     graph_id: str
     seed_entity_id: str
-    nodes: List[KineticNode]
-    edges: List[KineticEdge]
+    nodes: list[KineticNode]
+    edges: list[KineticEdge]
     total_uncollapsed_entities: int
 
-    def to_contract_dict(self) -> Dict[str, Any]:
+    def to_contract_dict(self) -> dict[str, Any]:
         data = {
             "graph_id": self.graph_id,
             "seed_entity_id": self.seed_entity_id,
@@ -105,7 +106,7 @@ class EntityInvestigationDossier(BaseModel):
     dowhy_refuter_confirmed: bool
     is_withdrawal_held: bool = False
 
-    def to_contract_dict(self) -> Dict[str, Any]:
+    def to_contract_dict(self) -> dict[str, Any]:
         data = {
             "case_id": self.case_id,
             "entity_id": self.entity_id,
@@ -138,12 +139,12 @@ class SARDraftDocument(BaseModel):
     subject_entity_id: str
     pseudonymized_cluster_key: str
     narrative_summary: str
-    cited_metric_ids: List[str]
-    statutory_citations: List[str]
+    cited_metric_ids: list[str]
+    statutory_citations: list[str]
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     investigator_id: str
 
-    def to_contract_dict(self) -> Dict[str, Any]:
+    def to_contract_dict(self) -> dict[str, Any]:
         data = {
             "sar_id": self.sar_id,
             "case_id": self.case_id,
@@ -163,10 +164,10 @@ class SARDraftDocument(BaseModel):
 class AMLWorkstationService:
     """Service providing AML investigation triage, unified dossiers, kinetic graphs, and SAR drafts."""
 
-    def __init__(self, provenance_resolver: Optional[ProvenanceResolver] = None) -> None:
+    def __init__(self, provenance_resolver: ProvenanceResolver | None = None) -> None:
         self.provenance_resolver = provenance_resolver or ProvenanceResolver()
 
-    def get_triage_queue(self, min_score: int = 50, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_triage_queue(self, min_score: int = 50, limit: int = 10) -> list[dict[str, Any]]:
         """Returns prioritized AML alert inbox items sorted by composite hazard."""
         items = [
             {
@@ -213,7 +214,9 @@ class AMLWorkstationService:
             realized_deposit_volume_30d_usd=8000.0,
             discrepancy_multiplier=16.0,
             crypto_usdt_deposit_ratio=0.88,
-            provenance=self.provenance_resolver.resolve("realized_deposit_volume_30d_usd", as_of=now),
+            provenance=self.provenance_resolver.resolve(
+                "realized_deposit_volume_30d_usd", as_of=now
+            ),
         )
 
         return EntityInvestigationDossier(

@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from collections import defaultdict, deque
-from datetime import UTC, datetime
-from typing import Any, Dict, List, Sequence, Tuple
 import uuid
+from collections import defaultdict, deque
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from typing import Any
+
 import numpy as np
 
 from eios.flywheel.models import SCMRecalibrationCheckpoint
 
 
-def parse_edge_key(edge_key: str) -> Tuple[str, str]:
+def parse_edge_key(edge_key: str) -> tuple[str, str]:
     """Parses 'source->target' key into (source, target) tuple."""
     if "->" not in edge_key:
         raise ValueError(f"Invalid edge key '{edge_key}'. Expected 'source->target' format.")
@@ -19,11 +21,11 @@ def parse_edge_key(edge_key: str) -> Tuple[str, str]:
     return parts[0].strip(), parts[1].strip()
 
 
-def verify_dag_acyclicity(edges: Sequence[Tuple[str, str]]) -> bool:
+def verify_dag_acyclicity(edges: Sequence[tuple[str, str]]) -> bool:
     """Verifies that a directed graph contains no cycles using Kahn's algorithm."""
     nodes: set[str] = set()
-    adj: Dict[str, List[str]] = defaultdict(list)
-    in_degree: Dict[str, int] = defaultdict(int)
+    adj: dict[str, list[str]] = defaultdict(list)
+    in_degree: dict[str, int] = defaultdict(int)
 
     for src, tgt in edges:
         nodes.add(src)
@@ -57,12 +59,12 @@ class SCMRecalibrator:
 
     def __init__(
         self,
-        initial_weights: Optional[Dict[str, float]] = None,
+        initial_weights: dict[str, float] | None = None,
         learning_rate: float = 0.05,
         l2_reg: float = 0.01,
-        weight_bounds: Tuple[float, float] = (-2.0, 2.0),
+        weight_bounds: tuple[float, float] = (-2.0, 2.0),
     ) -> None:
-        self.weights: Dict[str, float] = dict(initial_weights) if initial_weights else {}
+        self.weights: dict[str, float] = dict(initial_weights) if initial_weights else {}
         self.learning_rate = learning_rate
         self.l2_reg = l2_reg
         self.weight_bounds = weight_bounds
@@ -76,7 +78,7 @@ class SCMRecalibrator:
 
     def recalibrate_edges(
         self,
-        observations: List[Dict[str, Any]],
+        observations: list[dict[str, Any]],
         version: str = "v1.0.0",
         provenance_seed: str = "default_seed",
     ) -> SCMRecalibrationCheckpoint:
@@ -88,7 +90,7 @@ class SCMRecalibrator:
         - 'residual': float (actual - predicted)
         """
         # Group observations by edge
-        grouped: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for obs in observations:
             grouped[obs["edge"]].append(obs)
 
@@ -97,8 +99,8 @@ class SCMRecalibrator:
         self.validate_acyclicity(all_edge_keys)
 
         updated_weights = dict(self.weights)
-        baseline_errors: List[float] = []
-        recalibrated_errors: List[float] = []
+        baseline_errors: list[float] = []
+        recalibrated_errors: list[float] = []
 
         for edge_key, obs_list in grouped.items():
             curr_weight = self.weights.get(edge_key, 0.0)
@@ -110,11 +112,13 @@ class SCMRecalibrator:
             # Regularized gradient: dL/dw = - (1/N) * sum(residual * source_val) + lambda * w
             gradient = float(np.mean(residuals * source_vals))
             delta = self.learning_rate * gradient - self.l2_reg * curr_weight
-            new_weight = float(np.clip(
-                curr_weight + delta,
-                self.weight_bounds[0],
-                self.weight_bounds[1],
-            ))
+            new_weight = float(
+                np.clip(
+                    curr_weight + delta,
+                    self.weight_bounds[0],
+                    self.weight_bounds[1],
+                )
+            )
             updated_weights[edge_key] = round(new_weight, 4)
 
             # Expected error after weight shift

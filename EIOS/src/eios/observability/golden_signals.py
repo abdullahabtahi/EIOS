@@ -6,11 +6,11 @@ and Resource Saturation (%) across all core platform services with saturation wa
 
 from __future__ import annotations
 
-from collections import deque
-from datetime import datetime, timedelta, timezone
 import math
 import threading
-from typing import Any, Dict, List, Optional, Tuple
+from collections import deque
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -34,8 +34,12 @@ class ServiceGoldenSignals(BaseModel):
     latency_p90_ms: float = Field(..., ge=0.0, description="90th percentile latency in ms")
     latency_p95_ms: float = Field(..., ge=0.0, description="95th percentile latency in ms")
     latency_p99_ms: float = Field(..., ge=0.0, description="99th percentile latency in ms")
-    error_rate_pct: float = Field(..., ge=0.0, le=100.0, description="Error percentage of total requests")
-    saturation_pct: float = Field(..., ge=0.0, le=100.0, description="Resource saturation percentage")
+    error_rate_pct: float = Field(
+        ..., ge=0.0, le=100.0, description="Error percentage of total requests"
+    )
+    saturation_pct: float = Field(
+        ..., ge=0.0, le=100.0, description="Resource saturation percentage"
+    )
     is_saturated: bool = Field(default=False, description="True if saturation exceeds 85.0%")
 
 
@@ -48,7 +52,7 @@ class _RequestEntry:
         self.is_error = is_error
 
 
-def _compute_percentile(sorted_values: List[float], percentile: float) -> float:
+def _compute_percentile(sorted_values: list[float], percentile: float) -> float:
     """Computes percentile from a pre-sorted list using nearest-rank / linear interpolation."""
     if not sorted_values:
         return 0.0
@@ -70,8 +74,8 @@ class GoldenSignalsCollector:
 
     def __init__(self, buffer_maxlen_per_service: int = 50_000) -> None:
         self.buffer_maxlen = buffer_maxlen_per_service
-        self._buffers: Dict[str, deque[_RequestEntry]] = {}
-        self._saturation: Dict[str, float] = {}
+        self._buffers: dict[str, deque[_RequestEntry]] = {}
+        self._saturation: dict[str, float] = {}
         self._lock = threading.RLock()
 
     def record_request(
@@ -79,19 +83,17 @@ class GoldenSignalsCollector:
         service_name: str,
         latency_ms: float,
         is_error: bool = False,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> None:
         """Records a single service request observation."""
-        ts = timestamp or datetime.now(timezone.utc)
+        ts = timestamp or datetime.now(UTC)
         if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+            ts = ts.replace(tzinfo=UTC)
 
         with self._lock:
             if service_name not in self._buffers:
                 self._buffers[service_name] = deque(maxlen=self.buffer_maxlen)
-            self._buffers[service_name].append(
-                _RequestEntry(ts, max(0.0, latency_ms), is_error)
-            )
+            self._buffers[service_name].append(_RequestEntry(ts, max(0.0, latency_ms), is_error))
 
     def set_saturation(self, service_name: str, saturation_pct: float) -> None:
         """Updates the resource saturation percentage for a service."""
@@ -102,18 +104,18 @@ class GoldenSignalsCollector:
         self,
         service_name: str,
         window_seconds: int = 60,
-        reference_time: Optional[datetime] = None,
+        reference_time: datetime | None = None,
     ) -> ServiceGoldenSignals:
         """Computes Four Golden Signals for a given service over a sliding time window."""
-        ref_time = reference_time or datetime.now(timezone.utc)
+        ref_time = reference_time or datetime.now(UTC)
         if ref_time.tzinfo is None:
-            ref_time = ref_time.replace(tzinfo=timezone.utc)
+            ref_time = ref_time.replace(tzinfo=UTC)
 
         cutoff = ref_time - timedelta(seconds=window_seconds)
 
         with self._lock:
             buf = self._buffers.get(service_name)
-            entries: List[_RequestEntry] = []
+            entries: list[_RequestEntry] = []
             if buf:
                 for entry in buf:
                     if entry.timestamp >= cutoff:
@@ -163,19 +165,18 @@ class GoldenSignalsCollector:
 
     def get_all_services_signals(
         self,
-        services: Optional[List[str]] = None,
+        services: list[str] | None = None,
         window_seconds: int = 60,
-        reference_time: Optional[datetime] = None,
-    ) -> List[ServiceGoldenSignals]:
+        reference_time: datetime | None = None,
+    ) -> list[ServiceGoldenSignals]:
         """Calculates golden signals for all core platform services."""
         target_services = services or CORE_PLATFORM_SERVICES
         return [
-            self.get_golden_signals(svc, window_seconds, reference_time)
-            for svc in target_services
+            self.get_golden_signals(svc, window_seconds, reference_time) for svc in target_services
         ]
 
 
-def golden_signals_to_contract_dict(signals: ServiceGoldenSignals) -> Dict[str, Any]:
+def golden_signals_to_contract_dict(signals: ServiceGoldenSignals) -> dict[str, Any]:
     """Converts ServiceGoldenSignals to dictionary matching contract schema."""
     return {
         "service_name": signals.service_name,

@@ -1,13 +1,12 @@
 """Immutable WORM Chain-Head Anchoring Service (GCS Compliance Mode / US4)."""
 
-from datetime import UTC, datetime, timedelta
 import threading
-from typing import Any
+from datetime import UTC, datetime, timedelta
 
 from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.actions.models import WORMAnchorCheckpoint
-from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.record_store import ModelStore, RecordStore, default_record_store
+from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.signer import ActionSigner, default_action_signer
 
 

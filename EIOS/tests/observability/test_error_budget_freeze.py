@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
-from eios.observability.slo_catalog import SLICategory, SLOTier
+from eios.observability.slo_catalog import SLICategory
 from eios.observability.slo_engine import (
     BreakGlassOverrideRequest,
     ErrorBudgetHealth,
-    ReleaseGateVerdict,
     SLOMonitoringEngine,
 )
 
@@ -17,7 +17,7 @@ from eios.observability.slo_engine import (
 def test_tier_1_exhaustion_triggers_release_freeze():
     """Verify Tier 1 budget exhaustion blocks releases, while Tier 2 does not block releases."""
     engine = SLOMonitoringEngine()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # 1. Tier 2 exhaustion (AGENT_TURN_FIRST_TOKEN)
     for i in range(100):
@@ -60,7 +60,7 @@ def test_tier_1_exhaustion_triggers_release_freeze():
 def test_four_eyes_break_glass_hotfix_override():
     """Verify Constitution Principle II four-eyes break-glass authorization during freeze."""
     engine = SLOMonitoringEngine()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Freeze system via Tier 1 breach
     engine.record_event(
@@ -106,6 +106,8 @@ def test_four_eyes_break_glass_hotfix_override():
     assert override.is_active is True
 
     # Now release gate allows deployment under active override
-    verdict_override = engine.evaluate_release_gate("fraud_engine", override_id=override.override_id)
+    verdict_override = engine.evaluate_release_gate(
+        "fraud_engine", override_id=override.override_id
+    )
     assert verdict_override.is_allowed is True
     assert "Four-Eyes break-glass override authorized" in verdict_override.reason

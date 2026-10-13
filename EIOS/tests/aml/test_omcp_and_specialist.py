@@ -6,7 +6,6 @@ Authoritative References:
 """
 
 from langchain_core.messages import HumanMessage
-import pytest
 
 from eios.conversation.specialists.aml import SentinelAMLSpecialist
 from eios.ingestion.hot_state import HotStateEngine
@@ -94,7 +93,9 @@ def test_sentinel_aml_specialist_with_server() -> None:
     specialist = SentinelAMLSpecialist(omcp_server=server)
 
     state = {
-        "messages": [HumanMessage(content="Assess account C-AML-ROUNDTRIP-01 for laundering risk.")],
+        "messages": [
+            HumanMessage(content="Assess account C-AML-ROUNDTRIP-01 for laundering risk.")
+        ],
         "reflection_cycles": 0,
     }
 

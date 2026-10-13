@@ -8,8 +8,8 @@ Prevents the Metric Auditor Gate from mistakenly flagging statutory regulatory c
 (e.g., '31 CFR 1010.410', '31 U.S.C. 5318(g)', 'Section 314(b)') as ungrounded business metrics.
 """
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
@@ -81,7 +81,7 @@ class StatutoryCitationNormalizer:
 
     def normalize_text_for_audit(self, text: str) -> str:
         """Replace statutory numerical patterns with [STATUTE:<code>] tokens.
-        
+
         This prevents numerical audit gates from parsing '1010', '5318', etc.
         as financial figures or untraced quantitative assertions.
         """

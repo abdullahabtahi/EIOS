@@ -2,16 +2,19 @@
 
 from datetime import date, datetime
 from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class BaseDataProductModel(BaseModel):
     """Base class for typed data product payloads."""
+
     model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
 
 class Client360Event(BaseDataProductModel):
     """Data Product 1: client_360 (Grain: client_id, Freshness: 5m, Marking: P)."""
+
     client_id: str = Field(..., min_length=4)
     tax_id: str = Field(..., min_length=4)  # Marking P: Tokenized
     full_name: str = Field(..., min_length=2)  # Marking P: Tokenized
@@ -29,6 +32,7 @@ class Client360Event(BaseDataProductModel):
 
 class ClientFunnelEvent(BaseDataProductModel):
     """Data Product 2: client_funnel (Grain: client_id x stage, Freshness: 15m, Marking: P)."""
+
     client_id: str = Field(..., min_length=4)
     stage: Literal["REGISTRATION", "KYC_SUBMITTED", "KYC_VERIFIED", "FIRST_DEPOSIT", "FIRST_TRADE"]
     entered_at: datetime
@@ -38,6 +42,7 @@ class ClientFunnelEvent(BaseDataProductModel):
 
 class TransactionAMLEvent(BaseDataProductModel):
     """Data Product 3: transactions_aml (Grain: txn_id, Freshness: 30s, Marking: P, S)."""
+
     txn_id: str = Field(..., min_length=6)
     client_id: str = Field(..., min_length=4)
     txn_type: Literal["DEPOSIT", "WITHDRAWAL", "TRANSFER", "ESCROW_RELEASE"]
@@ -52,6 +57,7 @@ class TransactionAMLEvent(BaseDataProductModel):
 
 class TradingActivityEvent(BaseDataProductModel):
     """Data Product 4: trading_activity (Grain: trade_id, Freshness: 30s, Marking: P)."""
+
     trade_id: str = Field(..., min_length=6)
     client_id: str = Field(..., min_length=4)
     symbol: str = Field(..., min_length=2)  # e.g. "VOL_75", "BOOM_1000", "EURUSD"
@@ -66,6 +72,7 @@ class TradingActivityEvent(BaseDataProductModel):
 
 class DeviceGraphEdgeEvent(BaseDataProductModel):
     """Data Product 5: device_network_graph (Grain: edge_id, Freshness: 1m, Marking: P, S)."""
+
     edge_id: str = Field(..., min_length=6)
     source_id: str = Field(..., min_length=4)  # client_id
     target_id: str = Field(..., min_length=4)  # device_id or ip_id
@@ -78,6 +85,7 @@ class DeviceGraphEdgeEvent(BaseDataProductModel):
 
 class Partner360Event(BaseDataProductModel):
     """Data Product 6: partner_360 (Grain: partner_id, Freshness: 15m)."""
+
     partner_id: str = Field(..., min_length=4)
     tier: Literal["TIER_1", "TIER_2", "TIER_3", "VIP_MASTER"]
     region: str = Field(..., min_length=2)
@@ -89,6 +97,7 @@ class Partner360Event(BaseDataProductModel):
 
 class ReferralTreeEdgeEvent(BaseDataProductModel):
     """Data Product 7: partner_referral_tree (Grain: parent x child, Freshness: 15m)."""
+
     parent_id: str = Field(..., min_length=4)
     child_id: str = Field(..., min_length=4)
     layer: int = Field(..., ge=1, le=5)
@@ -98,6 +107,7 @@ class ReferralTreeEdgeEvent(BaseDataProductModel):
 
 class CommissionLedgerEvent(BaseDataProductModel):
     """Data Product 8: commission_ledger (Grain: entry_id, Freshness: 15m)."""
+
     entry_id: str = Field(..., min_length=6)
     partner_id: str = Field(..., min_length=4)
     client_id: str = Field(..., min_length=4)
@@ -109,6 +119,7 @@ class CommissionLedgerEvent(BaseDataProductModel):
 
 class PartnerSignalsEvent(BaseDataProductModel):
     """Data Product 9: partner_engagement_signals (Grain: partner_id x date, Freshness: 1h)."""
+
     partner_id: str = Field(..., min_length=4)
     date: date
     logins: int = Field(default=0, ge=0)
@@ -120,6 +131,7 @@ class PartnerSignalsEvent(BaseDataProductModel):
 
 class PartnerCommsEvent(BaseDataProductModel):
     """Data Product 10: partner_comms (Grain: message_id, Freshness: 15m, Marking: S)."""
+
     message_id: str = Field(..., min_length=6)
     partner_id: str = Field(..., min_length=4)
     channel: Literal["TICKET", "EMAIL", "CHAT", "CALL_NOTE"]
@@ -130,6 +142,7 @@ class PartnerCommsEvent(BaseDataProductModel):
 
 class FinancialPnLEvent(BaseDataProductModel):
     """Data Product 11: financial_pnl (Grain: date x prod x reg, Freshness: 1h)."""
+
     date: date
     product: str = Field(..., min_length=2)  # e.g. "SYNTHETICS_BBOOK", "FOREX_ABOOK"
     region: str = Field(..., min_length=2)
@@ -141,6 +154,7 @@ class FinancialPnLEvent(BaseDataProductModel):
 
 class CompetitorBenchmarkEvent(BaseDataProductModel):
     """Data Product 12: competitor_benchmarks (Grain: comp x date x reg, Freshness: 24h)."""
+
     competitor: str = Field(..., min_length=2)
     date: date
     region: str = Field(..., min_length=2)
@@ -151,6 +165,7 @@ class CompetitorBenchmarkEvent(BaseDataProductModel):
 
 class PlatformOperationsEvent(BaseDataProductModel):
     """Data Product 13: platform_operations (Grain: date x service, Freshness: 5m)."""
+
     date: date
     service: str = Field(..., min_length=2)
     latency_p95_ms: float = Field(..., ge=0.0)
@@ -161,6 +176,7 @@ class PlatformOperationsEvent(BaseDataProductModel):
 
 class ComplianceCaseEvent(BaseDataProductModel):
     """Data Product 14: compliance_cases (Grain: case_id, Freshness: 1m, Marking: S)."""
+
     case_id: str = Field(..., min_length=6)
     client_id: str = Field(..., min_length=4)
     status: Literal["OPEN", "INVESTIGATING", "SAR_FILED", "CLOSED_BENIGN"]

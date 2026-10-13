@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from typing import Any, Dict, List, Sequence
 import uuid
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from typing import Any
+
 import numpy as np
 
 from eios.flywheel.models import CalibrationDiagnosticsReport
@@ -59,7 +61,7 @@ class CalibrationDiagnosticsEngine:
         # 10-bin Expected Calibration Error (ECE)
         bin_edges = np.linspace(0.0, 1.0, self.n_bins + 1)
         ece = 0.0
-        bins_summary: List[Dict[str, Any]] = []
+        bins_summary: list[dict[str, Any]] = []
 
         for i in range(self.n_bins):
             lower = bin_edges[i]
@@ -82,15 +84,17 @@ class CalibrationDiagnosticsEngine:
                 bin_acc = 0.0
                 gap = 0.0
 
-            bins_summary.append({
-                "bin_index": i + 1,
-                "bin_lower": round(float(lower), 2),
-                "bin_upper": round(float(upper), 2),
-                "sample_count": bin_count,
-                "mean_predicted_prob": round(bin_conf, 4),
-                "empirical_frequency": round(bin_acc, 4),
-                "calibration_gap": round(gap, 4),
-            })
+            bins_summary.append(
+                {
+                    "bin_index": i + 1,
+                    "bin_lower": round(float(lower), 2),
+                    "bin_upper": round(float(upper), 2),
+                    "sample_count": bin_count,
+                    "mean_predicted_prob": round(bin_conf, 4),
+                    "empirical_frequency": round(bin_acc, 4),
+                    "calibration_gap": round(gap, 4),
+                }
+            )
 
         is_drift = bool(ece > self.drift_threshold)
 

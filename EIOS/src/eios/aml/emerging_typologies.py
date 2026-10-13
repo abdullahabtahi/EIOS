@@ -6,9 +6,10 @@ Authoritative References:
 - .specify/memory/constitution.md (Principles I, VI)
 """
 
+import uuid
 from dataclasses import dataclass
 from typing import Any
-import uuid
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
@@ -33,7 +34,9 @@ class EmergingTypologyMiner:
         self.contamination = contamination
         self.random_state = random_state
 
-    def mine_emerging_typologies(self, residual_df: pd.DataFrame) -> list[EmergingTypologyCandidate]:
+    def mine_emerging_typologies(
+        self, residual_df: pd.DataFrame
+    ) -> list[EmergingTypologyCandidate]:
         """Execute unsupervised anomaly clustering and surface top novel laundering candidates."""
         if residual_df.empty:
             return []
@@ -42,7 +45,8 @@ class EmergingTypologyMiner:
 
         # Identify numerical candidate feature columns
         candidate_cols = [
-            c for c in [
+            c
+            for c in [
                 "amount_usd",
                 "distinct_instruments_count",
                 "rapid_turnaround_ratio",
@@ -55,7 +59,9 @@ class EmergingTypologyMiner:
 
         if not candidate_cols:
             # Fall back to any numeric columns
-            candidate_cols = [c for c in df.select_dtypes(include=[np.number]).columns if not c.endswith("_id")]
+            candidate_cols = [
+                c for c in df.select_dtypes(include=[np.number]).columns if not c.endswith("_id")
+            ]
 
         if not candidate_cols:
             return []
@@ -100,14 +106,18 @@ class EmergingTypologyMiner:
 
         if multi_asset_mask.any():
             multi_df = anom_df[multi_asset_mask]
-            client_ids = list(multi_df["client_id"].unique()) if "client_id" in multi_df.columns else []
+            client_ids = (
+                list(multi_df["client_id"].unique()) if "client_id" in multi_df.columns else []
+            )
             mean_score = float(multi_df["anomaly_score"].mean())
 
             profile = {
                 "avg_instruments": float(multi_df["distinct_instruments_count"].mean())
                 if "distinct_instruments_count" in multi_df.columns
                 else 0.0,
-                "avg_amount_usd": float(multi_df["amount_usd"].mean()) if "amount_usd" in multi_df.columns else 0.0,
+                "avg_amount_usd": float(multi_df["amount_usd"].mean())
+                if "amount_usd" in multi_df.columns
+                else 0.0,
                 "avg_entropy": float(multi_df["asset_spread_entropy"].mean())
                 if "asset_spread_entropy" in multi_df.columns
                 else 0.0,
@@ -131,7 +141,11 @@ class EmergingTypologyMiner:
         # Residual high velocity / timing cluster
         residual_anom = anom_df[~multi_asset_mask] if multi_asset_mask.any() else anom_df
         if not residual_anom.empty and len(candidates) < self.top_k:
-            client_ids = list(residual_anom["client_id"].unique()) if "client_id" in residual_anom.columns else []
+            client_ids = (
+                list(residual_anom["client_id"].unique())
+                if "client_id" in residual_anom.columns
+                else []
+            )
             mean_score = float(residual_anom["anomaly_score"].mean())
             profile = {
                 "avg_amount_usd": float(residual_anom["amount_usd"].mean())

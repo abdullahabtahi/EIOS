@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """T185 (FR-036, FR-017): spans and logs carry the correlation id; redaction; env-driven setup."""
 
 from __future__ import annotations

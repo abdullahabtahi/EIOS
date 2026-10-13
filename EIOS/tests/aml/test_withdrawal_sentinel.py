@@ -8,7 +8,7 @@ Authoritative References:
 """
 
 import time
-import pytest
+
 from eios.aml.models import WithdrawalDisposition
 from eios.aml.withdrawal_sentinel import WithdrawalSentinel
 from eios.ingestion.hot_state import HotStateEngine
@@ -88,7 +88,7 @@ def test_withdrawal_sentinel_persists_to_hot_state() -> None:
     intent_hub = ActionIntentHub()
     sentinel = WithdrawalSentinel(hot_state=hot_state, intent_hub=intent_hub)
 
-    assessment = sentinel.evaluate_withdrawal(
+    sentinel.evaluate_withdrawal(
         withdrawal_id="WDL-DB-01",
         client_id="C-DB-01",
         amount_usd=150.0,

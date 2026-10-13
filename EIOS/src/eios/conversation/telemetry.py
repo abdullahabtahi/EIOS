@@ -5,8 +5,9 @@ from __future__ import annotations
 import logging
 import os
 import time
+from collections.abc import Generator
 from contextlib import contextmanager
-from typing import Any, Dict, Generator, Optional
+from typing import Any
 
 _LOG = logging.getLogger("eios.conversation.telemetry")
 
@@ -25,10 +26,10 @@ class CopilotTracer:
         turn_index: int,
         query: str,
         role: str,
-    ) -> Generator[Dict[str, Any], None, None]:
+    ) -> Generator[dict[str, Any]]:
         """Context manager capturing turn latency, token usage, and auditor pass/block tags."""
         start_time = time.perf_counter()
-        metadata: Dict[str, Any] = {
+        metadata: dict[str, Any] = {
             "session_id": session_id,
             "turn_index": turn_index,
             "role": role,

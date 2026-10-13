@@ -6,9 +6,10 @@ Authoritative References:
 - specs/009-partner-fraud/research.md §1
 """
 
+import math
 from collections import defaultdict
 from datetime import UTC, datetime
-import math
+
 import numpy as np
 import pandas as pd
 
@@ -31,7 +32,7 @@ class TimeBucketedPairDetector:
        - Composite collusion score
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         bucket_window_sec: float = 30.0,
         tau_timing_sec: float = 5.0,
@@ -51,7 +52,7 @@ class TimeBucketedPairDetector:
         self.w_timing = w_timing
         self.w_zero_sum = w_zero_sum
 
-    def detect_pairs(self, trade_df: pd.DataFrame) -> list[TradingPairCorrelation]:
+    def detect_pairs(self, trade_df: pd.DataFrame) -> list[TradingPairCorrelation]:  # noqa: C901, PLR0912, PLR0915
         """Execute candidate pruning and bilateral scoring over trade log."""
         if trade_df.empty:
             return []
@@ -102,17 +103,19 @@ class TimeBucketedPairDetector:
                     rec_a = r1 if r1["account_id"] == acc_a else r2
                     rec_b = r2 if r2["account_id"] == acc_b else r1
 
-                    candidate_co_occurrences[pair_key].append({
-                        "delta_t": delta_t,
-                        "dir_a": rec_a["direction"],
-                        "dir_b": rec_b["direction"],
-                        "lots_a": rec_a["lots"],
-                        "lots_b": rec_b["lots"],
-                        "pnl_a": rec_a.get("pnl_usd", 0.0),
-                        "pnl_b": rec_b.get("pnl_usd", 0.0),
-                        "comm_a": rec_a.get("commission_usd", 0.0),
-                        "comm_b": rec_b.get("commission_usd", 0.0),
-                    })
+                    candidate_co_occurrences[pair_key].append(
+                        {
+                            "delta_t": delta_t,
+                            "dir_a": rec_a["direction"],
+                            "dir_b": rec_b["direction"],
+                            "lots_a": rec_a["lots"],
+                            "lots_b": rec_b["lots"],
+                            "pnl_a": rec_a.get("pnl_usd", 0.0),
+                            "pnl_b": rec_b.get("pnl_usd", 0.0),
+                            "comm_a": rec_a.get("commission_usd", 0.0),
+                            "comm_b": rec_b.get("commission_usd", 0.0),
+                        }
+                    )
 
         # Stage 2: Bilateral Correlation Scoring
         flagged_pairs: list[TradingPairCorrelation] = []
@@ -130,12 +133,8 @@ class TimeBucketedPairDetector:
             timing_pct = (within_15s_count / co_count) * 100.0
 
             # Directional anti-correlation vs mirror correlation
-            opposite_count = sum(
-                1 for o in occurrences if (o["dir_a"] != o["dir_b"])
-            )
-            mirror_count = sum(
-                1 for o in occurrences if (o["dir_a"] == o["dir_b"])
-            )
+            opposite_count = sum(1 for o in occurrences if (o["dir_a"] != o["dir_b"]))
+            mirror_count = sum(1 for o in occurrences if (o["dir_a"] == o["dir_b"]))
 
             if opposite_count >= mirror_count:
                 directional_type = DirectionalType.OPPOSITE
@@ -163,7 +162,9 @@ class TimeBucketedPairDetector:
 
             if directional_type == DirectionalType.OPPOSITE:
                 if total_commission > 0:
-                    zero_sum_ratio = 1.0 - min(1.0, abs(combined_net_pl) / (total_commission + 1e-6))
+                    zero_sum_ratio = 1.0 - min(
+                        1.0, abs(combined_net_pl) / (total_commission + 1e-6)
+                    )
                 else:
                     zero_sum_ratio = 0.50
                 coordination_pl_score = zero_sum_ratio

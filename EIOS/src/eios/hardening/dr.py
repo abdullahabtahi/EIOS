@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import hashlib
 import json
 import time
-from typing import Any, Dict, List, Optional, Tuple
 import uuid
+from datetime import UTC, datetime
+from typing import Any
 
 from eios.hardening.models import DisasterRecoveryDrillReport, DRDrillStatus
 from eios.ingestion.hot_state import HotStateEngine
-from eios.ontology.actions.models import LedgerEntry, LedgerEventType
+from eios.ontology.actions.models import LedgerEntry
 from eios.ontology.actions.sequencer import GENESIS_ANCHOR, LedgerSequencer
 from eios.ontology.graph.property_graph import InMemPropertyGraph
 
@@ -21,17 +21,17 @@ class DisasterRecoveryCoordinator:
 
     def __init__(
         self,
-        hot_state: Optional[HotStateEngine] = None,
-        sequencer: Optional[LedgerSequencer] = None,
-        property_graph: Optional[InMemPropertyGraph] = None,
+        hot_state: HotStateEngine | None = None,
+        sequencer: LedgerSequencer | None = None,
+        property_graph: InMemPropertyGraph | None = None,
     ) -> None:
         self.hot_state = hot_state or HotStateEngine()
         self.sequencer = sequencer or LedgerSequencer(hot_state_engine=self.hot_state)
         self.property_graph = property_graph or InMemPropertyGraph()
-        self.snapshots: Dict[str, Dict[str, Any]] = {}
-        self.last_drill_report: Optional[DisasterRecoveryDrillReport] = None
+        self.snapshots: dict[str, dict[str, Any]] = {}
+        self.last_drill_report: DisasterRecoveryDrillReport | None = None
 
-    def _compute_merkle_root(self, hashes: List[str]) -> str:
+    def _compute_merkle_root(self, hashes: list[str]) -> str:
         """Compute cryptographic SHA-256 Merkle root over list of hex hashes."""
         if not hashes:
             return hashlib.sha256(b"EMPTY_LEDGER_MERKLE_ROOT").hexdigest()
@@ -42,13 +42,13 @@ class DisasterRecoveryCoordinator:
             for i in range(0, len(current_level), 2):
                 left = current_level[i]
                 right = current_level[i + 1] if i + 1 < len(current_level) else current_level[i]
-                combined = hashlib.sha256(f"{left}{right}".encode("utf-8")).hexdigest()
+                combined = hashlib.sha256(f"{left}{right}".encode()).hexdigest()
                 next_level.append(combined)
             current_level = next_level
 
         return current_level[0]
 
-    def create_snapshot(self, snapshot_id: Optional[str] = None) -> str:
+    def create_snapshot(self, snapshot_id: str | None = None) -> str:
         """Takes an atomic cold-storage snapshot of DuckDB state, property graph, and ledger."""
         snap_id = snapshot_id or f"SNAP-{uuid.uuid4().hex[:12].upper()}"
         now = datetime.now(UTC)
@@ -63,14 +63,14 @@ class DisasterRecoveryCoordinator:
         edges = [(u, v, dict(attrs)) for u, v, attrs in self.property_graph.graph.edges(data=True)]
 
         # 3. Snapshot hot state tables
-        tables_data: Dict[str, List[Dict[str, Any]]] = {}
+        tables_data: dict[str, list[dict[str, Any]]] = {}
         cursor = self.hot_state.get_cursor()
         try:
             for tbl in self.hot_state.list_tables():
                 # Query table contents
-                rows = cursor.execute(f"SELECT * FROM {tbl}").fetchdf().to_dict(orient="records")
+                rows = cursor.execute(f"SELECT * FROM {tbl}").fetchdf().to_dict(orient="records")  # noqa: S608
                 tables_data[tbl] = rows
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         self.snapshots[snap_id] = {
@@ -93,7 +93,7 @@ class DisasterRecoveryCoordinator:
         self.sequencer = LedgerSequencer(hot_state_engine=self.hot_state)
         self.property_graph.graph.clear()
 
-    def restore_from_snapshot(self, snapshot_id: str) -> Dict[str, Any]:
+    def restore_from_snapshot(self, snapshot_id: str) -> dict[str, Any]:
         """Rehydrates hot state, graph nodes, and cryptographic ledger from cold snapshot."""
         if snapshot_id not in self.snapshots:
             raise KeyError(f"Snapshot ID {snapshot_id} not found in cold storage archives.")
@@ -111,8 +111,8 @@ class DisasterRecoveryCoordinator:
                 col_names = ", ".join(cols)
                 vals = [json.dumps(v) if isinstance(v, (dict, list)) else v for v in row.values()]
                 try:
-                    cursor.execute(f"INSERT INTO {tbl} ({col_names}) VALUES ({placeholders})", vals)
-                except Exception:
+                    cursor.execute(f"INSERT INTO {tbl} ({col_names}) VALUES ({placeholders})", vals)  # noqa: S608
+                except Exception:  # noqa: S110
                     pass
 
         # 2. Rehydrate property graph
@@ -123,7 +123,7 @@ class DisasterRecoveryCoordinator:
 
         # 3. Rehydrate ledger sequencer
         self.sequencer = LedgerSequencer(hot_state_engine=self.hot_state)
-        entries: List[LedgerEntry] = snap["ledger_entries"]
+        entries: list[LedgerEntry] = snap["ledger_entries"]
         for entry in entries:
             self.sequencer._entries.append(entry)
             self.sequencer._persist_to_hot_state(entry)
@@ -137,7 +137,7 @@ class DisasterRecoveryCoordinator:
             "restored_tables_count": len(snap["tables_data"]),
         }
 
-    def verify_forensic_continuity(self, snapshot_id: str) -> Tuple[bool, str]:
+    def verify_forensic_continuity(self, snapshot_id: str) -> tuple[bool, str]:
         """Validates that 100% of restored ledger transactions match SHA-256 chain and Merkle root."""
         if snapshot_id not in self.snapshots:
             raise KeyError(f"Snapshot ID {snapshot_id} not found in cold storage archives.")
@@ -149,7 +149,7 @@ class DisasterRecoveryCoordinator:
             return False, ""
 
         expected_prev = GENESIS_ANCHOR
-        current_hashes: List[str] = []
+        current_hashes: list[str] = []
 
         for idx, entry in enumerate(entries, start=1):
             if entry.ledger_seq != idx:
@@ -169,7 +169,7 @@ class DisasterRecoveryCoordinator:
             expected_prev = entry.current_hash
 
         recomputed_root = self._compute_merkle_root(current_hashes)
-        valid = (recomputed_root == snap["worm_root_hash"])
+        valid = recomputed_root == snap["worm_root_hash"]
         return valid, recomputed_root
 
     def run_failover_drill(
@@ -189,7 +189,9 @@ class DisasterRecoveryCoordinator:
         entries = self.sequencer.entries
         if entries:
             last_event_time = entries[-1].recorded_at
-            rpo_minutes = max(0.0, (snap_meta["timestamp"] - last_event_time).total_seconds() / 60.0)
+            rpo_minutes = max(
+                0.0, (snap_meta["timestamp"] - last_event_time).total_seconds() / 60.0
+            )
         else:
             rpo_minutes = 0.0
 

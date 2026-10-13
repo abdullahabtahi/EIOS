@@ -6,8 +6,8 @@ Authoritative References:
 - .specify/memory/constitution.md (Principles I, II, IV, VIII)
 """
 
-from datetime import UTC, datetime
 import uuid
+from datetime import UTC, datetime
 
 from eios.fraud.models import (
     BonusAbuseProfile,
@@ -27,7 +27,7 @@ class FraudDossierAssembler:
     def __init__(self, sanitizer: FraudComplianceSanitizer | None = None) -> None:
         self.sanitizer = sanitizer or FraudComplianceSanitizer()
 
-    def assemble_dossier(
+    def assemble_dossier(  # noqa: C901, PLR0912, PLR0915
         self,
         partner_id: str,
         trading_pairs: list[TradingPairCorrelation] | None = None,
@@ -83,7 +83,9 @@ class FraudDossierAssembler:
             for acc in recycling_cluster.linked_client_ids:
                 implicated_accounts.add(acc)
             total_exposure += recycling_cluster.total_promotions_harvested_usd
-            if not partner_pairs and (not bonus_profile or bonus_profile.status != "HIGH_BONUS_ABUSE_RISK"):
+            if not partner_pairs and (
+                not bonus_profile or bonus_profile.status != "HIGH_BONUS_ABUSE_RISK"
+            ):
                 primary_typology = FraudTypology.CLIENT_RECYCLING
 
         # 5. Traffic anomaly evidence

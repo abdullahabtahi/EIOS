@@ -1,7 +1,7 @@
 """Tests for structural causal DAG equations and placebo refuter edges (SC-005, FR-046, FR-048)."""
 
 from pathlib import Path
-import pytest
+
 from eios.foundry.generators.causal_truth import CausalTruthGenerator
 from eios.foundry.rng import DeterministicRNG
 from eios.foundry.storage.eval_truth_store import EvalGroundTruthStore
@@ -27,7 +27,7 @@ def test_causal_dag_structural_equations_and_placebo_edge(tmp_path: Path):
     assert "PARTNER->CLIENT" in edge_map
     assert "CLIENT->FINANCIAL" in edge_map
 
-    for e_name, edge in edge_map.items():
+    for _e_name, edge in edge_map.items():
         if not edge.get("is_placebo"):
             assert edge["true_structural_coefficient"] != 0.0
 

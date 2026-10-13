@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 from eios.foundry.contracts import ContractValidator, WeeklySignalRecord
 from eios.foundry.rng import RNGManager
 from eios.foundry.universe import GlobalEntityUniverse
@@ -18,13 +19,13 @@ class ChurnDataGenerator:
         self._gen = rng.get_generator("churn_radar")
         self._validator = ContractValidator(WeeklySignalRecord)
 
-    def generate_weekly_signals(self, weeks: int = 8) -> List[Dict[str, Any]]:
+    def generate_weekly_signals(self, weeks: int = 8) -> list[dict[str, Any]]:
         """Generates validated weekly signals across 5 indicator families."""
-        records: List[Dict[str, Any]] = []
-        base_date = datetime(2025, 1, 6, tzinfo=timezone.utc)
+        records: list[dict[str, Any]] = []
+        base_date = datetime(2025, 1, 6, tzinfo=UTC)
         sig_counter = 0
 
-        for p_idx, partner in enumerate(self.universe.partners):
+        for _p_idx, partner in enumerate(self.universe.partners):
             for w in range(weeks):
                 sig_counter += 1
                 week_start = (base_date + timedelta(weeks=w)).strftime("%Y-%m-%d")
@@ -52,10 +53,10 @@ class ChurnDataGenerator:
         self._validator.validate_batch(records)
         return records
 
-    def get_seasonal_dip_partners(self) -> List[Dict[str, Any]]:
+    def get_seasonal_dip_partners(self) -> list[dict[str, Any]]:
         """Returns ~8% of partners who experienced a benign 30-day dip and recovered."""
         target_count = max(1, int(len(self.universe.partners) * 0.08))
-        dips: List[Dict[str, Any]] = []
+        dips: list[dict[str, Any]] = []
         for i in range(target_count):
             partner = self.universe.partners[i]
             dips.append(
@@ -69,7 +70,7 @@ class ChurnDataGenerator:
             )
         return dips
 
-    def get_regional_cohort_shock(self) -> Dict[str, Any]:
+    def get_regional_cohort_shock(self) -> dict[str, Any]:
         """Returns regional cohort disengagement event with 14-day lag."""
         latam_partners = [p.partner_id for p in self.universe.partners[:8]]
         return {

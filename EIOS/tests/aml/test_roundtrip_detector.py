@@ -7,8 +7,7 @@ Authoritative References:
 """
 
 import pandas as pd
-import pytest
-from eios.aml.models import RoundTripTypology
+
 from eios.aml.roundtrip_detector import RoundTripDetector
 from eios.ingestion.hot_state import HotStateEngine
 

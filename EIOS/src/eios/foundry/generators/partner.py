@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Literal
 
 from eios.foundry.contracts import (
     CommissionLedgerRecord,
@@ -24,7 +24,7 @@ class PartnerDataGenerator:
         self,
         universe: GlobalEntityUniverse,
         rng: RNGManager,
-        truth_store: Optional[EvalGroundTruthStore] = None,
+        truth_store: EvalGroundTruthStore | None = None,
     ) -> None:
         self.universe = universe
         self.rng = rng
@@ -35,11 +35,11 @@ class PartnerDataGenerator:
         self._validator_tree = ContractValidator(ReferralNodeRecord)
         self._validator_ledger = ContractValidator(CommissionLedgerRecord)
 
-    def generate_partner_360(self) -> List[Dict[str, Any]]:
+    def generate_partner_360(self) -> list[dict[str, Any]]:
         """Emits validated partner_360 records."""
-        records: List[Dict[str, Any]] = []
-        base_dt = datetime(2024, 1, 1, tzinfo=timezone.utc)
-        tiers: List[Literal["STANDARD", "VIP", "MASTER"]] = ["MASTER", "VIP", "STANDARD"]
+        records: list[dict[str, Any]] = []
+        base_dt = datetime(2024, 1, 1, tzinfo=UTC)
+        tiers: list[Literal["STANDARD", "VIP", "MASTER"]] = ["MASTER", "VIP", "STANDARD"]
 
         for idx, partner in enumerate(self.universe.partners):
             tier_name = tiers[partner.tier - 1] if 1 <= partner.tier <= 3 else "STANDARD"
@@ -61,11 +61,11 @@ class PartnerDataGenerator:
         self._validator_360.validate_batch(records)
         return records
 
-    def generate_referral_tree(self) -> List[Dict[str, Any]]:
+    def generate_referral_tree(self) -> list[dict[str, Any]]:
         """Emits validated referral_tree link records across max 3 tiers."""
-        records: List[Dict[str, Any]] = []
+        records: list[dict[str, Any]] = []
         link_counter = 0
-        base_dt = datetime(2024, 2, 1, tzinfo=timezone.utc)
+        base_dt = datetime(2024, 2, 1, tzinfo=UTC)
 
         # 1. Partner-to-Partner hierarchical links (Tier 1 -> Tier 2 -> Tier 3)
         for partner in self.universe.partners:
@@ -100,10 +100,10 @@ class PartnerDataGenerator:
         self._validator_tree.validate_batch(records)
         return records
 
-    def generate_commission_ledger(self, count: int = 100) -> List[Dict[str, Any]]:
+    def generate_commission_ledger(self, count: int = 100) -> list[dict[str, Any]]:
         """Emits validated commission ledger payout records."""
-        records: List[Dict[str, Any]] = []
-        base_dt = datetime(2025, 2, 1, 0, 0, 0, tzinfo=timezone.utc)
+        records: list[dict[str, Any]] = []
+        base_dt = datetime(2025, 2, 1, 0, 0, 0, tzinfo=UTC)
 
         for idx in range(count):
             partner = self.universe.partners[idx % len(self.universe.partners)]
@@ -126,7 +126,7 @@ class PartnerDataGenerator:
         self._validator_ledger.validate_batch(records)
         return records
 
-    def generate_partner_fraud_suite(self) -> Dict[str, Any]:
+    def generate_partner_fraud_suite(self) -> dict[str, Any]:
         """Generates 3-tier ring, 23 mirror trading pairs, 12 bot partners, and 35% bonus abuse."""
         master_partners = [p.partner_id for p in self.universe.partners[:7]]
         sub_partners = [p.partner_id for p in self.universe.partners[7:30]]  # 23
@@ -144,7 +144,7 @@ class PartnerDataGenerator:
             self.truth_store.write_truth("module_b/partner_ring_7_23_184.json", ring_truth)
 
         # 23 Mirror trading pairs
-        mirror_pairs: List[Dict[str, Any]] = []
+        mirror_pairs: list[dict[str, Any]] = []
         for i in range(23):
             c1 = self.universe.accounts[i * 2].client_id
             c2 = self.universe.accounts[i * 2 + 1].client_id
@@ -160,7 +160,7 @@ class PartnerDataGenerator:
             )
 
         # 12 Bot-traffic partners
-        bot_partners: List[Dict[str, Any]] = []
+        bot_partners: list[dict[str, Any]] = []
         for i in range(12):
             bp_id = self.universe.partners[30 + i].partner_id
             bot_partners.append(

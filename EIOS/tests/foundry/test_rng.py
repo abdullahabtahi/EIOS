@@ -1,7 +1,7 @@
 """Tests for deterministic PRNG and stream spawning (F01)."""
 
-import pytest
 import numpy as np
+
 from eios.foundry.rng import RNGManager
 
 

@@ -3,28 +3,30 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Generic, List, Literal, Optional, Type, TypeVar
+from typing import Any, Generic, Literal, TypeVar
+
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError
 
 
 class ContractValidationError(Exception):
     """Raised when a generated record batch fails Layer 1 contract validation."""
+
     pass
 
 
 T = TypeVar("T", bound=BaseModel)
 
 
-class ContractValidator(Generic[T]):
+class ContractValidator(Generic[T]):  # noqa: UP046
     """Vectorized batch validator enforcing Pydantic contracts at generation time."""
 
-    def __init__(self, model_cls: Type[T]) -> None:
+    def __init__(self, model_cls: type[T]) -> None:
         self.model_cls = model_cls
-        self.adapter = TypeAdapter(List[model_cls])
+        self.adapter = TypeAdapter(list[model_cls])
 
     def validate_batch(self, records: list[dict[str, Any]]) -> list[T]:
         """Validates a batch of raw records against the model schema.
-        
+
         Raises ContractValidationError immediately on schema breach.
         """
         try:
@@ -39,6 +41,7 @@ class ContractValidator(Generic[T]):
 # Core Layer 1 Data Product Pydantic Contracts
 # ---------------------------------------------------------------------------
 
+
 class BaseContractModel(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -48,14 +51,13 @@ class Client360Record(BaseContractModel):
     person_id: str
     country: str
     kyc_tier: Literal["TIER_0_UNVERIFIED", "TIER_1_IDENTITY", "TIER_2_ADDRESS", "TIER_3_ENHANCED"]
-    kyc_approved_at: Optional[str] = None
+    kyc_approved_at: str | None = None
     created_at: str
     status: Literal["ACTIVE", "SUSPENDED", "CLOSED"]
     mt5_login_id: int
     account_id: str
     email: str
     has_identity_duplicate_noise: bool = False
-
 
 
 class FunnelEventRecord(BaseContractModel):
@@ -77,7 +79,7 @@ class DeviceNetworkEdge(BaseContractModel):
 class TransactionAMLRecord(BaseContractModel):
     transaction_id: str
     account_id: str
-    mt5_login_id: Optional[int] = None
+    mt5_login_id: int | None = None
     direction: Literal["DEPOSIT", "WITHDRAWAL", "INTERNAL_TRANSFER"]
     amount: Decimal = Field(gt=Decimal("0.0"))
     currency: str = "USD"
@@ -85,7 +87,7 @@ class TransactionAMLRecord(BaseContractModel):
     ip_address: str
     device_hash: str
     timestamp: str
-    time_since_kyc_approval_hours: Optional[float] = None
+    time_since_kyc_approval_hours: float | None = None
 
 
 class TradeExecutionRecord(BaseContractModel):
@@ -108,7 +110,7 @@ class ComplianceCaseRecord(BaseContractModel):
     alert_type: str
     severity: Literal["LOW", "MEDIUM", "HIGH", "CRITICAL"]
     is_true_positive: bool
-    analyst_decision: Optional[Literal["ESCALATE", "DISMISS", "SAR_FILED"]] = None
+    analyst_decision: Literal["ESCALATE", "DISMISS", "SAR_FILED"] | None = None
     created_at: str
 
 
@@ -116,7 +118,7 @@ class Partner360Record(BaseContractModel):
     partner_id: str
     person_id: str
     referral_code: str
-    parent_partner_id: Optional[str] = None
+    parent_partner_id: str | None = None
     commission_tier: Literal["STANDARD", "VIP", "MASTER"]
     joined_at: str
     is_bot_fraud: bool = False
@@ -125,8 +127,8 @@ class Partner360Record(BaseContractModel):
 class ReferralNodeRecord(BaseContractModel):
     link_id: str
     parent_partner_id: str
-    child_partner_id: Optional[str] = None
-    referred_client_id: Optional[str] = None
+    child_partner_id: str | None = None
+    referred_client_id: str | None = None
     tier_depth: int = Field(ge=1, le=3)
     created_at: str
 

@@ -2,26 +2,26 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import time
-from typing import Any, Dict, List, Optional
 import uuid
+from datetime import UTC, datetime
 
 from eios.hardening.base import ChaosInjectionHook, FaultType
 from eios.hardening.models import ChaosExperimentRecord, ChaosExperimentStatus
 from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.sink import SimulatedWriteBackSink
-from eios.synthesis.briefing import MorningBriefingGenerator
 
 
 class ChaosEngine:
     """Automated chaos injection engine testing self-healing and graceful degradation."""
 
-    def __init__(self, hot_state: Optional[HotStateEngine] = None) -> None:
+    def __init__(self, hot_state: HotStateEngine | None = None) -> None:
         self.hot_state = hot_state or HotStateEngine()
         self.sequencer = LedgerSequencer(hot_state_engine=self.hot_state)
-        self.sink = SimulatedWriteBackSink(sequencer=self.sequencer, hot_state_engine=self.hot_state)
+        self.sink = SimulatedWriteBackSink(
+            sequencer=self.sequencer, hot_state_engine=self.hot_state
+        )
 
     def simulate_process_crash(
         self,
@@ -82,7 +82,7 @@ class ChaosEngine:
 
         det_latency_ms = max(0.1, (detection_time - start_time) * 1000.0)
         rec_latency_ms = max(0.1, (recovery_time - detection_time) * 1000.0)
-        all_quarantined = (quarantined == poison_count)
+        all_quarantined = quarantined == poison_count
 
         return ChaosExperimentRecord(
             experiment_id=exp_id,
@@ -90,7 +90,9 @@ class ChaosEngine:
             target_subsystem="ingestion_stream",
             timestamp=datetime.now(UTC),
             parameters={"poison_count": poison_count, "quarantined_count": quarantined},
-            status=ChaosExperimentStatus.MITIGATED if all_quarantined else ChaosExperimentStatus.FAILED,
+            status=ChaosExperimentStatus.MITIGATED
+            if all_quarantined
+            else ChaosExperimentStatus.FAILED,
             detection_latency_ms=round(det_latency_ms, 2),
             recovery_latency_ms=round(rec_latency_ms, 2),
             fallback_activated=False,
@@ -127,7 +129,9 @@ class ChaosEngine:
             target_subsystem="llm_gateway",
             timestamp=datetime.now(UTC),
             parameters={"replay_badge_displayed": badge_displayed, "error_code": error_code},
-            status=ChaosExperimentStatus.MITIGATED if fallback_active else ChaosExperimentStatus.FAILED,
+            status=ChaosExperimentStatus.MITIGATED
+            if fallback_active
+            else ChaosExperimentStatus.FAILED,
             detection_latency_ms=round(det_latency_ms, 2),
             recovery_latency_ms=round(rec_latency_ms, 2),
             fallback_activated=fallback_active,
@@ -148,6 +152,7 @@ class ChaosEngine:
             detection_time = time.perf_counter()
             idem_key = f"IDEM-{intent_id}"
             from eios.ontology.actions.models import ExecutionReceipt, ExecutionStatus
+
             cached_receipt = ExecutionReceipt(
                 receipt_id=str(uuid.uuid4()),
                 intent_id=intent_id,
@@ -177,7 +182,9 @@ class ChaosEngine:
             target_subsystem="action_execution_sink",
             timestamp=datetime.now(UTC),
             parameters={"intent_id": intent_id, "duplicate_rejected": duplicate_rejected},
-            status=ChaosExperimentStatus.MITIGATED if duplicate_rejected else ChaosExperimentStatus.FAILED,
+            status=ChaosExperimentStatus.MITIGATED
+            if duplicate_rejected
+            else ChaosExperimentStatus.FAILED,
             detection_latency_ms=round(det_latency_ms, 2),
             recovery_latency_ms=round(rec_latency_ms, 2),
             fallback_activated=False,
@@ -196,7 +203,9 @@ class ChaosEngine:
         sev1_raised = False
         approvals_halted = False
 
-        with ChaosInjectionHook(FaultType.LEDGER_TAMPER, "decision_ledger", {"target_seq": target_seq}):
+        with ChaosInjectionHook(
+            FaultType.LEDGER_TAMPER, "decision_ledger", {"target_seq": target_seq}
+        ):
             detection_time = time.perf_counter()
             # Anomaly detected in hash chain
             sev1_raised = True

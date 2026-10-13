@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
 import numpy as np
 from pydantic import BaseModel, Field
 
@@ -25,7 +24,7 @@ class CommonCauseRefuterResult(BaseModel):
 class SubsetRefuterResult(BaseModel):
     passed: bool
     stability_pct: float
-    subset_estimates: List[float] = Field(default_factory=list)
+    subset_estimates: list[float] = Field(default_factory=list)
 
 
 class GateEvaluationReport(BaseModel):
@@ -49,7 +48,7 @@ class CausalEvidenceGate:
     4. The Data Subset Refuter confirms parameter stability across random 80% data slices.
     """
 
-    def __init__(self, estimator: Optional[AIPWCausalEstimator] = None) -> None:
+    def __init__(self, estimator: AIPWCausalEstimator | None = None) -> None:
         self.estimator = estimator or AIPWCausalEstimator()
 
     def run_placebo_refuter(
@@ -58,7 +57,7 @@ class CausalEvidenceGate:
         W: np.ndarray,
         propensity: np.ndarray,
         X: np.ndarray,
-        baseline_tau: Optional[float] = None,
+        baseline_tau: float | None = None,
         seed: int = 42,
     ) -> PlaceboRefuterResult:
         """Assigns synthetic Bernoulli(0.5) treatment to verify effect collapses."""
@@ -96,7 +95,7 @@ class CausalEvidenceGate:
         W: np.ndarray,
         propensity: np.ndarray,
         X: np.ndarray,
-        baseline_tau: Optional[float] = None,
+        baseline_tau: float | None = None,
         seed: int = 42,
     ) -> CommonCauseRefuterResult:
         """Adds independent Gaussian noise feature Z ~ N(0, 1) and measures stability."""
@@ -132,13 +131,13 @@ class CausalEvidenceGate:
             new_effect=round(new_est.ate_aipw, 4),
         )
 
-    def run_subset_refuter(
+    def run_subset_refuter(  # noqa: PLR0913
         self,
         Y: np.ndarray,
         W: np.ndarray,
         propensity: np.ndarray,
         X: np.ndarray,
-        baseline_tau: Optional[float] = None,
+        baseline_tau: float | None = None,
         subset_fraction: float = 0.8,
         n_iterations: int = 5,
         seed: int = 42,
@@ -147,7 +146,7 @@ class CausalEvidenceGate:
         rng = np.random.default_rng(seed)
         n = len(Y)
         k = int(n * subset_fraction)
-        sub_estimates: List[float] = []
+        sub_estimates: list[float] = []
 
         for _ in range(n_iterations):
             idx = rng.choice(n, size=k, replace=False)
@@ -238,7 +237,9 @@ class CausalEvidenceGate:
             update={
                 "causal_gate_passed": gate_passed,
                 "placebo_effect": placebo_res.placebo_effect,
-                "refuter_stability_pct": max(0.0, round((1.0 - rcc_res.relative_change) * 100.0, 2)),
+                "refuter_stability_pct": max(
+                    0.0, round((1.0 - rcc_res.relative_change) * 100.0, 2)
+                ),
             }
         )
 

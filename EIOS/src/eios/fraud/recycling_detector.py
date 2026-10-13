@@ -13,7 +13,6 @@ Guarantees:
 """
 
 from datetime import datetime
-import networkx as nx
 
 from eios.fraud.models import RecyclingCluster
 
@@ -53,7 +52,9 @@ class ClientRecyclingDetector:
             distinct_kyc_count = int(r.get("distinct_verified_kyc_count", 1))
 
             # Base risk scales with number of distinct partners and promo volume
-            base_risk = min(1.0, 0.40 + (distinct_partner_count * 0.15) + (promo_usd / 10000.0) * 0.20)
+            base_risk = min(
+                1.0, 0.40 + (distinct_partner_count * 0.15) + (promo_usd / 10000.0) * 0.20
+            )
 
             # Dampen if verified distinct household members
             if is_household and distinct_kyc_count >= 2:

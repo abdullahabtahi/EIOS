@@ -6,8 +6,8 @@ Authoritative Reference:
 
 import json
 from pathlib import Path
+
 import jsonschema
-import pytest
 
 
 def get_schema_path(rel_path: str) -> Path:
@@ -96,4 +96,3 @@ def test_sar_composer_contract_compliance() -> None:
     sar = composer.compose_sar(dossier, jurisdiction="US_FINCEN")
     contract_dict = SARComposer.to_contract_dict(sar)
     jsonschema.validate(instance=contract_dict, schema=schema)
-

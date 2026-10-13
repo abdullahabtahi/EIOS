@@ -8,8 +8,8 @@ Orchestrates:
 5. Running cohort anomaly detection and persisting alerts into churn_cohort_alerts table
 """
 
-from datetime import date, datetime
-from typing import Any
+from datetime import date
+
 import duckdb
 import pandas as pd
 
@@ -60,16 +60,21 @@ class ChurnRadarPipeline:
         # Seasonality change-point filter (FR-004 / US3)
         seasonal_flags = []
         for pid in df_features["partner_id"]:
-            hist_rows = self.conn.execute("""
-                SELECT date, logins 
-                FROM partner_engagement_signals 
-                WHERE partner_id = ? 
+            hist_rows = self.conn.execute(
+                """
+                SELECT date, logins
+                FROM partner_engagement_signals
+                WHERE partner_id = ?
                 ORDER BY date
-            """, [str(pid)]).fetchall()
+            """,
+                [str(pid)],
+            ).fetchall()
             if hist_rows and len(hist_rows) >= 7:
                 hist_df = pd.DataFrame(hist_rows, columns=["date", "volume"])
-                cp_res = self.change_point_detector.detect_change_point(hist_df, metric_col="volume")
-                is_dip = (cp_res["reason"] == "SEASONAL_DIP_RECOVERED")
+                cp_res = self.change_point_detector.detect_change_point(
+                    hist_df, metric_col="volume"
+                )
+                is_dip = cp_res["reason"] == "SEASONAL_DIP_RECOVERED"
                 seasonal_flags.append(is_dip)
             else:
                 seasonal_flags.append(False)
@@ -101,7 +106,8 @@ class ChurnRadarPipeline:
 
         # 5. Persist into DuckDB churn_radar_scores
         for _, row in df_scored.iterrows():
-            self.conn.execute("""
+            self.conn.execute(
+                """
                 INSERT OR REPLACE INTO churn_radar_scores (
                     partner_id,
                     as_of_date,
@@ -115,19 +121,21 @@ class ChurnRadarPipeline:
                     top_driver_delta,
                     narrative_summary
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                str(row["partner_id"]),
-                as_of_date,
-                float(row["hazard_probability_30d"]),
-                float(row["priority_score"]),
-                str(row["risk_tier"]),
-                str(row["intervention_window"]),
-                bool(row["change_point_flag"]),
-                str(row["top_driver_family"]),
-                str(row["top_driver_metric"]),
-                float(row["top_driver_delta"]),
-                f"{row['risk_tier']} risk partner driven by {row['top_driver_family']} signals."
-            ))
+            """,
+                (
+                    str(row["partner_id"]),
+                    as_of_date,
+                    float(row["hazard_probability_30d"]),
+                    float(row["priority_score"]),
+                    str(row["risk_tier"]),
+                    str(row["intervention_window"]),
+                    bool(row["change_point_flag"]),
+                    str(row["top_driver_family"]),
+                    str(row["top_driver_metric"]),
+                    float(row["top_driver_delta"]),
+                    f"{row['risk_tier']} risk partner driven by {row['top_driver_family']} signals.",
+                ),
+            )
 
         # 6. Run cohort anomaly detection and persist alerts (T026)
         alerts = self.cohort_detector.detect_cohort_anomalies(as_of_date=as_of_date)

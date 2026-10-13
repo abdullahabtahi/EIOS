@@ -1,8 +1,9 @@
 """DuckDB in-process columnar Hot-State Engine for real-time analytical queries (US3)."""
 
-from datetime import datetime, timezone, timedelta
 import threading
+from datetime import UTC, datetime, timedelta
 from typing import Any
+
 import duckdb
 
 from eios.contracts.base import DataProductEnum
@@ -463,13 +464,20 @@ class HotStateEngine:
             cursor.execute(schema_sql)
         # Extend decision_outcomes_ledger with multi-horizon columns if missing
         try:
-            cursor.execute("ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS observed_retained_revenue_30d DOUBLE")
-            cursor.execute("ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS clawback_recovered_usd_90d DOUBLE")
-            cursor.execute("ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS reconciled_at TIMESTAMP")
-            cursor.execute("ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS causal_features JSON")
-        except Exception:
+            cursor.execute(
+                "ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS observed_retained_revenue_30d DOUBLE"
+            )
+            cursor.execute(
+                "ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS clawback_recovered_usd_90d DOUBLE"
+            )
+            cursor.execute(
+                "ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS reconciled_at TIMESTAMP"
+            )
+            cursor.execute(
+                "ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS causal_features JSON"
+            )
+        except Exception:  # noqa: S110
             pass
-
 
     def get_cursor(self) -> duckdb.DuckDBPyConnection:
         """Provide a new cursor connection sharing the same database state."""
@@ -488,22 +496,24 @@ class HotStateEngine:
         col_names = ", ".join(columns)
         values = list(payload.values())
 
-        query = f"INSERT INTO {table_name} ({col_names}) VALUES ({placeholders})"
+        query = f"INSERT INTO {table_name} ({col_names}) VALUES ({placeholders})"  # noqa: S608
         self._get_local_cursor().execute(query, values)
 
-    def evict_older_than(self, product: DataProductEnum, timestamp_col: str, hours: int = 24) -> int:
+    def evict_older_than(
+        self, product: DataProductEnum, timestamp_col: str, hours: int = 24
+    ) -> int:
         """Sliding-window eviction: remove records older than cutoff hours."""
         table_name = product.value if isinstance(product, DataProductEnum) else str(product)
-        cutoff_dt = datetime.now(timezone.utc) - timedelta(hours=hours)
-        
+        cutoff_dt = datetime.now(UTC) - timedelta(hours=hours)
+
         cursor = self._get_local_cursor()
         # Count rows to be deleted
-        pre_count = cursor.execute(f"SELECT count(*) FROM {table_name}").fetchone()[0]
+        pre_count = cursor.execute(f"SELECT count(*) FROM {table_name}").fetchone()[0]  # noqa: S608
         cursor.execute(
-            f"DELETE FROM {table_name} WHERE {timestamp_col} < ?",
+            f"DELETE FROM {table_name} WHERE {timestamp_col} < ?",  # noqa: S608
             [cutoff_dt],
         )
-        post_count = cursor.execute(f"SELECT count(*) FROM {table_name}").fetchone()[0]
+        post_count = cursor.execute(f"SELECT count(*) FROM {table_name}").fetchone()[0]  # noqa: S608
         return pre_count - post_count
 
     def prune_hot_state(
@@ -513,9 +523,9 @@ class HotStateEngine:
     ) -> dict[str, int]:
         """Prunes time-series tables older than max_age_days to enforce hot-state scale ceiling."""
         if as_of_ts is None:
-            as_of_ts = datetime.now(timezone.utc)
+            as_of_ts = datetime.now(UTC)
         elif as_of_ts.tzinfo is None:
-            as_of_ts = as_of_ts.replace(tzinfo=timezone.utc)
+            as_of_ts = as_of_ts.replace(tzinfo=UTC)
 
         cutoff_dt = as_of_ts - timedelta(days=max_age_days)
         cursor = self._get_local_cursor()
@@ -526,13 +536,13 @@ class HotStateEngine:
             if table_name not in existing_tables:
                 continue
             try:
-                pre_count = cursor.execute(f"SELECT count(*) FROM {table_name}").fetchone()[0]
+                pre_count = cursor.execute(f"SELECT count(*) FROM {table_name}").fetchone()[0]  # noqa: S608
                 if ts_col == "date":
                     cutoff_val = cutoff_dt.date()
                 else:
                     cutoff_val = cutoff_dt
-                cursor.execute(f"DELETE FROM {table_name} WHERE {ts_col} < ?", [cutoff_val])
-                post_count = cursor.execute(f"SELECT count(*) FROM {table_name}").fetchone()[0]
+                cursor.execute(f"DELETE FROM {table_name} WHERE {ts_col} < ?", [cutoff_val])  # noqa: S608
+                post_count = cursor.execute(f"SELECT count(*) FROM {table_name}").fetchone()[0]  # noqa: S608
                 pruned_stats[table_name] = pre_count - post_count
             except Exception:
                 pruned_stats[table_name] = 0
@@ -547,7 +557,7 @@ class HotStateEngine:
         total_rows = 0
         for tbl in tables:
             try:
-                count = cursor.execute(f"SELECT count(*) FROM {tbl}").fetchone()[0]
+                count = cursor.execute(f"SELECT count(*) FROM {tbl}").fetchone()[0]  # noqa: S608
                 metrics[tbl] = count
                 total_rows += count
             except Exception:

@@ -2,7 +2,7 @@
 
 import os
 from unittest.mock import MagicMock, patch
-import pytest
+
 from eios.conversation.client import GeminiClientManager
 
 
@@ -23,7 +23,9 @@ def test_client_manager_online_mocked():
             # 1. Client initialization
             client = mgr.get_client()
             assert client is not None
-            mock_client_cls.assert_called_once_with(vertexai=True, project="test-proj", location="us-central1")
+            mock_client_cls.assert_called_once_with(
+                vertexai=True, project="test-proj", location="us-central1"
+            )
 
             # 2. Context Caching
             mock_cache = MagicMock()

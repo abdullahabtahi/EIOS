@@ -1,7 +1,5 @@
 """Tests verifying that Churn Radar explanation narratives pass MetricAuditorGate with 0 hallucinations (T015)."""
 
-import pytest
-
 from eios.churn.models import RiskTier
 from eios.churn.narrative import ChurnNarrativeGenerator
 from eios.ontology.auditor.gate import MetricAuditorGate
@@ -35,7 +33,9 @@ def test_audited_narrative_passes_gate():
     tool_trace = [{"tool_name": "get_partner_signals", "output": tool_output}]
 
     audit_result = auditor.verify_response(narrative.narrative, tool_trace)
-    assert audit_result.passed is True, f"Auditor rejected narrative: {audit_result.untraced_tokens}"
+    assert audit_result.passed is True, (
+        f"Auditor rejected narrative: {audit_result.untraced_tokens}"
+    )
     assert len(narrative.citations) >= 2
 
 

@@ -2,11 +2,12 @@
 
 import json
 from pathlib import Path
-from fastapi.testclient import TestClient
+
 import jsonschema
 import pytest
+from fastapi.testclient import TestClient
 
-from eios.cockpit.server import app, _build_contract_state
+from eios.cockpit.server import app
 
 
 @pytest.fixture
@@ -23,7 +24,7 @@ def ui_contract_schema():
         / "contracts"
         / "cockpit-ui-contract.schema.json"
     )
-    with open(schema_path, "r", encoding="utf-8") as f:
+    with open(schema_path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -205,13 +206,16 @@ def test_audit_verify_walks_the_real_ledger(client):
     assert body["status"] == "VALID"
     assert body["total_records"] == server.governance.sequencer.current_seq > 0
     assert body["last_hash"] == server.governance.sequencer.head_hash
-    assert body["worm_mode"] in {"SIGNED_CHECKPOINTS", "NO_CHECKPOINTS"}  # never claims a bucket lock
+    assert body["worm_mode"] in {
+        "SIGNED_CHECKPOINTS",
+        "NO_CHECKPOINTS",
+    }  # never claims a bucket lock
 
 
 def test_audit_verify_detects_tampering(client):
     from eios.cockpit import server
 
-    intent_id = _stage(client).json()["card"]["intent_id"]
+    _stage(client).json()["card"]["intent_id"]
     seq = server.governance.sequencer.current_seq
     server.governance.sequencer.tamper_payload_for_testing(seq, "action_type", "Forged")
     body = client.get("/api/cockpit/audit/verify").json()

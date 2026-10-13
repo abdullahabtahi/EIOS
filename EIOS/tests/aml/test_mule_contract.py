@@ -6,8 +6,8 @@ Authoritative Reference:
 
 import json
 from pathlib import Path
+
 import jsonschema
-import pytest
 
 
 def get_schema_path(rel_path: str) -> Path:

@@ -65,7 +65,7 @@ def load_config(repo_root: Path) -> RepoChecksConfig:
     if not path.is_file():
         return _defaults()
     data = load_validated(path, _SCHEMA)
-    assert isinstance(data, dict)  # noqa: S101 - the schema guarantees an object
+    assert isinstance(data, dict)  # noqa: S101
     checks = data.get("checks", {})
     enabled = frozenset(n for n in CHECK_NAMES if checks.get(n, True))
     ceiling = data.get("file_size", {}).get("ceiling", DEFAULT_CEILING)

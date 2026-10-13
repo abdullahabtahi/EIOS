@@ -14,7 +14,7 @@ from tools.common.yaml_io import load_yaml
 from tools.gates._config_loading import ensure_unique, entries_from_data
 
 Stage = Literal["pr", "merge", "promote", "release_candidate"]
-THRESHOLD_TOKEN = "{threshold}"  # noqa: S105 - a placeholder name, not a credential
+THRESHOLD_TOKEN = "{threshold}"  # noqa: S105
 _GATE_ID = r"^[a-z][a-z0-9_-]*$"
 
 

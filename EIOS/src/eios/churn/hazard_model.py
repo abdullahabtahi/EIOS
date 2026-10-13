@@ -7,7 +7,8 @@ using a logistic hazard link function:
     P(churn in 30d) = 1 - S_i(4)
 """
 
-from typing import Sequence
+from collections.abc import Sequence
+
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
@@ -34,7 +35,7 @@ class DiscreteTimeHazardModel:
         feature_cols: Sequence[str],
         duration_col: str = "period_week",
         event_col: str = "churn_event",
-    ) -> "DiscreteTimeHazardModel":
+    ) -> DiscreteTimeHazardModel:
         """Fits the discrete hazard model on person-period data using period baseline dummies."""
         self.feature_cols = list(feature_cols)
 
@@ -52,7 +53,7 @@ class DiscreteTimeHazardModel:
 
     def predict_30d_hazard(self, df_partners: pd.DataFrame) -> pd.DataFrame:
         """Computes cumulative 30-day disengagement probability P(churn in 30d) for each partner.
-        
+
         Evaluates cumulative survival across 4 discrete weekly intervals:
             S(4) = Product_{w=1..4} (1 - h_w)
             Hazard_30d = 1 - S(4)
@@ -71,15 +72,17 @@ class DiscreteTimeHazardModel:
                 X_week[f"period_d_{w}"] = float(w == week)
 
             probs = self.model.predict_proba(X_week)[:, 1]
-            survival_prob *= (1.0 - probs)
+            survival_prob *= 1.0 - probs
 
         cumulative_hazard_30d = np.clip(1.0 - survival_prob, 0.0, 1.0)
 
         # Apply seasonal dip suppression (zero false alarm filter)
         if "seasonal_dip_flag" in res_df.columns:
             # If seasonal dip detected (e.g. vacation), cap hazard at 0.15
-            seasonal_mask = res_df["seasonal_dip_flag"] == True
-            cumulative_hazard_30d = np.where(seasonal_mask, np.minimum(cumulative_hazard_30d, 0.15), cumulative_hazard_30d)
+            seasonal_mask = res_df["seasonal_dip_flag"].eq(True)
+            cumulative_hazard_30d = np.where(
+                seasonal_mask, np.minimum(cumulative_hazard_30d, 0.15), cumulative_hazard_30d
+            )
 
         res_df["hazard_probability_30d"] = cumulative_hazard_30d
 
@@ -88,10 +91,8 @@ class DiscreteTimeHazardModel:
             res_df["hazard_probability_30d"] >= 0.50,
             RiskTier.HIGH.value,
             np.where(
-                res_df["hazard_probability_30d"] >= 0.25,
-                RiskTier.MEDIUM.value,
-                RiskTier.LOW.value
-            )
+                res_df["hazard_probability_30d"] >= 0.25, RiskTier.MEDIUM.value, RiskTier.LOW.value
+            ),
         )
 
         # Derive Intervention Window
@@ -104,9 +105,9 @@ class DiscreteTimeHazardModel:
                 np.where(
                     res_df["hazard_probability_30d"] >= 0.20,
                     InterventionWindow.EARLY_WATCH.value,
-                    InterventionWindow.STABLE.value
-                )
-            )
+                    InterventionWindow.STABLE.value,
+                ),
+            ),
         )
 
         return res_df

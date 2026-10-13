@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -29,19 +28,21 @@ def generate_compliance_report() -> dict:
         hasher.update(f"{res['test_id']}:{res['passed']}:{res['violations_detected']}".encode())
     manifest_hash = hasher.hexdigest()
 
-    git_sha = hashlib.sha1(manifest_hash.encode()).hexdigest()  # 40-char hex string
+    git_sha = hashlib.sha1(manifest_hash.encode()).hexdigest()  # 40-char hex string  # noqa: S324
 
     red_line_results = []
     for r in summary["results"]:
-        red_line_results.append({
-            "test_id": r["test_id"],
-            "name": r["name"],
-            "passed": r["passed"],
-            "total_evaluated": r["total_evaluated"],
-            "violations_detected": r["violations_detected"],
-            "tolerance": 0,
-            "execution_time_ms": round(r.get("execution_time_ms", 0.0), 4),
-        })
+        red_line_results.append(
+            {
+                "test_id": r["test_id"],
+                "name": r["name"],
+                "passed": r["passed"],
+                "total_evaluated": r["total_evaluated"],
+                "violations_detected": r["violations_detected"],
+                "tolerance": 0,
+                "execution_time_ms": round(r.get("execution_time_ms", 0.0), 4),
+            }
+        )
 
     report = {
         "suite_id": "redline-compliance-audit",

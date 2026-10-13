@@ -1,6 +1,5 @@
 """Tests for honest refusal and ungrounded query boundaries (Principle III, T011)."""
 
-import pytest
 from eios.conversation.copilot_engine import CopilotEngine
 from eios.conversation.models import OperatorRole
 

@@ -7,7 +7,6 @@ Authoritative References:
 """
 
 import pandas as pd
-import pytest
 
 from eios.aml.emerging_typologies import EmergingTypologyMiner
 from eios.aml.feedback_loop import AnalystDisposition, AnalystFeedbackLoop
@@ -65,27 +64,31 @@ def test_emerging_typology_miner_surfaces_zero_day_scheme() -> None:
     records = []
     # 200 normal residual transactions
     for i in range(200):
-        records.append({
-            "client_id": f"C-NORM-{i}",
-            "txn_id": f"TXN-NORM-{i}",
-            "amount_usd": 150.0 + (i % 20) * 10.0,
-            "distinct_instruments_count": 1,
-            "rapid_turnaround_ratio": 0.1,
-            "off_hours_ratio": 0.05,
-            "asset_spread_entropy": 0.1,
-        })
+        records.append(
+            {
+                "client_id": f"C-NORM-{i}",
+                "txn_id": f"TXN-NORM-{i}",
+                "amount_usd": 150.0 + (i % 20) * 10.0,
+                "distinct_instruments_count": 1,
+                "rapid_turnaround_ratio": 0.1,
+                "off_hours_ratio": 0.05,
+                "asset_spread_entropy": 0.1,
+            }
+        )
 
     # Novel unplanted scheme: 8 coordinated clients with multi-instrument dispersion and high entropy
     for i in range(8):
-        records.append({
-            "client_id": f"C-NOVEL-{i}",
-            "txn_id": f"TXN-NOVEL-{i}",
-            "amount_usd": 4850.0 + (i % 3) * 50.0,
-            "distinct_instruments_count": 7,
-            "rapid_turnaround_ratio": 0.95,
-            "off_hours_ratio": 0.85,
-            "asset_spread_entropy": 0.92,
-        })
+        records.append(
+            {
+                "client_id": f"C-NOVEL-{i}",
+                "txn_id": f"TXN-NOVEL-{i}",
+                "amount_usd": 4850.0 + (i % 3) * 50.0,
+                "distinct_instruments_count": 7,
+                "rapid_turnaround_ratio": 0.95,
+                "off_hours_ratio": 0.85,
+                "asset_spread_entropy": 0.92,
+            }
+        )
 
     df = pd.DataFrame(records)
     candidates = miner.mine_emerging_typologies(df)
@@ -97,5 +100,9 @@ def test_emerging_typology_miner_surfaces_zero_day_scheme() -> None:
     top_cand = candidates[0]
     assert top_cand.anomaly_score >= 0.80
     assert any("C-NOVEL" in cid for cid in top_cand.participating_clients)
-    assert "CROSS_ASSET" in top_cand.candidate_name or "MULTI_INSTRUMENT" in top_cand.candidate_name or "NOVEL" in top_cand.candidate_name
+    assert (
+        "CROSS_ASSET" in top_cand.candidate_name
+        or "MULTI_INSTRUMENT" in top_cand.candidate_name
+        or "NOVEL" in top_cand.candidate_name
+    )
     assert len(top_cand.participating_clients) >= 4

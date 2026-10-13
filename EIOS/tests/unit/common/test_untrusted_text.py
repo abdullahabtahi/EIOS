@@ -27,7 +27,7 @@ def test_no_implicit_str_conversion() -> None:
     with pytest.raises(TypeError):
         str(wrapped)
     with pytest.raises(TypeError):
-        f"{wrapped}"  # noqa: B018
+        f"{wrapped}"
     with pytest.raises(TypeError):
         "prefix " + wrapped  # type: ignore[operator]
 

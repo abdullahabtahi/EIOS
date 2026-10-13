@@ -6,25 +6,25 @@ import argparse
 import datetime
 import json
 import os
-from pathlib import Path
 import sys
-from typing import Any, Dict, List, Optional
 import uuid
+from pathlib import Path
+from typing import Any
 
 from eios.foundry.generators.aml import AMLDataGenerator
 from eios.foundry.generators.causal_truth import CausalTruthGenerator
+from eios.foundry.generators.churn import ChurnDataGenerator
 from eios.foundry.generators.client import ClientDataGenerator
 from eios.foundry.generators.competitive import CompetitiveDataGenerator
 from eios.foundry.generators.financial import FinancialDataGenerator
 from eios.foundry.generators.operational import OperationalDataGenerator
 from eios.foundry.generators.partner import PartnerDataGenerator
-from eios.foundry.generators.churn import ChurnDataGenerator
-from eios.foundry.noise.prompt_injections import PromptInjectionGenerator
 from eios.foundry.manifest import (
     FoundryManifest,
     compute_dataset_merkle_hash,
     validate_manifest_dict,
 )
+from eios.foundry.noise.prompt_injections import PromptInjectionGenerator
 from eios.foundry.rng import RNGManager
 from eios.foundry.storage.eval_truth_store import EvalTruthStore
 from eios.foundry.storage.lineage import write_dataset_lineage
@@ -32,7 +32,7 @@ from eios.foundry.storage.parquet_writer import write_deterministic_parquet
 from eios.foundry.universe import GlobalEntityUniverse
 
 
-def run_pipeline(
+def run_pipeline(  # noqa: PLR0915
     seed: int,
     tier: str,
     output_dir: Path | str,
@@ -68,9 +68,33 @@ def run_pipeline(
     r_funnel = client_gen.generate_client_funnel()
     r_device = client_gen.generate_device_network()
 
-    _write_product(raw_dir / "client_360", "client_360", r_c360, "client_id", "Client360Record", run_uuid, universe)
-    _write_product(raw_dir / "client_funnel", "client_funnel", r_funnel, "event_id", "FunnelEventRecord", run_uuid, universe)
-    _write_product(raw_dir / "device_network", "device_network_graph", r_device, "edge_id", "DeviceNetworkEdge", run_uuid, universe)
+    _write_product(
+        raw_dir / "client_360",
+        "client_360",
+        r_c360,
+        "client_id",
+        "Client360Record",
+        run_uuid,
+        universe,
+    )
+    _write_product(
+        raw_dir / "client_funnel",
+        "client_funnel",
+        r_funnel,
+        "event_id",
+        "FunnelEventRecord",
+        run_uuid,
+        universe,
+    )
+    _write_product(
+        raw_dir / "device_network",
+        "device_network_graph",
+        r_device,
+        "edge_id",
+        "DeviceNetworkEdge",
+        run_uuid,
+        universe,
+    )
 
     # 2. gen_aml (transactions_aml, trading_activity, compliance_cases)
     aml_gen = AMLDataGenerator(universe=universe, rng=rng, truth_store=eval_store)
@@ -83,9 +107,33 @@ def run_pipeline(
     r_cases = aml_gen.generate_compliance_cases(count=cases_count)
     syndicate_data = aml_gen.inject_syndicate_ring_and_round_trip()
 
-    _write_product(raw_dir / "transactions_aml", "transactions_aml", r_tx, "transaction_id", "TransactionAMLRecord", run_uuid, universe)
-    _write_product(raw_dir / "trading_activity", "trading_activity", r_trades, "deal_id", "TradeExecutionRecord", run_uuid, universe)
-    _write_product(raw_dir / "compliance_cases", "compliance_cases", r_cases, "case_id", "ComplianceCaseRecord", run_uuid, universe)
+    _write_product(
+        raw_dir / "transactions_aml",
+        "transactions_aml",
+        r_tx,
+        "transaction_id",
+        "TransactionAMLRecord",
+        run_uuid,
+        universe,
+    )
+    _write_product(
+        raw_dir / "trading_activity",
+        "trading_activity",
+        r_trades,
+        "deal_id",
+        "TradeExecutionRecord",
+        run_uuid,
+        universe,
+    )
+    _write_product(
+        raw_dir / "compliance_cases",
+        "compliance_cases",
+        r_cases,
+        "case_id",
+        "ComplianceCaseRecord",
+        run_uuid,
+        universe,
+    )
 
     # 3. gen_partner (partner_360, partner_referral_tree, commission_ledger)
     partner_gen = PartnerDataGenerator(universe=universe, rng=rng, truth_store=eval_store)
@@ -94,9 +142,33 @@ def run_pipeline(
     r_ledger = partner_gen.generate_commission_ledger(count=max(100, int(200 * scale)))
     partner_fraud_data = partner_gen.generate_partner_fraud_suite()
 
-    _write_product(raw_dir / "partner_360", "partner_360", r_p360, "partner_id", "Partner360Record", run_uuid, universe)
-    _write_product(raw_dir / "partner_referral_tree", "partner_referral_tree", r_tree, "link_id", "ReferralNodeRecord", run_uuid, universe)
-    _write_product(raw_dir / "commission_ledger", "commission_ledger", r_ledger, "ledger_id", "CommissionLedgerRecord", run_uuid, universe)
+    _write_product(
+        raw_dir / "partner_360",
+        "partner_360",
+        r_p360,
+        "partner_id",
+        "Partner360Record",
+        run_uuid,
+        universe,
+    )
+    _write_product(
+        raw_dir / "partner_referral_tree",
+        "partner_referral_tree",
+        r_tree,
+        "link_id",
+        "ReferralNodeRecord",
+        run_uuid,
+        universe,
+    )
+    _write_product(
+        raw_dir / "commission_ledger",
+        "commission_ledger",
+        r_ledger,
+        "ledger_id",
+        "CommissionLedgerRecord",
+        run_uuid,
+        universe,
+    )
 
     # 4. gen_partner_churn (partner_engagement_signals, partner_comms)
     churn_gen = ChurnDataGenerator(universe=universe, rng=rng)
@@ -107,23 +179,63 @@ def run_pipeline(
     inj_gen = PromptInjectionGenerator(universe=universe, rng=rng)
     r_comms = inj_gen.generate_comms_with_injections(count=max(50, int(100 * scale)))
 
-    _write_product(raw_dir / "partner_engagement", "partner_engagement_signals", r_signals, "signal_id", "WeeklySignalRecord", run_uuid, universe)
-    _write_product(raw_dir / "partner_comms", "partner_comms", r_comms, "ticket_id", "PartnerCommsRecord", run_uuid, universe)
+    _write_product(
+        raw_dir / "partner_engagement",
+        "partner_engagement_signals",
+        r_signals,
+        "signal_id",
+        "WeeklySignalRecord",
+        run_uuid,
+        universe,
+    )
+    _write_product(
+        raw_dir / "partner_comms",
+        "partner_comms",
+        r_comms,
+        "ticket_id",
+        "PartnerCommsRecord",
+        run_uuid,
+        universe,
+    )
 
     # 5. gen_financial (financial_pnl)
     fin_gen = FinancialDataGenerator(universe=universe, rng=rng)
     r_fin = fin_gen.generate_daily_pnl(days=30)
-    _write_product(raw_dir / "financial_pnl", "financial_pnl", r_fin, "date", "DailyPnLRecord", run_uuid, universe)
+    _write_product(
+        raw_dir / "financial_pnl",
+        "financial_pnl",
+        r_fin,
+        "date",
+        "DailyPnLRecord",
+        run_uuid,
+        universe,
+    )
 
     # 6. gen_competitive (competitor_benchmarks)
     comp_gen = CompetitiveDataGenerator(rng=rng)
     r_comp = comp_gen.generate_events(count=max(30, int(40 * scale)))
-    _write_product(raw_dir / "competitor_benchmarks", "competitor_benchmarks", r_comp, "event_id", "CompetitorEventRecord", run_uuid, universe)
+    _write_product(
+        raw_dir / "competitor_benchmarks",
+        "competitor_benchmarks",
+        r_comp,
+        "event_id",
+        "CompetitorEventRecord",
+        run_uuid,
+        universe,
+    )
 
     # 7. gen_operational (platform_operations)
     ops_gen = OperationalDataGenerator(rng=rng)
     r_ops = ops_gen.generate_metrics(hours=48)
-    _write_product(raw_dir / "platform_operations", "platform_operations", r_ops, "timestamp", "OperationalMetricRecord", run_uuid, universe)
+    _write_product(
+        raw_dir / "platform_operations",
+        "platform_operations",
+        r_ops,
+        "timestamp",
+        "OperationalMetricRecord",
+        run_uuid,
+        universe,
+    )
 
     # 8. gen_causal_truth (synthesis ground truth)
     causal_gen = CausalTruthGenerator(rng=rng, truth_store=eval_store)
@@ -164,7 +276,7 @@ def run_pipeline(
             "gen_causal_truth": "1.0.0",
         },
         "dataset_hash": dataset_hash,
-        "generated_at": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "generated_at": datetime.datetime.now(datetime.UTC).isoformat(),
     }
 
     manifest = validate_manifest_dict(manifest_data)
@@ -175,7 +287,7 @@ def run_pipeline(
 def _write_product(
     product_dir: Path,
     product_name: str,
-    records: List[Dict[str, Any]],
+    records: list[dict[str, Any]],
     sort_key: str,
     schema_model: str,
     manifest_id: str,
@@ -199,17 +311,17 @@ def _write_product(
     )
 
 
-def _build_unified_ground_truth(
+def _build_unified_ground_truth(  # noqa: PLR0913
     run_uuid: str,
     tier: str,
     universe: GlobalEntityUniverse,
-    syndicate_data: Dict[str, Any],
-    partner_fraud_data: Dict[str, Any],
-    seasonal_dips: List[Dict[str, Any]],
-    cohort_shock: Dict[str, Any],
-    dag_data: Dict[str, Any],
-    driver_data: Dict[str, Any],
-) -> Dict[str, Any]:
+    syndicate_data: dict[str, Any],
+    partner_fraud_data: dict[str, Any],
+    seasonal_dips: list[dict[str, Any]],
+    cohort_shock: dict[str, Any],
+    dag_data: dict[str, Any],
+    driver_data: dict[str, Any],
+) -> dict[str, Any]:
     """Constructs unified ground truth conforming strictly to eval-ground-truth.schema.json."""
     return {
         "manifest_id_ref": run_uuid,
@@ -245,7 +357,9 @@ def _build_unified_ground_truth(
                 }
                 for p in partner_fraud_data["mirror_pairs"]
             ],
-            "traffic_fraud_partner_ids": [bp["partner_id"] for bp in partner_fraud_data["bot_partners"]],
+            "traffic_fraud_partner_ids": [
+                bp["partner_id"] for bp in partner_fraud_data["bot_partners"]
+            ],
             "hard_negatives": {
                 "legitimate_hedgers": [c.client_id for c in universe.accounts[184:224]],
                 "ib_portfolios": [p.partner_id for p in universe.partners[42:54]],
@@ -271,7 +385,9 @@ def _build_unified_ground_truth(
                         "to_node": e["target"],
                         "true_effect": float(e["true_structural_coefficient"]),
                         "is_placebo": bool(e["is_placebo"]),
-                        "refuter_p_value_expected": float(e.get("placebo_refuter_expected_p_value", 0.45)),
+                        "refuter_p_value_expected": float(
+                            e.get("placebo_refuter_expected_p_value", 0.45)
+                        ),
                     }
                     for e in dag_data["edges"]
                 ]

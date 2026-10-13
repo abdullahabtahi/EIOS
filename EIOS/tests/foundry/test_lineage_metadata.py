@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-import pytest
+
 from eios.foundry.storage.lineage import write_dataset_lineage
 
 
@@ -26,7 +26,7 @@ def test_lineage_metadata_schema_and_provenance(tmp_path: Path):
     assert lineage_path.exists()
     assert lineage_path.name == "_lineage.json"
 
-    with open(lineage_path, "r", encoding="utf-8") as f:
+    with open(lineage_path, encoding="utf-8") as f:
         data = json.load(f)
 
     assert data["dataset_id"] == "client_360"

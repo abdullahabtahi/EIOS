@@ -9,7 +9,9 @@ get_intent_status, get_ledger_audit_status, verify_hash_chain) to provide explai
 governance inspection with deterministic replay fallback [REPLAY] under outage.
 """
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
+
 from langchain_core.messages import AIMessage
 
 from eios.conversation.models import SpecialistDomain
@@ -19,7 +21,9 @@ from eios.ontology.omcp.server import OMCPServer
 class GovernanceAuditorSpecialist:
     """Domain specialist agent for Action Ledger Governance and Cryptographic Auditing."""
 
-    def __init__(self, omcp_server: OMCPServer | None = None, omcp_handler: Any | None = None) -> None:
+    def __init__(
+        self, omcp_server: OMCPServer | None = None, omcp_handler: Any | None = None
+    ) -> None:
         self.omcp_server = omcp_server or omcp_handler
 
     @property
@@ -51,7 +55,9 @@ class GovernanceAuditorSpecialist:
             }
 
         try:
-            audit = self.omcp_server.call_tool("get_ledger_audit_status", {}, caller_role="ComplianceAuditor")
+            audit = self.omcp_server.call_tool(
+                "get_ledger_audit_status", {}, caller_role="ComplianceAuditor"
+            )
             score = audit.get("integrity_score", 1.0)
             entries = audit.get("total_entries", 0)
             head_seq = audit.get("head_seq", 0)
@@ -95,7 +101,9 @@ class GovernanceAuditorSpecialist:
                 {
                     "tool_name": "get_ledger_audit_status",
                     "metric_name": "ledger_integrity_score",
-                    "value": 1.0 if not res.get("audit") else res["audit"].get("integrity_score", 1.0),
+                    "value": 1.0
+                    if not res.get("audit")
+                    else res["audit"].get("integrity_score", 1.0),
                     "as_of": "2026-10-08T08:00:00Z",
                 }
             ],

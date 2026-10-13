@@ -10,9 +10,10 @@ Detects the money laundering pattern:
 Deposit -> brief micro-trading with near-zero market exposure (net P&L ≈ $0.00) -> withdrawal within 72h of KYC approval.
 """
 
-from datetime import datetime, timedelta, timezone
 import math
 import uuid
+from datetime import UTC, datetime, timedelta
+
 import numpy as np
 import pandas as pd
 
@@ -26,7 +27,7 @@ class RoundTripDetector:
     def __init__(self, hot_state: HotStateEngine | None = None) -> None:
         self.hot_state = hot_state
 
-    def detect_roundtrips(
+    def detect_roundtrips(  # noqa: C901, PLR0912, PLR0915
         self,
         events_df: pd.DataFrame,
         window_hours: float = 72.0,
@@ -70,9 +71,11 @@ class RoundTripDetector:
                     wdl_amt = float(wdl["amount"])
 
                     # Intervening trades
-                    inter_trades = trades[
-                        (trades["timestamp"] >= dep_ts) & (trades["timestamp"] <= wdl_ts)
-                    ] if not trades.empty else pd.DataFrame()
+                    inter_trades = (
+                        trades[(trades["timestamp"] >= dep_ts) & (trades["timestamp"] <= wdl_ts)]
+                        if not trades.empty
+                        else pd.DataFrame()
+                    )
 
                     trade_count = len(inter_trades)
                     if trade_count > 0:
@@ -94,7 +97,7 @@ class RoundTripDetector:
                         holding_secs = 0.0
 
                     market_risk_pct = round(abs(net_pl) / max(dep_amt, 1.0), 5)
-                    turnaround_hours = (wdl_ts - dep_ts).total_seconds() / 3600.0
+                    (wdl_ts - dep_ts).total_seconds() / 3600.0
 
                     if pd.notna(kyc_dt) and kyc_dt is not None:
                         hours_since_kyc = max(
@@ -131,10 +134,10 @@ class RoundTripDetector:
 
                     # Composite round-trip risk score
                     raw_risk = (
-                        0.40 * zero_risk_score
-                        + 0.35 * turnover_factor
-                        + 0.25 * duration_score
-                    ) * kyc_multiplier * variance_penalty
+                        (0.40 * zero_risk_score + 0.35 * turnover_factor + 0.25 * duration_score)
+                        * kyc_multiplier
+                        * variance_penalty
+                    )
 
                     # Micro-profit bonus ($0.01 to $0.05 laundering pattern specifically)
                     if abs(net_pl) <= 0.05 and trade_count >= 1:
@@ -146,8 +149,16 @@ class RoundTripDetector:
                         RoundTripTypology(
                             event_id=f"EV-RT-{uuid.uuid4().hex[:8].upper()}",
                             client_id=str(client_id),
-                            deposit_txn_id=str(dep.get("txn_id") if "txn_id" in dep else dep.get("transaction_id", "TXN-DEP")),
-                            withdrawal_txn_id=str(wdl.get("txn_id") if "txn_id" in wdl else wdl.get("transaction_id", "TXN-WTH")),
+                            deposit_txn_id=str(
+                                dep.get("txn_id")
+                                if "txn_id" in dep
+                                else dep.get("transaction_id", "TXN-DEP")
+                            ),
+                            withdrawal_txn_id=str(
+                                wdl.get("txn_id")
+                                if "txn_id" in wdl
+                                else wdl.get("transaction_id", "TXN-WTH")
+                            ),
                             deposit_amount_usd=dep_amt,
                             withdrawal_amount_usd=wdl_amt,
                             trade_count=trade_count,
@@ -166,7 +177,7 @@ class RoundTripDetector:
         if not self.hot_state:
             return 0
         cursor = self.hot_state.get_cursor()
-        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        now_str = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
 
         count = 0
         for ev in events:

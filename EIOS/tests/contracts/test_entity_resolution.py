@@ -1,10 +1,14 @@
 """Tests for Single Client View (SCV) Entity Resolution (US4)."""
 
-import pytest
-
-from eios.ingestion.entity_resolution.deterministic import DeterministicResolver, ClientProfileRecord
-from eios.ingestion.entity_resolution.probabilistic import ProbabilisticLinker, jaro_winkler_similarity
 from eios.ingestion.entity_resolution.coordinator import SCVCoordinator
+from eios.ingestion.entity_resolution.deterministic import (
+    ClientProfileRecord,
+    DeterministicResolver,
+)
+from eios.ingestion.entity_resolution.probabilistic import (
+    ProbabilisticLinker,
+    jaro_winkler_similarity,
+)
 
 
 def test_jaro_winkler_similarity():
@@ -17,7 +21,7 @@ def test_jaro_winkler_similarity():
 def test_deterministic_exact_key_merges():
     """Profiles sharing tax_id, phone, or email must resolve to same canonical_id."""
     resolver = DeterministicResolver()
-    
+
     # Same client with 2 platform accounts (MT5 and Deriv Trader)
     r1 = ClientProfileRecord(
         account_id="MT5_1001",
@@ -35,7 +39,7 @@ def test_deterministic_exact_key_merges():
         phone_hash="hash_phone_john",
         full_name="John Doe",
     )
-    
+
     c1 = resolver.resolve(r1)
     c2 = resolver.resolve(r2)
     assert c1 == c2  # Must merge deterministically
@@ -44,7 +48,7 @@ def test_deterministic_exact_key_merges():
 def test_probabilistic_fellegi_sunter_linkage():
     """Profiles with high name similarity and matching birthdate/country link probabilistically."""
     linker = ProbabilisticLinker(threshold=0.85)
-    
+
     p1 = {
         "full_name": "Alexander Hamilton",
         "dob": "1980-01-11",
@@ -63,7 +67,7 @@ def test_probabilistic_fellegi_sunter_linkage():
         "country": "GBR",
         "device_id": "dev_win_99",
     }
-    
+
     score_match, is_match = linker.evaluate_pair(p1, p2)
     assert is_match is True
     assert score_match >= 0.85
@@ -94,4 +98,3 @@ def test_coordinator_resolves_probabilistically_when_deterministic_keys_absent()
     c2 = coordinator.resolve_record(r2, profile_metadata={"dob": "1980-01-11", "country": "MYS"})
 
     assert c1 == c2  # Successfully resolved via Stage 2 probabilistic linkage!
-

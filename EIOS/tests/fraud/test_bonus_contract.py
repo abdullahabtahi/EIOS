@@ -6,8 +6,8 @@ Authoritative Reference:
 
 import json
 from pathlib import Path
+
 import jsonschema
-import pytest
 
 
 def test_client_quality_profile_schema_contract() -> None:

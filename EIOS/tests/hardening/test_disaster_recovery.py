@@ -1,20 +1,15 @@
 """Tests for User Story 2: Automated Disaster Recovery (DR) & Failover Drill."""
 
-from datetime import UTC, datetime
-import pytest
-
+from eios.hardening.dr import DisasterRecoveryCoordinator
 from eios.hardening.models import DisasterRecoveryDrillReport, DRDrillStatus
 from eios.hardening.schemas import validate_contract
-from eios.hardening.dr import DisasterRecoveryCoordinator
-from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.actions.models import LedgerEventType
-from eios.ontology.actions.sequencer import LedgerSequencer
 
 
 def test_cold_storage_snapshot_and_restore():
     """Verify snapshot export, clean site teardown, and clean-site rehydration."""
     coordinator = DisasterRecoveryCoordinator()
-    
+
     # Populate some ledger events
     for i in range(10):
         coordinator.sequencer.record_event(

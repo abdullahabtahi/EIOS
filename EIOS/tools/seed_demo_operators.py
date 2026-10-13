@@ -95,10 +95,10 @@ def main() -> None:
         uid = ensure_operator(session, args.project, email, password, role)
         if generated:
             credentials_lines.append(f"{email}\t{password}")
-        print(f"{role:9} {email}  uid={uid}")  # noqa: T201 - operator-facing progress
+        print(f"{role:9} {email}  uid={uid}")
     if credentials_lines:
         write_credentials(args.credentials_file, credentials_lines)
-        print(f"generated credentials written to {args.credentials_file} (mode 0600)")  # noqa: T201
+        print(f"generated credentials written to {args.credentials_file} (mode 0600)")
 
 
 if __name__ == "__main__":

@@ -5,7 +5,8 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-from typing import Any, Dict, Optional
+from typing import Any
+
 from eios.conversation.models import sanitize_for_state_storage
 
 _LOG = logging.getLogger("eios.conversation.checkpointer")
@@ -31,7 +32,7 @@ class ThreadCheckpointer:
                 """
             )
 
-    def save_state(self, thread_id: str, state: Dict[str, Any]) -> None:
+    def save_state(self, thread_id: str, state: dict[str, Any]) -> None:
         """Sanitizes state against NumPy/Firestore serialization traps and saves to store."""
         sanitized = sanitize_for_state_storage(state)
         payload_str = json.dumps(sanitized)
@@ -46,7 +47,7 @@ class ThreadCheckpointer:
                 (thread_id, payload_str),
             )
 
-    def get_state(self, thread_id: str) -> Optional[Dict[str, Any]]:
+    def get_state(self, thread_id: str) -> dict[str, Any] | None:
         """Retrieves and deserializes state for a thread."""
         cur = self._conn.execute(
             "SELECT state_json FROM conversation_checkpoints WHERE thread_id = ?",

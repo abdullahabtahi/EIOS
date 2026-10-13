@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import time
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from google.cloud import pubsub_v1
 
 
@@ -13,7 +14,7 @@ class StreamingReplayEngine:
 
     def __init__(
         self,
-        publisher: Optional[Any] = None,
+        publisher: Any | None = None,
         topic_name: str = "projects/feios-synthetic-dev/topics/eios.l0.transactions.v1",
         velocity_records_per_sec: float = 100.0,
     ) -> None:
@@ -21,9 +22,11 @@ class StreamingReplayEngine:
         self.topic_name = topic_name
         self.velocity_records_per_sec = velocity_records_per_sec
 
-    def replay_batch(self, records: List[Dict[str, Any]]) -> int:
+    def replay_batch(self, records: list[dict[str, Any]]) -> int:
         """Publishes records to the configured Pub/Sub topic respecting velocity throttle."""
-        sleep_interval = 1.0 / self.velocity_records_per_sec if self.velocity_records_per_sec > 0 else 0.0
+        sleep_interval = (
+            1.0 / self.velocity_records_per_sec if self.velocity_records_per_sec > 0 else 0.0
+        )
         published_count = 0
 
         for record in records:

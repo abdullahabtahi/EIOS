@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import time
+
 import pytest
 
 from eios.observability.carrier import (
-    W3C_TRACEPARENT_HEADER,
     W3C_BAGGAGE_HEADER,
     ambient_context_scope,
     extract_context,
@@ -21,7 +20,6 @@ from eios.observability.schemas import validate_contract
 from eios.observability.tracing import (
     OpenTelemetrySpine,
     SpanStatus,
-    TraceContextSpan,
     span_to_contract_dict,
 )
 
@@ -106,7 +104,9 @@ def test_tracing_spine_root_and_child_spans():
 
 def test_tracing_spine_error_capture_and_tail_sampling():
     """Verify error status and exception event recording, plus adaptive tail sampling retention."""
-    spine = OpenTelemetrySpine(service_name="error_service", sample_rate=0.0)  # nominal spans dropped
+    spine = OpenTelemetrySpine(
+        service_name="error_service", sample_rate=0.0
+    )  # nominal spans dropped
 
     # 1. Error span should be retained despite 0.0 nominal sample rate
     with pytest.raises(RuntimeError):
@@ -149,4 +149,3 @@ def test_tracing_spine_overhead_sub_2ms():
             pass
     avg_ms = ((time.perf_counter() - t0) * 1000.0) / iterations
     assert avg_ms < 2.0
-

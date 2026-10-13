@@ -7,6 +7,7 @@ Authoritative References:
 """
 
 from datetime import datetime
+
 from eios.aml.models import AMLAlert, AMLPriorityTier, AMLTriggerType, AMLTypology
 from eios.aml.triage_scorer import AlertTriageScorer
 from eios.ingestion.hot_state import HotStateEngine
@@ -57,7 +58,9 @@ def test_triage_scorer_compresses_2000_queue_to_top_50(
     )
     retention_rate = planted_in_top50 / 50.0  # 50 planted TPs in queue
 
-    print(f"\nPlanted True Positives captured in top-50: {planted_in_top50}/50 ({retention_rate:.1%})")
+    print(
+        f"\nPlanted True Positives captured in top-50: {planted_in_top50}/50 ({retention_rate:.1%})"
+    )
     assert retention_rate >= 0.90, (
         f"Failed true positive retention target: {retention_rate:.1%} < 90.0%"
     )
@@ -85,5 +88,7 @@ def test_triage_scorer_persists_to_hot_state(
     row_count = cursor.execute("SELECT count(*) FROM aml_alert_scores").fetchone()[0]
     assert row_count == 100
 
-    top_count = cursor.execute("SELECT count(*) FROM aml_alert_scores WHERE is_triage_top50 = TRUE").fetchone()[0]
+    top_count = cursor.execute(
+        "SELECT count(*) FROM aml_alert_scores WHERE is_triage_top50 = TRUE"
+    ).fetchone()[0]
     assert top_count >= 1

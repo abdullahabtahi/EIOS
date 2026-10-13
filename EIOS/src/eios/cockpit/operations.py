@@ -7,7 +7,8 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from eios.ontology.metrics.registry import MetricRegistry
@@ -22,16 +23,22 @@ class DataProductHealthStatus(str, Enum):
 class DataProductSLAStatus(BaseModel):
     """Operational health record displayed on the Data Platform & Operations Board."""
 
-    product_name: str = Field(..., description="e.g. 'transactions_aml', 'client_360', 'partner_aggregates'")
+    product_name: str = Field(
+        ..., description="e.g. 'transactions_aml', 'client_360', 'partner_aggregates'"
+    )
     contract_schema_version: str = Field(..., description="Schema contract version, e.g. 'v1.2.0'")
     row_count: int = Field(..., ge=0, description="Total row count ingested")
     null_check_pass_rate: float = Field(..., ge=0.0, le=1.0, description="DQ null validation score")
     last_ingestion_timestamp: datetime = Field(..., description="Latest record timestamp")
-    freshness_sla_seconds: int = Field(..., ge=0, description="Configured freshness SLA window in seconds")
+    freshness_sla_seconds: int = Field(
+        ..., ge=0, description="Configured freshness SLA window in seconds"
+    )
     status: DataProductHealthStatus = Field(..., description="Current operational health status")
-    is_degraded: bool = Field(..., description="True if contract breach or freshness delay is active")
+    is_degraded: bool = Field(
+        ..., description="True if contract breach or freshness delay is active"
+    )
 
-    def to_contract_dict(self) -> Dict[str, Any]:
+    def to_contract_dict(self) -> dict[str, Any]:
         """Serialize according to contracts/data-product-sla-status.schema.json."""
         return {
             "product_name": self.product_name,
@@ -48,12 +55,12 @@ class DataProductSLAStatus(BaseModel):
 class DataPlatformOperationsService:
     """Service providing real-time data quality monitoring, freshness SLAs, and semantic metric lineage."""
 
-    def __init__(self, metric_registry: Optional[MetricRegistry] = None) -> None:
+    def __init__(self, metric_registry: MetricRegistry | None = None) -> None:
         self.metric_registry = metric_registry
         now = datetime.now(UTC)
 
         # Baseline active data products
-        self._products: Dict[str, DataProductSLAStatus] = {
+        self._products: dict[str, DataProductSLAStatus] = {
             "client_transactions": DataProductSLAStatus(
                 product_name="client_transactions",
                 contract_schema_version="v2.1.0",
@@ -97,7 +104,7 @@ class DataPlatformOperationsService:
         }
 
         # Baseline identity cluster conflicts
-        self._identity_conflicts: List[Dict[str, Any]] = [
+        self._identity_conflicts: list[dict[str, Any]] = [
             {
                 "conflict_id": "conf_fp_8401",
                 "entity_a": "client_usr_84920",
@@ -125,7 +132,7 @@ class DataPlatformOperationsService:
         ]
 
     def evaluate_product_health(
-        self, product: DataProductSLAStatus, as_of: Optional[datetime] = None
+        self, product: DataProductSLAStatus, as_of: datetime | None = None
     ) -> DataProductSLAStatus:
         """Evaluates freshness and null rates against configured SLA thresholds."""
         ref_time = as_of or datetime.now(UTC)
@@ -153,7 +160,7 @@ class DataPlatformOperationsService:
             is_degraded=is_degraded,
         )
 
-    def get_data_products(self, as_of: Optional[datetime] = None) -> List[DataProductSLAStatus]:
+    def get_data_products(self, as_of: datetime | None = None) -> list[DataProductSLAStatus]:
         """Returns all registered data products with evaluated operational health statuses."""
         return [self.evaluate_product_health(p, as_of=as_of) for p in self._products.values()]
 
@@ -173,39 +180,45 @@ class DataPlatformOperationsService:
                 is_degraded=prod.is_degraded,
             )
 
-    def get_contract_breach_alerts(self, as_of: Optional[datetime] = None) -> List[Dict[str, Any]]:
+    def get_contract_breach_alerts(self, as_of: datetime | None = None) -> list[dict[str, Any]]:
         """Returns real-time contract breach and SLA delay alerts."""
-        alerts: List[Dict[str, Any]] = []
+        alerts: list[dict[str, Any]] = []
         for p in self.get_data_products(as_of=as_of):
             if p.status == DataProductHealthStatus.BREACHED:
-                alerts.append({
-                    "alert_id": f"alt_sla_breach_{p.product_name}",
-                    "severity": "CRITICAL",
-                    "product_name": p.product_name,
-                    "type": "SLA_BREACH",
-                    "message": f"Ingestion lag exceeded 2x SLA threshold ({p.freshness_sla_seconds}s). Downstream synthesis halted.",
-                    "detected_at": datetime.now(UTC).isoformat(),
-                })
+                alerts.append(
+                    {
+                        "alert_id": f"alt_sla_breach_{p.product_name}",
+                        "severity": "CRITICAL",
+                        "product_name": p.product_name,
+                        "type": "SLA_BREACH",
+                        "message": f"Ingestion lag exceeded 2x SLA threshold ({p.freshness_sla_seconds}s). Downstream synthesis halted.",
+                        "detected_at": datetime.now(UTC).isoformat(),
+                    }
+                )
             elif p.status == DataProductHealthStatus.DEGRADED:
-                alerts.append({
-                    "alert_id": f"alt_sla_degraded_{p.product_name}",
-                    "severity": "WARNING",
-                    "product_name": p.product_name,
-                    "type": "SLA_DEGRADED",
-                    "message": f"Product is lagging SLA threshold ({p.freshness_sla_seconds}s) or null-check rate dropped.",
-                    "detected_at": datetime.now(UTC).isoformat(),
-                })
+                alerts.append(
+                    {
+                        "alert_id": f"alt_sla_degraded_{p.product_name}",
+                        "severity": "WARNING",
+                        "product_name": p.product_name,
+                        "type": "SLA_DEGRADED",
+                        "message": f"Product is lagging SLA threshold ({p.freshness_sla_seconds}s) or null-check rate dropped.",
+                        "detected_at": datetime.now(UTC).isoformat(),
+                    }
+                )
         return alerts
 
-    def get_identity_cluster_conflicts(self) -> List[Dict[str, Any]]:
+    def get_identity_cluster_conflicts(self) -> list[dict[str, Any]]:
         """Returns unresolved identity cluster conflicts across cross-account entity resolution."""
         return list(self._identity_conflicts)
 
-    def resolve_identity_conflict(self, conflict_id: str, action: str) -> Dict[str, Any]:
+    def resolve_identity_conflict(self, conflict_id: str, action: str) -> dict[str, Any]:
         """Execute conflict resolution (MERGE_PSEUDONYMIZED, MANUAL_SPLIT, REJECT_LINK)."""
         valid_actions = {"MERGE_PSEUDONYMIZED", "MANUAL_SPLIT", "REJECT_LINK"}
         if action not in valid_actions:
-            raise ValueError(f"Invalid resolution action: '{action}'. Must be one of {valid_actions}")
+            raise ValueError(
+                f"Invalid resolution action: '{action}'. Must be one of {valid_actions}"
+            )
 
         for conf in self._identity_conflicts:
             if conf["conflict_id"] == conflict_id:
@@ -216,7 +229,7 @@ class DataPlatformOperationsService:
 
         raise KeyError(f"Identity conflict '{conflict_id}' not found.")
 
-    def get_metric_lineage(self, metric_id: str) -> Dict[str, Any]:
+    def get_metric_lineage(self, metric_id: str) -> dict[str, Any]:
         """Builds an end-to-end data lineage DAG topology for the specified governed metric."""
         # Find metric in registry if available
         metric_def = None
@@ -226,34 +239,74 @@ class DataPlatformOperationsService:
             except Exception:
                 metric_def = None
 
-        source_products = metric_def.source_products if metric_def else ["client_transactions", "partner_aggregates"]
+        source_products = (
+            metric_def.source_products
+            if metric_def
+            else ["client_transactions", "partner_aggregates"]
+        )
         formula = metric_def.formula if metric_def else "SUM(net_deposit_volume_usd)"
 
         nodes = [
-            {"id": "source_kafka_stream", "type": "INGESTION_SOURCE", "label": "Kafka Trade Events", "system": "Confluent/Kafka"},
-            {"id": "source_bigquery_lakehouse", "type": "DATA_LAKE", "label": "BigQuery Lakehouse", "system": "GCP BigQuery"},
-            {"id": "dbt_stg_trades", "type": "TRANSFORMATION", "label": "dbt_stg_trades", "system": "dbt Cloud"},
-            {"id": "dbt_fct_metrics", "type": "TRANSFORMATION", "label": "dbt_fct_metrics", "system": "dbt Cloud"},
+            {
+                "id": "source_kafka_stream",
+                "type": "INGESTION_SOURCE",
+                "label": "Kafka Trade Events",
+                "system": "Confluent/Kafka",
+            },
+            {
+                "id": "source_bigquery_lakehouse",
+                "type": "DATA_LAKE",
+                "label": "BigQuery Lakehouse",
+                "system": "GCP BigQuery",
+            },
+            {
+                "id": "dbt_stg_trades",
+                "type": "TRANSFORMATION",
+                "label": "dbt_stg_trades",
+                "system": "dbt Cloud",
+            },
+            {
+                "id": "dbt_fct_metrics",
+                "type": "TRANSFORMATION",
+                "label": "dbt_fct_metrics",
+                "system": "dbt Cloud",
+            },
         ]
 
         # Add data product nodes
         for sp in source_products:
-            nodes.append({"id": f"dp_{sp}", "type": "DATA_PRODUCT", "label": sp, "system": "FEIOS HotState"})
+            nodes.append(
+                {"id": f"dp_{sp}", "type": "DATA_PRODUCT", "label": sp, "system": "FEIOS HotState"}
+            )
 
         # Add metric node
-        nodes.append({
-            "id": f"metric_{metric_id}",
-            "type": "GOVERNED_METRIC",
-            "label": metric_id,
-            "formula": formula,
-            "system": "FEIOS MetricEngine",
-        })
+        nodes.append(
+            {
+                "id": f"metric_{metric_id}",
+                "type": "GOVERNED_METRIC",
+                "label": metric_id,
+                "formula": formula,
+                "system": "FEIOS MetricEngine",
+            }
+        )
 
         # Add consumers
-        nodes.extend([
-            {"id": "consumer_omcp", "type": "AGENT_TOOL", "label": "OMCP Tool Server", "system": "OMCP"},
-            {"id": "consumer_cockpit", "type": "COCKPIT_WORKSTATION", "label": "Executive Cockpit", "system": "FEIOS UI"},
-        ])
+        nodes.extend(
+            [
+                {
+                    "id": "consumer_omcp",
+                    "type": "AGENT_TOOL",
+                    "label": "OMCP Tool Server",
+                    "system": "OMCP",
+                },
+                {
+                    "id": "consumer_cockpit",
+                    "type": "COCKPIT_WORKSTATION",
+                    "label": "Executive Cockpit",
+                    "system": "FEIOS UI",
+                },
+            ]
+        )
 
         edges = [
             {"from": "source_kafka_stream", "to": "dbt_stg_trades"},
@@ -276,7 +329,7 @@ class DataPlatformOperationsService:
             "lineage_depth": 5,
         }
 
-    def get_board_summary(self, as_of: Optional[datetime] = None) -> Dict[str, Any]:
+    def get_board_summary(self, as_of: datetime | None = None) -> dict[str, Any]:
         """Provides an aggregated summary for the Data Platform & Operations Board."""
         products = self.get_data_products(as_of=as_of)
         alerts = self.get_contract_breach_alerts(as_of=as_of)

@@ -11,21 +11,13 @@ class PIISanitizer:
     """Pre-processor sanitizing PII from unstructured text before LLM analysis."""
 
     def __init__(self) -> None:
-        self.email_pattern = re.compile(
-            r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b"
-        )
-        self.ip_pattern = re.compile(
-            r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b"
-        )
+        self.email_pattern = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
+        self.ip_pattern = re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b")
         self.phone_pattern = re.compile(
             r"(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4})\b"
         )
-        self.card_pattern = re.compile(
-            r"\b(?:\d{4}[-\s]?){3}\d{4}\b"
-        )
-        self.account_pattern = re.compile(
-            r"\b\d{8,16}\b"
-        )
+        self.card_pattern = re.compile(r"\b(?:\d{4}[-\s]?){3}\d{4}\b")
+        self.account_pattern = re.compile(r"\b\d{8,16}\b")
 
     def sanitize(self, text: str) -> str:
         """Sanitizes PII tokens in text by replacing with standard redacted placeholders."""

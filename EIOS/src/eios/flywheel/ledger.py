@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import hashlib
 import json
 import threading
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any
 
 from eios.flywheel.models import DecisionOutcomeRecord, MilestoneStatus
 
 
-def compute_record_lineage_hash(
+def compute_record_lineage_hash(  # noqa: PLR0913
     decision_id: str,
     intent_id: str,
     timestamp: datetime | str,
@@ -41,9 +41,9 @@ class DecisionOutcomesLedger:
     """Thread-safe multi-horizon decision outcomes repository and reconciliation store."""
 
     def __init__(self) -> None:
-        self._records: Dict[str, DecisionOutcomeRecord] = {}
-        self._intent_index: Dict[str, str] = {}
-        self._entity_index: Dict[str, List[str]] = {}
+        self._records: dict[str, DecisionOutcomeRecord] = {}
+        self._intent_index: dict[str, str] = {}
+        self._entity_index: dict[str, list[str]] = {}
         self._lock = threading.RLock()
         self._last_hash = "GENESIS"
 
@@ -80,12 +80,12 @@ class DecisionOutcomesLedger:
             self._last_hash = record.provenance_hash
             return record
 
-    def get_by_id(self, decision_id: str) -> Optional[DecisionOutcomeRecord]:
+    def get_by_id(self, decision_id: str) -> DecisionOutcomeRecord | None:
         """Retrieves record by decision ID."""
         with self._lock:
             return self._records.get(decision_id)
 
-    def get_by_intent_id(self, intent_id: str) -> Optional[DecisionOutcomeRecord]:
+    def get_by_intent_id(self, intent_id: str) -> DecisionOutcomeRecord | None:
         """Retrieves record by intent ID."""
         with self._lock:
             decision_id = self._intent_index.get(intent_id)
@@ -93,26 +93,26 @@ class DecisionOutcomesLedger:
                 return self._records.get(decision_id)
             return None
 
-    def get_by_entity(self, entity_id: str) -> List[DecisionOutcomeRecord]:
+    def get_by_entity(self, entity_id: str) -> list[DecisionOutcomeRecord]:
         """Retrieves all records for an entity."""
         with self._lock:
             ids = self._entity_index.get(entity_id, [])
             return [self._records[did] for did in ids if did in self._records]
 
-    def query_records(
+    def query_records(  # noqa: C901, PLR0913
         self,
-        service_name: Optional[str] = None,
-        action_type: Optional[str] = None,
-        entity_type: Optional[str] = None,
-        treatment_assigned: Optional[bool] = None,
-        start_time: Optional[datetime] = None,
-        end_time: Optional[datetime] = None,
-        horizon_filter: Optional[str] = None,
-        horizon_status: Optional[MilestoneStatus] = None,
-    ) -> List[DecisionOutcomeRecord]:
+        service_name: str | None = None,
+        action_type: str | None = None,
+        entity_type: str | None = None,
+        treatment_assigned: bool | None = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        horizon_filter: str | None = None,
+        horizon_status: MilestoneStatus | None = None,
+    ) -> list[DecisionOutcomeRecord]:
         """Queries records by multiple operational filters."""
         with self._lock:
-            results: List[DecisionOutcomeRecord] = []
+            results: list[DecisionOutcomeRecord] = []
             for record in self._records.values():
                 if service_name and record.service_name != service_name:
                     continue
@@ -120,18 +120,33 @@ class DecisionOutcomesLedger:
                     continue
                 if entity_type and record.entity_type != entity_type:
                     continue
-                if treatment_assigned is not None and record.treatment_assigned != treatment_assigned:
+                if (
+                    treatment_assigned is not None
+                    and record.treatment_assigned != treatment_assigned
+                ):
                     continue
                 if start_time and record.timestamp < start_time:
                     continue
                 if end_time and record.timestamp > end_time:
                     continue
                 if horizon_filter:
-                    if horizon_filter == "30d" and horizon_status and record.status_30d != horizon_status:
+                    if (
+                        horizon_filter == "30d"
+                        and horizon_status
+                        and record.status_30d != horizon_status
+                    ):
                         continue
-                    elif horizon_filter == "60d" and horizon_status and record.status_60d != horizon_status:
+                    elif (
+                        horizon_filter == "60d"
+                        and horizon_status
+                        and record.status_60d != horizon_status
+                    ):
                         continue
-                    elif horizon_filter == "90d" and horizon_status and record.status_90d != horizon_status:
+                    elif (
+                        horizon_filter == "90d"
+                        and horizon_status
+                        and record.status_90d != horizon_status
+                    ):
                         continue
 
                 results.append(record)
@@ -152,7 +167,7 @@ class DecisionOutcomesLedger:
                 raise KeyError(f"Decision ID '{decision_id}' not found in ledger")
 
             actual_val = float(actual_impact)
-            updates: Dict[str, Any] = {}
+            updates: dict[str, Any] = {}
 
             if horizon == "30d":
                 residual = actual_val - record.predicted_impact_30d

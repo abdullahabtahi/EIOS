@@ -2,8 +2,9 @@
 
 import json
 from pathlib import Path
+
 import pytest
-from eios.foundry.contracts import ContractValidator, Partner360Record
+
 from eios.foundry.generators.partner import PartnerDataGenerator
 from eios.foundry.rng import DeterministicRNG
 from eios.foundry.storage.eval_truth_store import EvalGroundTruthStore
@@ -21,13 +22,15 @@ def test_partner_fraud_typologies_and_eval_truth(tmp_path: Path):
     truth_store_path = tmp_path / "eval-truth" / "module_b" / "partner_ring_7_23_184.json"
 
     assert truth_store_path.exists(), "Partner ring ground truth must exist"
-    with open(truth_store_path, "r", encoding="utf-8") as f:
+    with open(truth_store_path, encoding="utf-8") as f:
         ring_truth = json.load(f)
 
     # 1. 3-tier ring verification
     assert len(ring_truth["master_partner_ids"]) == 7, "Must contain exactly 7 master partners"
     assert len(ring_truth["sub_partner_ids"]) == 23, "Must contain exactly 23 sub-partners"
-    assert len(ring_truth["referred_client_ids"]) == 184, "Must contain exactly 184 referred clients"
+    assert len(ring_truth["referred_client_ids"]) == 184, (
+        "Must contain exactly 184 referred clients"
+    )
 
     # 2. 23 Mirror trading pairs
     mirror_pairs = fraud_data["mirror_pairs"]

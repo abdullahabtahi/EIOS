@@ -1,8 +1,6 @@
 """Tests for persistent session checkpointer and state rehydration (F018, T017)."""
 
-import pytest
 from eios.conversation.checkpointer import ThreadCheckpointer
-from eios.conversation.models import OperatorRole
 
 
 def test_thread_checkpointer_saves_and_rehydrates(tmp_path):

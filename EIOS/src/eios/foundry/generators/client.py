@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 import polars as pl
 
 from eios.foundry.contracts import (
@@ -29,9 +30,9 @@ class ClientDataGenerator:
         self._validator_funnel = ContractValidator(FunnelEventRecord)
         self._validator_device = ContractValidator(DeviceNetworkEdge)
 
-    def generate_silo_projections(self) -> List[Dict[str, Any]]:
+    def generate_silo_projections(self) -> list[dict[str, Any]]:
         """Returns fragmented multi-silo identity representations for entity resolution benchmarking."""
-        projections: List[Dict[str, Any]] = []
+        projections: list[dict[str, Any]] = []
         for account in self.universe.accounts:
             projections.append(
                 {
@@ -45,9 +46,9 @@ class ClientDataGenerator:
             )
         return projections
 
-    def generate_client_360(self) -> List[Dict[str, Any]]:
+    def generate_client_360(self) -> list[dict[str, Any]]:
         """Emits validated client_360 records."""
-        records: List[Dict[str, Any]] = []
+        records: list[dict[str, Any]] = []
         for account in self.universe.accounts:
             record = {
                 "client_id": account.client_id,
@@ -68,10 +69,9 @@ class ClientDataGenerator:
         self._validator_360.validate_batch(records)
         return records
 
-    def generate_client_funnel(self) -> List[Dict[str, Any]]:
+    def generate_client_funnel(self) -> list[dict[str, Any]]:
         """Emits validated client_funnel progression event records."""
-        events: List[Dict[str, Any]] = []
-        steps = ["VISIT", "SIGNUP", "KYC_SUBMIT", "FIRST_DEPOSIT"]
+        events: list[dict[str, Any]] = []
         event_counter = 0
 
         for account in self.universe.accounts:
@@ -128,9 +128,9 @@ class ClientDataGenerator:
         self._validator_funnel.validate_batch(events)
         return events
 
-    def generate_device_network(self) -> List[Dict[str, Any]]:
+    def generate_device_network(self) -> list[dict[str, Any]]:
         """Emits validated device_network_graph edge records."""
-        edges: List[Dict[str, Any]] = []
+        edges: list[dict[str, Any]] = []
         edge_counter = 0
 
         for account in self.universe.accounts:
@@ -155,7 +155,7 @@ class ClientDataGenerator:
         self._validator_device.validate_batch(edges)
         return edges
 
-    def write_to_storage(self, output_dir: Path) -> Dict[str, Path]:
+    def write_to_storage(self, output_dir: Path) -> dict[str, Path]:
         """Writes client_360, client_funnel, and device_network Parquet files deterministically."""
         writer = DeterministicParquetWriter()
         c360_dir = output_dir / "client_360"
@@ -167,9 +167,15 @@ class ClientDataGenerator:
         device_df = pl.DataFrame(self.generate_device_network())
 
         # Sort columns deterministically and write
-        p_c360 = writer.write_partition(c360_df, c360_dir / "client_360.parquet", sort_columns=["client_id"])
-        p_funnel = writer.write_partition(funnel_df, funnel_dir / "client_funnel.parquet", sort_columns=["event_id"])
-        p_device = writer.write_partition(device_df, device_dir / "device_network.parquet", sort_columns=["edge_id"])
+        p_c360 = writer.write_partition(
+            c360_df, c360_dir / "client_360.parquet", sort_columns=["client_id"]
+        )
+        p_funnel = writer.write_partition(
+            funnel_df, funnel_dir / "client_funnel.parquet", sort_columns=["event_id"]
+        )
+        p_device = writer.write_partition(
+            device_df, device_dir / "device_network.parquet", sort_columns=["edge_id"]
+        )
 
         return {
             "client_360": p_c360,

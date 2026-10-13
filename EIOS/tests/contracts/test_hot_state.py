@@ -1,9 +1,8 @@
 """Tests for In-Memory DuckDB Hot-State Engine and concurrency (US3)."""
 
-from concurrent.futures import ThreadPoolExecutor
-from datetime import datetime, timezone, timedelta
 import time
-import pytest
+from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime, timedelta
 
 from eios.contracts.base import DataProductEnum
 from eios.ingestion.hot_state import HotStateEngine
@@ -19,7 +18,7 @@ def test_hot_state_engine_initializes_all_14_tables():
 
 def test_concurrent_readers_and_writers():
     engine = HotStateEngine()
-    
+
     def writer_task(worker_id: int):
         for i in range(50):
             engine.insert_event(
@@ -31,7 +30,7 @@ def test_concurrent_readers_and_writers():
                     "side": "BUY",
                     "volume": 1.0,
                     "open_price": 500.0,
-                    "open_ts": datetime.now(timezone.utc).isoformat(),
+                    "open_ts": datetime.now(UTC).isoformat(),
                 },
             )
 
@@ -40,7 +39,9 @@ def test_concurrent_readers_and_writers():
         for _ in range(50):
             start = time.perf_counter()
             cursor = engine.get_cursor()
-            res = cursor.execute("SELECT count(*), avg(open_price) FROM trading_activity").fetchall()
+            res = cursor.execute(
+                "SELECT count(*), avg(open_price) FROM trading_activity"
+            ).fetchall()
             latencies.append((time.perf_counter() - start) * 1000.0)
             assert res is not None
         return latencies
@@ -64,7 +65,7 @@ def test_concurrent_readers_and_writers():
 
 def test_sliding_window_eviction():
     engine = HotStateEngine()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     old_ts = (now - timedelta(hours=48)).isoformat()
     recent_ts = (now - timedelta(hours=2)).isoformat()
 
@@ -93,7 +94,9 @@ def test_sliding_window_eviction():
         },
     )
 
-    count_before = engine.get_cursor().execute("SELECT count(*) FROM trading_activity").fetchone()[0]
+    count_before = (
+        engine.get_cursor().execute("SELECT count(*) FROM trading_activity").fetchone()[0]
+    )
     assert count_before == 2
 
     # Evict records older than 24h

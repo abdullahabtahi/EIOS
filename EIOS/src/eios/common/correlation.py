@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """Correlation identifiers (FR-036): generated at the edge, validated, carried by header and context.
 
 Public API:

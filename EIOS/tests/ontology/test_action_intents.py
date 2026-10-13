@@ -196,4 +196,3 @@ def test_reject_action_lifecycle():
     )
     assert rejected_token.status == ActionStatus.REJECTED
     assert sequencer.current_seq == 2
-

@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from eios.foundry.rng import RNGManager
 from eios.foundry.storage.eval_truth_store import EvalGroundTruthStore
 
@@ -13,15 +14,15 @@ class CausalTruthGenerator:
     def __init__(
         self,
         rng: RNGManager,
-        truth_store: Optional[EvalGroundTruthStore] = None,
+        truth_store: EvalGroundTruthStore | None = None,
     ) -> None:
         self.rng = rng
         self.truth_store = truth_store
         self._gen = rng.get_generator("causal_truth")
 
-    def generate_causal_dag(self) -> Dict[str, Any]:
+    def generate_causal_dag(self) -> dict[str, Any]:
         """Generates ground truth structural causal model across 4 domains with planted placebo edge."""
-        dag_payload: Dict[str, Any] = {
+        dag_payload: dict[str, Any] = {
             "domains": ["COMPETITIVE", "PARTNER", "CLIENT", "FINANCIAL"],
             "structural_equations": {
                 "PARTNER": "Delta_P = 0.65 * Delta_C + epsilon_P",
@@ -68,9 +69,9 @@ class CausalTruthGenerator:
 
         return dag_payload
 
-    def generate_forecast_driver_attribution(self) -> Dict[str, Any]:
+    def generate_forecast_driver_attribution(self) -> dict[str, Any]:
         """Generates ground truth driver attribution decomposing forecast variance to exactly 100.0%."""
-        attribution_payload: Dict[str, Any] = {
+        attribution_payload: dict[str, Any] = {
             "scenario": "Q3_LTV_FORECAST_MISS",
             "forecast_miss_drivers": {
                 "competitive": 40.0,

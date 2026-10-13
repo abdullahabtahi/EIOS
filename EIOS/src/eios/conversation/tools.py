@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 _LOG = logging.getLogger("eios.conversation.tools")
 
 
-def get_governed_metric(metric_id: str, entity_id: str = "") -> Dict[str, Any]:
+def get_governed_metric(metric_id: str, entity_id: str = "") -> dict[str, Any]:
     """Retrieve governed metric calculation strictly from DuckDB Semantic Metric Registry.
-    
+
     Args:
         metric_id: Identifier of the metric (e.g. 'net_deposit_volume_30d_usd', 'net_revenue_usd').
         entity_id: Optional entity ID (e.g. 'P-882', 'CR84920').
@@ -47,9 +47,9 @@ def get_governed_metric(metric_id: str, entity_id: str = "") -> Dict[str, Any]:
     }
 
 
-def inspect_aml_entity(entity_id: str) -> Dict[str, Any]:
+def inspect_aml_entity(entity_id: str) -> dict[str, Any]:
     """Inspect AML forensic dossier including KYC declared income, volume, and discrepancy multiplier.
-    
+
     Args:
         entity_id: Account or client entity identifier (e.g. 'CR84920').
     """
@@ -82,9 +82,9 @@ def inspect_aml_entity(entity_id: str) -> Dict[str, Any]:
     }
 
 
-def query_graph_topology(entity_id: str, hub_threshold: int = 100) -> Dict[str, Any]:
+def query_graph_topology(entity_id: str, hub_threshold: int = 100) -> dict[str, Any]:
     """Traverse multihop relational network links with dynamic hub suppression for high degrees (k > 100).
-    
+
     Args:
         entity_id: Seed entity identifier (e.g. 'CR84920').
         hub_threshold: Maximum degree before hub collapse (default 100).
@@ -112,9 +112,9 @@ def query_graph_topology(entity_id: str, hub_threshold: int = 100) -> Dict[str, 
     }
 
 
-def inspect_partner_churn(partner_id: str) -> Dict[str, Any]:
+def inspect_partner_churn(partner_id: str) -> dict[str, Any]:
     """Retrieve discrete-time hazard model scores, CUSUM change points, and root causes.
-    
+
     Args:
         partner_id: Affiliate or partner identifier (e.g. 'AP-1029', 'P-882').
     """
@@ -131,9 +131,9 @@ def inspect_partner_churn(partner_id: str) -> Dict[str, Any]:
     }
 
 
-def run_causal_what_if(shock_param: str, magnitude_pct: float) -> Dict[str, Any]:
+def run_causal_what_if(shock_param: str, magnitude_pct: float) -> dict[str, Any]:
     """Run parametric shock propagation across DoWhy refuter-verified Structural Causal Model.
-    
+
     Args:
         shock_param: Name of shock parameter (e.g. 'competitor_spread_delta_bps').
         magnitude_pct: Magnitude of parametric shock in percent (e.g. 20.0).
@@ -166,10 +166,10 @@ def stage_action_intent(
     action_type: str,
     target_entity_id: str,
     reason: str = "",
-    parameters: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    parameters: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Stage a high-severity operational action into the Cockpit Action Shelf (Principle II).
-    
+
     Generates a cryptographically signed ActionIntentToken with Cloud KMS ECDSA P-256 signature,
     15-minute expiration, and mandatory Four-Eyes approval requirement. Does not execute direct database writes.
     """

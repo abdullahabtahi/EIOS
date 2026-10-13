@@ -1,7 +1,7 @@
 """Tests for HotStateEngine pruning and storage metrics (FM-1 Countermeasure)."""
 
-from datetime import datetime, timezone, timedelta
-from eios.contracts.base import DataProductEnum
+from datetime import UTC, datetime, timedelta
+
 from eios.ingestion.hot_state import HotStateEngine
 
 
@@ -18,37 +18,49 @@ def test_hot_state_pruning_sliding_window():
     engine = HotStateEngine(":memory:")
     cursor = engine.get_cursor()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     old_ts = now - timedelta(days=45)
     recent_ts = now - timedelta(days=10)
 
     # Insert old record in trading_activity
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO trading_activity (
             trade_id, client_id, symbol, side, volume, open_price, close_price, open_ts
         ) VALUES ('T-OLD', 'C-1', 'EURUSD', 'BUY', 1.0, 1.1, 1.1, ?)
-    """, [old_ts])
+    """,
+        [old_ts],
+    )
 
     # Insert recent record in trading_activity
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO trading_activity (
             trade_id, client_id, symbol, side, volume, open_price, close_price, open_ts
         ) VALUES ('T-NEW', 'C-1', 'EURUSD', 'BUY', 1.0, 1.1, 1.1, ?)
-    """, [recent_ts])
+    """,
+        [recent_ts],
+    )
 
     # Insert old record in partner_engagement_signals (date column)
     old_date = (now - timedelta(days=50)).date()
     recent_date = (now - timedelta(days=5)).date()
-    cursor.execute("""
+    cursor.execute(
+        """
         INSERT INTO partner_engagement_signals (
             partner_id, date, logins, referrals, ftd_count, conversion_rate, clicks
         ) VALUES ('P-OLD', ?, 10, 5, 2, 0.25, 100)
-    """, [old_date])
-    cursor.execute("""
+    """,
+        [old_date],
+    )
+    cursor.execute(
+        """
         INSERT INTO partner_engagement_signals (
             partner_id, date, logins, referrals, ftd_count, conversion_rate, clicks
         ) VALUES ('P-NEW', ?, 10, 5, 2, 0.25, 100)
-    """, [recent_date])
+    """,
+        [recent_date],
+    )
 
     # Verify initial storage counts
     metrics_pre = engine.get_storage_metrics()

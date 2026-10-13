@@ -1,11 +1,7 @@
 """Tests for User Story 1: Chaos Engineering Injection & Resilient Degradation."""
 
-from datetime import UTC, datetime
-import pytest
-
-from eios.hardening.schemas import validate_contract
 from eios.hardening.models import ChaosExperimentRecord, ChaosExperimentStatus
-from eios.hardening.base import FaultType, ChaosInjectionHook
+from eios.hardening.schemas import validate_contract
 
 
 def test_crash_recovery():

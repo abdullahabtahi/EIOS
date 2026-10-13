@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """The budget probe (FR-038, T192): build a notification, dev only, injected publisher."""
 
 from __future__ import annotations

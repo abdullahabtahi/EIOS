@@ -144,7 +144,7 @@ def test_ruff_flags_a_vendor_import_through_banned_api(tmp_path: Path, module: s
     probe = tmp_path / "probe.py"
     probe.write_text(f"import {module}\n", encoding="utf-8")
     command = [ruff, "check", "--config", str(PYPROJECT), "--select", "TID251", "--no-cache"]
-    done = subprocess.run(  # noqa: S603 - fixed argv, no shell
+    done = subprocess.run(  # noqa: S603
         [*command, "--output-format", "concise", str(probe)],
         capture_output=True,
         text=True,

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 import jsonschema
 from referencing import Registry, Resource
 
@@ -12,8 +13,8 @@ _CONTRACTS_DIR = (
     Path(__file__).resolve().parents[4] / "specs" / "013-observability-sre" / "contracts"
 )
 
-_SCHEMAS: Dict[str, Dict[str, Any]] = {}
-_REGISTRY: Optional[Registry] = None
+_SCHEMAS: dict[str, dict[str, Any]] = {}
+_REGISTRY: Registry | None = None
 
 
 def get_contracts_dir() -> Path:
@@ -29,18 +30,18 @@ def _get_referencing_registry() -> Registry:
     if _CONTRACTS_DIR.exists():
         for p in _CONTRACTS_DIR.glob("*.json"):
             try:
-                with open(p, "r", encoding="utf-8") as f:
+                with open(p, encoding="utf-8") as f:
                     content = json.load(f)
                     resource = Resource.from_contents(content)
                     registry = registry.with_resource(p.name, resource)
                     registry = registry.with_resource(p.resolve().as_uri(), resource)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
     _REGISTRY = registry
     return _REGISTRY
 
 
-def load_schema(name: str) -> Dict[str, Any]:
+def load_schema(name: str) -> dict[str, Any]:
     """Loads a contract schema by name (e.g. 'trace-context-span' or 'trace-context-span.schema.json')."""
     if not name.endswith(".schema.json"):
         name = f"{name}.schema.json"
@@ -51,13 +52,13 @@ def load_schema(name: str) -> Dict[str, Any]:
     if not schema_path.exists():
         raise FileNotFoundError(f"Contract schema not found: {schema_path}")
 
-    with open(schema_path, "r", encoding="utf-8") as f:
+    with open(schema_path, encoding="utf-8") as f:
         schema = json.load(f)
         _SCHEMAS[name] = schema
         return schema
 
 
-def validate_contract(data: Dict[str, Any], schema_name: str) -> bool:
+def validate_contract(data: dict[str, Any], schema_name: str) -> bool:
     """Validates a payload against a registered JSON schema contract with cross-file references.
 
     Raises jsonschema.ValidationError if invalid.
@@ -69,7 +70,7 @@ def validate_contract(data: Dict[str, Any], schema_name: str) -> bool:
     return True
 
 
-def list_registered_schemas() -> List[str]:
+def list_registered_schemas() -> list[str]:
     """Lists all registered schema file names found in the contracts directory."""
     if not _CONTRACTS_DIR.exists():
         return []

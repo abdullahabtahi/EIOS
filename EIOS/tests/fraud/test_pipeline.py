@@ -6,7 +6,6 @@ Authoritative References:
 """
 
 import pandas as pd
-import pytest
 
 from eios.fraud.pipeline import PartnerFraudPipeline
 from eios.ingestion.hot_state import HotStateEngine

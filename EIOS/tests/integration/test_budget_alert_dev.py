@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """T192 cloud test: one threshold published to dev reaches the channel declared in infra code.
 
 Skipped unless ``EIOS_TEST_CLOUD=1``. It also needs, from ``terraform output`` of ``infra/envs/dev``:

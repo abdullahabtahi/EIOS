@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Literal
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 from eios.foundry.contracts import CompetitorEventRecord, ContractValidator
 from eios.foundry.rng import RNGManager
 
@@ -27,10 +28,10 @@ class CompetitiveDataGenerator:
         self._gen = rng.get_generator("competitive_intel")
         self._validator = ContractValidator(CompetitorEventRecord)
 
-    def generate_events(self, count: int = 30) -> List[Dict[str, Any]]:
+    def generate_events(self, count: int = 30) -> list[dict[str, Any]]:
         """Generates validated competitor events."""
-        records: List[Dict[str, Any]] = []
-        base_dt = datetime(2025, 2, 1, 0, 0, 0, tzinfo=timezone.utc)
+        records: list[dict[str, Any]] = []
+        base_dt = datetime(2025, 2, 1, 0, 0, 0, tzinfo=UTC)
 
         for i in range(count):
             dt = base_dt + timedelta(days=i * 2, hours=int(self._gen.integers(1, 12)))

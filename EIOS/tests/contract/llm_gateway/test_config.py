@@ -33,7 +33,7 @@ def test_valid_config_parses_into_a_frozen_model() -> None:
     config = parse_config(config_dict(), source="test")
     assert isinstance(config, GatewayConfig)
     assert config.daily_token_cap == 1000
-    with pytest.raises(ValueError):  # noqa: PT011
+    with pytest.raises(ValueError):
         config.daily_token_cap = 5
 
 

@@ -4,7 +4,8 @@ import os
 import shutil
 import tempfile
 from collections.abc import Generator
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 import duckdb
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -18,7 +19,7 @@ def sample_salt() -> str:
 
 
 @pytest.fixture
-def in_memory_duckdb() -> Generator[duckdb.DuckDBPyConnection, None, None]:
+def in_memory_duckdb() -> Generator[duckdb.DuckDBPyConnection]:
     """Provide a fresh named in-memory DuckDB connection."""
     conn = duckdb.connect(":memory:eios_test_conftest")
     yield conn
@@ -26,14 +27,14 @@ def in_memory_duckdb() -> Generator[duckdb.DuckDBPyConnection, None, None]:
 
 
 @pytest.fixture
-def temp_parquet_dir() -> Generator[str, None, None]:
+def temp_parquet_dir() -> Generator[str]:
     """Create a temporary directory with test Parquet partitions."""
     temp_dir = tempfile.mkdtemp(prefix="eios_test_lakehouse_")
-    
+
     # Create product directory for trading_activity
     trading_dir = os.path.join(temp_dir, "trading_activity")
     os.makedirs(trading_dir, exist_ok=True)
-    
+
     # Write a small sample parquet partition (100 rows)
     data = {
         "trade_id": [f"TRD_{i:06d}" for i in range(100)],
@@ -42,10 +43,10 @@ def temp_parquet_dir() -> Generator[str, None, None]:
         "side": ["BUY" if i % 2 == 0 else "SELL" for i in range(100)],
         "volume": [float(1 + (i % 5)) for i in range(100)],
         "open_price": [1000.0 + float(i) for i in range(100)],
-        "open_ts": [datetime(2026, 10, 4, 12, 0, 0, tzinfo=timezone.utc)] * 100,
+        "open_ts": [datetime(2026, 10, 4, 12, 0, 0, tzinfo=UTC)] * 100,
     }
     table = pa.Table.from_pydict(data)
     pq.write_table(table, os.path.join(trading_dir, "batch_001.parquet"))
-    
+
     yield temp_dir
     shutil.rmtree(temp_dir, ignore_errors=True)

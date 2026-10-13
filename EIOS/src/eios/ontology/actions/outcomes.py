@@ -1,10 +1,10 @@
 """Multi-Horizon Decision Outcomes Ledger and Doubly Robust AIPW Estimator (US5)."""
 
-from datetime import UTC, datetime
 import json
 import threading
-from typing import Any
 import uuid
+from datetime import UTC, datetime
+from typing import Any
 
 import numpy as np
 from scipy import stats
@@ -22,7 +22,7 @@ class DecisionOutcomesStore:
         self._intent_index: dict[str, str] = {}
         self._lock = threading.Lock()
 
-    def record_decision(
+    def record_decision(  # noqa: PLR0913
         self,
         intent_id: str,
         entity_id: str,

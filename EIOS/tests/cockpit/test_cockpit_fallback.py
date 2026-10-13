@@ -1,12 +1,13 @@
 """Tests for Cockpit Deterministic Fallback and Replay Badging."""
 
 import pytest
+
 from eios.cockpit.fallback import FallbackEngine, ServiceHealthState
 
 
 def test_fallback_caches_live_execution():
     engine = FallbackEngine()
-    
+
     def live_call():
         return {"briefing_id": "brf_001", "headline": "Live briefing content"}
 
@@ -18,15 +19,17 @@ def test_fallback_caches_live_execution():
 
 def test_fallback_activates_on_outage():
     engine = FallbackEngine()
-    
+
     # Prime with a warm snapshot
-    engine.register_snapshot("morning_briefing", {"briefing_id": "brf_001", "headline": "Verified cached briefing"})
-    
+    engine.register_snapshot(
+        "morning_briefing", {"briefing_id": "brf_001", "headline": "Verified cached briefing"}
+    )
+
     def failing_call():
         raise TimeoutError("Vertex AI gateway 504 Gateway Timeout")
 
     result = engine.execute_with_fallback("morning_briefing", failing_call)
-    
+
     assert result["is_cached_fallback"] is True
     assert "fallback_badge" in result
     badge = result["fallback_badge"]
@@ -39,7 +42,7 @@ def test_fallback_activates_on_outage():
 
 def test_fallback_unregistered_view_raises():
     engine = FallbackEngine()
-    
+
     def failing_call():
         raise ConnectionResetError("Connection lost")
 

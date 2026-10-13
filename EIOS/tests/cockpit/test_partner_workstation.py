@@ -1,14 +1,13 @@
 """Tests for Partner Manager Workstation: Churn Radar, Referral Tree, and Playbooks."""
 
-import pytest
-from eios.cockpit.partner import PartnerWorkstationService, PartnerQuadrant
+from eios.cockpit.partner import PartnerQuadrant, PartnerWorkstationService
 from eios.cockpit.schemas import validate_contract
 
 
 def test_churn_radar_scatter_contract():
     svc = PartnerWorkstationService()
     scatter = svc.get_churn_radar_scatter()
-    
+
     assert len(scatter.partners) >= 20
     at_risk = next(p for p in scatter.partners if p.partner_id in ["PTR-882", "AP-1029"])
     assert at_risk.quadrant == PartnerQuadrant.HIGH_VALUE_HIGH_RISK
@@ -23,7 +22,7 @@ def test_churn_radar_scatter_contract():
 def test_partner_referral_tree_opposite_trading():
     svc = PartnerWorkstationService()
     tree = svc.get_partner_referral_tree("AP-1029")
-    
+
     assert tree["master_partner_id"] == "AP-1029"
     assert len(tree["detected_abusive_rings"]) >= 1
     ring = tree["detected_abusive_rings"][0]
@@ -34,13 +33,13 @@ def test_partner_referral_tree_opposite_trading():
 def test_retention_playbooks_fast_path_policy():
     svc = PartnerWorkstationService()
     playbooks = svc.get_retention_playbooks("AP-1029")
-    
+
     assert len(playbooks) == 2
     # Deal 1 <= $2,500 -> fast path
     assert playbooks[0].estimated_cost_usd <= 2500.0
     assert playbooks[0].is_fast_path_eligible is True
     assert playbooks[0].requires_four_eyes is False
-    
+
     # Deal 2 > $2,500 -> dual approval
     assert playbooks[1].estimated_cost_usd > 2500.0
     assert playbooks[1].is_fast_path_eligible is False

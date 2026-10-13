@@ -1,7 +1,7 @@
 """Thread-safe bounded in-memory staging queue for micro-batch ingestion."""
 
 import queue
-from typing import Any
+
 from eios.contracts.base import DataProductEvent
 
 

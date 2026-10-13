@@ -4,15 +4,31 @@ from __future__ import annotations
 
 import logging
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 _LOG = logging.getLogger("eios.conversation.rag_tools")
 
 # Selective RAG trigger keywords (Blindspot #1: prevent latency blowouts on pure math questions)
 POLICY_TRIGGER_KEYWORDS = [
-    "policy", "regulation", "regulatory", "threshold", "rule", "statute",
-    "fincen", "sar", "fatf", "sec", "cfr", "mandate", "escalat", "form 111",
-    "playbook", "sop", "guideline", "314", "1020"
+    "policy",
+    "regulation",
+    "regulatory",
+    "threshold",
+    "rule",
+    "statute",
+    "fincen",
+    "sar",
+    "fatf",
+    "sec",
+    "cfr",
+    "mandate",
+    "escalat",
+    "form 111",
+    "playbook",
+    "sop",
+    "guideline",
+    "314",
+    "1020",
 ]
 
 
@@ -22,9 +38,9 @@ def should_route_to_policy_rag(query: str) -> bool:
     return any(kw in lower_q for kw in POLICY_TRIGGER_KEYWORDS)
 
 
-def query_policy_search(query: str) -> Dict[str, Any]:
+def query_policy_search(query: str) -> dict[str, Any]:
     """Search institutional compliance policy manuals and regulatory statutes via policy search service.
-    
+
     Args:
         query: Compliance or regulatory search phrase (e.g. 'AML SAR filing discrepancy threshold').
     """
@@ -54,9 +70,9 @@ def query_policy_search(query: str) -> Dict[str, Any]:
     }
 
 
-def query_sar_precedents(query: str, top_k: int = 3) -> Dict[str, Any]:
+def query_sar_precedents(query: str, top_k: int = 3) -> dict[str, Any]:
     """Retrieve historical SAR case narratives using Vertex RAG Store vector embeddings.
-    
+
     Args:
         query: Pattern or typology description (e.g. 'mule ring structured round-trip transfers').
         top_k: Number of precedent cases to return (default 3).

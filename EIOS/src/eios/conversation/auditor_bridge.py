@@ -5,10 +5,10 @@ from __future__ import annotations
 import re
 import string
 from datetime import UTC, datetime
-from typing import Any, Dict, List
+from typing import Any
+
 from eios.conversation.models import AuditorRecord, AuditorStatus
 from eios.ontology.auditor.gate import MetricAuditorGate
-
 
 STATUTORY_PATTERNS = [
     re.compile(r"\b\d{1,3}\s*CFR\s*§?\s*\d+(?:\.\d+)?", re.IGNORECASE),
@@ -41,7 +41,7 @@ class ConversationAuditorBridge:
     def __init__(self, auditor: MetricAuditorGate | None = None) -> None:
         self.auditor = auditor or MetricAuditorGate(relative_tolerance=0.01)
 
-    def extract_statutory_citations(self, text: str) -> List[str]:
+    def extract_statutory_citations(self, text: str) -> list[str]:
         """Extracts and normalizes legal and regulatory citations to exempt them from arithmetic audits."""
         exemptions = []
         for pat in STATUTORY_PATTERNS:
@@ -52,7 +52,7 @@ class ConversationAuditorBridge:
     def audit_turn(
         self,
         narrative_text: str,
-        tool_trace: List[Dict[str, Any]],
+        tool_trace: list[dict[str, Any]],
         trace_id: str = "tr_turn",
     ) -> AuditorRecord:
         """Audits an agent turn against tool outputs while exempting statutory citations and identifier codes."""
@@ -92,7 +92,7 @@ class ConversationAuditorBridge:
         )
 
     def scan_egress_response(
-        self, response_text: str, evidence_ledger: List[Dict[str, Any]]
+        self, response_text: str, evidence_ledger: list[dict[str, Any]]
     ) -> str:
         """Convenience method returning safe narrative or refusal message."""
         record = self.audit_turn(response_text, evidence_ledger)

@@ -6,7 +6,7 @@ Authoritative References:
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+
 import networkx as nx
 import numpy as np
 
@@ -43,14 +43,16 @@ class EmergingPatternMiner:
 
         for cycle in cycles:
             if len(cycle) >= self.min_cycle_length:
-                anomalous_clusters.append({
-                    "typology_name": "CYCLIC_COMMISSION_REBATING",
-                    "participating_partners": cycle,
-                    "structural_anomaly_score": round(min(1.0, 0.70 + len(cycle) * 0.05), 4),
-                    "description": (
-                        f"Novel cyclic commission rebating pattern isolated across {len(cycle)} partners."
-                    ),
-                })
+                anomalous_clusters.append(
+                    {
+                        "typology_name": "CYCLIC_COMMISSION_REBATING",
+                        "participating_partners": cycle,
+                        "structural_anomaly_score": round(min(1.0, 0.70 + len(cycle) * 0.05), 4),
+                        "description": (
+                            f"Novel cyclic commission rebating pattern isolated across {len(cycle)} partners."
+                        ),
+                    }
+                )
 
         return anomalous_clusters
 
@@ -85,8 +87,12 @@ class TemporalDriftAnalyzer:
         base_micro_pct = float(np.mean([w.get("micro_trade_pct", 0.0) for w in baseline_weeks]))
         recent_micro_pct = float(np.mean([w.get("micro_trade_pct", 0.0) for w in recent_weeks]))
 
-        base_withdrawal_pct = float(np.mean([w.get("withdrawal_72h_pct", 0.0) for w in baseline_weeks]))
-        recent_withdrawal_pct = float(np.mean([w.get("withdrawal_72h_pct", 0.0) for w in recent_weeks]))
+        base_withdrawal_pct = float(
+            np.mean([w.get("withdrawal_72h_pct", 0.0) for w in baseline_weeks])
+        )
+        recent_withdrawal_pct = float(
+            np.mean([w.get("withdrawal_72h_pct", 0.0) for w in recent_weeks])
+        )
 
         base_refs = float(np.mean([w.get("referred_count", 0.0) for w in baseline_weeks]))
         recent_refs = float(np.mean([w.get("referred_count", 0.0) for w in recent_weeks]))

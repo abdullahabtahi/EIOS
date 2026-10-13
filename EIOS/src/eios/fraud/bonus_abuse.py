@@ -92,7 +92,9 @@ class BonusAbuseScorer:
         turnover_score = min(1.0, mean_turnover / 10.0)
 
         # Composite Client Quality Index: [0.0, 1.0]
-        cqi_raw = (0.45 * active_retention_rate) + (0.35 * turnover_score) - (0.50 * fast_withdrawal_rate)
+        cqi_raw = (
+            (0.45 * active_retention_rate) + (0.35 * turnover_score) - (0.50 * fast_withdrawal_rate)
+        )
         # Shift and scale to ensure [0.0, 1.0]
         cqi = max(0.0, min(1.0, cqi_raw + 0.20 * active_retention_rate))
         cqi = round(cqi, 4)

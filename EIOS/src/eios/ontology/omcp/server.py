@@ -19,7 +19,26 @@ Implements the 13 canonical OMCP tool handlers matching contracts/omcp-tools.jso
 from datetime import datetime
 from typing import Any
 
+from eios.cockpit.aml import AMLWorkstationService
+from eios.cockpit.compliance import ComplianceExplorerService
+from eios.cockpit.executive import ExecutiveCockpitService
+from eios.cockpit.operations import DataPlatformOperationsService
+from eios.cockpit.partner import PartnerWorkstationService
+from eios.cockpit.provenance import ProvenanceResolver
+from eios.cockpit.session import OperatorRole, SessionManager
+from eios.cockpit.shell import CockpitShellPresenter
+from eios.flywheel.diagnostics import CalibrationDiagnosticsEngine
+from eios.flywheel.ledger import DecisionOutcomesLedger
+from eios.hardening.base import ChaosInjectionHook
+from eios.hardening.chaos import ChaosEngine
+from eios.hardening.dr import DisasterRecoveryCoordinator
+from eios.hardening.runbooks import RunbookVerificationEngine
+from eios.hardening.soak import AcceleratedSoakTestRunner
+from eios.hardening.stride import STRIDESecuritySuite
 from eios.ingestion.hot_state import HotStateEngine
+from eios.observability.alerts import SREAlertEngine
+from eios.observability.golden_signals import GoldenSignalsCollector
+from eios.observability.slo_engine import SLOMonitoringEngine
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import ActionIntentHub
 from eios.ontology.actions.outcomes import DecisionOutcomesStore
@@ -29,7 +48,6 @@ from eios.ontology.actions.worm import WORMAnchorService
 from eios.ontology.config import OntologyConfig
 from eios.ontology.core.hydrator import OntologyHydrator
 from eios.ontology.functions.partner import churn_priority
-from eios.ontology.functions.scenario import scenario_propagate
 from eios.ontology.graph.property_graph import InMemPropertyGraph
 from eios.ontology.metrics.catalog import create_default_registry
 from eios.ontology.metrics.engine import MetricEngine, MetricQuery
@@ -38,25 +56,6 @@ from eios.synthesis.briefing import MorningBriefingGenerator
 from eios.synthesis.models import ScenarioShockSpec
 from eios.synthesis.scenario import ScenarioSimulator
 from eios.synthesis.scm_runner import SCMRunner
-from eios.cockpit.provenance import ProvenanceResolver
-from eios.cockpit.session import SessionManager, OperatorRole, WorkstationTab
-from eios.cockpit.shell import CockpitShellPresenter
-from eios.cockpit.executive import ExecutiveCockpitService
-from eios.cockpit.aml import AMLWorkstationService
-from eios.cockpit.partner import PartnerWorkstationService
-from eios.cockpit.compliance import ComplianceExplorerService
-from eios.cockpit.operations import DataPlatformOperationsService
-from eios.observability.slo_engine import SLOMonitoringEngine
-from eios.observability.alerts import SREAlertEngine
-from eios.observability.golden_signals import GoldenSignalsCollector
-from eios.flywheel.ledger import DecisionOutcomesLedger
-from eios.flywheel.diagnostics import CalibrationDiagnosticsEngine
-from eios.hardening.base import ChaosInjectionHook
-from eios.hardening.chaos import ChaosEngine
-from eios.hardening.dr import DisasterRecoveryCoordinator
-from eios.hardening.runbooks import RunbookVerificationEngine
-from eios.hardening.soak import AcceleratedSoakTestRunner
-from eios.hardening.stride import STRIDESecuritySuite
 
 
 class OMCPServer:
@@ -74,10 +73,16 @@ class OMCPServer:
         self.registry = create_default_registry()
         self.metric_engine = MetricEngine(hot_state=self.hot_state, registry=self.registry)
         self.provenance_resolver = ProvenanceResolver(metric_registry=self.registry)
-        self.cockpit_shell = CockpitShellPresenter(session_manager=SessionManager(), action_shelf=None)
-        self.executive_cockpit = ExecutiveCockpitService(provenance_resolver=self.provenance_resolver)
+        self.cockpit_shell = CockpitShellPresenter(
+            session_manager=SessionManager(), action_shelf=None
+        )
+        self.executive_cockpit = ExecutiveCockpitService(
+            provenance_resolver=self.provenance_resolver
+        )
         self.aml_cockpit = AMLWorkstationService(provenance_resolver=self.provenance_resolver)
-        self.partner_cockpit = PartnerWorkstationService(provenance_resolver=self.provenance_resolver)
+        self.partner_cockpit = PartnerWorkstationService(
+            provenance_resolver=self.provenance_resolver
+        )
         self.operations_cockpit = DataPlatformOperationsService(metric_registry=self.registry)
 
         # Initialize Observability & SRE Spine
@@ -95,7 +100,9 @@ class OMCPServer:
 
         # Initialize Upstream Sequencer, WORM, Sink, Outcomes, and Action Intent Hub
         self.sequencer = LedgerSequencer(hot_state_engine=self.hot_state)
-        self.worm_service = WORMAnchorService(sequencer=self.sequencer, hot_state_engine=self.hot_state)
+        self.worm_service = WORMAnchorService(
+            sequencer=self.sequencer, hot_state_engine=self.hot_state
+        )
         self.compliance_cockpit = ComplianceExplorerService(
             sequencer=self.sequencer,
             audit_walker=ContinuousAuditWalker(
@@ -104,7 +111,9 @@ class OMCPServer:
             ),
             worm_service=self.worm_service,
         )
-        self.sink = SimulatedWriteBackSink(sequencer=self.sequencer, hot_state_engine=self.hot_state)
+        self.sink = SimulatedWriteBackSink(
+            sequencer=self.sequencer, hot_state_engine=self.hot_state
+        )
         self.outcomes_store = DecisionOutcomesStore(hot_state_engine=self.hot_state)
         self.intent_hub = ActionIntentHub(
             sequencer=self.sequencer,
@@ -115,7 +124,6 @@ class OMCPServer:
 
         # Initialize Ontology Object Hydrator
         self.hydrator = OntologyHydrator(self.hot_state)
-
 
         # Initialize Synthesis components
         self.scm_cache = SCMRunner.build_default_dag()
@@ -335,7 +343,9 @@ class OMCPServer:
             "ledger_seq": res.ledger_seq,
         }
 
-    def _handle_get_ledger_audit_status(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_ledger_audit_status(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Verify unbroken cryptographic ledger hash chain and WORM anchor proofs."""
         walker = ContinuousAuditWalker(sequencer=self.sequencer, worm_service=self.worm_service)
         report = walker.verify_ledger()
@@ -355,7 +365,6 @@ class OMCPServer:
     def _handle_verify_hash_chain(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
         """Alias for ledger audit verification."""
         return self._handle_get_ledger_audit_status(args, caller_role=caller_role)
-
 
     def _handle_get_partner_signals(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
         """Retrieve daily behavioral engagement signals and change-point markers for a partner."""
@@ -378,8 +387,9 @@ class OMCPServer:
         # 2. Query churn_radar_scores hot state
         score_row = None
         try:
-            score_row = cursor.execute("""
-                SELECT 
+            score_row = cursor.execute(
+                """
+                SELECT
                     hazard_probability_30d,
                     priority_score,
                     risk_tier,
@@ -391,7 +401,9 @@ class OMCPServer:
                     narrative_summary
                 FROM churn_radar_scores
                 WHERE partner_id = ?
-            """, [partner_id]).fetchone()
+            """,
+                [partner_id],
+            ).fetchone()
         except Exception:
             score_row = None
 
@@ -404,7 +416,9 @@ class OMCPServer:
             top_family = str(score_row[5])
             top_metric = str(score_row[6])
             top_delta = float(score_row[7])
-            narrative = str(score_row[8] or f"{risk_tier} risk partner driven by {top_family} signals.")
+            narrative = str(
+                score_row[8] or f"{risk_tier} risk partner driven by {top_family} signals."
+            )
         else:
             # Fallback to deterministic priority function
             try:
@@ -432,7 +446,9 @@ class OMCPServer:
                 "observed_value": top_delta,
                 "baseline_value": 0.0,
                 "relative_delta": top_delta,
-                "citation_ref": "DP9:partner_engagement_signals" if top_family == "BEHAVIORAL" else "DP10:partner_comms"
+                "citation_ref": "DP9:partner_engagement_signals"
+                if top_family == "BEHAVIORAL"
+                else "DP10:partner_comms",
             },
             {
                 "signal_family": "FINANCIAL",
@@ -440,7 +456,7 @@ class OMCPServer:
                 "observed_value": 0.0,
                 "baseline_value": 0.0,
                 "relative_delta": -0.15 if hazard_prob >= 0.50 else 0.02,
-                "citation_ref": "DP8:commission_ledger"
+                "citation_ref": "DP8:commission_ledger",
             },
             {
                 "signal_family": "RELATIONSHIP",
@@ -448,14 +464,18 @@ class OMCPServer:
                 "observed_value": 12.0,
                 "baseline_value": 12.0,
                 "relative_delta": 0.0,
-                "citation_ref": "DP6:partner_360"
-            }
+                "citation_ref": "DP6:partner_360",
+            },
         ]
 
         explanation = {
             "narrative": narrative,
-            "citations": ["DP6:partner_360", "DP8:commission_ledger", "DP9:partner_engagement_signals"],
-            "is_replay": False
+            "citations": [
+                "DP6:partner_360",
+                "DP8:commission_ledger",
+                "DP9:partner_engagement_signals",
+            ],
+            "is_replay": False,
         }
 
         return {
@@ -483,13 +503,15 @@ class OMCPServer:
             "churn_hazard_score": hazard_prob,
         }
 
-    def _handle_get_high_risk_cohorts(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_high_risk_cohorts(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve systemic regional and segment disengagement cohort anomaly alerts (T025)."""
         region_filter = args.get("region_id")
 
         cursor = self.hot_state.get_cursor()
         rows = cursor.execute("""
-            SELECT 
+            SELECT
                 alert_id,
                 region_id,
                 partner_count,
@@ -506,41 +528,49 @@ class OMCPServer:
             for r in rows:
                 if region_filter and r[1] != region_filter:
                     continue
-                aff_rows = cursor.execute("""
-                    SELECT p.partner_id 
+                aff_rows = cursor.execute(
+                    """
+                    SELECT p.partner_id
                     FROM partner_360 p
                     JOIN churn_radar_scores s ON p.partner_id = s.partner_id
                     WHERE p.region = ? AND s.hazard_probability_30d >= 0.50
-                """, [r[1]]).fetchall()
+                """,
+                    [r[1]],
+                ).fetchall()
                 aff_ids = [row[0] for row in aff_rows]
 
-                cohorts.append({
-                    "cohort_id": str(r[0]),
-                    "region_id": str(r[1]),
-                    "partner_count": int(r[2]),
-                    "affected_partner_ids": aff_ids,
-                    "aggregate_value_at_risk_usd": float(r[3]),
-                    "p_value": float(r[4]),
-                    "common_driver": str(r[5]),
-                    "recommended_playbook": str(r[6]),
-                })
+                cohorts.append(
+                    {
+                        "cohort_id": str(r[0]),
+                        "region_id": str(r[1]),
+                        "partner_count": int(r[2]),
+                        "affected_partner_ids": aff_ids,
+                        "aggregate_value_at_risk_usd": float(r[3]),
+                        "p_value": float(r[4]),
+                        "common_driver": str(r[5]),
+                        "recommended_playbook": str(r[6]),
+                    }
+                )
         else:
             from eios.churn.cohort_detector import CohortRiskDetector
+
             detector = CohortRiskDetector(self.hot_state)
             alerts = detector.detect_cohort_anomalies()
             for a in alerts:
                 if region_filter and a.region_id != region_filter:
                     continue
-                cohorts.append({
-                    "cohort_id": a.cohort_id or a.alert_id,
-                    "region_id": a.region_id,
-                    "partner_count": a.partner_count,
-                    "affected_partner_ids": a.affected_partner_ids,
-                    "aggregate_value_at_risk_usd": a.aggregate_value_at_risk_usd,
-                    "p_value": a.p_value,
-                    "common_driver": a.common_driver,
-                    "recommended_playbook": a.recommended_playbook,
-                })
+                cohorts.append(
+                    {
+                        "cohort_id": a.cohort_id or a.alert_id,
+                        "region_id": a.region_id,
+                        "partner_count": a.partner_count,
+                        "affected_partner_ids": a.affected_partner_ids,
+                        "aggregate_value_at_risk_usd": a.aggregate_value_at_risk_usd,
+                        "p_value": a.p_value,
+                        "common_driver": a.common_driver,
+                        "recommended_playbook": a.recommended_playbook,
+                    }
+                )
 
         return {"cohorts": cohorts}
 
@@ -631,15 +661,15 @@ class OMCPServer:
                     "message_id": "COMM-01",
                     "channel": "TELEGRAM",
                     "sentiment": "NEGATIVE",
-                    "text": (
-                        f"Partner {partner_id} for '{query}': competitor offered higher rev."
-                    ),
+                    "text": (f"Partner {partner_id} for '{query}': competitor offered higher rev."),
                     "is_untrusted": True,
                 }
             ],
         }
 
-    def _handle_get_opposite_trading_pairs(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_opposite_trading_pairs(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve identified coordinated opposite and mirror trading pairs for an affiliate."""
         partner_id = args["partner_id"]
         cursor = self.hot_state.get_cursor()
@@ -684,7 +714,9 @@ class OMCPServer:
             "aggregate_commission_usd": round(agg_commission, 2),
         }
 
-    def _handle_get_partner_referral_ring(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_partner_referral_ring(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve 3-layer sub-affiliate network hierarchy and master partner attribution."""
         from eios.fraud.ring_attribution import ReferralRingAttributionEngine
 
@@ -699,15 +731,17 @@ class OMCPServer:
         tree_records = []
         if rows:
             for r in rows:
-                tree_records.append({
-                    "partner_id": r[1],
-                    "parent_partner_id": r[0],
-                    "tier_level": r[2],
-                    "direct_referred_clients": 15,
-                    "direct_commission_usd": 3500.0,
-                    "sub_affiliate_count": 1,
-                    "is_root_master": (r[0] is None),
-                })
+                tree_records.append(
+                    {
+                        "partner_id": r[1],
+                        "parent_partner_id": r[0],
+                        "tier_level": r[2],
+                        "direct_referred_clients": 15,
+                        "direct_commission_usd": 3500.0,
+                        "sub_affiliate_count": 1,
+                        "is_root_master": (r[0] is None),
+                    }
+                )
         else:
             # Synthetic single/root tree record for query
             tree_records = [
@@ -722,12 +756,16 @@ class OMCPServer:
                 }
             ]
 
-        engine = ReferralRingAttributionEngine(hub_degree_threshold=self.config.hub_degree_threshold)
+        engine = ReferralRingAttributionEngine(
+            hub_degree_threshold=self.config.hub_degree_threshold
+        )
         engine.build_graph(tree_records)
         attribution = engine.attribute_partner_ring(partner_id)
         return attribution.model_dump(mode="json")
 
-    def _handle_get_client_quality_profile(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_client_quality_profile(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve client quality score and bonus abuse velocity metrics."""
         from eios.fraud.bonus_abuse import BonusAbuseScorer
 
@@ -737,7 +775,9 @@ class OMCPServer:
         profile = scorer.score_partner_portfolio(partner_id, [])
         return profile.model_dump(mode="json")
 
-    def _handle_get_partner_fraud_dossier(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_partner_fraud_dossier(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Compile complete multi-source fraud investigation dossier."""
         from eios.fraud.dossier import FraudDossierAssembler
 
@@ -746,7 +786,9 @@ class OMCPServer:
         case = assembler.assemble_dossier(partner_id=partner_id)
         return case.model_dump(mode="json")
 
-    def _handle_get_client_aml_dossier(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_client_aml_dossier(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Compile multi-source AML case dossier matching aml-case-dossier.schema.json."""
         from eios.aml.dossier import AMLDossierAssembler
 
@@ -810,7 +852,9 @@ class OMCPServer:
                 "plain_language_explanation": f"No multi-client mule syndicate detected for account {target_id}.",
             }
 
-    def _handle_get_roundtrip_structuring_alerts(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_roundtrip_structuring_alerts(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve detected round-trip structuring alerts matching roundtrip-structuring-alerts.schema.json."""
         from datetime import UTC, datetime
 
@@ -832,20 +876,22 @@ class OMCPServer:
         rows = cursor.execute(query, params).fetchall()
         alerts = []
         for r in rows:
-            alerts.append({
-                "event_id": r[0],
-                "client_id": r[1],
-                "deposit_txn_id": r[2],
-                "withdrawal_txn_id": r[3],
-                "deposit_amount_usd": float(r[4]),
-                "withdrawal_amount_usd": float(r[5]),
-                "trade_count": int(r[6]),
-                "net_pl_usd": float(r[7]),
-                "market_risk_pct": float(r[8]),
-                "holding_duration_seconds": float(r[9]),
-                "hours_since_kyc": float(r[10]),
-                "typology_risk_score": float(r[11]),
-            })
+            alerts.append(
+                {
+                    "event_id": r[0],
+                    "client_id": r[1],
+                    "deposit_txn_id": r[2],
+                    "withdrawal_txn_id": r[3],
+                    "deposit_amount_usd": float(r[4]),
+                    "withdrawal_amount_usd": float(r[5]),
+                    "trade_count": int(r[6]),
+                    "net_pl_usd": float(r[7]),
+                    "market_risk_pct": float(r[8]),
+                    "holding_duration_seconds": float(r[9]),
+                    "hours_since_kyc": float(r[10]),
+                    "typology_risk_score": float(r[11]),
+                }
+            )
 
         return {
             "alerts": alerts,
@@ -854,7 +900,9 @@ class OMCPServer:
             "evaluated_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         }
 
-    def _handle_check_withdrawal_risk(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_check_withdrawal_risk(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Real-time withdrawal risk evaluation matching withdrawal-risk-assessment.schema.json."""
         from eios.aml.withdrawal_sentinel import WithdrawalSentinel
 
@@ -910,7 +958,9 @@ class OMCPServer:
             if "txn_id" not in parameters and "withdrawal_id" in parameters:
                 parameters["txn_id"] = parameters["withdrawal_id"]
             if "reason" not in parameters:
-                parameters["reason"] = parameters.get("reason_code", "Acute AML risk indicator detected")
+                parameters["reason"] = parameters.get(
+                    "reason_code", "Acute AML risk indicator detected"
+                )
 
         token = self.intent_hub.propose_action(
             action_type=action_type,
@@ -933,7 +983,9 @@ class OMCPServer:
             "requires_dual_approval": token.requires_dual_approval,
         }
 
-    def _handle_get_metric_provenance(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_metric_provenance(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Deterministic retrieval of metric provenance metadata in < 50ms."""
         metric_id = args["metric_id"]
         version = args.get("version")
@@ -941,7 +993,9 @@ class OMCPServer:
         meta = self.provenance_resolver.resolve(metric_id, version=version, is_replayed=is_replayed)
         return meta.to_contract_dict()
 
-    def _handle_get_workstation_view(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_workstation_view(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Renders the tripartite Common Operational Picture (COP) view for an operator role."""
         operator_id = args.get("operator_id", caller_role)
         role_str = args.get("role", "EXECUTIVE")
@@ -949,31 +1003,45 @@ class OMCPServer:
             role = OperatorRole(role_str)
         except ValueError:
             role = OperatorRole.EXECUTIVE
-        session = self.cockpit_shell.session_manager.create_session(operator_id=operator_id, role=role)
+        session = self.cockpit_shell.session_manager.create_session(
+            operator_id=operator_id, role=role
+        )
         return self.cockpit_shell.render_workstation_view(session_id=session.session_id)
 
-    def _handle_get_morning_briefing(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_morning_briefing(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve 4-horizon morning briefing for Executive Decision Cockpit."""
         briefing = self.executive_cockpit.get_morning_briefing()
         return briefing.to_contract_dict()
 
-    def _handle_simulate_what_if_shock(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_simulate_what_if_shock(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Sub-200ms parametric what-if shock propagation and 100% additive attribution."""
         shock_param = args.get("shock_param", "competitor_payout_spread")
         magnitude_pct = float(args.get("magnitude_pct", 15.0))
-        return self.executive_cockpit.simulate_what_if_shock(shock_param=shock_param, magnitude_pct=magnitude_pct)
+        return self.executive_cockpit.simulate_what_if_shock(
+            shock_param=shock_param, magnitude_pct=magnitude_pct
+        )
 
-    def _handle_get_aml_entity_dossier(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_aml_entity_dossier(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve 1-screen unified AML investigation dossier."""
         entity_id = args.get("entity_id", "CR84920")
         dossier = self.aml_cockpit.get_entity_dossier(entity_id=entity_id)
         return dossier.to_contract_dict()
 
-    def _handle_get_kinetic_network_graph(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_kinetic_network_graph(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve kinetic network graph with hub suppression for high-degree nodes."""
         entity_id = args.get("entity_id", "CR84920")
         hub_threshold = int(args.get("hub_threshold", self.config.hub_degree_threshold))
-        graph = self.aml_cockpit.get_kinetic_network_graph(entity_id=entity_id, hub_threshold=hub_threshold)
+        graph = self.aml_cockpit.get_kinetic_network_graph(
+            entity_id=entity_id, hub_threshold=hub_threshold
+        )
         return graph.to_contract_dict()
 
     def _handle_compose_sar_draft(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
@@ -981,10 +1049,14 @@ class OMCPServer:
         case_id = args.get("case_id", "case_aml_84920")
         entity_id = args.get("entity_id", "CR84920")
         investigator_id = args.get("investigator_id", caller_role)
-        sar = self.aml_cockpit.compose_sar_draft(case_id=case_id, entity_id=entity_id, investigator_id=investigator_id)
+        sar = self.aml_cockpit.compose_sar_draft(
+            case_id=case_id, entity_id=entity_id, investigator_id=investigator_id
+        )
         return sar.to_contract_dict()
 
-    def _handle_get_churn_radar_scatter(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_churn_radar_scatter(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve partner churn radar scatter dataset for Partner Manager Workstation."""
         scatter = self.partner_cockpit.get_churn_radar_scatter()
         return scatter.to_contract_dict()
@@ -996,15 +1068,21 @@ class OMCPServer:
         entries = self.compliance_cockpit.get_ledger_timeline(start_seq=start_seq, limit=limit)
         return {"entries": entries, "count": len(entries)}
 
-    def _handle_verify_hash_chain_interactive(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_verify_hash_chain_interactive(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Execute interactive cryptographic hash chain verification walking."""
         return self.compliance_cockpit.verify_hash_chain_interactive()
 
-    def _handle_get_data_quality_board(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_data_quality_board(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve operational health, freshness SLAs, and DQ status for Data Platform Board."""
         return self.operations_cockpit.get_board_summary()
 
-    def _handle_get_system_reliability_status(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_system_reliability_status(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve unified platform reliability health, 10-SLO error budgets, SRE alerts, and Golden Signals."""
         all_slo_statuses = self.slo_engine.evaluate_all_slos()
         frozen = any(s.is_frozen for s in all_slo_statuses)
@@ -1056,7 +1134,9 @@ class OMCPServer:
             ],
         }
 
-    def _handle_get_flywheel_calibration_status(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_flywheel_calibration_status(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve Closed-Loop Decision Learning Flywheel calibration diagnostics and drift warnings (US5)."""
         model_id = args.get("model_id", "churn-hazard-model-v2")
         records = self.flywheel_ledger.query_records()
@@ -1064,7 +1144,9 @@ class OMCPServer:
         if records:
             predicted_probs = [r.propensity_score for r in records]
             actual_labels = [
-                1.0 if (r.actual_impact_60d and r.actual_impact_60d > 0) or r.treatment_assigned else 0.0
+                1.0
+                if (r.actual_impact_60d and r.actual_impact_60d > 0) or r.treatment_assigned
+                else 0.0
                 for r in records
             ]
         else:
@@ -1078,7 +1160,9 @@ class OMCPServer:
         )
         return report.model_dump(mode="json")
 
-    def _handle_get_hardening_drill_status(self, args: dict[str, Any], caller_role: str) -> dict[str, Any]:
+    def _handle_get_hardening_drill_status(
+        self, args: dict[str, Any], caller_role: str
+    ) -> dict[str, Any]:
         """Retrieve status and verification proofs from production hardening, chaos, DR, and security drills."""
         drill_type = args.get("drill_type", "all")
 
@@ -1106,9 +1190,3 @@ class OMCPServer:
             status_payload["runbook_catalog"] = self.runbook_engine.get_runbook_catalog()
 
         return status_payload
-
-
-
-
-
-

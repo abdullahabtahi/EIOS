@@ -1,13 +1,10 @@
 """Tests asserting zero plaintext PII leakage in Hot State and API (RL-5, US5)."""
 
-from datetime import date
 from fastapi.testclient import TestClient
-import pytest
 
-from eios.contracts.base import DataProductEnum
 from eios.ingestion.hot_state import HotStateEngine
-from eios.ingestion.vault import TokenVault
 from eios.ingestion.router import create_ingestion_app
+from eios.ingestion.vault import TokenVault
 
 
 def test_zero_raw_pii_in_hot_state_after_ingestion():
@@ -16,7 +13,7 @@ def test_zero_raw_pii_in_hot_state_after_ingestion():
     engine = HotStateEngine()
     app = create_ingestion_app(hot_state=engine)
     app.state.vault = vault
-    
+
     raw_email = "super_secret_vip@deriv.com"
     raw_tax = "TAX_MY_998877"
     raw_phone = "+60199887766"
@@ -50,7 +47,9 @@ def test_zero_raw_pii_in_hot_state_after_ingestion():
 
     # Query DuckDB hot state directly
     cursor = engine.get_cursor()
-    row = cursor.execute("SELECT tax_id, full_name, email, phone FROM client_360 WHERE client_id = 'cli_vip_001'").fetchone()
+    row = cursor.execute(
+        "SELECT tax_id, full_name, email, phone FROM client_360 WHERE client_id = 'cli_vip_001'"
+    ).fetchone()
     assert row is not None
     tax_id_stored, name_stored, email_stored, phone_stored = row
 

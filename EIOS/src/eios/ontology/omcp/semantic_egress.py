@@ -55,9 +55,7 @@ class SemanticEgressGate:
         r"\babsolutely certain\b": "statistically confident",
     }
 
-    PROVENANCE_TAG_PATTERN = re.compile(
-        r"\[(BRIEF|ASSUMPTION|TARGET|SPIKE|ILLUSTRATIVE)\]"
-    )
+    PROVENANCE_TAG_PATTERN = re.compile(r"\[(BRIEF|ASSUMPTION|TARGET|SPIKE|ILLUSTRATIVE)\]")
 
     NUMERIC_PATTERN = re.compile(
         r"(?<![A-Za-z0-9_$-])(?:\$[0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?%)(?![A-Za-z0-9_])"

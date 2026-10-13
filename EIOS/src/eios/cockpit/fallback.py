@@ -9,10 +9,12 @@ Invented or hallucinated text is strictly prohibited.
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Callable, Dict, Optional, TypeVar
-from pydantic import BaseModel, Field
+from typing import Any, TypeVar
+
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
@@ -30,25 +32,27 @@ class FallbackBadge(BaseModel):
     badge_color: str = "#b45309"  # Amber-700
     is_fallback: bool = True
     snapshot_timestamp: datetime
-    message: str = "Live synthesis engine is currently unavailable. Displaying precomputed verified snapshot."
+    message: str = (
+        "Live synthesis engine is currently unavailable. Displaying precomputed verified snapshot."
+    )
 
 
 class FallbackEngine:
     """Manages cached view snapshots and executes automatic failover."""
 
     def __init__(self) -> None:
-        self._snapshots: Dict[str, Dict[str, Any]] = {}
+        self._snapshots: dict[str, dict[str, Any]] = {}
         self._health_state: ServiceHealthState = ServiceHealthState.HEALTHY_LIVE
         self._failover_count: int = 0
 
-    def register_snapshot(self, view_key: str, data: Dict[str, Any]) -> None:
+    def register_snapshot(self, view_key: str, data: dict[str, Any]) -> None:
         """Stores a verified pre-computed snapshot for a view."""
         self._snapshots[view_key] = {
             "payload": data,
             "captured_at": datetime.now(UTC),
         }
 
-    def get_snapshot(self, view_key: str) -> Dict[str, Any]:
+    def get_snapshot(self, view_key: str) -> dict[str, Any]:
         """Retrieves a snapshot stamped with [REPLAY] badge metadata."""
         if view_key not in self._snapshots:
             raise KeyError(f"No cached snapshot registered for view: {view_key}")
@@ -69,10 +73,10 @@ class FallbackEngine:
     def execute_with_fallback(
         self,
         view_key: str,
-        live_callable: Callable[..., Dict[str, Any]],
+        live_callable: Callable[..., dict[str, Any]],
         *args: Any,
         **kwargs: Any,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Executes live_callable; falls back to verified cached snapshot on error."""
         try:
             result = live_callable(*args, **kwargs)

@@ -1,9 +1,9 @@
 """Tests for Data Quality & Freshness SLA Monitor (US6)."""
 
-from datetime import datetime, timezone, timedelta
 import time
+from datetime import UTC, datetime, timedelta
+
 from fastapi.testclient import TestClient
-import pytest
 
 from eios.contracts.base import DataProductEnum
 from eios.ingestion.dq import DQMonitor
@@ -13,22 +13,22 @@ from eios.ingestion.router import create_ingestion_app
 def test_dq_monitor_tracks_freshness_lag_and_sla():
     monitor = DQMonitor()
     product = DataProductEnum.TRANSACTIONS_AML
-    
+
     # Freshness SLA for transactions_aml is 30s
-    event_time_fresh = datetime.now(timezone.utc) - timedelta(seconds=10)
+    event_time_fresh = datetime.now(UTC) - timedelta(seconds=10)
     monitor.record_event(
         product,
         event_time_fresh,
         {"txn_id": "txn_01", "amount": 100.0, "currency": "USD"},
     )
-    
+
     status = monitor.get_product_status(product)
     assert status.freshness_sla_met is True
     assert status.freshness_lag_seconds <= 15.0
 
     # Product with stream delayed by 45s (> 30s SLA)
     stale_product = DataProductEnum.TRADING_ACTIVITY
-    event_time_stale = datetime.now(timezone.utc) - timedelta(seconds=45)
+    event_time_stale = datetime.now(UTC) - timedelta(seconds=45)
     monitor.record_event(
         stale_product,
         event_time_stale,
@@ -42,7 +42,7 @@ def test_dq_monitor_tracks_freshness_lag_and_sla():
 def test_dq_monitor_tracks_null_rates():
     monitor = DQMonitor()
     product = DataProductEnum.CLIENT_360
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # 10 records: 3 with partner_id None, 7 with partner_id populated
     for i in range(10):

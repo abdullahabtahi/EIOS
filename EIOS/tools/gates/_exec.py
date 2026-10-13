@@ -36,7 +36,7 @@ def run(
     """Run ``argv`` (no shell) in ``cwd`` capturing text output; never raises on exit status."""
     env = {**os.environ, **(extra_env or {})}
     try:
-        return subprocess.run(  # noqa: S603 - argv is a list built by this package, no shell
+        return subprocess.run(  # noqa: S603
             list(argv),
             cwd=cwd,
             env=env,

@@ -1,8 +1,8 @@
 """In-memory NetworkX Property Graph with Hub Suppression (ADR-004, ADR-008, US3)."""
 
 from collections import deque
+from datetime import UTC, datetime
 from typing import Any
-from datetime import datetime, timezone
 
 import networkx as nx
 
@@ -40,8 +40,8 @@ class InMemPropertyGraph:
     def sync_from_hot_state(self, hot_state: HotStateEngine) -> None:
         """Incrementally sync nodes and edges from hot-state tables in DuckDB."""
         cursor = hot_state.get_cursor()
-        current_sync_ts = datetime.now(timezone.utc)
-        
+        current_sync_ts = datetime.now(UTC)
+
         if self._last_sync_ts is None:
             time_filter_dev = ""
             time_filter_partner = ""
@@ -58,7 +58,7 @@ class InMemPropertyGraph:
                 SELECT source_id, target_id, edge_type, session_count
                 FROM device_network_graph
                 {time_filter_dev}
-            """
+            """  # noqa: S608
             dev_edges = cursor.execute(dev_query, params).fetchall()
 
             # 2. Partner referral tree edges
@@ -66,7 +66,7 @@ class InMemPropertyGraph:
                 SELECT parent_id, child_id, 'REFERRED_BY' as edge_type, 1 as session_count
                 FROM partner_referral_tree
                 {time_filter_partner}
-            """
+            """  # noqa: S608
             partner_edges = cursor.execute(partner_query, params).fetchall()
         finally:
             cursor.close()
@@ -94,7 +94,7 @@ class InMemPropertyGraph:
             )
             eval_res = self.hub_filter.evaluate_node(node_id, node_type, degree)
             self.graph.nodes[node_id].update(eval_res)
-            
+
         self._last_sync_ts = current_sync_ts
 
     def get_ego_graph(

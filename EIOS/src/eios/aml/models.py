@@ -10,11 +10,13 @@ Authoritative References:
 from datetime import datetime
 from enum import Enum
 from typing import Any
-from pydantic import BaseModel, Field, ConfigDict
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AMLTriggerType(str, Enum):
     """Surveillance trigger typology."""
+
     THRESHOLD_RULE = "THRESHOLD_RULE"
     ROUND_TRIP_SEQUENCE = "ROUND_TRIP_SEQUENCE"
     MULE_RING_CLUSTER = "MULE_RING_CLUSTER"
@@ -24,6 +26,7 @@ class AMLTriggerType(str, Enum):
 
 class AMLPriorityTier(str, Enum):
     """Investigation priority tier."""
+
     CRITICAL = "CRITICAL"  # Top 50 prioritized case
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
@@ -32,6 +35,7 @@ class AMLPriorityTier(str, Enum):
 
 class AMLTypology(str, Enum):
     """Categorized financial crime typology."""
+
     STRUCTURING = "STRUCTURING"
     MICRO_PNL_WASH = "MICRO_PNL_WASH"
     MULE_SYNDICATE = "MULE_SYNDICATE"
@@ -41,6 +45,7 @@ class AMLTypology(str, Enum):
 
 class WithdrawalDisposition(str, Enum):
     """Action recommendation for real-time pre-withdrawal evaluation."""
+
     ALLOW = "ALLOW"
     PROPOSE_HOLD = "PROPOSE_HOLD"
     PROPOSE_FREEZE = "PROPOSE_FREEZE"
@@ -48,6 +53,7 @@ class WithdrawalDisposition(str, Enum):
 
 class AMLAlert(BaseModel):
     """Core transaction surveillance alert."""
+
     model_config = ConfigDict(strict=True, frozen=True)
 
     alert_id: str
@@ -64,6 +70,7 @@ class AMLAlert(BaseModel):
 
 class RoundTripTypology(BaseModel):
     """Structured wash/layering pattern (deposit -> micro-trade -> withdrawal within 72h KYC)."""
+
     model_config = ConfigDict(strict=True, frozen=True)
 
     event_id: str
@@ -82,6 +89,7 @@ class RoundTripTypology(BaseModel):
 
 class MuleRingCluster(BaseModel):
     """Graph cluster of accounts linked by shared tokens with hub suppression."""
+
     model_config = ConfigDict(strict=True, frozen=True)
 
     cluster_id: str
@@ -98,6 +106,7 @@ class MuleRingCluster(BaseModel):
 
 class WithdrawalRiskAssessment(BaseModel):
     """Real-time pre-withdrawal risk evaluation result."""
+
     model_config = ConfigDict(strict=True, frozen=True)
 
     assessment_id: str
@@ -113,6 +122,7 @@ class WithdrawalRiskAssessment(BaseModel):
 
 class SARDraft(BaseModel):
     """Regulator-ready Suspicious Activity Report (FinCEN / FIU standard format)."""
+
     model_config = ConfigDict(strict=True, frozen=True)
 
     sar_id: str
@@ -132,6 +142,7 @@ class SARDraft(BaseModel):
 
 class AMLCaseDossier(BaseModel):
     """Unified AML investigation pack aggregating 5+ source systems."""
+
     model_config = ConfigDict(strict=True, frozen=True)
 
     case_id: str

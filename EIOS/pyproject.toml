@@ -83,12 +83,26 @@ src = ["src", "."]
 extend-exclude = [".github", "web-prototype", "docs", "tests/fixtures"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "B", "UP", "S", "C90", "PLR0912", "PLR0913", "PLR0915", "TID"]
-ignore = ["E501"]
+select = ["E", "F", "W", "I", "B", "UP", "S", "C90", "PLR0912", "PLR0913", "PLR0915", "TID", "RUF100"]
+ignore = [
+    "E501",
+    # str-mixin enums keep their current str()/format() output, which is serialised into
+    # contracts and the ledger; migrating to StrEnum changes it, so each move is a reviewed change.
+    "UP042",
+]
+
+# Existing structural debt (complexity, argument counts, ...) carries an inline `# noqa` so that new
+# violations fail while old ones are visible. RUF100 turns a noqa that no longer matches a violation
+# into an error, so the debt can only shrink.
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI dependency injection is a call in an argument default by design.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header", "fastapi.Body"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "S105", "S106"]
+"tests/**" = ["S101", "S105", "S106", "S311"]  # S311: seeded RNG for deterministic fixtures
 "evals/**" = ["S101", "S105", "S106"]
+# Operator scripts adjust sys.path before importing the package.
+"scripts/**" = ["E402"]
 # The one place telemetry SDK classes may be imported (T194); everything else uses the API.
 "src/eios/common/otel.py" = ["TID251"]
 # Vendor LLM SDKs live only in the gateway providers package (ADR-002).

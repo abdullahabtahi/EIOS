@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import jsonschema
-import pytest
 
 from eios.ontology.actions.models import (
     ActionIntentToken,
@@ -19,13 +18,15 @@ from eios.ontology.actions.models import (
     WORMAnchorCheckpoint,
 )
 
-CONTRACTS_DIR = Path(__file__).resolve().parents[3] / "specs" / "011-governed-actions-ledger" / "contracts"
+CONTRACTS_DIR = (
+    Path(__file__).resolve().parents[3] / "specs" / "011-governed-actions-ledger" / "contracts"
+)
 
 
 def load_schema(schema_name: str) -> dict:
     schema_path = CONTRACTS_DIR / schema_name
     assert schema_path.exists(), f"Schema file not found at {schema_path}"
-    with open(schema_path, "r", encoding="utf-8") as f:
+    with open(schema_path, encoding="utf-8") as f:
         return json.load(f)
 
 

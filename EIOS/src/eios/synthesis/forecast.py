@@ -38,7 +38,7 @@ class MultivariateRidgeForecaster:
         self,
         y: Sequence[float],
         leading_indicators: dict[str, Sequence[float]] | None = None,
-    ) -> "MultivariateRidgeForecaster":
+    ) -> MultivariateRidgeForecaster:
         """Fit autoregressive and leading indicator coefficients using Ridge regression."""
         from sklearn.linear_model import Ridge
 
@@ -73,7 +73,7 @@ class MultivariateRidgeForecaster:
         # Ridge regularized inversion
         model = Ridge(alpha=self.alpha, fit_intercept=True)
         model.fit(x_mat, y_vec)
-        
+
         self.intercept = float(model.intercept_)
         self.weights = model.coef_
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, Dict, Optional
+
 from google import genai
 from google.genai import types
 
@@ -21,9 +21,9 @@ class GeminiClientManager:
 
     def __init__(
         self,
-        project: Optional[str] = None,
-        location: Optional[str] = None,
-        model_id: Optional[str] = None,
+        project: str | None = None,
+        location: str | None = None,
+        model_id: str | None = None,
         offline_mode: bool = False,
     ) -> None:
         self.project = project or os.getenv("GOOGLE_CLOUD_PROJECT")
@@ -31,11 +31,13 @@ class GeminiClientManager:
         self.model_id = model_id or os.getenv("EIOS_GEMINI_MODEL", DEFAULT_MODEL)
         self.fallback_model_id = FALLBACK_MODEL
         self.offline_mode = offline_mode or (os.getenv("EIOS_OFFLINE_REPLAY", "0") == "1")
-        self.offline_reason: Optional[str] = "offline replay mode requested" if self.offline_mode else None
-        self._client: Optional[genai.Client] = None
-        self._active_cache_name: Optional[str] = None
+        self.offline_reason: str | None = (
+            "offline replay mode requested" if self.offline_mode else None
+        )
+        self._client: genai.Client | None = None
+        self._active_cache_name: str | None = None
 
-    def get_client(self) -> Optional[genai.Client]:
+    def get_client(self) -> genai.Client | None:
         """Initializes and returns the unified google.genai client."""
         if self.offline_mode:
             return None
@@ -52,7 +54,9 @@ class GeminiClientManager:
                     project=self.project,
                     location=self.location,
                 )
-                _LOG.info("Initialized client for project=%s in location=%s", self.project, self.location)
+                _LOG.info(
+                    "Initialized client for project=%s in location=%s", self.project, self.location
+                )
             except Exception as e:
                 _LOG.warning("Failed to initialize client, falling back to offline replay: %s", e)
                 self.offline_reason = f"Gemini client initialisation failed: {e}"
@@ -61,7 +65,9 @@ class GeminiClientManager:
 
         return self._client
 
-    def ensure_context_cache(self, system_instruction: str, ontology_schema_text: str) -> Optional[str]:
+    def ensure_context_cache(
+        self, system_instruction: str, ontology_schema_text: str
+    ) -> str | None:
         """Creates or returns a cached context bundle on the backend provider."""
         if self.offline_mode or not self.get_client():
             return None
@@ -89,5 +95,8 @@ class GeminiClientManager:
             _LOG.info("Successfully established context cache: %s", self._active_cache_name)
             return self._active_cache_name
         except Exception as e:
-            _LOG.warning("Context caching initialization encountered an error (continuing without cache): %s", e)
+            _LOG.warning(
+                "Context caching initialization encountered an error (continuing without cache): %s",
+                e,
+            )
             return None

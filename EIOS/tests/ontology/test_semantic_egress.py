@@ -43,7 +43,9 @@ def test_strict_provenance_mode_flags_untagged_numbers():
     assert result_fail.is_safe is False
     assert any(v.rule_id == "egress.unlabelled_numeric_claim" for v in result_fail.violations)
 
-    text_tagged = "Retention revenue will drop by 45% [ASSUMPTION] ($250,000 [TARGET] loss) next month."
+    text_tagged = (
+        "Retention revenue will drop by 45% [ASSUMPTION] ($250,000 [TARGET] loss) next month."
+    )
     result_ok = gate_strict.inspect_and_sanitize(text_tagged)
     assert result_ok.is_safe is True
     assert not any(v.rule_id == "egress.unlabelled_numeric_claim" for v in result_ok.violations)

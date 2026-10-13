@@ -1,9 +1,8 @@
 """Tests for multi-silo identity fragmentation and hard negative distributions (FR-011 to FR-014)."""
 
-import pytest
+from eios.foundry.generators.client import ClientDataGenerator
 from eios.foundry.rng import DeterministicRNG
 from eios.foundry.universe import GlobalEntityUniverse
-from eios.foundry.generators.client import ClientDataGenerator
 
 
 def test_silo_projection_and_fragmentation():
@@ -22,7 +21,7 @@ def test_silo_projection_and_fragmentation():
 
         # Deriv Trader CR Account
         assert proj["deriv_trader_cr_id"].startswith("CR")
-        
+
         # MetaTrader 5 Login ID
         assert isinstance(proj["mt5_login_id"], int)
         assert proj["mt5_login_id"] >= 10000000
@@ -46,7 +45,9 @@ def test_shared_device_fingerprints_and_domain_variations():
     for edge in network_edges:
         device_to_clients.setdefault(edge["device_hash"], set()).add(edge["client_id"])
 
-    shared_devices = {dev: clients for dev, clients in device_to_clients.items() if len(clients) > 1}
+    shared_devices = {
+        dev: clients for dev, clients in device_to_clients.items() if len(clients) > 1
+    }
     # 3% targeted shared device fingerprints, in 1000 clients we should have at least 15 shared device pairings
     assert len(shared_devices) >= 15
 

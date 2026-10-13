@@ -2,9 +2,7 @@
 
 import json
 from unittest.mock import MagicMock
-import pytest
 
-from eios.contracts.base import DataProductEvent
 from eios.ingestion.subscriber import IngestionSubscriber
 
 
@@ -61,6 +59,7 @@ def test_subscriber_diverts_malformed_event_to_dlq_and_acks():
     mock_queue = MagicMock()
     mock_dlq = MagicMock()
     from eios.ingestion.processor import IngestionPipeline
+
     pipeline = IngestionPipeline(queue=mock_queue, dlq_dispatcher=mock_dlq)
     subscriber = IngestionSubscriber(queue=mock_queue, pipeline=pipeline)
 

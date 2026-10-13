@@ -79,6 +79,6 @@ def run_entry(
         return handler(args)
     except EiosError as exc:
         print(f"{prog}: error: {exc}", file=sys.stderr)
-    except Exception as exc:  # noqa: BLE001 - reported on stderr, mapped to exit code 2
+    except Exception as exc:
         print(f"{prog}: unexpected error: {type(exc).__name__}: {exc}", file=sys.stderr)
     return EXIT_ERROR

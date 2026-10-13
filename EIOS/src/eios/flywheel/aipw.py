@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import uuid
-from typing import Any, Optional
+from datetime import UTC, datetime
+
 import numpy as np
 from scipy import stats
 from sklearn.linear_model import Ridge
@@ -69,14 +69,10 @@ class AIPWCausalEstimator:
     ) -> np.ndarray:
         """Computes per-observation uncentered influence function values psi_i."""
         e = clip_propensity_scores(propensity, epsilon=self.epsilon)
-        psi = (
-            (mu_1 - mu_0)
-            + (W * (Y - mu_1) / e)
-            - ((1.0 - W) * (Y - mu_0) / (1.0 - e))
-        )
+        psi = (mu_1 - mu_0) + (W * (Y - mu_1) / e) - ((1.0 - W) * (Y - mu_0) / (1.0 - e))
         return psi
 
-    def estimate(
+    def estimate(  # noqa: PLR0913
         self,
         Y: np.ndarray,
         W: np.ndarray,
@@ -86,7 +82,7 @@ class AIPWCausalEstimator:
         intervention_type: str,
         placebo_effect: float = 0.0,
         refuter_stability_pct: float = 100.0,
-        causal_gate_passed: Optional[bool] = None,
+        causal_gate_passed: bool | None = None,
     ) -> CausalUpliftEstimate:
         """Computes Doubly Robust AIPW Average Treatment Effect and confidence bounds."""
         Y = np.asarray(Y, dtype=np.float64)

@@ -122,7 +122,7 @@ def test_replay_round_trips_and_overwrites(fake_firestore: types.ModuleType) -> 
 
 def test_replay_rejects_naive_timestamps(fake_firestore: types.ModuleType) -> None:
     with pytest.raises(BoundaryValidationError):
-        FirestoreReplayStore(project="p").put("k", "t", datetime(2026, 1, 1))  # noqa: DTZ001
+        FirestoreReplayStore(project="p").put("k", "t", datetime(2026, 1, 1))
 
 
 def test_replay_treats_a_malformed_document_as_a_miss_and_logs(

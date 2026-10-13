@@ -1,8 +1,7 @@
 """Tests for Compliance Priority Hierarchy (Principle VII, T027)."""
 
-import pytest
+from eios.conversation.models import BlackboardState, SpecialistRoute
 from eios.conversation.supervisor import ConversationalSupervisor
-from eios.conversation.models import SpecialistRoute, BlackboardState
 
 
 def test_compliance_priority_hierarchy_suppresses_commercial_rebate_on_aml_alert():

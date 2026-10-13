@@ -1,11 +1,10 @@
 """Tests for User Story 5: Automated 10 Production Runbook Verification & OMCP Integration."""
 
-from datetime import UTC, datetime
 import pytest
 
 from eios.hardening.models import RunbookExecutionProof, RunbookResolutionStatus
-from eios.hardening.schemas import validate_contract
 from eios.hardening.runbooks import RunbookVerificationEngine
+from eios.hardening.schemas import validate_contract
 
 
 def test_individual_runbook_execution():
@@ -70,4 +69,3 @@ def test_omcp_get_hardening_drill_status():
     assert "disaster_recovery" in status
     assert "runbook_catalog" in status
     assert len(status["runbook_catalog"]) == 10
-

@@ -1,8 +1,8 @@
 """Continuous Cryptographic Audit Walker and Tamper Localization (US4)."""
 
-from datetime import UTC, datetime
 import time
 import uuid
+from datetime import UTC, datetime
 
 from eios.ontology.actions.models import AuditVerificationReport
 from eios.ontology.actions.sequencer import GENESIS_ANCHOR, LedgerSequencer
@@ -20,7 +20,7 @@ class ContinuousAuditWalker:
         self.sequencer = sequencer
         self.worm_service = worm_service
 
-    def verify_ledger(self) -> AuditVerificationReport:
+    def verify_ledger(self) -> AuditVerificationReport:  # noqa: C901
         """Execute a full sequential audit pass across the cryptographic ledger."""
         start_time = time.perf_counter()
         entries = self.sequencer.entries
@@ -49,7 +49,7 @@ class ContinuousAuditWalker:
         prev_hash = GENESIS_ANCHOR
         valid_links = 0
 
-        for i, entry in enumerate(entries):
+        for _i, entry in enumerate(entries):
             # 1. Verify sequence monotonicity
             if entry.ledger_seq != expected_seq:
                 duration_ms = (time.perf_counter() - start_time) * 1000.0

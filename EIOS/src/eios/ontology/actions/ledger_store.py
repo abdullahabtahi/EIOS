@@ -139,7 +139,7 @@ class FirestoreLedgerStore:
             except (ValueError, Aborted) as exc:  # SDK attempts exhausted, or aborted by contention
                 last_error = exc
                 delay = min(BACKOFF_CAP_SECONDS, BACKOFF_BASE_SECONDS * 2**attempt)
-                time.sleep(random.uniform(0, delay))  # noqa: S311 - jitter, not cryptography
+                time.sleep(random.uniform(0, delay))  # noqa: S311
         raise LedgerContentionError("ledger head contended beyond the retry budget") from last_error
 
     def get(self, seq: int) -> LedgerEntry | None:

@@ -1,10 +1,10 @@
 """Tests for Foundry manifest loading, validation, and Merkle root hashing."""
 
-import json
 from pathlib import Path
+
 import pytest
+
 from eios.foundry.manifest import (
-    FoundryManifest,
     compute_dataset_merkle_hash,
     validate_manifest_dict,
 )

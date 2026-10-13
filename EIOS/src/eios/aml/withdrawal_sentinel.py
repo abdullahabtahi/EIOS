@@ -11,17 +11,17 @@ Cloud KMS ECDSA P-256 signed HoldWithdrawal / FreezeAccount proposals in PENDING
 Never executes mutations autonomously.
 """
 
-from datetime import datetime, timezone
 import math
 import time
 import uuid
+from datetime import UTC, datetime
 
 from eios.aml.models import (
     WithdrawalDisposition,
     WithdrawalRiskAssessment,
 )
 from eios.ingestion.hot_state import HotStateEngine
-from eios.ontology.actions.intent_hub import ActionIntentHub, ActionSeverity
+from eios.ontology.actions.intent_hub import ActionIntentHub
 
 
 class WithdrawalSentinel:
@@ -68,9 +68,7 @@ class WithdrawalSentinel:
 
         # Composite withdrawal risk score
         raw_score = (
-            0.45 * recent_alert_score
-            + 0.30 * turnaround_risk
-            + 0.25 * wash_risk
+            0.45 * recent_alert_score + 0.30 * turnaround_risk + 0.25 * wash_risk
         ) * kyc_factor
 
         risk_score = round(min(0.99, max(0.01, raw_score)), 4)
@@ -80,7 +78,6 @@ class WithdrawalSentinel:
         if risk_score >= self.hold_risk_threshold:
             recommendation = WithdrawalDisposition.PROPOSE_HOLD
             action_type = "HoldWithdrawal"
-            requires_dual = amount_usd > 2500.0
 
             # Propose Action Intent via IntentHub (Principle II)
             token = self.intent_hub.propose_action(
@@ -98,7 +95,7 @@ class WithdrawalSentinel:
             recommendation = WithdrawalDisposition.ALLOW
 
         latency_ms = (time.perf_counter() - start_time) * 1000.0
-        now_dt = datetime.now(timezone.utc)
+        now_dt = datetime.now(UTC)
 
         assessment = WithdrawalRiskAssessment(
             assessment_id=f"WRA-{uuid.uuid4().hex[:8].upper()}",

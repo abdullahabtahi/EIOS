@@ -1,11 +1,11 @@
 """Tests for User Story 5: Model Calibration Diagnostics & OMCP Integration."""
 
 from datetime import UTC, datetime
-import numpy as np
-import pytest
 
-from eios.flywheel.schemas import validate_contract
+import numpy as np
+
 from eios.flywheel.models import CalibrationDiagnosticsReport
+from eios.flywheel.schemas import validate_contract
 
 
 def test_well_calibrated_diagnostics():
@@ -102,4 +102,3 @@ def test_omcp_get_flywheel_calibration_status():
     assert res["model_id"] == "churn-hazard-model-v2"
     assert elapsed_ms < 200.0  # Must return under 200ms
     assert validate_contract(res, "calibration-diagnostics-report") is True
-

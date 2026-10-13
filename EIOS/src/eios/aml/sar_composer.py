@@ -9,9 +9,9 @@ Authoritative References:
 - .specify/memory/constitution.md (Principles I, VII, VIII)
 """
 
+import uuid
 from datetime import UTC, datetime
 from typing import Any
-import uuid
 
 from eios.aml.models import AMLCaseDossier, SARDraft
 from eios.aml.statutory_normalizer import StatutoryCitationNormalizer
@@ -64,30 +64,36 @@ class SARComposer:
         date_str = dossier.as_of.strftime("%Y-%m-%d")
 
         if dossier.total_deposit_usd > 0:
-            chronological_transactions.append({
-                "date": date_str,
-                "type": "DEPOSIT",
-                "amount": dossier.total_deposit_usd,
-                "currency": "USD",
-                "details": f"Inbound deposit of ${dossier.total_deposit_usd:,.2f} USD.",
-            })
+            chronological_transactions.append(
+                {
+                    "date": date_str,
+                    "type": "DEPOSIT",
+                    "amount": dossier.total_deposit_usd,
+                    "currency": "USD",
+                    "details": f"Inbound deposit of ${dossier.total_deposit_usd:,.2f} USD.",
+                }
+            )
 
-        chronological_transactions.append({
-            "date": date_str,
-            "type": "TRADE",
-            "amount": abs(dossier.net_trading_pl_usd),
-            "currency": "USD",
-            "details": f"Trading activity executed with net P&L ${dossier.net_trading_pl_usd:,.2f} USD.",
-        })
+        chronological_transactions.append(
+            {
+                "date": date_str,
+                "type": "TRADE",
+                "amount": abs(dossier.net_trading_pl_usd),
+                "currency": "USD",
+                "details": f"Trading activity executed with net P&L ${dossier.net_trading_pl_usd:,.2f} USD.",
+            }
+        )
 
         if dossier.total_withdrawal_usd > 0:
-            chronological_transactions.append({
-                "date": date_str,
-                "type": "WITHDRAWAL",
-                "amount": dossier.total_withdrawal_usd,
-                "currency": "USD",
-                "details": f"Outbound withdrawal request for ${dossier.total_withdrawal_usd:,.2f} USD.",
-            })
+            chronological_transactions.append(
+                {
+                    "date": date_str,
+                    "type": "WITHDRAWAL",
+                    "amount": dossier.total_withdrawal_usd,
+                    "currency": "USD",
+                    "details": f"Outbound withdrawal request for ${dossier.total_withdrawal_usd:,.2f} USD.",
+                }
+            )
 
         # 4. Narrative Basis & Suspicion Grounds
         if self.force_fallback:

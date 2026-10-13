@@ -5,7 +5,7 @@ trading-day calendar masking and Week-over-Week (WoW) normalized CUSUM / MAD.
 """
 
 from typing import Any
-import numpy as np
+
 import pandas as pd
 
 
@@ -64,7 +64,7 @@ class SeasonalityChangePointDetector:
 
         latest_ratio = wow_ratios[-1]
         latest_vol = float(weekly_vol.iloc[-1])
-        prior_vol = float(weekly_vol.iloc[-2]) if len(weekly_vol) >= 2 else latest_vol
+        float(weekly_vol.iloc[-2]) if len(weekly_vol) >= 2 else latest_vol
 
         # Check for recovery: if latest week recovered significantly vs prior week, it was a temporary dip!
         if latest_ratio >= 1.5 and latest_vol > 15:
@@ -78,7 +78,7 @@ class SeasonalityChangePointDetector:
         # Check for sustained structural decay:
         # If last 2 consecutive weeks show acute drops (ratio < 0.60 or decay sustained)
         consecutive_drops = 0
-        for r in wow_ratios[-self.min_consecutive_weeks:]:
+        for r in wow_ratios[-self.min_consecutive_weeks :]:
             if r < 0.70:
                 consecutive_drops += 1
 
@@ -86,7 +86,11 @@ class SeasonalityChangePointDetector:
         initial_vol = float(weekly_vol.iloc[0])
         total_decay = (initial_vol - latest_vol) / max(initial_vol, 1.0)
 
-        if consecutive_drops >= self.min_consecutive_weeks and total_decay >= 0.50 and latest_vol <= 15:
+        if (
+            consecutive_drops >= self.min_consecutive_weeks
+            and total_decay >= 0.50
+            and latest_vol <= 15
+        ):
             return {
                 "is_anomaly": True,
                 "confidence": 0.92,

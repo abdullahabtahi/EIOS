@@ -6,12 +6,12 @@ Authoritative References:
 - specs/009-partner-fraud/research.md §3
 """
 
-import pytest
-
 from eios.fraud.bonus_abuse import BonusAbuseScorer
 
 
-def test_bonus_abuse_scorer_flags_rapid_withdrawal_syndicate(synthetic_client_lifecycles: list[dict]) -> None:
+def test_bonus_abuse_scorer_flags_rapid_withdrawal_syndicate(
+    synthetic_client_lifecycles: list[dict],
+) -> None:
     scorer = BonusAbuseScorer()
     profile = scorer.score_partner_portfolio("P-ABUSE-100", synthetic_client_lifecycles)
 
@@ -24,7 +24,9 @@ def test_bonus_abuse_scorer_flags_rapid_withdrawal_syndicate(synthetic_client_li
     assert profile.cpa_bounty_collected_usd > 0
 
 
-def test_bonus_abuse_scorer_passes_healthy_organic_portfolio(synthetic_client_lifecycles: list[dict]) -> None:
+def test_bonus_abuse_scorer_passes_healthy_organic_portfolio(
+    synthetic_client_lifecycles: list[dict],
+) -> None:
     scorer = BonusAbuseScorer()
     profile = scorer.score_partner_portfolio("P-ORGANIC-50", synthetic_client_lifecycles)
 

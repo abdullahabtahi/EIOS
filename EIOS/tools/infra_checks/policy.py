@@ -21,7 +21,7 @@ from tools.infra_checks.hcl import (
 from tools.infra_checks.truth import check_eval_truth
 
 PROD_LIKE = "prod-like"
-SECRET_STORE = "secret_store"  # noqa: S105  (module name, not a secret)
+SECRET_STORE = "secret_store"  # noqa: S105
 SIGNING_PURPOSE = "ASYMMETRIC_SIGN"
 SIGNING_ALGORITHM = "EC_SIGN_P256_SHA256"
 KMS_KEY = "google_kms_crypto_key"

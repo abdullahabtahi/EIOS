@@ -11,9 +11,9 @@ Guarantees:
 """
 
 from datetime import datetime, timedelta
+
 import numpy as np
-import pytest
-from sklearn.metrics import precision_recall_curve, auc
+from sklearn.metrics import auc, precision_recall_curve
 
 from eios.aml.baseline import NaiveThresholdBaseline
 from eios.aml.models import AMLAlert, AMLPriorityTier, AMLTriggerType, AMLTypology
@@ -34,12 +34,14 @@ def generate_sealed_aml_dataset(seed: int = 100) -> tuple[list[AMLAlert], dict[s
         cid = f"C-SEALED-TP-{i:03d}"
         ground_truth[aid] = 1
 
-        is_rt = (i % 2 == 0)
+        is_rt = i % 2 == 0
         alerts.append(
             AMLAlert(
                 alert_id=aid,
                 client_id=cid,
-                trigger_type=AMLTriggerType.ROUND_TRIP_SEQUENCE if is_rt else AMLTriggerType.MULE_RING_CLUSTER,
+                trigger_type=AMLTriggerType.ROUND_TRIP_SEQUENCE
+                if is_rt
+                else AMLTriggerType.MULE_RING_CLUSTER,
                 risk_score=float(rng.uniform(0.85, 0.98)),
                 priority_tier=AMLPriorityTier.CRITICAL,
                 typology=AMLTypology.MICRO_PNL_WASH if is_rt else AMLTypology.MULE_SYNDICATE,
@@ -151,7 +153,7 @@ def test_triage_scorer_beats_naive_baseline_eval_gate() -> None:
 
     delta_pr_auc = pr_auc_scorer - pr_auc_naive
 
-    print(f"\n--- EVALUATION GATE: Client AML Triage Scorer ---")
+    print("\n--- EVALUATION GATE: Client AML Triage Scorer ---")
     print(f"Naive Baseline PR-AUC: {pr_auc_naive:.4f}")
     print(f"Supervised Scorer PR-AUC: {pr_auc_scorer:.4f}")
     print(f"PR-AUC Improvement Delta: +{delta_pr_auc:.4f} (Required: >= 0.1500)")
@@ -162,9 +164,7 @@ def test_triage_scorer_beats_naive_baseline_eval_gate() -> None:
     )
 
     # 3. Hard-Negative False Positive Rate comparison
-    naive_hn_flags = [
-        res.flagged for res in naive_results if res.alert_id in hard_negative_ids
-    ]
+    naive_hn_flags = [res.flagged for res in naive_results if res.alert_id in hard_negative_ids]
     naive_hn_fpr = sum(naive_hn_flags) / len(naive_hn_flags)
 
     scorer_hn_flags = [

@@ -4,16 +4,15 @@ Guarantees 100% contract compliance across all 5 persona workstations and shared
 """
 
 from datetime import UTC, datetime, timedelta
-import pytest
 
 from eios.cockpit.aml import AMLWorkstationService
 from eios.cockpit.executive import ExecutiveCockpitService
-from eios.cockpit.governance_shelf import GovernedActionCard, GovernedActionShelf
+from eios.cockpit.governance_shelf import GovernedActionShelf
 from eios.cockpit.operations import DataPlatformOperationsService
 from eios.cockpit.partner import PartnerWorkstationService
 from eios.cockpit.provenance import ProvenanceResolver
 from eios.cockpit.schemas import validate_contract
-from eios.cockpit.session import OperatorRole, SessionManager, WorkstationTab
+from eios.cockpit.session import OperatorRole, SessionManager
 from eios.ontology.actions.models import (
     ActionIntentToken,
     ActionSeverity,
@@ -91,7 +90,9 @@ def test_contract_7_kinetic_network_graph():
 
 def test_contract_8_sar_draft_document():
     svc = AMLWorkstationService()
-    sar = svc.compose_sar_draft(case_id="case_aml_84920", entity_id="CR84920", investigator_id="investigator_alice")
+    sar = svc.compose_sar_draft(
+        case_id="case_aml_84920", entity_id="CR84920", investigator_id="investigator_alice"
+    )
     data = sar.to_contract_dict()
     assert validate_contract(data, "sar-draft-document") is True
 

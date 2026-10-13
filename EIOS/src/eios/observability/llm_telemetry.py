@@ -7,12 +7,12 @@ latency distributions, and Constitution Principle I Auditor Gate verdict telemet
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from enum import Enum
 import hashlib
 import threading
-from typing import Any, Dict, List, Optional
 import uuid
+from datetime import UTC, datetime
+from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -72,7 +72,9 @@ class AuditorGateTelemetry(BaseModel):
     verified_claims_count: int = Field(..., ge=0, description="Claims traced to tool outputs")
     unverified_claims_count: int = Field(..., ge=0, description="Ungrounded claims intercepted")
     verdict: AuditorVerdict = Field(..., description="Auditor Gate decision")
-    citation_references: List[str] = Field(default_factory=list, description="Verified metric citation IDs")
+    citation_references: list[str] = Field(
+        default_factory=list, description="Verified metric citation IDs"
+    )
     evaluated_at: datetime = Field(..., description="Evaluation timestamp in UTC")
 
 
@@ -80,9 +82,9 @@ class LLMTelemetryCollector:
     """Collects and aggregates LLM calls and Auditor Gate verdicts."""
 
     def __init__(self) -> None:
-        self._pricing_tables: Dict[str, ModelPricingConfig] = {}
-        self._invocations: List[LLMInvocationTelemetry] = []
-        self._audits: List[AuditorGateTelemetry] = []
+        self._pricing_tables: dict[str, ModelPricingConfig] = {}
+        self._invocations: list[LLMInvocationTelemetry] = []
+        self._audits: list[AuditorGateTelemetry] = []
         self._lock = threading.RLock()
 
     def register_pricing(self, model_id: str, pricing: ModelPricingConfig) -> None:
@@ -90,7 +92,7 @@ class LLMTelemetryCollector:
         with self._lock:
             self._pricing_tables[model_id] = pricing
 
-    def record_invocation(
+    def record_invocation(  # noqa: PLR0913
         self,
         trace_id: str,
         correlation_id: str,
@@ -101,12 +103,12 @@ class LLMTelemetryCollector:
         completion_tokens: int,
         duration_ms: float,
         cached_tokens: int = 0,
-        timestamp: Optional[datetime] = None,
+        timestamp: datetime | None = None,
     ) -> LLMInvocationTelemetry:
         """Records an LLM invocation with deterministic cost accounting."""
-        ts = timestamp or datetime.now(timezone.utc)
+        ts = timestamp or datetime.now(UTC)
         if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+            ts = ts.replace(tzinfo=UTC)
 
         with self._lock:
             pricing = self._pricing_tables.get(model_id, ModelPricingConfig())
@@ -129,7 +131,7 @@ class LLMTelemetryCollector:
             self._invocations.append(record)
             return record
 
-    def record_auditor_gate(
+    def record_auditor_gate(  # noqa: PLR0913
         self,
         trace_id: str,
         correlation_id: str,
@@ -138,13 +140,13 @@ class LLMTelemetryCollector:
         verified_claims_count: int,
         unverified_claims_count: int,
         verdict: AuditorVerdict,
-        citation_references: Optional[List[str]] = None,
-        evaluated_at: Optional[datetime] = None,
+        citation_references: list[str] | None = None,
+        evaluated_at: datetime | None = None,
     ) -> AuditorGateTelemetry:
         """Records an Auditor Gate verification evaluation."""
-        ts = evaluated_at or datetime.now(timezone.utc)
+        ts = evaluated_at or datetime.now(UTC)
         if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+            ts = ts.replace(tzinfo=UTC)
 
         text_hash = hashlib.sha256(text.encode("utf-8")).hexdigest()
 
@@ -165,7 +167,7 @@ class LLMTelemetryCollector:
             self._audits.append(record)
             return record
 
-    def get_correlation_summary(self, correlation_id: str) -> Dict[str, Any]:
+    def get_correlation_summary(self, correlation_id: str) -> dict[str, Any]:
         """Calculates token counts, spend, and audit stats for a given correlation ID."""
         with self._lock:
             calls = [inv for inv in self._invocations if inv.correlation_id == correlation_id]
@@ -198,7 +200,7 @@ class LLMTelemetryCollector:
             self._audits.clear()
 
 
-def llm_telemetry_to_contract_dict(record: LLMInvocationTelemetry) -> Dict[str, Any]:
+def llm_telemetry_to_contract_dict(record: LLMInvocationTelemetry) -> dict[str, Any]:
     """Converts LLMInvocationTelemetry to dictionary matching schema."""
     return {
         "call_id": record.call_id,
@@ -216,7 +218,7 @@ def llm_telemetry_to_contract_dict(record: LLMInvocationTelemetry) -> Dict[str, 
     }
 
 
-def auditor_telemetry_to_contract_dict(record: AuditorGateTelemetry) -> Dict[str, Any]:
+def auditor_telemetry_to_contract_dict(record: AuditorGateTelemetry) -> dict[str, Any]:
     """Converts AuditorGateTelemetry to dictionary matching schema."""
     return {
         "audit_id": record.audit_id,
