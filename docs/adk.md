@@ -1,6 +1,6 @@
 # EIOS Conversational Agent: LangGraph to Google ADK
 
-**Status**: DRAFT, nothing built yet. **Updated**: 2026-10-13. **Owner**: you. **Companions**: `data-strategy.md`, `financial_geospatial.md` (v3, section 7.2 item 1), `EIOS/docs/evidence/adrs/016-*` (to be superseded), `specs/018-genai-conversational-agent`.
+**Status**: DRAFT, nothing built yet. **Updated**: 2026-10-13. **Owner**: you. **Companions**: `adk-research.md` (research, pre-mortem, spec plan), `data-strategy.md`, `financial_geospatial.md` (v3, section 7.2 item 1), `EIOS/docs/evidence/adrs/016-*` (to be superseded), `specs/018-genai-conversational-agent`.
 **Tags**: `[ASSUMPTION]` `[TARGET]` `[SPIKE]`. "Verified" means checked on 2026-10-13.
 
 > Principle: build less custom code. Replace what ADK, MCP Toolbox, Agent Search and Model Armor already do; keep only what is our IP (intent hub, KMS signing, WORM ledger, metric semantics, domain engines, red-line tests).
@@ -11,8 +11,8 @@
 
 | # | Phase | Status | Exit criterion |
 |---|---|---|---|
-| A0 | Dependency alignment PR (`opentelemetry-*`, `fastapi`, `websockets` pins that `google-adk` requires) | Not started | `make check` green on the new pins |
-| A1 | ADR superseding 016, and spec 021 | Not started | Reviewed; `open_decisions.yaml` updated |
+| A0 | Dependency alignment PR: `google-adk[gcp]==2.11.0`, `fastapi>=0.133,<0.142.2`, `opentelemetry-*<=1.42.1` (`fastapi>=0.142.2` itself needs `opentelemetry>=1.44`, so both move together) | Tested in a scratch worktree, not opened: full suite shows no regression from the pins (`adk-research.md` section 3.2); waits for decision A-9 | `make check` green on the new pins |
+| A1 | ADR superseding 016, and spec 021 | Research done (`adk-research.md`); decisions A-2 to A-10 await your review; specs 021 to 028 planned, build order starts with 022 | Reviewed; `open_decisions.yaml` updated |
 | A2 | Eval set first (probe cases below plus golden questions for expected tool calls) | In progress: auditor cases pinned in PR #33; golden tool-call questions and the lighthouse suites (`lighthouse.md`) not started | Suite runs red against today's engine, as expected |
 | A3 | Thin slice: one ADK `LlmAgent`, 2-3 tools behind a tool port (real OMCP handlers over the existing hot state first; MCP Toolbox when the warm tier exists), reference-based answer check, honest replay | Not started | Same `/api/cockpit/copilot/query` contract; A2 suite green; bugs B1-B4 fixed |
 | A4 | Sub-agents, Agent Search RAG, Model Armor plugin, ADK session service on Firestore | Not started | Parity with the 24 existing conversation test files, ported not deleted |
@@ -76,9 +76,9 @@ Database access: never expose generic `execute_sql` to the model; only named par
 
 | Item | State |
 |---|---|
-| `google-adk` 2.11.0 resolves on Python 3.14 but downgrades `opentelemetry-*` to 1.42.1, `fastapi` to 0.141.1, `websockets` to 15.0.1 (dry run) | Verified; handled by A0 |
+| `google-adk` 2.11.0 resolves on Python 3.14 with `opentelemetry-*` 1.42.1, `fastapi` 0.141.1, `websockets` 15.0.1; cause is a chain (ADK caps OpenTelemetry at 1.42.1, `fastapi>=0.142.2` needs 1.44 or newer) | Verified, full suite run on the new pins; handled by A0 |
 | Vendor SDK rule (ADR-002): `google.adk` and `mcp` imports need an allowed path | Open; resolve in the A1 ADR |
-| ADK automatic function calling on Python 3.14 (CLAUDE.md records a failure with raw google-genai) | Unverified |
+| ADK tool loop on Python 3.14 (CLAUDE.md records an automatic-function-calling failure with raw google-genai) | Tool loop, plugins and first-party integrations verified with a scripted model (`adk-research.md` S-ADK-1); live Gemini unverified (S-ADK-2) |
 | MCP Toolbox ADK SDK on Python 3.14; Toolbox as a new private Cloud Run service (identity, `infra/identities.yaml`) | Unverified |
 | Offline tests need a Toolbox stand-in (SQLite or stub) | Open |
 | Google docs search tool (Developer Knowledge MCP) rejected its API key this session; Check Grounding and Model Armor details come from public doc pages | Known limitation |
