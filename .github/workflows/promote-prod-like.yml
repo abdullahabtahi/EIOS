@@ -59,11 +59,11 @@ jobs:
               exit 1
             fi
           done
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
-      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
       - name: require the rollback rehearsal evidence
         run: test -s docs/evidence/sc-009-rollback-rehearsal.md
       - name: read the approver from the platform approvals record
@@ -77,7 +77,7 @@ jobs:
           fi
           echo "EIOS_VERIFIED_APPROVER=$approver" >> "$GITHUB_ENV"
       - name: authenticate with federated identity
-        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
         with:
           workload_identity_provider: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.EIOS_PROD_LIKE_SERVICE_ACCOUNT }}
@@ -103,7 +103,7 @@ jobs:
           uv run python -m tools.gates.promote --workflow promote-prod-like "${args[@]}"
       - name: upload reports and run records
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: reports-promote-prod-like
           path: EIOS/evals/reports/
