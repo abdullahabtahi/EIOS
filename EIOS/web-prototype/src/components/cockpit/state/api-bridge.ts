@@ -1,16 +1,10 @@
 /**
- * EIOS Live Backend API Bridge & Native SSE Streaming Client (F019 Phase 2, T010).
+ * EIOS Live Backend API Bridge (F019 Phase 2, T010).
  * Connects Cockpit React workstations to FastAPI backend with offline replay fallback.
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  PersonaRole,
-  WorkstationApiResponse,
-} from './cockpit-types';
-import { getFallbackWorkstationData } from './fixtures';
 import { authFetch } from '@/lib/auth/token';
-import { createSseParser } from '@/lib/sse';
 
 // An explicit (even empty) NEXT_PUBLIC_API_URL wins; empty means same-origin, served by the /api/v1 gateway.
 export const BACKEND_BASE_URL =
@@ -18,72 +12,6 @@ export const BACKEND_BASE_URL =
   (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
     ? ''
     : 'http://localhost:8002');
-
-export interface StreamSubscription {
-  close: () => void;
-}
-
-/**
- * Server-Sent Events subscription over authenticated fetch (EventSource cannot send an
- * Authorization header). Reconnects with exponential backoff until closed.
- */
-export function subscribeToSseStream<T>(
-  endpoint: string,
-  eventName: string,
-  onData: (data: T) => void,
-  onError?: (err: unknown) => void
-): StreamSubscription {
-  if (typeof window === 'undefined') {
-    return { close: () => {} };
-  }
-
-  const url = `${BACKEND_BASE_URL}${endpoint}`;
-  const controller = new AbortController();
-  let closed = false;
-
-  const run = async () => {
-    let delayMs = 1000;
-    while (!closed) {
-      try {
-        const res = await authFetch(url, {
-          headers: { Accept: 'text/event-stream' },
-          signal: controller.signal,
-        });
-        if (!res.ok || !res.body) throw new Error(`SSE stream HTTP ${res.status}`);
-        delayMs = 1000;
-        const reader = res.body.getReader();
-        const decoder = new TextDecoder();
-        const feed = createSseParser((name, data) => {
-          if (name !== eventName) return;
-          try {
-            onData(JSON.parse(data) as T);
-          } catch (e) {
-            console.warn(`[API Bridge SSE Parse Error] ${e}`);
-          }
-        });
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          feed(decoder.decode(value, { stream: true }));
-        }
-      } catch (err) {
-        if (closed) return;
-        if (onError) onError(err);
-      }
-      if (closed) return;
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-      delayMs = Math.min(delayMs * 2, 30000);
-    }
-  };
-  void run();
-
-  return {
-    close: () => {
-      closed = true;
-      controller.abort();
-    },
-  };
-}
 
 /**
  * Fetches live Partner Churn Radar dataset with fallback to mock fixtures.
@@ -121,58 +49,6 @@ export async function fetchChurnRadar(): Promise<any> {
 }
 
 /**
- * Fetches live Partner Fraud referral tree with sub-affiliate directed graph.
- */
-export async function fetchFraudTree(partnerId = 'AP-1029'): Promise<any> {
-  try {
-    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/fraud/tree?partner_id=${partnerId}`, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    console.info('[API Bridge] Using offline replay for Fraud Tree:', err);
-    return {
-      master_partner_id: partnerId,
-      tier: 'Tier 1 Regional Master',
-      active_sub_affiliates_count: 14,
-      total_clawback_exposure_usd: 63750.0,
-      clawback_status: 'STAGED_FOR_GOVERNED_REVIEW [REPLAY]',
-      isReplay: true,
-    };
-  }
-}
-
-/**
- * Fetches live AML Investigation Dossier.
- */
-export async function fetchAmlDossier(caseId: string): Promise<any> {
-  try {
-    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/aml/dossier/${caseId}`, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    console.info('[API Bridge] Using offline replay for AML Dossier:', err);
-    return {
-      case_id: caseId,
-      entity_id: 'CR84920',
-      composite_risk_score: 89,
-      isReplay: true,
-      peer_group_comparison: {
-        peer_cohort: 'Retail Traders (SG / Self-Employed)',
-        median_turnover_usd: 720.0,
-        entity_turnover_usd: 8000.0,
-        standard_deviations_above_median: 4.82,
-      },
-    };
-  }
-}
-
-/**
  * Fetches AML Relational Graph for hardware-accelerated Canvas / WebGL rendering.
  */
 export async function fetchAmlGraph(caseId: string, hubThreshold = 100): Promise<any> {
@@ -198,55 +74,6 @@ export async function fetchAmlGraph(caseId: string, hubThreshold = 100): Promise
       edges: [
         { source_node_id: 'CR84920', target_node_id: 'PA-HUB-007', edge_type: 'TRANSACTION_FLOW', transaction_volume_usd: 8000.0 },
       ],
-    };
-  }
-}
-
-/**
- * Executes Causal What-If Simulation via FastAPI with Hare-Niemeyer attribution.
- */
-export async function executeWhatIfSimulation(shockParam: string, magnitudePct: number): Promise<any> {
-  try {
-    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/synthesis/what-if`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ shock_param: shockParam, magnitude_pct: magnitudePct }),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    console.info('[API Bridge] Using offline replay for What-If:', err);
-    return {
-      simulation_id: `sim_replay_${Date.now()}`,
-      shock_param: shockParam,
-      magnitude_pct: magnitudePct,
-      attribution_sum_pct: 100.0,
-      isReplay: true,
-      attribution_waterfall: [
-        { driver_id: 'spread_elasticity', impact_pct: 42.5 },
-        { driver_id: 'rebate_sensitivity', impact_pct: 35.5 },
-        { driver_id: 'macro_volatility', impact_pct: 22.0 },
-      ],
-    };
-  }
-}
-
-/**
- * Universal workstation loader with live bridge & replay fallback.
- */
-export async function loadWorkstationData(role: PersonaRole): Promise<WorkstationApiResponse> {
-  try {
-    const res = await authFetch(`/api/cockpit/workstations/${role}`, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch {
-    return {
-      ...getFallbackWorkstationData(role),
-      isLiveConnected: false,
-      isCachedFallback: true,
     };
   }
 }
@@ -308,71 +135,6 @@ export async function fetchPartnerOntology(partnerId: string): Promise<any> {
   } catch (err) {
     console.info('[API Bridge] Using fallback Partner Object 360:', err);
     return getFallbackPartnerOntology(partnerId);
-  }
-}
-
-export function getFallbackPartnerBattlecards(partnerId: string): any {
-  return {
-    partner_id: partnerId,
-    synthesizer_model: 'gemini-3.8-flash',
-    generated_at: new Date().toISOString(),
-    forensic_diagnostic_narrative:
-      'Gemini 3.8 Flash Multi-Signal Synthesis: Subject AP-1029 (Carlos Mendez, LatAm Master IB) is experiencing acute disengagement driven by a 4.8-hour latency spike on local DP2P cashier withdrawals in Colombia, compounded by aggressive rival poaching from Exness offering +$3/lot higher rebates on Gold. 3 of his Tier-2 sub-IBs have begun redirecting new trader traffic. Recovery window is active for 14 days before rival broker contractual terms lock.',
-    battlecards: [
-      {
-        id: 'card_p2p_cashier',
-        title: 'VIP Cashier Whitelist & Instant DP2P Clearing',
-        angle: 'Operational Friction Removal & Relationship Trust',
-        channel: 'WhatsApp / Telegram Voice Note',
-        whatsapp_script:
-          'Hola Carlos! Vi que tus traders tuvieron fricción con los retiros de P2P Cashier la semana pasada en Medellín. Ya hablé directo con nuestro equipo de tesorería LatAm y te habilitamos un canal VIP directo con 0% comisión y acreditación bancaria en menos de 15 minutos. Pruébalo hoy con tu equipo.',
-        projected_lift_pct: 38.0,
-        deal_cost_usd: 0.0,
-        net_margin_usd: 42000.0,
-        concession_bound: 'Pre-approved under Partner Manager Level-2 authority (Zero P&L cost)',
-        action_type: 'WhitelistDirectCashierRail',
-      },
-      {
-        id: 'card_spread_rebate',
-        title: 'Volatility 75 & Crash 500 Spread Rebate Upgrade (+1.20/lot)',
-        angle: 'Commercial Parity vs Exness Poaching',
-        channel: 'WhatsApp Direct Proposal',
-        whatsapp_script:
-          'Carlos, para apoyarte contra las promos agresivas que están circulando en la región, te acabo de autorizar un upgrade especial en tu rebate: +$1.20 por lote operado en Volatility 75 y Crash 500 por los próximos 90 días. Con el volumen de tu comunidad, esto te representa +$14,000 USD adicionales sobre cualquier otra plataforma. ¿Te parece si lo activamos este lunes?',
-        projected_lift_pct: 74.0,
-        deal_cost_usd: 18000.0,
-        net_margin_usd: 92000.0,
-        concession_bound: 'Requires maintaining >= 50 monthly active traders; capped at 90 days. Net ROI: 5.1x',
-        action_type: 'DeployRetentionConcession',
-      },
-      {
-        id: 'card_seminar_sponsorship',
-        title: 'Bogotá Trading Academy Sponsorship ($3,500 Budget)',
-        angle: 'Community Retention & New Lead Acquisition',
-        channel: 'WhatsApp / Phone Call',
-        whatsapp_script:
-          'Carlos, queremos patrocinar tu próximo masterclass presencial de trading en Bogotá. EIOS cubre $3,500 USD de salón, merchandising y welcome bonus para tus 150 nuevos alumnos verificados. Armemos la fecha juntos.',
-        projected_lift_pct: 45.0,
-        deal_cost_usd: 3500.0,
-        net_margin_usd: 34000.0,
-        concession_bound: 'Co-marketing budget pre-allocated in Q4 LatAm partner expansion pool',
-        action_type: 'AllocateCoMarketingBudget',
-      },
-    ],
-  };
-}
-
-/**
- * Fetch Gemini 3.8 Flash multi-signal forensic diagnostic narrative & WhatsApp/Telegram battlecards.
- */
-export async function fetchPartnerBattlecards(partnerId: string): Promise<any> {
-  try {
-    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/churn/partner/${encodeURIComponent(partnerId)}/battlecards`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  } catch (err) {
-    console.info('[API Bridge] Using fallback Gemini 3.8 Flash Battlecards:', err);
-    return getFallbackPartnerBattlecards(partnerId);
   }
 }
 

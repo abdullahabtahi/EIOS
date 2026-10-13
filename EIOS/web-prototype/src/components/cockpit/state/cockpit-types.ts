@@ -371,6 +371,9 @@ export interface CopilotQueryResponse {
   citedMetrics: MetricProvenance[];
   suggestedAction?: ActionIntentCard;
   auditorResult: AuditorGateResult;
+  /** True when the answer is a deterministic replay, not a live model turn. Set by the backend, never inferred. */
+  isReplayFallback?: boolean;
+  fallbackReason?: string;
   timestamp: string;
 }
 

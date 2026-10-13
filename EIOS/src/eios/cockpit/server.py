@@ -974,24 +974,32 @@ def query_copilot(req: CopilotQueryRequest) -> dict[str, Any]:
         role=role_enum,
     )
 
+    audit = response_model.audit_record
+    audit_passed = audit is not None and audit.passed and response_model.auditor_status == "PASS"
     return {
         "query": req.query,
         "response": response_model.response_markdown,
-        "auditor_status": response_model.auditor_status or "PASS",
+        "auditor_status": response_model.auditor_status or "UNAUDITED",
+        "is_replay_fallback": response_model.is_replay_fallback,
+        "fallback_reason": response_model.fallback_reason,
         "provenance_citations": [
             {
                 "metric_id": c.citation_id,
                 "formatted_value": c.label,
                 "steward": c.source_engine,
-                "as_of": _get_utc_now(),
+                "as_of": c.as_of.isoformat(),
             }
             for c in response_model.provenance_citations
         ],
         "audit_record": {
-            "passed": response_model.auditor_status == "PASS",
-            "unanchored_tokens": [],
-            "relative_tolerance": auditor_gate.relative_tolerance,
+            "passed": audit_passed,
+            "unanchored_tokens": list(audit.unanchored_tokens) if audit else [],
+            "anchored_numbers": list(audit.verified_numerical_anchors) if audit else [],
+            "relative_tolerance": audit.relative_tolerance
+            if audit
+            else auditor_gate.relative_tolerance,
         },
+        "tool_trace_count": response_model.tool_trace_count,
         "suggested_action": response_model.staged_recommendation,
         "turn_latency_ms": response_model.turn_latency_ms,
     }

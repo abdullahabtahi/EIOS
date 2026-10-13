@@ -16,7 +16,7 @@ import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
 import { PartnerChurnItem, WhatIfCausalResponse } from '../state/cockpit-types';
 import { PartnerTriageGrid } from './partner-triage-grid';
-import { fetchChurnRadar, subscribeToSseStream, simulatePartnerWhatIf } from '../state/api-bridge';
+import { fetchChurnRadar, simulatePartnerWhatIf } from '../state/api-bridge';
 import { MOCK_PARTNERS } from '../state/fixtures';
 export { MOCK_PARTNERS };
 
@@ -84,15 +84,8 @@ export function ChurnRadarScatter() {
 
     loadRadar();
 
-    const sub = subscribeToSseStream('/api/v1/churn/stream', 'churn_update', (data: any) => {
-      if (data?.partners?.length && isMounted) {
-        // live SSE stream update
-      }
-    });
-
     return () => {
       isMounted = false;
-      sub.close();
     };
   }, []);
 

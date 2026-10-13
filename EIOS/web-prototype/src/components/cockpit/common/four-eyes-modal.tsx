@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { authFetch } from '@/lib/auth/token';
 
 interface FourEyesFormProps {
   action: ActionIntentCard;
@@ -52,7 +53,7 @@ function FourEyesForm({ action, operatorId, onClose, onAuthorize }: FourEyesForm
       // Attempt backend Cloud KMS authorize endpoint
       let signedReceipt = `RECEIPT_KMS_${action.intentId.slice(0, 8)}_${Date.now()}`;
       try {
-        const res = await fetch('/api/cockpit/actions/authorize', {
+        const res = await authFetch('/api/cockpit/actions/authorize', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -1,0 +1,103 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import React from 'react';
+import { CockpitProvider } from '@/components/cockpit/state/cockpit-context';
+import { CopilotCommandBar } from '@/components/cockpit/shell/copilot-command-bar';
+
+const workstationBody = {
+  workstation: 'executive',
+  isLiveConnected: true,
+  isCachedFallback: false,
+  asOfTimestamp: '2026-10-10T10:00:00Z',
+  session: { sessionId: 'test', systemLatencyMs: 12 },
+  triageItems: [],
+  activeDossier: null,
+  stagedActionCards: [],
+};
+
+function mockCopilot(reply: () => Promise<unknown>) {
+  global.fetch = vi.fn().mockImplementation((url: string) =>
+    url.includes('/api/cockpit/copilot/query')
+      ? reply()
+      : Promise.resolve({ ok: true, json: () => Promise.resolve(workstationBody) }),
+  ) as unknown as typeof fetch;
+}
+
+async function ask(text: string) {
+  render(
+    <CockpitProvider>
+      <CopilotCommandBar forceOpen={true} />
+    </CockpitProvider>,
+  );
+  const input = screen.getAllByPlaceholderText(/Ask Copilot or type institutional command/i)[0];
+  fireEvent.change(input, { target: { value: text } });
+  fireEvent.submit(screen.getAllByRole('button', { name: /Submit Query/i })[0].closest('form')!);
+}
+
+afterEach(() => vi.restoreAllMocks());
+
+describe('Copilot command bar never fabricates an audited answer', () => {
+  it.each([
+    [401, /not authorized/i],
+    [403, /not permitted/i],
+    [503, /backend is offline/i],
+    [500, /HTTP 500/],
+  ])('shows an explicit error for HTTP %i and no audit badge', async (status, message) => {
+    mockCopilot(() => Promise.resolve({ ok: false, status, json: () => Promise.resolve({ detail: 'nope' }) }));
+    await ask('What is the LatAm spread impact?');
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(message);
+    expect(screen.queryByText(/AUDIT PASSED/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Spread Shock LatAm/i)).not.toBeInTheDocument();
+  });
+
+  it('shows an explicit error when the request itself fails', async () => {
+    mockCopilot(() => Promise.reject(new TypeError('network down')));
+    await ask('anything');
+    expect(await screen.findByRole('alert')).toHaveTextContent(/could not be reached/i);
+    expect(screen.queryByText(/AUDIT PASSED/i)).not.toBeInTheDocument();
+  });
+
+  it('badges a deterministic replay with the backend-supplied reason', async () => {
+    mockCopilot(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            queryId: 'q1',
+            naturalLanguageQuery: 'q',
+            responseMarkdown: 'Replay narrative.',
+            citedMetrics: [],
+            auditorResult: { auditPassed: true, extractedNumbers: [], anchoredNumbers: [], untraceableNumbers: [], toolTracesCount: 1 },
+            isReplayFallback: true,
+            fallbackReason: 'live Gemini call failed: quota',
+            timestamp: '2026-10-10T10:00:00Z',
+          }),
+      }),
+    );
+    await ask('q');
+    expect(await screen.findByText(/DETERMINISTIC REPLAY/i)).toBeInTheDocument();
+    expect(screen.getByText(/live Gemini call failed: quota/)).toBeInTheDocument();
+  });
+
+  it('does not badge a live answer as a replay', async () => {
+    mockCopilot(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            queryId: 'q2',
+            naturalLanguageQuery: 'q',
+            responseMarkdown: 'Live narrative.',
+            citedMetrics: [],
+            auditorResult: { auditPassed: true, extractedNumbers: [], anchoredNumbers: [], untraceableNumbers: [], toolTracesCount: 1 },
+            isReplayFallback: false,
+            timestamp: '2026-10-10T10:00:00Z',
+          }),
+      }),
+    );
+    await ask('q');
+    await waitFor(() => expect(screen.getByText(/Live narrative\./)).toBeInTheDocument());
+    expect(screen.queryByText(/DETERMINISTIC REPLAY/i)).not.toBeInTheDocument();
+  });
+});

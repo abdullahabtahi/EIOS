@@ -44,6 +44,7 @@ jobs:
           - label_check
           - adr_check
           - repo_checks
+          - forbidden_artifacts
     env:
       EIOS_REQUIRE_TFLINT: "1"
     steps:

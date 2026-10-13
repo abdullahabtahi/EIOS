@@ -88,3 +88,13 @@ def test_copilot_tracer():
 
     assert "duration_ms" in meta
     assert meta["auditor_status"] == "PASS"
+
+
+def test_query_response_defaults_to_unaudited_not_pass():
+    """Fail closed: a response nobody audited must not carry a PASS status by default."""
+    from eios.conversation.models import ConversationQueryResponse
+
+    unaudited = ConversationQueryResponse(session_id="s", response_markdown="text")
+    assert unaudited.auditor_status is None
+    assert unaudited.audit_record is None
+    assert unaudited.tool_trace_count == 0

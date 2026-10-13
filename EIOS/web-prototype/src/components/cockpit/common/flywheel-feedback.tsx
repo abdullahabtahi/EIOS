@@ -15,6 +15,7 @@ import {
   DialogContent,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { authFetch } from '@/lib/auth/token';
 
 interface FlywheelFeedbackModalProps {
   open: boolean;
@@ -46,7 +47,7 @@ export function FlywheelFeedbackModal({ open, onOpenChange }: FlywheelFeedbackMo
     setIsSubmitting(true);
     setSuccessReceipt(null);
     try {
-      const res = await fetch('/api/cockpit/flywheel/feedback', {
+      const res = await authFetch('/api/cockpit/flywheel/feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

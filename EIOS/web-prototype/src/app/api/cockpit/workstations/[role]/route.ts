@@ -10,6 +10,7 @@ import {
 import { getMockWorkstationState } from '@/components/cockpit/state/fixtures';
 
 import { callBackend, relayError } from '@/lib/server/backend';
+import { normalizeActionCard } from '@/lib/server/normalize';
 
 function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationApiResponse {
   const mock = getMockWorkstationState(role);
@@ -88,34 +89,11 @@ function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationAp
     };
   }
 
-  // 4. Staged Action Cards
+  // 4. Staged Action Cards: signature state comes from the backend verdict, never a default
   let stagedActionCards: ActionIntentCard[] = mock.stagedActionCards;
   const rawActions = raw.governed_action_shelf?.actions || raw.stagedActionCards;
   if (Array.isArray(rawActions) && rawActions.length > 0) {
-    stagedActionCards = rawActions.map((a: any, idx: number) => ({
-      intentId: a.intent_id || a.intentId || `act_${idx}`,
-      actionType: a.action_type || a.actionType || 'GENERIC_ACTION',
-      targetEntityId: a.target_entity_id || a.targetEntityId || 'ENTITY-01',
-      targetEntityType: a.target_entity_type || a.targetEntityType || 'ACCOUNT',
-      severity: a.severity || 'MEDIUM',
-      lifecycleState: a.lifecycle_state || a.lifecycleState || 'STAGED',
-      stagedTimestamp: a.staged_timestamp || a.stagedTimestamp || new Date().toISOString(),
-      expiresAt: a.expires_at || a.expiresAt || new Date(Date.now() + 900000).toISOString(),
-      parameters: a.parameters || {},
-      estimatedImpact: a.estimated_impact || a.estimatedImpact || 'Action staged',
-      requiresFourEyes: a.requires_four_eyes ?? a.requiresFourEyes ?? false,
-      kmsSignatureBadge: {
-        keyId: a.kms_signature_badge?.key_id || a.kmsSignatureBadge?.keyId || 'projects/kms/keys/key1',
-        algorithm: a.kms_signature_badge?.algorithm || a.kmsSignatureBadge?.algorithm || 'ECDSA_P256_SHA256',
-        signatureDigest: a.kms_signature_badge?.signature_digest || a.kmsSignatureBadge?.signatureDigest || 'DIGEST_VALID',
-        verified: a.kms_signature_badge?.verified ?? a.kmsSignatureBadge?.verified ?? true,
-      },
-      fourEyesRecord: {
-        initiatorOfficerId: a.four_eyes_record?.initiator_officer_id || a.fourEyesRecord?.initiatorOfficerId || 'OPERATOR_PRIMARY',
-        initiatorTimestamp: a.four_eyes_record?.initiator_timestamp || a.fourEyesRecord?.initiatorTimestamp || new Date().toISOString(),
-        idpClaimValidation: true,
-      },
-    }));
+    stagedActionCards = rawActions.map(normalizeActionCard).filter((card) => card.intentId !== '');
   }
 
   return {
