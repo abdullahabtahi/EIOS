@@ -49,14 +49,14 @@ def test_dual_approval_mandated_for_high_budget_medium_severity():
 
     # Single approval remains PENDING
     hub.approve_action(token.intent_id, approver_id="LEAD_1", role="PARTNER_LEAD")
-    assert token.status == ActionStatus.PENDING
+    assert hub.get_status(token.intent_id).status == ActionStatus.PENDING
 
     with pytest.raises(FourEyesApprovalRequiredError):
         hub.execute_action(token.intent_id)
 
     # Second approval transitions to APPROVED
     hub.approve_action(token.intent_id, approver_id="HEAD_1", role="HEAD_OF_PARTNERSHIPS")
-    assert token.status == ActionStatus.APPROVED
+    assert hub.get_status(token.intent_id).status == ActionStatus.APPROVED
 
     # Execution now succeeds
     executed_token = hub.execute_action(token.intent_id)
@@ -94,6 +94,6 @@ def test_auto_stage_low_risk_actions():
     assert token_med_small.intent_id in staged_ids
     assert token_high.intent_id not in staged_ids
 
-    assert token_low.status == ActionStatus.APPROVED
-    assert token_med_small.status == ActionStatus.APPROVED
-    assert token_high.status == ActionStatus.PENDING
+    assert hub.get_status(token_low.intent_id).status == ActionStatus.APPROVED
+    assert hub.get_status(token_med_small.intent_id).status == ActionStatus.APPROVED
+    assert hub.get_status(token_high.intent_id).status == ActionStatus.PENDING

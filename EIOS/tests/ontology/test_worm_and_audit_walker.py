@@ -148,3 +148,17 @@ def test_continuous_audit_walker_detects_worm_anchor_mismatch():
     report = walker.verify_ledger()
     assert report.is_valid is False
     assert report.tampered_sequence_id == 3
+
+
+def test_worm_checkpoints_are_durable_and_numbered_across_instances():
+    from eios.ontology.actions.record_store import InMemoryRecordStore
+
+    records = InMemoryRecordStore()
+    sequencer = LedgerSequencer()
+    sequencer.record_event(LedgerEventType.PROPOSAL_CREATED, "INTENT-1", {"step": 1})
+    first = WORMAnchorService(sequencer=sequencer, checkpoint_records=records)
+    second = WORMAnchorService(sequencer=sequencer, checkpoint_records=records)
+    a = first.create_checkpoint()
+    b = second.create_checkpoint()
+    assert (a.checkpoint_seq, b.checkpoint_seq) == (1, 2)
+    assert [c.checkpoint_seq for c in first.get_checkpoints()] == [1, 2]

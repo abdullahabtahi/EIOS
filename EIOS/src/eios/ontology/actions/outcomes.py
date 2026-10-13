@@ -116,7 +116,9 @@ class DecisionOutcomesStore:
     def _persist_to_hot_state(self, rec: DecisionOutcomeRecord) -> None:
         """Persist record into DuckDB decision_outcomes_ledger."""
         cursor = self.hot_state.get_cursor()
-        cursor.execute("DELETE FROM decision_outcomes_ledger WHERE outcome_id = ?", [rec.outcome_id])
+        cursor.execute(
+            "DELETE FROM decision_outcomes_ledger WHERE outcome_id = ?", [rec.outcome_id]
+        )
         cursor.execute(
             """
             INSERT INTO decision_outcomes_ledger (
@@ -167,11 +169,7 @@ class DecisionOutcomesStore:
         mu_0 = np.asarray(mu_0_preds, dtype=float)
 
         # Doubly Robust score function Gamma_i
-        gamma = (
-            (mu_1 - mu_0)
-            + (w * (y - mu_1) / e)
-            - ((1.0 - w) * (y - mu_0) / (1.0 - e))
-        )
+        gamma = (mu_1 - mu_0) + (w * (y - mu_1) / e) - ((1.0 - w) * (y - mu_0) / (1.0 - e))
 
         n = len(gamma)
         tau_aipw = float(np.mean(gamma))

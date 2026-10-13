@@ -10,7 +10,8 @@ import pytest
 import yaml
 
 REPO = Path(__file__).resolve().parents[3]
-WORKFLOWS = REPO / ".github" / "workflows"
+# The root .github is the only one GitHub runs; EIOS/.github held stale copies these tests used to read.
+WORKFLOWS = REPO.parent / ".github" / "workflows"
 STAGE = "promote-stage"
 PROD_LIKE = "promote-prod-like"
 RELEASE = "release-candidate"
@@ -91,8 +92,20 @@ def test_promote_prod_like_is_bound_to_a_protected_environment() -> None:
 
 
 def test_only_promote_prod_like_uses_the_protected_environment() -> None:
-    for name in (STAGE, RELEASE, "pr"):
+    for name in (RELEASE, "pr"):
         assert all("environment" not in job for job in _jobs(name).values()), name
+
+
+def test_promote_stage_runs_in_the_unprotected_stage_environment() -> None:
+    # The deployer identity is impersonable only under the GitHub environment of the same name
+    # (infra/bootstrap/deployers.tf), so a stage job without `environment: stage` cannot
+    # authenticate. Stage has no reviewers: it still promotes on every merge to the main line.
+    jobs = _jobs(STAGE)
+    assert jobs
+    for job in jobs.values():
+        environment = job.get("environment")
+        name = environment.get("name") if isinstance(environment, dict) else environment
+        assert name == "stage"
 
 
 def test_prod_like_approver_comes_from_the_platform_never_from_an_input() -> None:
@@ -187,13 +200,22 @@ def test_only_the_promotion_workflows_apply_infrastructure() -> None:
 # --- shared hygiene -----------------------------------------------------------------------
 
 
-@pytest.mark.parametrize("name", PROMOTION)
-def test_actions_use_major_tags_with_the_pin_spike_comment(name: str) -> None:
-    uses = [line for line in _text(name).splitlines() if "uses:" in line]
-    assert uses
-    for line in uses:
-        assert re.search(r"@v\d+\b", line), line
-        assert "[SPIKE] pin to commit SHA when CI first runs" in line
+PINNED_USES = re.compile(r"uses:\s+[\w./-]+@[0-9a-f]{40}\s+# v\d+(\.\d+)*\s*$")
+USES_LINE = re.compile(r"^\s*(-\s+)?uses:")
+
+
+def _all_workflow_files() -> list[Path]:
+    return sorted(WORKFLOWS.glob("*.yml"))
+
+
+@pytest.mark.parametrize("path", _all_workflow_files(), ids=lambda p: p.stem)
+def test_every_action_is_pinned_to_a_full_commit_sha_with_its_version_comment(path: Path) -> None:
+    lines = [
+        line for line in path.read_text(encoding="utf-8").splitlines() if USES_LINE.match(line)
+    ]
+    assert lines, path.name
+    for line in lines:
+        assert PINNED_USES.search(line), f"{path.name}: {line.strip()}"
 
 
 @pytest.mark.parametrize("name", PROMOTION)
@@ -226,3 +248,74 @@ def test_promote_stage_promotes_after_its_suites_and_installs_frozen() -> None:
     promote_at = next(i for i, c in enumerate(commands) if "tools.gates.promote" in c)
     suites_at = max(i for i, c in enumerate(commands) if "evals.cli" in c)
     assert suites_at < promote_at
+
+
+# --- preflight and guards -----------------------------------------------------------------
+
+
+def _step_named(name: str, step_name: str) -> dict[str, Any]:
+    matches = [
+        step
+        for job in _jobs(name).values()
+        for step in _steps(job)
+        if step.get("name") == step_name
+    ]
+    assert len(matches) == 1, (name, step_name)
+    return matches[0]
+
+
+@pytest.mark.parametrize("name", (STAGE, RELEASE))
+def test_a_missing_cloud_configuration_is_announced_never_a_silent_skip(name: str) -> None:
+    for job in _jobs(name).values():
+        assert "if" not in job, "a job-level `if` makes an unconfigured pipeline look green"
+    preflight = _step_named(name, "preflight")
+    assert "::warning" in str(preflight["run"])
+    assert "EIOS_CD_ENABLED" in str(preflight["run"]), "strict mode must fail when enabled"
+    steps = [s for job in _jobs(name).values() for s in _steps(job)]
+    after = steps[steps.index(preflight) + 1 :]
+    assert after
+    for step in after:
+        if step.get("if") == "always()":
+            continue
+        assert "CD_CONFIGURED" in str(step.get("if", "")), (name, step.get("name"))
+
+
+def test_prod_like_refuses_a_dispatch_from_any_ref_but_the_main_line() -> None:
+    guard = _step_named(PROD_LIKE, "require the main line")
+    assert "refs/heads/main" in str(guard["run"])
+    steps = [s for job in _jobs(PROD_LIKE).values() for s in _steps(job)]
+    assert steps.index(guard) < next(
+        i for i, s in enumerate(steps) if "auth@" in str(s.get("uses"))
+    )
+
+
+def test_prod_like_fails_loudly_when_cloud_configuration_is_missing() -> None:
+    for job in _jobs(PROD_LIKE).values():
+        assert "if" not in job
+    assert "preflight" in {str(s.get("name")) for j in _jobs(PROD_LIKE).values() for s in _steps(j)}
+
+
+def test_release_candidate_tags_must_point_at_the_main_line() -> None:
+    guard = _step_named(RELEASE, "require the tagged commit to be on the main line")
+    assert "merge-base --is-ancestor" in str(guard["run"])
+    checkout = next(
+        s for j in _jobs(RELEASE).values() for s in _steps(j) if "checkout@" in str(s.get("uses"))
+    )
+    assert checkout["with"]["fetch-depth"] == 0
+
+
+@pytest.mark.parametrize("name", ALL_WORKFLOWS)
+def test_checkout_never_persists_credentials(name: str) -> None:
+    checkouts = [
+        s for j in _jobs(name).values() for s in _steps(j) if "checkout@" in str(s.get("uses"))
+    ]
+    assert checkouts
+    for step in checkouts:
+        assert step["with"]["persist-credentials"] is False, name
+
+
+def test_the_frontend_check_type_checks_and_resolves_peers_strictly() -> None:
+    commands = [str(s.get("run", "")) for s in _steps(_jobs("pr")["frontend"])]
+    assert "npm ci" in commands, "peer-dependency conflicts must fail the install"
+    assert any("tsc --noEmit" in c for c in commands)
+    assert not any("legacy-peer-deps" in c for c in commands)

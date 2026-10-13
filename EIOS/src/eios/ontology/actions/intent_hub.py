@@ -16,11 +16,18 @@ from eios.ontology.actions.models import (
     ExecutionStatus,
     LedgerEventType,
 )
+from eios.ontology.actions.record_store import ModelStore, RecordStore, default_record_store
 from eios.ontology.actions.signer import ActionSigner, default_action_signer
+
+APPROVAL_ATTEMPTS = 8
 
 
 class InvalidActionParameterError(Exception):
     pass
+
+
+class ConcurrentModificationError(Exception):
+    """The stored token changed since it was read; reload and retry."""
 
 
 class NonceReplayError(Exception):
@@ -83,6 +90,48 @@ CANONICAL_ACTION_SPECS = {
 }
 
 
+class _TokenBook:
+    """Token records with optimistic concurrency. Reads return independent copies, so a change
+    only takes effect through ``save``, which rejects a stale revision."""
+
+    def __init__(self, records: RecordStore) -> None:
+        self._records = records
+        self._models = ModelStore(records, ActionIntentToken)
+
+    def __contains__(self, intent_id: str) -> bool:
+        return self._records.get(intent_id) is not None
+
+    def __getitem__(self, intent_id: str) -> ActionIntentToken:
+        token = self._models.get(intent_id)
+        if token is None:
+            raise KeyError(intent_id)
+        return token
+
+    def create(self, token: ActionIntentToken) -> None:
+        if not self._models.create(token.intent_id, token):
+            raise ConcurrentModificationError(f"intent '{token.intent_id}' already exists")
+
+    def save(self, token: ActionIntentToken) -> None:
+        expected = token.revision
+
+        def mutate(current: dict[str, Any]) -> dict[str, Any]:
+            if current.get("revision", 0) != expected:
+                raise ConcurrentModificationError(
+                    f"intent '{token.intent_id}' was modified concurrently"
+                )
+            return {**token.model_dump(mode="json"), "revision": expected + 1}
+
+        self._records.update(token.intent_id, mutate)
+        token.revision = expected + 1
+
+    def attach_ledger_seq(self, intent_id: str, seq: int) -> None:
+        """Record the ledger sequence without a revision check; it never conflicts with approvals."""
+        self._records.update(intent_id, lambda current: {**current, "ledger_seq": seq})
+
+    def items(self) -> list[tuple[str, ActionIntentToken]]:
+        return [(t.intent_id, t) for t in self._models.list()]
+
+
 class ActionIntentHub:
     """Non-autonomous Action Intent Hub generating KMS-signed mutation proposals."""
 
@@ -95,23 +144,29 @@ class ActionIntentHub:
         sink: Any | None = None,
         hot_state_engine: HotStateEngine | None = None,
         outcomes_store: Any | None = None,
+        token_records: RecordStore | None = None,
+        nonce_records: RecordStore | None = None,
     ) -> None:
         self.signer = signer or default_action_signer()
         self.sequencer = sequencer
         self.sink = sink
         self.hot_state = hot_state_engine
         self.outcomes_store = outcomes_store
-        self._tokens: dict[str, ActionIntentToken] = {}
-        self._used_nonces: set[str] = set()
-
+        self._token_store: RecordStore = token_records or default_record_store("intent_tokens")
+        self._tokens = _TokenBook(self._token_store)
+        self._nonces: RecordStore = nonce_records or default_record_store("intent_nonces")
 
     def _register_nonce(self, nonce: str) -> None:
-        if nonce in self._used_nonces:
+        if not self._nonces.create(nonce, {"registered_at": datetime.now(UTC).isoformat()}):
             raise NonceReplayError(f"Action intent nonce '{nonce}' has already been used.")
-        self._used_nonces.add(nonce)
 
     def _persist_token(self, token: ActionIntentToken) -> None:
-        """Persist active token state to DuckDB hot state if configured."""
+        """Save the token (revision-checked) and mirror it to DuckDB hot state if configured."""
+        self._tokens.save(token)
+        self._mirror_to_hot_state(token)
+
+    def _mirror_to_hot_state(self, token: ActionIntentToken) -> None:
+        """Mirror token state to DuckDB hot state if configured."""
         if not self.hot_state:
             return
         cursor = self.hot_state.get_cursor()
@@ -148,7 +203,6 @@ class ActionIntentHub:
                 token.execution_receipt_id,
             ],
         )
-
 
     def propose_action(
         self,
@@ -221,7 +275,9 @@ class ActionIntentHub:
             propensity_score=propensity_score,
             causal_context=causal_context or {},
             requires_dual_approval=requires_dual,
-            policy_tags=["FAST_PATH_ELIGIBLE"] if not requires_dual else ["DUAL_APPROVAL_MANDATORY"],
+            policy_tags=["FAST_PATH_ELIGIBLE"]
+            if not requires_dual
+            else ["DUAL_APPROVAL_MANDATORY"],
         )
 
         if self.sequencer:
@@ -244,7 +300,12 @@ class ActionIntentHub:
             entity_id = (
                 parameters.get("partner_id")
                 or parameters.get("client_id")
-                or (parameters.get("partner_ids", [None])[0] if isinstance(parameters.get("partner_ids"), list) and parameters.get("partner_ids") else None)
+                or (
+                    parameters.get("partner_ids", [None])[0]
+                    if isinstance(parameters.get("partner_ids"), list)
+                    and parameters.get("partner_ids")
+                    else None
+                )
                 or parameters.get("txn_id")
                 or "UNKNOWN"
             )
@@ -259,10 +320,9 @@ class ActionIntentHub:
                 override_reason=None,
             )
 
-        self._tokens[intent_id] = token
-        self._persist_token(token)
+        self._tokens.create(token)
+        self._mirror_to_hot_state(token)
         return token
-
 
     def approve_action(
         self,
@@ -273,39 +333,49 @@ class ActionIntentHub:
         override_applied: bool = False,
         override_reason: str | None = None,
     ) -> ActionIntentToken:
-        """Approve a pending action intent. Enforces dual approval when required."""
-        if intent_id not in self._tokens:
-            raise KeyError(f"Intent '{intent_id}' not found.")
+        """Approve a pending action intent. Enforces dual approval when required.
 
-        token = self._tokens[intent_id]
-        now = datetime.now(UTC)
-        if now > token.expires_at:
-            token.status = ActionStatus.EXPIRED
-            self._persist_token(token)
-            raise TokenExpiredError(f"Action intent '{intent_id}' has expired.")
-
-        # Prevent duplicate approval by same person
-        if any(a.approver_id == approver_id for a in token.approvals):
-            raise InvalidActionParameterError(
-                f"Approver '{approver_id}' has already approved this intent."
+        The approval is saved first with a revision check (retrying on a concurrent change), then
+        sequenced into the ledger.
+        """
+        for _ in range(APPROVAL_ATTEMPTS):
+            if intent_id not in self._tokens:
+                raise KeyError(f"Intent '{intent_id}' not found.")
+            token = self._tokens[intent_id]
+            now = datetime.now(UTC)
+            if now > token.expires_at:
+                token.status = ActionStatus.EXPIRED
+                self._persist_token(token)
+                raise TokenExpiredError(f"Action intent '{intent_id}' has expired.")
+            # Prevent duplicate approval by same person
+            if any(a.approver_id == approver_id for a in token.approvals):
+                raise InvalidActionParameterError(
+                    f"Approver '{approver_id}' has already approved this intent."
+                )
+            token.approvals.append(
+                ApprovalRecord(
+                    approver_id=approver_id,
+                    approver_role=role,
+                    comment=comment,
+                    override_applied=override_applied,
+                    override_reason=override_reason,
+                )
             )
-
-        approval = ApprovalRecord(
-            approver_id=approver_id,
-            approver_role=role,
-            comment=comment,
-            override_applied=override_applied,
-            override_reason=override_reason,
-        )
-        token.approvals.append(approval)
-
-        if token.requires_dual_approval:
-            if len(token.approvals) >= 2:
-                token.status = ActionStatus.APPROVED
+            if token.requires_dual_approval:
+                token.status = (
+                    ActionStatus.APPROVED if len(token.approvals) >= 2 else ActionStatus.PENDING
+                )
             else:
-                token.status = ActionStatus.PENDING  # still waiting for second approver
+                token.status = ActionStatus.APPROVED
+            try:
+                self._persist_token(token)
+            except ConcurrentModificationError:
+                continue
+            break
         else:
-            token.status = ActionStatus.APPROVED
+            raise ConcurrentModificationError(
+                f"Approval of '{intent_id}' kept conflicting; retry the request."
+            )
 
         if self.sequencer:
             entry = self.sequencer.record_event(
@@ -321,14 +391,11 @@ class ActionIntentHub:
                     "total_approvals": len(token.approvals),
                 },
             )
+            self._tokens.attach_ledger_seq(token.intent_id, entry.ledger_seq)
             token.ledger_seq = entry.ledger_seq
-
         if override_applied and self.outcomes_store:
             self.outcomes_store.update_override(token.intent_id, override_reason=override_reason)
-
-        self._persist_token(token)
         return token
-
 
     def reject_action(
         self,
@@ -369,7 +436,9 @@ class ActionIntentHub:
         auto_approved = []
         for intent_id, token in list(self._tokens.items()):
             if token.status == ActionStatus.PENDING and not token.requires_dual_approval:
-                financial_impact = float(token.parameters.get("budget", token.parameters.get("amount", 0.0)) or 0.0)
+                financial_impact = float(
+                    token.parameters.get("budget", token.parameters.get("amount", 0.0)) or 0.0
+                )
                 if financial_impact <= max_budget:
                     self.approve_action(
                         intent_id=intent_id,
@@ -408,7 +477,9 @@ class ActionIntentHub:
         if self.sink is not None:
             receipt = self.sink.commit_action(token, idempotency_key=idempotency_key)
             token.execution_receipt_id = receipt.receipt_id
-            status_val = receipt.status.value if hasattr(receipt.status, "value") else str(receipt.status)
+            status_val = (
+                receipt.status.value if hasattr(receipt.status, "value") else str(receipt.status)
+            )
             if status_val == "COMMITTED":
                 token.status = ActionStatus.EXECUTED
                 ev_type = LedgerEventType.ACTION_EXECUTED
