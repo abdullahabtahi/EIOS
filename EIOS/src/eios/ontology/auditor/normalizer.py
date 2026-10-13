@@ -70,7 +70,7 @@ class NumericTokenNormalizer:
             spans.append(m.span())
 
         # 5. List bullets at line/sentence start: "1. ", ". 1. "
-        for m in re.finditer(r"(?:^|\n|[.!?]\s+)\s*(\d+)\.\s+", text):
+        for m in re.finditer(r"(?:^|\n|[.!?]\s+)\s*(?:#{1,6}\s*|[-*+]\s+)?(\d+)\.\s+", text):
             spans.append(m.span(1))
 
         # 6. Conversational structuring (Option 1, Step 2, etc.)
@@ -94,7 +94,8 @@ class NumericTokenNormalizer:
     def extract_numbers(self, text: str) -> list[ExtractedNumber]:
         """Extract all quantitative metric numbers from text."""
         excluded_spans = self._find_excluded_spans(text)
-        pattern = r"([$€£]?\s*\d+(?:,\d{3})*(?:\.\d+)?\s*(?:[kKmMbB]|%)?)"
+        # A k/m/b suffix counts only as a whole unit letter (1.2M, 1.2 B), never the start of a word (bps, months).
+        pattern = r"([$€£]?\s*\d+(?:,\d{3})*(?:\.\d+)?(?:\s?[kKmMbB](?![A-Za-z])|\s?%)?)"
         results: list[ExtractedNumber] = []
 
         for m in re.finditer(pattern, text):
