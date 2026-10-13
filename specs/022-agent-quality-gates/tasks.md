@@ -17,10 +17,10 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Create the package skeleton `src/eios/agent_gates/__init__.py`, `src/eios/agent_gates/core/__init__.py` and `src/eios/agent_gates/adapters/__init__.py`; keep `core/__init__.py` free of any import from `eios`
-- [ ] T002 [P] Create `tests/agent_gates/__init__.py` and a `conftest.py` with a fixture that loads recorded Turn Records from `evals/recorded/`
-- [ ] T003 [P] Create `evals/agent/__init__.py`, `evals/agent/metrics/` and `evals/golden/agent_cases/` and `evals/golden/attacks/` directories (each with a `.gitkeep` until populated)
-- [ ] T004 [P] Add a guard test `tests/agent_gates/test_core_isolation.py`: every module under `src/eios/agent_gates/core/` imports only the standard library (AST scan) and parses under Python 3.12 (`uv run --python 3.12 python -c "import ast, sys; ast.parse(open(sys.argv[1]).read())"`); expected to pass vacuously now and guard every later task
+- [X] T001 Create the package skeleton `src/eios/agent_gates/__init__.py`, `src/eios/agent_gates/core/__init__.py` and `src/eios/agent_gates/adapters/__init__.py`; keep `core/__init__.py` free of any import from `eios`
+- [X] T002 [P] Create `tests/agent_gates/__init__.py` and a `conftest.py` with a fixture that loads recorded Turn Records from `evals/recorded/`
+- [X] T003 [P] Create `evals/agent/__init__.py`, `evals/agent/metrics/` and `evals/golden/agent_cases/` and `evals/golden/attacks/` directories (each with a `.gitkeep` until populated)
+- [X] T004 [P] Add a guard test `tests/agent_gates/test_core_isolation.py`: every module under `src/eios/agent_gates/core/` imports only the standard library (AST scan) and parses under Python 3.12 (`uv run --python 3.12 python -c "import ast, sys; ast.parse(open(sys.argv[1]).read())"`); expected to pass vacuously now and guard every later task
 
 ---
 
@@ -28,15 +28,15 @@
 
 **Purpose**: the shared record, port, capability map and case loaders.
 
-- [ ] T005 [P] Contract tests for Turn Record in `tests/agent_gates/test_records.py`: valid record accepted; replay without reason, inconclusive without reason, a call with both result and error, unknown role and extra fields rejected, using `specs/022-agent-quality-gates/contracts/turn-record.schema.json`; JSON round trip equality
-- [ ] T006 Implement frozen `TurnRecord`, `ToolCall`, `Binding` and JSON (de)serialisation in `src/eios/agent_gates/records.py` (depends on T005)
-- [ ] T007 [P] Tests for verdict and gate models in `tests/agent_gates/test_verdicts.py`: `inconclusive` never yields `proven`; counts per verdict; first failing case carries its evidence
-- [ ] T008 Implement `Verdict`, `FigureVerdict`, `GateResult` in `src/eios/agent_gates/verdicts.py` (depends on T007)
-- [ ] T009 [P] Tests for capabilities in `tests/agent_gates/test_capabilities.py`: lookup by runtime, `unavailable` yields `capability_missing`, no mapping may expose `approve_action` or `execute_action` for any agent role
-- [ ] T010 Implement capability ids and the per-runtime map in `src/eios/agent_gates/capabilities.py` and `src/eios/agent_gates/capability_map.yaml`; map the copilot's six tools (`get_governed_metric`, `inspect_aml_entity`, `query_graph_topology`, `inspect_partner_churn`, `run_causal_what_if`, `stage_action_intent`) and mark its two retrieval tools as fixture-only (depends on T009)
-- [ ] T011 [P] Tests for case loading in `tests/agent_gates/test_cases.py`: golden case and attack case validation per `contracts/golden-case.md`; invalid file fails the suite; a ground-truth key in an agent-visible field is rejected; split handling
-- [ ] T012 Implement golden and attack case models and loaders in `src/eios/agent_gates/cases.py`, following the Google evaluation case shape in `specs/022-agent-quality-gates/contracts/golden-case.md`; the legacy `GoldenDialogueScenario` is neither extended nor modified (depends on T011)
-- [ ] T013 [P] Implement `AgentPort`, `TurnRequest`, `ToolFixture` in `src/eios/agent_gates/port.py` per `contracts/agent-port.md`, with a test in `tests/agent_gates/test_port.py` that a deadline overrun yields an `inconclusive` record, not an exception
+- [X] T005 [P] Contract tests for Turn Record in `tests/agent_gates/test_records.py`: valid record accepted; replay without reason, inconclusive without reason, a call with both result and error, unknown role and extra fields rejected, using `specs/022-agent-quality-gates/contracts/turn-record.schema.json`; JSON round trip equality
+- [X] T006 Implement frozen `TurnRecord`, `ToolCall`, `Binding` and JSON (de)serialisation in `src/eios/agent_gates/records.py` (depends on T005)
+- [X] T007 [P] Tests for verdict and gate models in `tests/agent_gates/test_verdicts.py`: `inconclusive` never yields `proven`; counts per verdict; first failing case carries its evidence
+- [X] T008 Implement `Verdict`, `FigureVerdict`, `GateResult` in `src/eios/agent_gates/verdicts.py` (depends on T007)
+- [X] T009 [P] Tests for capabilities in `tests/agent_gates/test_capabilities.py`: lookup by runtime, `unavailable` yields `capability_missing`, no mapping may expose `approve_action` or `execute_action` for any agent role
+- [X] T010 Implement capability ids and the per-runtime map in `src/eios/agent_gates/capabilities.py` and `src/eios/agent_gates/capability_map.yaml`; map the copilot's six tools (`get_governed_metric`, `inspect_aml_entity`, `query_graph_topology`, `inspect_partner_churn`, `run_causal_what_if`, `stage_action_intent`) and mark its two retrieval tools as fixture-only (depends on T009)
+- [X] T011 [P] Tests for case loading in `tests/agent_gates/test_cases.py`: golden case and attack case validation per `contracts/golden-case.md`; invalid file fails the suite; a ground-truth key in an agent-visible field is rejected; split handling
+- [X] T012 Implement golden and attack case models and loaders in `src/eios/agent_gates/cases.py`, following the Google evaluation case shape in `specs/022-agent-quality-gates/contracts/golden-case.md`; the legacy `GoldenDialogueScenario` is neither extended nor modified (depends on T011)
+- [X] T013 [P] Implement `AgentPort`, `TurnRequest`, `ToolFixture` in `src/eios/agent_gates/port.py` per `contracts/agent-port.md`, with a test in `tests/agent_gates/test_port.py` that a deadline overrun yields an `inconclusive` record, not an exception
 
 **Checkpoint**: records, port, capabilities and case loaders exist; stories can proceed.
 
