@@ -2,7 +2,8 @@
 # config/gates.yaml, in the same order as `make check` (tools.gates.local); the parity test keeps
 # them equal. The job is named by the gate id, so every gate is its own required status check
 # (see docs/runbooks/branch-protection.md). fail-fast is off so every gate runs even when
-# another fails (run-all-then-fail). The `gate` job holds no cloud credentials. The `plan` job
+# another fails (run-all-then-fail). Every action is pinned to a full commit SHA with its version
+# in a trailing comment; Dependabot (.github/dependabot.yml) proposes the bumps. The `gate` job holds no cloud credentials. The `plan` job
 # (T093) shows the infrastructure change of each environment with a read-only federated identity;
 # it never changes anything and is skipped for pull requests from forks.
 name: pr
@@ -45,21 +46,26 @@ jobs:
     env:
       EIOS_REQUIRE_TFLINT: "1"
     steps:
-      - uses: actions/checkout@v4 # [SPIKE] pin to commit SHA when CI first runs
-      - uses: astral-sh/setup-uv@v6 # [SPIKE] pin to commit SHA when CI first runs
-      - uses: hashicorp/setup-terraform@v3 # [SPIKE] pin to commit SHA when CI first runs
-      - uses: terraform-linters/setup-tflint@v4 # [SPIKE] pin to commit SHA when CI first runs
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          enable-cache: true
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
+      - uses: terraform-linters/setup-tflint@90f302c255ef959cbfb4bd10581afecdb7ece3e6 # v4
       - name: install locked dependencies
         run: uv sync --frozen
       - name: run gate
         run: uv run python -m tools.gates.run_gate ${{ matrix.gate }}
       - name: upload reports and run records
         if: always()
-        uses: actions/upload-artifact@v4 # [SPIKE] pin to commit SHA when CI first runs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: reports-${{ matrix.gate }}
           path: EIOS/evals/reports/
           if-no-files-found: ignore
+          retention-days: 30
 
   frontend:
     name: frontend-check
@@ -69,14 +75,18 @@ jobs:
       run:
         working-directory: EIOS/web-prototype
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: 'npm'
           cache-dependency-path: EIOS/web-prototype/package-lock.json
       - name: install dependencies
-        run: npm ci --legacy-peer-deps
+        run: npm ci
+      - name: type check
+        run: npx tsc --noEmit
       - name: lint
         run: npm run lint
       - name: test
@@ -103,10 +113,12 @@ jobs:
     env:
       EIOS_STATE_BUCKET: ${{ vars.EIOS_STATE_BUCKET }}
     steps:
-      - uses: actions/checkout@v4 # [SPIKE] pin to commit SHA when CI first runs
-      - uses: hashicorp/setup-terraform@v3 # [SPIKE] pin to commit SHA when CI first runs
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
       - name: authenticate with read-only federated identity
-        uses: google-github-actions/auth@v2 # [SPIKE] pin to commit SHA when CI first runs
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         with:
           workload_identity_provider: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.EIOS_PLAN_SERVICE_ACCOUNT }}

@@ -5,6 +5,8 @@
 # input tools.gates.promote accepts for identity. Promotion also requires the rollback rehearsal
 # evidence (SC-009) to be present in the tree under review.
 # Identity is federated (id-token: write); provider and service account are repository variables.
+# Only a dispatch from the main line runs, and missing configuration fails the run loudly: a manual
+# promotion that did nothing must never look like a success.
 name: promote-prod-like
 
 on:
@@ -20,7 +22,6 @@ concurrency:
 jobs:
   promote:
     name: promote-prod-like
-    if: vars.EIOS_WORKLOAD_IDENTITY_PROVIDER != '' && vars.EIOS_PROD_LIKE_SERVICE_ACCOUNT != ''
     runs-on: ubuntu-latest
     timeout-minutes: 60 # [ASSUMPTION]
     environment: prod-like
@@ -39,9 +40,30 @@ jobs:
       EIOS_CORE_IMAGE_DIGEST: ${{ vars.EIOS_PROD_LIKE_CORE_IMAGE_DIGEST }}
       EIOS_EDGE_IMAGE_DIGEST: ${{ vars.EIOS_PROD_LIKE_EDGE_IMAGE_DIGEST }}
     steps:
-      - uses: actions/checkout@v4 # [SPIKE] pin to commit SHA when CI first runs
-      - uses: astral-sh/setup-uv@v6 # [SPIKE] pin to commit SHA when CI first runs
-      - uses: hashicorp/setup-terraform@v3 # [SPIKE] pin to commit SHA when CI first runs
+      - name: require the main line
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "prod-like is promoted only from refs/heads/main, not $GITHUB_REF" >&2
+            exit 1
+          fi
+      - name: preflight
+        env:
+          WORKLOAD_IDENTITY_PROVIDER: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
+          SERVICE_ACCOUNT: ${{ vars.EIOS_PROD_LIKE_SERVICE_ACCOUNT }}
+          STATE_BUCKET: ${{ vars.EIOS_STATE_BUCKET }}
+        run: |
+          set -euo pipefail
+          for name in WORKLOAD_IDENTITY_PROVIDER SERVICE_ACCOUNT STATE_BUCKET; do
+            if [ -z "${!name}" ]; then
+              echo "repository variable for $name is not set; a manual promotion must not pass silently" >&2
+              exit 1
+            fi
+          done
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3
       - name: require the rollback rehearsal evidence
         run: test -s docs/evidence/sc-009-rollback-rehearsal.md
       - name: read the approver from the platform approvals record
@@ -55,7 +77,7 @@ jobs:
           fi
           echo "EIOS_VERIFIED_APPROVER=$approver" >> "$GITHUB_ENV"
       - name: authenticate with federated identity
-        uses: google-github-actions/auth@v2 # [SPIKE] pin to commit SHA when CI first runs
+        uses: google-github-actions/auth@c200f3691d83b41bf9bbd8638997a462592937ed # v2
         with:
           workload_identity_provider: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
           service_account: ${{ vars.EIOS_PROD_LIKE_SERVICE_ACCOUNT }}
@@ -81,8 +103,9 @@ jobs:
           uv run python -m tools.gates.promote --workflow promote-prod-like "${args[@]}"
       - name: upload reports and run records
         if: always()
-        uses: actions/upload-artifact@v4 # [SPIKE] pin to commit SHA when CI first runs
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: reports-promote-prod-like
           path: EIOS/evals/reports/
           if-no-files-found: ignore
+          retention-days: 90
