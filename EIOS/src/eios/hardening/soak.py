@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import time
-from typing import Optional
-import uuid
+from datetime import UTC, datetime
 
-from eios.contracts.base import DataProductEnum
 from eios.hardening.models import SoakTestTelemetryReport
 from eios.hardening.telemetry import HardeningTelemetryCollector
 from eios.ingestion.hot_state import HotStateEngine
@@ -25,9 +22,9 @@ class AcceleratedSoakTestRunner:
         events_per_day: int = 1500,
         queries_per_day: int = 150,
         actions_per_day: int = 75,
-        hot_state: Optional[HotStateEngine] = None,
-        telemetry: Optional[HardeningTelemetryCollector] = None,
-        slo_engine: Optional[SLOMonitoringEngine] = None,
+        hot_state: HotStateEngine | None = None,
+        telemetry: HardeningTelemetryCollector | None = None,
+        slo_engine: SLOMonitoringEngine | None = None,
     ) -> None:
         self.simulated_days = simulated_days
         self.events_per_day = events_per_day

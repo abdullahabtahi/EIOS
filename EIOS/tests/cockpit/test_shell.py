@@ -1,9 +1,10 @@
 """Unit tests for Tripartite Common Operational Picture (COP) Shell Presenter and Session RBAC."""
 
 import pytest
+
 from eios.cockpit.governance_shelf import GovernedActionShelf
 from eios.cockpit.session import OperatorRole, SessionManager, WorkstationTab
-from eios.cockpit.shell import CockpitShellPresenter, TripartiteLayoutConfig
+from eios.cockpit.shell import CockpitShellPresenter
 
 
 def test_cockpit_shell_presenter_rendering():
@@ -43,6 +44,8 @@ def test_session_rbac_switching_and_touch():
     assert with_filters.applied_filters["severity"] == "CRITICAL"
 
     # AML Investigator cannot switch to Data Ops Board
-    aml_session = mgr.create_session(operator_id="aml_investigator_bob", role=OperatorRole.AML_INVESTIGATOR)
+    aml_session = mgr.create_session(
+        operator_id="aml_investigator_bob", role=OperatorRole.AML_INVESTIGATOR
+    )
     with pytest.raises(PermissionError, match="does not have access"):
         mgr.switch_tab(aml_session.session_id, WorkstationTab.DATA_OPS_BOARD)

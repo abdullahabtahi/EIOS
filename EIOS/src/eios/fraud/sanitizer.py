@@ -21,17 +21,39 @@ class FraudComplianceSanitizer:
         self.email_pattern = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b")
         # Match raw IPs but do not match tokenized hashes like tok_id_cluster_...
         self.ip_pattern = re.compile(r"\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b")
-        self.phone_pattern = re.compile(r"(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4})\b")
+        self.phone_pattern = re.compile(
+            r"(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{2,4}\)?[-.\s]?\d{3,4}[-.\s]?\d{3,4})\b"
+        )
         self.card_pattern = re.compile(r"\b(?:\d{4}[-\s]?){3}\d{4}\b")
 
         # Semantic Egress Gate vocabulary mappings
         self.inflammatory_mappings: list[tuple[re.Pattern, str]] = [
-            (re.compile(r"\b(?:criminal ring|crime syndicate)\b", re.IGNORECASE), "coordinated account cluster"),
-            (re.compile(r"\b(?:fraudsters?|scammers?|criminals?)\b", re.IGNORECASE), "correlated participants"),
-            (re.compile(r"\b(?:stolen commissions?|looted funds?|scammed money)\b", re.IGNORECASE), "unearned incentive volume"),
-            (re.compile(r"\b(?:guilty of fraud|blatant theft)\b", re.IGNORECASE), "confirmed anomalous correlation"),
-            (re.compile(r"\b(?:illegal operation|criminal scheme)\b", re.IGNORECASE), "high-risk syndication pattern"),
-            (re.compile(r"\b(?:money launderers?)\b", re.IGNORECASE), "entities under compliance inquiry"),
+            (
+                re.compile(r"\b(?:criminal ring|crime syndicate)\b", re.IGNORECASE),
+                "coordinated account cluster",
+            ),
+            (
+                re.compile(r"\b(?:fraudsters?|scammers?|criminals?)\b", re.IGNORECASE),
+                "correlated participants",
+            ),
+            (
+                re.compile(
+                    r"\b(?:stolen commissions?|looted funds?|scammed money)\b", re.IGNORECASE
+                ),
+                "unearned incentive volume",
+            ),
+            (
+                re.compile(r"\b(?:guilty of fraud|blatant theft)\b", re.IGNORECASE),
+                "confirmed anomalous correlation",
+            ),
+            (
+                re.compile(r"\b(?:illegal operation|criminal scheme)\b", re.IGNORECASE),
+                "high-risk syndication pattern",
+            ),
+            (
+                re.compile(r"\b(?:money launderers?)\b", re.IGNORECASE),
+                "entities under compliance inquiry",
+            ),
         ]
 
     def sanitize(self, text: str) -> str:

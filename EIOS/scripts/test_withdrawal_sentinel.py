@@ -6,9 +6,9 @@ Usage:
 """
 
 import argparse
-from pathlib import Path
 import sys
 import time
+from pathlib import Path
 
 # Ensure src is on sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -18,16 +18,20 @@ from eios.aml.withdrawal_sentinel import WithdrawalSentinel
 from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.actions.intent_hub import (
     ActionIntentHub,
-    ActionSeverity,
-    ActionStatus,
     FourEyesApprovalRequiredError,
 )
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Test real-time pre-withdrawal evaluation and action intent governance.")
-    parser.add_argument("--client-id", default="C-AML-ROUNDTRIP-001", help="Target client account ID")
-    parser.add_argument("--withdrawal-id", default="WTH-2026-9001", help="Withdrawal transaction ID")
+    parser = argparse.ArgumentParser(
+        description="Test real-time pre-withdrawal evaluation and action intent governance."
+    )
+    parser.add_argument(
+        "--client-id", default="C-AML-ROUNDTRIP-001", help="Target client account ID"
+    )
+    parser.add_argument(
+        "--withdrawal-id", default="WTH-2026-9001", help="Withdrawal transaction ID"
+    )
     parser.add_argument("--amount", type=float, default=499.50, help="Withdrawal amount in USD")
     args = parser.parse_args()
 
@@ -41,8 +45,12 @@ def main() -> None:
     intent_hub = ActionIntentHub()
     sentinel = WithdrawalSentinel(hot_state=hot_state, intent_hub=intent_hub)
 
-    print(f"1. Evaluating inbound withdrawal request for account {args.client_id} (${args.amount:,.2f} USD)...")
-    print("   Simulating acute structuring indicators: 12h KYC recency, zero-risk micro-P&L trade...")
+    print(
+        f"1. Evaluating inbound withdrawal request for account {args.client_id} (${args.amount:,.2f} USD)..."
+    )
+    print(
+        "   Simulating acute structuring indicators: 12h KYC recency, zero-risk micro-P&L trade..."
+    )
 
     t0 = time.perf_counter()
     assessment = sentinel.evaluate_withdrawal(

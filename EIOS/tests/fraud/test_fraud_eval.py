@@ -11,10 +11,10 @@ Guarantees:
 """
 
 from datetime import datetime, timedelta
+
 import numpy as np
 import pandas as pd
-import pytest
-from sklearn.metrics import precision_recall_curve, auc
+from sklearn.metrics import auc, precision_recall_curve
 
 from eios.fraud.baseline import NaiveOppositeTradeBaseline
 from eios.fraud.pair_detector import TimeBucketedPairDetector
@@ -44,30 +44,34 @@ def generate_sealed_eval_dataset(seed: int = 42) -> tuple[pd.DataFrame, dict[tup
             t2 = t1 + timedelta(seconds=delta_s)
             lot = float(rng.choice([1.0, 2.0, 5.0, 10.0]))
 
-            records.append({
-                "trade_id": f"TRD-EV-{trade_id:06d}",
-                "account_id": acc_a,
-                "partner_id": part_a,
-                "symbol": "EURUSD",
-                "direction": "BUY",
-                "lots": lot,
-                "timestamp": t1,
-                "pnl_usd": 500.0,
-                "commission_usd": 25.0,
-            })
+            records.append(
+                {
+                    "trade_id": f"TRD-EV-{trade_id:06d}",
+                    "account_id": acc_a,
+                    "partner_id": part_a,
+                    "symbol": "EURUSD",
+                    "direction": "BUY",
+                    "lots": lot,
+                    "timestamp": t1,
+                    "pnl_usd": 500.0,
+                    "commission_usd": 25.0,
+                }
+            )
             trade_id += 1
 
-            records.append({
-                "trade_id": f"TRD-EV-{trade_id:06d}",
-                "account_id": acc_b,
-                "partner_id": part_b,
-                "symbol": "EURUSD",
-                "direction": "SELL",
-                "lots": lot,
-                "timestamp": t2,
-                "pnl_usd": -498.0,  # Zero-sum P&L
-                "commission_usd": 25.0,
-            })
+            records.append(
+                {
+                    "trade_id": f"TRD-EV-{trade_id:06d}",
+                    "account_id": acc_b,
+                    "partner_id": part_b,
+                    "symbol": "EURUSD",
+                    "direction": "SELL",
+                    "lots": lot,
+                    "timestamp": t2,
+                    "pnl_usd": -498.0,  # Zero-sum P&L
+                    "commission_usd": 25.0,
+                }
+            )
             trade_id += 1
 
     # 2. 10 Hard-Negative Legitimate Hedgers (True Negatives, label = 0)
@@ -87,30 +91,34 @@ def generate_sealed_eval_dataset(seed: int = 42) -> tuple[pd.DataFrame, dict[tup
             delta_s = rng.uniform(16.0, 35.0)
             t2 = t1 + timedelta(seconds=delta_s)
 
-            records.append({
-                "trade_id": f"TRD-EV-{trade_id:06d}",
-                "account_id": acc_h1,
-                "partner_id": part_h1,
-                "symbol": "EURUSD",
-                "direction": "BUY" if t_idx % 2 == 0 else "SELL",
-                "lots": 1.0,
-                "timestamp": t1,
-                "pnl_usd": rng.uniform(-400.0, 600.0),
-                "commission_usd": 15.0,
-            })
+            records.append(
+                {
+                    "trade_id": f"TRD-EV-{trade_id:06d}",
+                    "account_id": acc_h1,
+                    "partner_id": part_h1,
+                    "symbol": "EURUSD",
+                    "direction": "BUY" if t_idx % 2 == 0 else "SELL",
+                    "lots": 1.0,
+                    "timestamp": t1,
+                    "pnl_usd": rng.uniform(-400.0, 600.0),
+                    "commission_usd": 15.0,
+                }
+            )
             trade_id += 1
 
-            records.append({
-                "trade_id": f"TRD-EV-{trade_id:06d}",
-                "account_id": acc_h2,
-                "partner_id": part_h2,
-                "symbol": "EURUSD",
-                "direction": "SELL" if t_idx % 2 == 0 else "BUY",
-                "lots": 3.5,  # Asymmetric lot size
-                "timestamp": t2,
-                "pnl_usd": rng.uniform(-800.0, 900.0),  # Not zero-sum
-                "commission_usd": 30.0,
-            })
+            records.append(
+                {
+                    "trade_id": f"TRD-EV-{trade_id:06d}",
+                    "account_id": acc_h2,
+                    "partner_id": part_h2,
+                    "symbol": "EURUSD",
+                    "direction": "SELL" if t_idx % 2 == 0 else "BUY",
+                    "lots": 3.5,  # Asymmetric lot size
+                    "timestamp": t2,
+                    "pnl_usd": rng.uniform(-800.0, 900.0),  # Not zero-sum
+                    "commission_usd": 30.0,
+                }
+            )
             trade_id += 1
 
     # 3. 20 Background Retail Accounts (True Negatives, label = 0)
@@ -119,17 +127,19 @@ def generate_sealed_eval_dataset(seed: int = 42) -> tuple[pd.DataFrame, dict[tup
         part = f"P-RET-{b_idx % 4:02d}"
         for t_idx in range(10):
             t = base_ts + timedelta(minutes=int(rng.integers(1, 200)))
-            records.append({
-                "trade_id": f"TRD-EV-{trade_id:06d}",
-                "account_id": acc,
-                "partner_id": part,
-                "symbol": "EURUSD" if t_idx % 2 == 0 else "GBPUSD",
-                "direction": rng.choice(["BUY", "SELL"]),
-                "lots": rng.uniform(0.1, 2.0),
-                "timestamp": t,
-                "pnl_usd": rng.uniform(-100.0, 100.0),
-                "commission_usd": 5.0,
-            })
+            records.append(
+                {
+                    "trade_id": f"TRD-EV-{trade_id:06d}",
+                    "account_id": acc,
+                    "partner_id": part,
+                    "symbol": "EURUSD" if t_idx % 2 == 0 else "GBPUSD",
+                    "direction": rng.choice(["BUY", "SELL"]),
+                    "lots": rng.uniform(0.1, 2.0),
+                    "timestamp": t,
+                    "pnl_usd": rng.uniform(-100.0, 100.0),
+                    "commission_usd": 5.0,
+                }
+            )
             trade_id += 1
 
     df = pd.DataFrame(records)
@@ -200,4 +210,6 @@ def test_baseline_and_pair_detector_eval_gate() -> None:
     fpr_hedgers = hard_neg_false_positives / len(hard_negative_keys)
     print(f"[EVAL GATE RESULTS] Hard Negative FPR: {fpr_hedgers:.4%}")
 
-    assert fpr_hedgers < 0.05, f"False Positive Rate on legitimate hedgers ({fpr_hedgers:.4%}) exceeds 5%"
+    assert fpr_hedgers < 0.05, (
+        f"False Positive Rate on legitimate hedgers ({fpr_hedgers:.4%}) exceeds 5%"
+    )

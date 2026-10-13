@@ -5,11 +5,10 @@ structured DisengagementTheme hypotheses, and enforces strict Pydantic egress
 with Principle VIII deterministic replay fallback.
 """
 
-from collections import defaultdict
-from datetime import UTC, datetime
 import logging
-from typing import Any
 import uuid
+from collections import defaultdict
+from typing import Any
 
 from eios.churn.models import DisengagementTheme, SignalFamily
 from eios.churn.sanitizer import PIISanitizer
@@ -69,7 +68,9 @@ class PatternDiscoverySpecialist:
     ) -> list[DisengagementTheme]:
         """Cluster tickets and articulate structured disengagement hypotheses."""
         if self.force_gateway_failure:
-            logger.warning("Gateway failure simulated; falling back to deterministic replay themes.")
+            logger.warning(
+                "Gateway failure simulated; falling back to deterministic replay themes."
+            )
             return GOLDEN_REPLAY_THEMES
 
         if not tickets:
@@ -79,20 +80,32 @@ class PatternDiscoverySpecialist:
         sanitized_tickets = []
         for t in tickets:
             cleaned_text = self.sanitizer.sanitize(t.get("text", ""))
-            sanitized_tickets.append({
-                "ticket_id": t.get("ticket_id", "TICK-UNKNOWN"),
-                "partner_id": t.get("partner_id", "P-UNKNOWN"),
-                "text": cleaned_text,
-                "timestamp": t.get("timestamp", ""),
-            })
+            sanitized_tickets.append(
+                {
+                    "ticket_id": t.get("ticket_id", "TICK-UNKNOWN"),
+                    "partner_id": t.get("partner_id", "P-UNKNOWN"),
+                    "text": cleaned_text,
+                    "timestamp": t.get("timestamp", ""),
+                }
+            )
 
         # 2. Cluster tickets into emerging themes
         clusters: dict[str, list[dict[str, Any]]] = defaultdict(list)
         for t in sanitized_tickets:
             text_lower = t["text"].lower()
-            if "websocket" in text_lower or "mt5" in text_lower or "latency" in text_lower or "timeout" in text_lower:
+            if (
+                "websocket" in text_lower
+                or "mt5" in text_lower
+                or "latency" in text_lower
+                or "timeout" in text_lower
+            ):
                 clusters["mt5_latency"].append(t)
-            elif "competitor" in text_lower or "revshare" in text_lower or "spread" in text_lower or "poach" in text_lower:
+            elif (
+                "competitor" in text_lower
+                or "revshare" in text_lower
+                or "spread" in text_lower
+                or "poach" in text_lower
+            ):
                 clusters["competitor_poaching"].append(t)
             elif "payout" in text_lower or "commission" in text_lower or "dispute" in text_lower:
                 clusters["commission_dispute"].append(t)
@@ -105,41 +118,48 @@ class PatternDiscoverySpecialist:
             mt5_tickets = clusters["mt5_latency"]
             partner_ids = list(set(t["partner_id"] for t in mt5_tickets))
             ticket_ids = [t["ticket_id"] for t in mt5_tickets]
-            themes.append(DisengagementTheme(
-                theme_id=f"THEME-{uuid.uuid4().hex[:8]}",
-                title="Unresolved MT5 WebSocket Latency Spikes",
-                affected_partner_count=len(partner_ids),
-                signal_families_implicated=[SignalFamily.BEHAVIORAL, SignalFamily.COMMUNICATION],
-                confidence_score=0.88,
-                supporting_ticket_ids=ticket_ids,
-                plain_language_summary=(
-                    f"Identified {len(partner_ids)} partners reporting severe MT5 WebSocket latency "
-                    f"and disconnect errors causing client dissatisfaction."
-                ),
-                actionable_remediation=(
-                    "Deploy edge proxy nodes and configure automated EA health monitors."
-                ),
-            ))
+            themes.append(
+                DisengagementTheme(
+                    theme_id=f"THEME-{uuid.uuid4().hex[:8]}",
+                    title="Unresolved MT5 WebSocket Latency Spikes",
+                    affected_partner_count=len(partner_ids),
+                    signal_families_implicated=[
+                        SignalFamily.BEHAVIORAL,
+                        SignalFamily.COMMUNICATION,
+                    ],
+                    confidence_score=0.88,
+                    supporting_ticket_ids=ticket_ids,
+                    plain_language_summary=(
+                        f"Identified {len(partner_ids)} partners reporting severe MT5 WebSocket latency "
+                        f"and disconnect errors causing client dissatisfaction."
+                    ),
+                    actionable_remediation=(
+                        "Deploy edge proxy nodes and configure automated EA health monitors."
+                    ),
+                )
+            )
 
         if clusters.get("competitor_poaching"):
             comp_tickets = clusters["competitor_poaching"]
             partner_ids = list(set(t["partner_id"] for t in comp_tickets))
             ticket_ids = [t["ticket_id"] for t in comp_tickets]
-            themes.append(DisengagementTheme(
-                theme_id=f"THEME-{uuid.uuid4().hex[:8]}",
-                title="Competitor Regional Poaching & Spread Inquiries",
-                affected_partner_count=len(partner_ids),
-                signal_families_implicated=[SignalFamily.COMPETITIVE, SignalFamily.FINANCIAL],
-                confidence_score=0.92,
-                supporting_ticket_ids=ticket_ids,
-                plain_language_summary=(
-                    f"Identified {len(partner_ids)} partners discussing competitor promotional terms "
-                    f"and asking for matching payout schedules."
-                ),
-                actionable_remediation=(
-                    "Initiate proactive partner relationship calls and review regional tier commission structures."
-                ),
-            ))
+            themes.append(
+                DisengagementTheme(
+                    theme_id=f"THEME-{uuid.uuid4().hex[:8]}",
+                    title="Competitor Regional Poaching & Spread Inquiries",
+                    affected_partner_count=len(partner_ids),
+                    signal_families_implicated=[SignalFamily.COMPETITIVE, SignalFamily.FINANCIAL],
+                    confidence_score=0.92,
+                    supporting_ticket_ids=ticket_ids,
+                    plain_language_summary=(
+                        f"Identified {len(partner_ids)} partners discussing competitor promotional terms "
+                        f"and asking for matching payout schedules."
+                    ),
+                    actionable_remediation=(
+                        "Initiate proactive partner relationship calls and review regional tier commission structures."
+                    ),
+                )
+            )
 
         # If no specific cluster matched, fallback to golden replay
         if not themes:

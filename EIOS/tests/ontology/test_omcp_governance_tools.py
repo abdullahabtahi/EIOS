@@ -7,8 +7,6 @@ from eios.conversation.graph import create_conversational_graph
 from eios.conversation.models import SpecialistDomain
 from eios.conversation.router import SupervisoryRouter
 from eios.conversation.specialists.governance import GovernanceAuditorSpecialist
-from eios.llm_gateway.gateway import Gateway
-from eios.ontology.auditor.gate import MetricAuditorGate
 from eios.ontology.omcp.server import OMCPServer
 
 
@@ -108,7 +106,9 @@ def test_omcp_governance_tool_approve_and_execute_flow(omcp_server):
 def test_omcp_governance_tool_audit_and_hash_chain(omcp_server):
     """Verify get_ledger_audit_status and verify_hash_chain tools."""
     # Run audit check
-    audit_res = omcp_server.call_tool("get_ledger_audit_status", {}, caller_role="ComplianceAuditor")
+    audit_res = omcp_server.call_tool(
+        "get_ledger_audit_status", {}, caller_role="ComplianceAuditor"
+    )
     assert audit_res["is_valid"] is True
     assert audit_res["integrity_score"] == 1.0
     assert audit_res["head_seq"] >= 0

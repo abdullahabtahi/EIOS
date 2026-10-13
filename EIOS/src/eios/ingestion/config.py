@@ -1,6 +1,7 @@
 """Configuration settings for EIOS Layer 1 Ingestion Spine & Contract Gateway."""
 
 import os
+
 from pydantic import BaseModel, Field
 
 
@@ -8,14 +9,26 @@ class IngestionConfig(BaseModel):
     """Configuration parameters for Pub/Sub, DuckDB, DLQ, and HTTP endpoints."""
 
     # Ingestion transport
-    pubsub_project_id: str = Field(default_factory=lambda: os.getenv("EIOS_PUBSUB_PROJECT_ID", "deriv-eios-dev"))
-    pubsub_topic_id: str = Field(default_factory=lambda: os.getenv("EIOS_PUBSUB_TOPIC_ID", "eios.l1.events.v1"))
-    pubsub_subscription_id: str = Field(default_factory=lambda: os.getenv("EIOS_PUBSUB_SUBSCRIPTION_ID", "eios-l1-events-sub"))
-    dlq_topic_id: str = Field(default_factory=lambda: os.getenv("EIOS_DLQ_TOPIC_ID", "eios.l1.dlq.v1"))
+    pubsub_project_id: str = Field(
+        default_factory=lambda: os.getenv("EIOS_PUBSUB_PROJECT_ID", "deriv-eios-dev")
+    )
+    pubsub_topic_id: str = Field(
+        default_factory=lambda: os.getenv("EIOS_PUBSUB_TOPIC_ID", "eios.l1.events.v1")
+    )
+    pubsub_subscription_id: str = Field(
+        default_factory=lambda: os.getenv("EIOS_PUBSUB_SUBSCRIPTION_ID", "eios-l1-events-sub")
+    )
+    dlq_topic_id: str = Field(
+        default_factory=lambda: os.getenv("EIOS_DLQ_TOPIC_ID", "eios.l1.dlq.v1")
+    )
 
     # In-memory hot state & warm start
-    duckdb_database_path: str = Field(default_factory=lambda: os.getenv("EIOS_DUCKDB_PATH", ":memory:eios_hot_state"))
-    parquet_lakehouse_root: str = Field(default_factory=lambda: os.getenv("EIOS_LAKEHOUSE_ROOT", "data/raw"))
+    duckdb_database_path: str = Field(
+        default_factory=lambda: os.getenv("EIOS_DUCKDB_PATH", ":memory:eios_hot_state")
+    )
+    parquet_lakehouse_root: str = Field(
+        default_factory=lambda: os.getenv("EIOS_LAKEHOUSE_ROOT", "data/raw")
+    )
     rehydration_timeout_seconds: float = Field(default=3.0)
 
     @property
@@ -30,7 +43,9 @@ class IngestionConfig(BaseModel):
     microbatch_max_delay_ms: int = Field(default=500)
 
     # Security & Token Vault
-    hmac_salt: str = Field(default_factory=lambda: os.getenv("EIOS_HMAC_SALT", "eios-default-dev-salt-2026"))
+    hmac_salt: str = Field(
+        default_factory=lambda: os.getenv("EIOS_HMAC_SALT", "eios-default-dev-salt-2026")
+    )
     vault_key_version: str = Field(default="v1")
 
     # Service endpoints

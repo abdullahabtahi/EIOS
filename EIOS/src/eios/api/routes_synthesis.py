@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterable
 from datetime import UTC, datetime
-from typing import Any, AsyncIterable, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, status
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, Field
 
@@ -22,12 +23,16 @@ STREAM_PATH = "/api/v1/synthesis/stream"
 
 
 class WhatIfSimulationRequest(BaseModel):
-    shock_param: str = Field(default="competitor_commission_bps", description="Causal parameter shock identifier")
-    magnitude_pct: float = Field(default=25.0, description="Percentage shock magnitude (-100% to +100%)")
+    shock_param: str = Field(
+        default="competitor_commission_bps", description="Causal parameter shock identifier"
+    )
+    magnitude_pct: float = Field(
+        default=25.0, description="Percentage shock magnitude (-100% to +100%)"
+    )
 
 
 @router.post(WHAT_IF_PATH)
-def simulate_what_if(req: WhatIfSimulationRequest) -> Dict[str, Any]:
+def simulate_what_if(req: WhatIfSimulationRequest) -> dict[str, Any]:
     """Executes DoWhy refuter-checked causal SCM shock simulation with exact 100% Hare-Niemeyer attribution."""
     result = exec_svc.simulate_what_if_shock(
         shock_param=req.shock_param,
@@ -44,14 +49,14 @@ def simulate_what_if(req: WhatIfSimulationRequest) -> Dict[str, Any]:
 
 
 @router.get(BRIEFING_PATH)
-def get_morning_briefing() -> Dict[str, Any]:
+def get_morning_briefing() -> dict[str, Any]:
     """Returns 4-horizon executive morning briefing with DoWhy refuter statuses and verified citations."""
     briefing = exec_svc.get_morning_briefing()
     return briefing.to_contract_dict()
 
 
 @router.get(DAG_PATH)
-def get_causal_dag() -> Dict[str, Any]:
+def get_causal_dag() -> dict[str, Any]:
     """Returns Structural Causal Model DAG nodes, edges, and DoWhy refuter certification states."""
     dag = exec_svc.get_causal_dag()
     return dag.to_contract_dict()

@@ -2,8 +2,9 @@
 
 import json
 from pathlib import Path
+
 import jsonschema
-import pytest
+
 from eios.foundry.cli import run_pipeline
 
 
@@ -15,14 +16,13 @@ def test_unified_ground_truth_matches_json_schema(tmp_path: Path):
     truth_file = output_dir / "eval_truth" / "eval-ground-truth.json"
     assert truth_file.exists(), f"Missing unified ground truth file: {truth_file}"
 
-    with open(truth_file, "r", encoding="utf-8") as f:
+    with open(truth_file, encoding="utf-8") as f:
         truth_data = json.load(f)
 
     schema_path = Path(__file__).resolve().parents[2] / "schemas" / "eval-ground-truth.schema.json"
     assert schema_path.exists(), f"Schema file not found at {schema_path}"
 
-
-    with open(schema_path, "r", encoding="utf-8") as f:
+    with open(schema_path, encoding="utf-8") as f:
         schema = json.load(f)
 
     # Validate against JSON schema

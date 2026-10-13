@@ -1,7 +1,7 @@
 """Tests for structural causal DAG equations and placebo refuter edges (SC-005, FR-046, FR-048)."""
 
 from pathlib import Path
-import pytest
+
 from eios.foundry.generators.causal_truth import CausalTruthGenerator
 from eios.foundry.rng import DeterministicRNG
 from eios.foundry.storage.eval_truth_store import EvalGroundTruthStore

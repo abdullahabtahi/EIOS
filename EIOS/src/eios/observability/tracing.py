@@ -7,29 +7,26 @@ adaptive tail sampling preserving 100% of errors and long-tail latency events.
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-from contextvars import ContextVar
-from datetime import datetime, timezone
-from enum import Enum
-import os
 import random
 import secrets
 import threading
 import time
-from typing import Any, Dict, Iterator, List, Optional
-import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
+from datetime import UTC, datetime
+from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from eios.common.correlation import current_id, new_correlation_id
 from eios.observability.carrier import (
     current_baggage,
-    format_traceparent,
-    parse_traceparent,
 )
 
 # Active span context stack
-_CURRENT_ACTIVE_SPAN: ContextVar[Optional[TraceContextSpan]] = ContextVar(
+_CURRENT_ACTIVE_SPAN: ContextVar[TraceContextSpan | None] = ContextVar(
     "eios_active_span", default=None
 )
 
@@ -45,27 +42,27 @@ class TraceContextSpan(BaseModel):
 
     trace_id: str = Field(..., min_length=32, max_length=32, description="32-hex W3C trace ID")
     span_id: str = Field(..., min_length=16, max_length=16, description="16-hex W3C span ID")
-    parent_span_id: Optional[str] = Field(None, description="Parent span ID if nested")
+    parent_span_id: str | None = Field(None, description="Parent span ID if nested")
     correlation_id: str = Field(..., description="Enterprise transaction correlation identifier")
     service_name: str = Field(..., description="Service emitting the span")
     operation_name: str = Field(..., description="Operation executed")
     start_time: datetime = Field(..., description="Span start timestamp in UTC")
-    end_time: Optional[datetime] = Field(None, description="Span end timestamp in UTC")
-    duration_ms: Optional[float] = Field(None, ge=0.0, description="Duration in milliseconds")
+    end_time: datetime | None = Field(None, description="Span end timestamp in UTC")
+    duration_ms: float | None = Field(None, ge=0.0, description="Duration in milliseconds")
     status: SpanStatus = Field(default=SpanStatus.OK, description="Execution status")
-    attributes: Dict[str, Any] = Field(default_factory=dict, description="Diagnostic tags")
-    events: List[Dict[str, Any]] = Field(default_factory=list, description="In-span events")
+    attributes: dict[str, Any] = Field(default_factory=dict, description="Diagnostic tags")
+    events: list[dict[str, Any]] = Field(default_factory=list, description="In-span events")
 
     def set_attribute(self, key: str, value: Any) -> None:
         """Sets a tag attribute on the span."""
         self.attributes[key] = value
 
-    def add_event(self, name: str, attributes: Optional[Dict[str, Any]] = None) -> None:
+    def add_event(self, name: str, attributes: dict[str, Any] | None = None) -> None:
         """Appends an event checkpoint to the span."""
         self.events.append(
             {
                 "name": name,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "attributes": attributes or {},
             }
         )
@@ -93,20 +90,20 @@ class OpenTelemetrySpine:
         self.service_name = service_name
         self.sample_rate = sample_rate
         self.latency_tail_threshold_ms = latency_tail_threshold_ms
-        self._exported_spans: List[TraceContextSpan] = []
+        self._exported_spans: list[TraceContextSpan] = []
         self._lock = threading.RLock()
 
     @contextmanager
     def start_as_current_span(
         self,
         operation_name: str,
-        attributes: Optional[Dict[str, Any]] = None,
-        correlation_id: Optional[str] = None,
+        attributes: dict[str, Any] | None = None,
+        correlation_id: str | None = None,
     ) -> Iterator[TraceContextSpan]:
         """Starts a span as current in ContextVar, capturing parentage and correlation."""
         parent = _CURRENT_ACTIVE_SPAN.get()
         start_mono = time.perf_counter()
-        start_utc = datetime.now(timezone.utc)
+        start_utc = datetime.now(UTC)
 
         cid = (
             correlation_id
@@ -148,7 +145,7 @@ class OpenTelemetrySpine:
             raise
         finally:
             end_mono = time.perf_counter()
-            end_utc = datetime.now(timezone.utc)
+            end_utc = datetime.now(UTC)
             duration_ms = max(0.0, (end_mono - start_mono) * 1000.0)
             span.end_time = end_utc
             span.duration_ms = duration_ms
@@ -170,7 +167,7 @@ class OpenTelemetrySpine:
                 with self._lock:
                     self._exported_spans.append(span)
 
-    def get_exported_spans(self) -> List[TraceContextSpan]:
+    def get_exported_spans(self) -> list[TraceContextSpan]:
         """Returns snapshot of exported spans in chronological recording order."""
         with self._lock:
             return list(self._exported_spans)
@@ -181,9 +178,9 @@ class OpenTelemetrySpine:
             self._exported_spans.clear()
 
 
-def span_to_contract_dict(span: TraceContextSpan) -> Dict[str, Any]:
+def span_to_contract_dict(span: TraceContextSpan) -> dict[str, Any]:
     """Converts a TraceContextSpan to a dictionary strictly matching trace-context-span.schema.json."""
-    data: Dict[str, Any] = {
+    data: dict[str, Any] = {
         "trace_id": span.trace_id,
         "span_id": span.span_id,
         "correlation_id": span.correlation_id,

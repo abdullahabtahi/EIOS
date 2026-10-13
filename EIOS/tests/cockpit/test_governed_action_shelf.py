@@ -2,16 +2,17 @@
 
 import uuid
 from datetime import UTC, datetime, timedelta
+
 import pytest
 
 from eios.cockpit.governance_shelf import GovernedActionShelf
-from eios.ontology.actions.signer import LocalDevActionSigner
 from eios.cockpit.schemas import validate_contract
 from eios.ontology.actions.models import (
     ActionIntentToken,
     ActionSeverity,
     ActionStatus,
 )
+from eios.ontology.actions.signer import LocalDevActionSigner
 
 
 def _make_dummy_token(

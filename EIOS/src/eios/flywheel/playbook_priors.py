@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import math
-from typing import Optional, Sequence
+from collections.abc import Sequence
+from datetime import UTC, datetime
+
 import numpy as np
 
 from eios.flywheel.models import DecisionOutcomeRecord, PlaybookPolicyPrior
@@ -25,7 +26,7 @@ class PlaybookPriorUpdater:
         policy_id: str,
         action_type: str,
         records: Sequence[DecisionOutcomeRecord],
-        horizon: Optional[str] = None,
+        horizon: str | None = None,
         success_threshold: float = 0.0,
     ) -> PlaybookPolicyPrior:
         """Computes empirical win-rates, expected payoffs, and confidence ratings."""

@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import copy
-from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
 import uuid
+from datetime import UTC, datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -17,23 +17,23 @@ class BranchMetadata(BaseModel):
     created_by: str
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     is_active: bool = True
-    shock_parameters: Dict[str, float] = Field(default_factory=dict)
+    shock_parameters: dict[str, float] = Field(default_factory=dict)
 
 
 class ScenarioSandboxEngine:
     """Isolates What-If parametric simulations onto copy-on-write ontology branches.
-    
+
     Guarantees the canonical live operational graph is never directly mutated by hypothetical queries.
     """
 
-    def __init__(self, canonical_state: Optional[Dict[str, Any]] = None) -> None:
-        self.canonical_state: Dict[str, Any] = canonical_state or {
+    def __init__(self, canonical_state: dict[str, Any] | None = None) -> None:
+        self.canonical_state: dict[str, Any] = canonical_state or {
             "partner_commissions": {"AP-1029": 45.0, "AP-2041": 35.0, "AP-3088": 50.0},
             "broker_spread_bps": {"EURUSD": 1.2, "XAUUSD": 2.5, "BTCUSD": 12.0},
             "active_clients": 12500,
             "aggregate_var_30d_usd": 1041600.0,
         }
-        self._branches: Dict[str, BranchMetadata] = {
+        self._branches: dict[str, BranchMetadata] = {
             "main": BranchMetadata(
                 branch_id="main",
                 parent_branch_id="",
@@ -42,14 +42,14 @@ class ScenarioSandboxEngine:
             )
         }
         # Copy-on-write delta overlays per branch: branch_id -> {key: value}
-        self._branch_overlays: Dict[str, Dict[str, Any]] = {"main": {}}
+        self._branch_overlays: dict[str, dict[str, Any]] = {"main": {}}
 
     def fork_branch(
         self,
         scenario_name: str,
         parent_branch_id: str = "main",
         operator_id: str = "OFFICER_CHENG",
-        shock_parameters: Optional[Dict[str, float]] = None,
+        shock_parameters: dict[str, float] | None = None,
     ) -> BranchMetadata:
         """Forks a new copy-on-write ontology branch without copying full underlying memory."""
         if parent_branch_id not in self._branches:
@@ -76,7 +76,9 @@ class ScenarioSandboxEngine:
     def mutate_state(self, branch_id: str, key: str, value: Any) -> None:
         """Applies mutation to the isolated branch overlay only (never mutates canonical state)."""
         if branch_id == "main":
-            raise PermissionError("Direct mutation of canonical 'main' branch is forbidden (Principle II)")
+            raise PermissionError(
+                "Direct mutation of canonical 'main' branch is forbidden (Principle II)"
+            )
         if branch_id not in self._branch_overlays:
             raise KeyError(f"Branch '{branch_id}' not found")
         self._branch_overlays[branch_id][key] = value
@@ -93,19 +95,21 @@ class ScenarioSandboxEngine:
         # 2. Fallback to canonical state
         return self.canonical_state.get(key)
 
-    def compute_branch_diff(self, branch_id: str) -> Dict[str, Any]:
+    def compute_branch_diff(self, branch_id: str) -> dict[str, Any]:
         """Calculates delta between sandbox branch and canonical base."""
         if branch_id not in self._branch_overlays:
             raise KeyError(f"Branch '{branch_id}' not found")
 
         overlay = self._branch_overlays[branch_id]
-        diff: Dict[str, Any] = {}
+        diff: dict[str, Any] = {}
         for k, v in overlay.items():
             base_val = self.canonical_state.get(k)
             diff[k] = {
                 "base_value": base_val,
                 "sandbox_value": v,
-                "delta": round(v - base_val, 4) if isinstance(v, (int, float)) and isinstance(base_val, (int, float)) else "MODIFIED",
+                "delta": round(v - base_val, 4)
+                if isinstance(v, (int, float)) and isinstance(base_val, (int, float))
+                else "MODIFIED",
             }
         return diff
 

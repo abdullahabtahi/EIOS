@@ -1,19 +1,23 @@
 """Unified Single Client View (SCV) Coordinator enforcing ADR-008 Hub Suppression (US4)."""
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
 import threading
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
-from eios.ingestion.entity_resolution.deterministic import DeterministicResolver, ClientProfileRecord
-from eios.ingestion.entity_resolution.probabilistic import ProbabilisticLinker
+from eios.ingestion.entity_resolution.deterministic import (
+    ClientProfileRecord,
+    DeterministicResolver,
+)
 from eios.ingestion.entity_resolution.hub_suppression import HubSuppressionFilter
+from eios.ingestion.entity_resolution.probabilistic import ProbabilisticLinker
 
 
 @dataclass
 class CanonicalClientEntity:
     """Canonical client representation linking fragmented trading accounts."""
+
     canonical_id: str
     tax_id: str | None
     email_hash: str | None
@@ -22,7 +26,7 @@ class CanonicalClientEntity:
     devices: list[str] = field(default_factory=list)
     ips: list[str] = field(default_factory=list)
     is_shared_context: bool = False
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 class SCVCoordinator:
@@ -81,7 +85,9 @@ class SCVCoordinator:
             # Stage 2: Probabilistic Fellegi-Sunter Record Linkage (when deterministic key is absent or fresh)
             if not canonical_id or canonical_id not in self._canonical_entities:
                 for cand_id, cand_profile in self._entity_profiles.items():
-                    score, is_match = self.probabilistic_linker.evaluate_pair(curr_profile, cand_profile)
+                    score, is_match = self.probabilistic_linker.evaluate_pair(
+                        curr_profile, cand_profile
+                    )
                     if is_match:
                         canonical_id = cand_id
                         break

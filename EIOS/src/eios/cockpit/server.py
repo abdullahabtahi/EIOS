@@ -21,21 +21,15 @@ import argparse
 import hashlib
 import logging
 import time
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from datetime import UTC, datetime
+from typing import Any
 
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, status
+import uvicorn
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-import uvicorn
 
-from eios.cockpit.shell import CockpitShellPresenter
-from eios.cockpit.session import OperatorRole, WorkstationTab, SessionManager
-from eios.cockpit.executive import ExecutiveCockpitService
 from eios.cockpit.aml import AMLWorkstationService
-from eios.cockpit.partner import PartnerWorkstationService
-from eios.cockpit.compliance import ComplianceExplorerService
-from eios.cockpit.operations import DataPlatformOperationsService
 from eios.cockpit.auth import (
     APPROVE_ROLES,
     STAGE_ROLES,
@@ -44,8 +38,16 @@ from eios.cockpit.auth import (
     current_operator,
     require_roles,
 )
+from eios.cockpit.compliance import ComplianceExplorerService
+from eios.cockpit.executive import ExecutiveCockpitService
 from eios.cockpit.governance_runtime import build_governance_runtime
 from eios.cockpit.governance_shelf import GovernedActionCard
+from eios.cockpit.operations import DataPlatformOperationsService
+from eios.cockpit.partner import PartnerWorkstationService
+from eios.cockpit.session import OperatorRole, SessionManager
+from eios.cockpit.shell import CockpitShellPresenter
+from eios.conversation.copilot_engine import CopilotEngine
+from eios.flywheel.ledger import DecisionOutcomeRecord, DecisionOutcomesLedger
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
     CANONICAL_ACTION_SPECS,
@@ -55,13 +57,8 @@ from eios.ontology.actions.intent_hub import (
 )
 from eios.ontology.actions.models import (
     ActionIntentToken,
-    ActionSeverity,
-    ActionStatus,
-    ApprovalRecord,
 )
 from eios.ontology.auditor.gate import MetricAuditorGate
-from eios.flywheel.ledger import DecisionOutcomesLedger, DecisionOutcomeRecord
-from eios.conversation.copilot_engine import CopilotEngine
 
 _LOG = logging.getLogger("eios.cockpit.server")
 
@@ -107,18 +104,18 @@ class StageActionRequest(BaseModel):
     severity: str = "HIGH"
     initiator_officer_id: str = "OFFICER_CHENG_772"
     requires_four_eyes: bool = True
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class AuthorizeActionRequest(BaseModel):
     intent_id: str
     authorizer_id: str
-    second_eye_token: Optional[str] = None
+    second_eye_token: str | None = None
 
 
 class CopilotQueryRequest(BaseModel):
     query: str
-    context_entity_id: Optional[str] = None
+    context_entity_id: str | None = None
     role: str = "executive"
 
 
@@ -132,12 +129,12 @@ class FlywheelFeedbackRequest(BaseModel):
 
 
 def _get_utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 def _card_to_ui_contract_dict(
-    card: GovernedActionCard, token: Optional[ActionIntentToken] = None
-) -> Dict[str, Any]:
+    card: GovernedActionCard, token: ActionIntentToken | None = None
+) -> dict[str, Any]:
     lifecycle_state = "STAGED"
     if card.status == "PENDING_APPROVAL":
         if card.first_approver_id:
@@ -180,7 +177,7 @@ def _ensure_default_staged_cards() -> None:
     governance.seed_demo_intents()
 
 
-def _build_contract_state(role_str: str, operator_id: Optional[str] = None) -> Dict[str, Any]:
+def _build_contract_state(role_str: str, operator_id: str | None = None) -> dict[str, Any]:
     """Compiles the full CockpitUiContract JSON structure for a role."""
     norm_role = role_str.lower().strip()
     now_iso = _get_utc_now()
@@ -719,7 +716,7 @@ def _build_contract_state(role_str: str, operator_id: Optional[str] = None) -> D
         formatted_cards.append(_card_to_ui_contract_dict(c, tok))
 
     # Build full contract JSON conforming to cockpit-ui-contract.schema.json
-    contract_payload: Dict[str, Any] = {
+    contract_payload: dict[str, Any] = {
         "session": {
             "session_id": f"sess_{role_enum}_{int(time.time())}",
             "active_role": role_enum,
@@ -838,7 +835,7 @@ router = APIRouter(tags=["Cockpit Presentation"], dependencies=[Depends(current_
 # Endpoints
 @public_router.get(HEALTH_PATH)
 @public_router.get(API_HEALTH_PATH)
-def get_health() -> Dict[str, Any]:
+def get_health() -> dict[str, Any]:
     return {
         "status": "UP",
         "version": "0.1.0",
@@ -853,7 +850,7 @@ def get_health() -> Dict[str, Any]:
 @router.get(WORKSTATIONS_PATH)
 def get_workstation_state(
     role: str, operator: Operator | None = Depends(current_operator)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Returns the full contract-compliant client state for the requested workstation."""
     try:
         return _build_contract_state(role, operator_id=operator.uid if operator else None)
@@ -866,7 +863,7 @@ def get_workstation_state(
 
 
 @router.post(SIMULATE_PATH)
-def simulate_what_if_shock(req: SimulateRequest) -> Dict[str, Any]:
+def simulate_what_if_shock(req: SimulateRequest) -> dict[str, Any]:
     """Parametric propagation across structural causal model equations."""
     result = executive_svc.simulate_what_if_shock(
         shock_param=req.shock_param,
@@ -883,8 +880,8 @@ _ACTION_ALIASES = {
 
 
 def _resolve_parameters(
-    action_type: str, target_entity_id: str, metadata: Dict[str, Any]
-) -> Dict[str, Any]:
+    action_type: str, target_entity_id: str, metadata: dict[str, Any]
+) -> dict[str, Any]:
     """Fill the action's first missing required *_id parameter from the target entity."""
     params = dict(metadata)
     spec = CANONICAL_ACTION_SPECS.get(action_type)
@@ -899,7 +896,7 @@ def _resolve_parameters(
 @router.post(STAGE_ACTION_PATH)
 def stage_governed_action(
     req: StageActionRequest, operator: Operator | None = Depends(require_roles(STAGE_ROLES))
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Propose an action through the intent hub: validated, KMS-signed, nonce-registered and ledgered."""
     action_type = _ACTION_ALIASES.get(req.action_type, req.action_type)
     try:
@@ -926,7 +923,7 @@ def stage_governed_action(
 @router.post(AUTHORIZE_ACTION_PATH)
 def authorize_governed_action(
     req: AuthorizeActionRequest, operator: Operator | None = Depends(require_roles(APPROVE_ROLES))
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Record a Four-Eyes approval; commit the action once every required approval is in."""
     try:
         card = action_shelf.submit_approval(
@@ -962,7 +959,7 @@ def authorize_governed_action(
 
 
 @router.post(COPILOT_QUERY_PATH)
-def query_copilot(req: CopilotQueryRequest) -> Dict[str, Any]:
+def query_copilot(req: CopilotQueryRequest) -> dict[str, Any]:
     """Processes Copilot queries with Metric Auditor Gate verification and dual-engine grounding."""
     role_enum = OperatorRole.EXECUTIVE
     for r in OperatorRole:
@@ -1001,10 +998,10 @@ def query_copilot(req: CopilotQueryRequest) -> Dict[str, Any]:
 @router.post(FLYWHEEL_FEEDBACK_PATH)
 def submit_flywheel_feedback(
     req: FlywheelFeedbackRequest, operator: Operator | None = Depends(current_operator)
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Records operator annotation/revision into closed-loop Decision Outcomes Ledger."""
     decision_id = f"dec_{int(time.time() * 1000)}"
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     record = DecisionOutcomeRecord(
         decision_id=decision_id,
         intent_id=f"intent_{req.case_id}",
@@ -1033,7 +1030,7 @@ def submit_flywheel_feedback(
 
 
 @router.get(AUDIT_VERIFY_PATH)
-def verify_ledger_continuity() -> Dict[str, Any]:
+def verify_ledger_continuity() -> dict[str, Any]:
     """Walk the real decision ledger: sequence continuity, SHA-256 hash chain and signed checkpoints."""
     report = ContinuousAuditWalker(governance.sequencer, governance.worm).verify_ledger()
     checkpoints = governance.worm.get_checkpoints()

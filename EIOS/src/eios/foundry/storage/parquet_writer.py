@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
+
 import pyarrow as pa
 import pyarrow.parquet as pq
 
 
 def write_deterministic_parquet(
-    records: List[dict[str, Any]],
+    records: list[dict[str, Any]],
     out_path: Path | str,
-    sort_key: Optional[str] = None,
+    sort_key: str | None = None,
 ) -> None:
     """Writes records to a Parquet file with deterministic column ordering and compression."""
     out_file = Path(out_path)
@@ -50,7 +51,7 @@ class DeterministicParquetWriter:
     def write_partition(
         records: Any,
         out_path: Path | str,
-        sort_columns: Optional[List[str]] = None,
+        sort_columns: list[str] | None = None,
     ) -> Path:
         out_file = Path(out_path)
         if hasattr(records, "to_dicts"):
@@ -64,4 +65,3 @@ class DeterministicParquetWriter:
         sort_key = sort_columns[0] if sort_columns else None
         write_deterministic_parquet(record_dicts, out_file, sort_key=sort_key)
         return out_file
-

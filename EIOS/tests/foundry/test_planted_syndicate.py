@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-import pytest
+
 from eios.foundry.generators.aml import AMLDataGenerator
 from eios.foundry.rng import DeterministicRNG
 from eios.foundry.storage.eval_truth_store import EvalGroundTruthStore
@@ -21,13 +21,19 @@ def test_planted_47_account_syndicate_topology(tmp_path: Path):
     syndicate_truth_path = tmp_path / "eval-truth" / "module_a" / "syndicate_47.json"
     assert syndicate_truth_path.exists(), "Syndicate truth file missing from eval-truth bucket"
 
-    with open(syndicate_truth_path, "r", encoding="utf-8") as f:
+    with open(syndicate_truth_path, encoding="utf-8") as f:
         data = json.load(f)
 
-    assert len(data["client_uuids"]) == 47, f"Expected 47 clients, found {len(data['client_uuids'])}"
-    assert len(data["device_hashes"]) == 6, f"Expected 6 devices, found {len(data['device_hashes'])}"
+    assert len(data["client_uuids"]) == 47, (
+        f"Expected 47 clients, found {len(data['client_uuids'])}"
+    )
+    assert len(data["device_hashes"]) == 6, (
+        f"Expected 6 devices, found {len(data['device_hashes'])}"
+    )
     assert len(data["ip_addresses"]) == 4, f"Expected 4 IPs, found {len(data['ip_addresses'])}"
-    assert len(data["round_trip_transaction_ids"]) >= 47, "Must track round-trip laundering transaction IDs"
+    assert len(data["round_trip_transaction_ids"]) >= 47, (
+        "Must track round-trip laundering transaction IDs"
+    )
 
     # Check typology description and round-trip characteristics
     assert data["typology"] == "ROUND_TRIP_LAUNDERING_RING"

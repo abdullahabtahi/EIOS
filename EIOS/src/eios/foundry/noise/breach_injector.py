@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from eios.foundry.rng import RNGManager
 
 
@@ -16,11 +17,11 @@ class BreachInjector:
 
     def inject_transaction_breaches(
         self,
-        records: List[Dict[str, Any]],
+        records: list[dict[str, Any]],
         breach_type: str = "NEGATIVE_AMOUNT",
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Mutates transaction records to deliberately violate Layer 1 Pydantic contracts."""
-        mutated: List[Dict[str, Any]] = []
+        mutated: list[dict[str, Any]] = []
         for r in records:
             item = dict(r)
             if breach_type == "NEGATIVE_AMOUNT":
@@ -34,11 +35,11 @@ class BreachInjector:
 
     def inject_client_breaches(
         self,
-        records: List[Dict[str, Any]],
+        records: list[dict[str, Any]],
         breach_type: str = "INVALID_STATUS",
-    ) -> List[Dict[str, Any]]:
+    ) -> list[dict[str, Any]]:
         """Mutates client records to deliberately violate Layer 1 Pydantic contracts."""
-        mutated: List[Dict[str, Any]] = []
+        mutated: list[dict[str, Any]] = []
         for r in records:
             item = dict(r)
             if breach_type == "INVALID_STATUS":

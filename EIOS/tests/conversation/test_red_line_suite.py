@@ -1,6 +1,5 @@
 """Red-Line Security and Governance Benchmarking Suite (Principle I, II, III, T032)."""
 
-import pytest
 from eios.conversation.auditor_bridge import ConversationAuditorBridge
 from eios.conversation.copilot_engine import CopilotEngine
 from eios.conversation.models import OperatorRole
@@ -17,7 +16,11 @@ def test_red_line_1_hallucinated_numerical_metric_100_percent_blocked():
     record = bridge.audit_turn(narrative, tool_trace)
     assert record.passed is False
     assert record.status.value == "BLOCKED"
-    assert "1420000" in record.unanchored_tokens or "1,420,000" in record.unanchored_tokens or len(record.unanchored_tokens) > 0
+    assert (
+        "1420000" in record.unanchored_tokens
+        or "1,420,000" in record.unanchored_tokens
+        or len(record.unanchored_tokens) > 0
+    )
 
 
 def test_red_line_2_autonomous_write_back_impossible():

@@ -1,5 +1,7 @@
 """Unit and adversary simulation tests for WORM Checkpoints and Continuous Audit Walker (US4)."""
 
+import pytest
+
 from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.models import (
@@ -10,7 +12,6 @@ from eios.ontology.actions.models import (
 from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.signer import LocalDevActionSigner
 from eios.ontology.actions.worm import WORMAnchorService, WORMRetentionViolationError
-import pytest
 
 
 def test_worm_anchor_checkpoint_creation_and_immutability():
@@ -94,14 +95,19 @@ def test_continuous_audit_walker_detects_single_byte_payload_tampering():
         )
 
     # Tamper with historical payload at sequence 3
-    sequencer.tamper_payload_for_testing(target_seq=3, corrupted_byte_key="reason", corrupted_val="FORGED_PAYLOAD")
+    sequencer.tamper_payload_for_testing(
+        target_seq=3, corrupted_byte_key="reason", corrupted_val="FORGED_PAYLOAD"
+    )
 
     # Run audit walker
     report = walker.verify_ledger()
     assert report.is_valid is False
     assert report.integrity_score < 1.0
     assert report.tampered_sequence_id == 3
-    assert "PAYLOAD_DIGEST_MISMATCH" in report.failure_reason or "HASH_MISMATCH" in report.failure_reason
+    assert (
+        "PAYLOAD_DIGEST_MISMATCH" in report.failure_reason
+        or "HASH_MISMATCH" in report.failure_reason
+    )
 
 
 def test_continuous_audit_walker_detects_sequence_gap():
@@ -123,7 +129,9 @@ def test_continuous_audit_walker_detects_sequence_gap():
 
     report = walker.verify_ledger()
     assert report.is_valid is False
-    assert report.tampered_sequence_id == 3  # Gap detected because expected seq 2 but encountered seq 3
+    assert (
+        report.tampered_sequence_id == 3
+    )  # Gap detected because expected seq 2 but encountered seq 3
     assert "SEQUENCE_GAP_DETECTED" in report.failure_reason
 
 
@@ -143,7 +151,9 @@ def test_continuous_audit_walker_detects_worm_anchor_mismatch():
 
     # Adversary forges the head hash of entry 3 in the ledger
     with sequencer._lock:
-        sequencer._entries[2].current_hash = "0000000000000000000000000000000000000000000000000000000000000000"
+        sequencer._entries[
+            2
+        ].current_hash = "0000000000000000000000000000000000000000000000000000000000000000"
 
     report = walker.verify_ledger()
     assert report.is_valid is False

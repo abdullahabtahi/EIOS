@@ -2,7 +2,6 @@
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from eios.churn.baseline import NaiveRuleBaseline
 from eios.churn.hazard_model import DiscreteTimeHazardModel
@@ -25,7 +24,9 @@ def test_hazard_beats_baseline():
         comp_flag = float(np.random.rand() < (0.15 + 0.3 * login_decay))
 
         # Realistic affiliate network churn rate (~20% annual/quarterly disengagement rate)
-        latent_risk = -3.2 + 3.5 * login_decay + 2.8 * neg_comms - 2.0 * comm_delta + 1.8 * comp_flag
+        latent_risk = (
+            -3.2 + 3.5 * login_decay + 2.8 * neg_comms - 2.0 * comm_delta + 1.8 * comp_flag
+        )
         true_hazard = 1.0 / (1.0 + np.exp(-latent_risk))
 
         # True 30-day churn outcome (approx 20% base rate)
@@ -46,7 +47,7 @@ def test_hazard_beats_baseline():
             else:
                 inactive_days = np.random.uniform(1.0, 6.0)
 
-        is_test = (pid >= 250)
+        is_test = pid >= 250
 
         # In survival data, churn occurs at week w in 1..4 based on discrete hazard
         churn_week = None
@@ -102,11 +103,13 @@ def test_hazard_beats_baseline():
 
     challenger_scores = challenger.predict_30d_hazard(df_test_partners)
     challenger_probs = challenger_scores["hazard_probability_30d"].values
-    challenger_metrics = baseline.evaluate(df_test_partners["actual_churn"].values, challenger_probs)
+    challenger_metrics = baseline.evaluate(
+        df_test_partners["actual_churn"].values, challenger_probs
+    )
 
     pr_auc_delta = challenger_metrics["pr_auc"] - baseline_metrics["pr_auc"]
 
-    print(f"\n--- EVALUATION HARNESS RESULTS ---")
+    print("\n--- EVALUATION HARNESS RESULTS ---")
     print(f"Baseline PR-AUC:   {baseline_metrics['pr_auc']:.4f}")
     print(f"Challenger PR-AUC: {challenger_metrics['pr_auc']:.4f}")
     print(f"Delta PR-AUC:      {pr_auc_delta:+.4f} (Commitment: >= +0.10)")

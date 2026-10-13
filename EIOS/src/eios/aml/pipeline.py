@@ -9,7 +9,7 @@ Authoritative References:
 """
 
 from datetime import UTC, datetime
-from typing import Any
+
 import pandas as pd
 
 from eios.aml.dossier import AMLDossierAssembler
@@ -103,7 +103,8 @@ class ClientAMLPipeline:
                             attributes={
                                 "peer_z_score": 3.5,
                                 "hours_since_kyc": rt.hours_since_kyc,
-                                "deposit_withdrawal_ratio": rt.withdrawal_amount_usd / max(rt.deposit_amount_usd, 1.0),
+                                "deposit_withdrawal_ratio": rt.withdrawal_amount_usd
+                                / max(rt.deposit_amount_usd, 1.0),
                                 "mule_cluster_size": 1.0,
                                 "market_risk_pct": rt.market_risk_pct,
                             },
@@ -116,7 +117,8 @@ class ClientAMLPipeline:
                     attributes={
                         "peer_z_score": 3.5,
                         "hours_since_kyc": rt.hours_since_kyc,
-                        "deposit_withdrawal_ratio": rt.withdrawal_amount_usd / max(rt.deposit_amount_usd, 1.0),
+                        "deposit_withdrawal_ratio": rt.withdrawal_amount_usd
+                        / max(rt.deposit_amount_usd, 1.0),
                         "mule_cluster_size": 1.0,
                         "market_risk_pct": rt.market_risk_pct,
                     },

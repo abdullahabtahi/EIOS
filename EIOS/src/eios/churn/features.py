@@ -10,8 +10,8 @@ Extracts features from DuckDB Hot State L1 Data Products:
 - DP12: competitor_benchmarks
 """
 
-from datetime import date, datetime, timedelta
-from typing import Any
+from datetime import date
+
 import duckdb
 import numpy as np
 import pandas as pd
@@ -91,10 +91,16 @@ class PartnerFeatureExtractor:
         """
 
         params = [
-            as_of_date, as_of_date, as_of_date,
-            as_of_date, as_of_date, as_of_date,
             as_of_date,
-            as_of_date, as_of_date, as_of_date,
+            as_of_date,
+            as_of_date,
+            as_of_date,
+            as_of_date,
+            as_of_date,
+            as_of_date,
+            as_of_date,
+            as_of_date,
+            as_of_date,
             as_of_date,
         ]
 
@@ -105,24 +111,26 @@ class PartnerFeatureExtractor:
         df["login_velocity_decay_3w"] = np.where(
             df["logins_prior"] > 0,
             (df["logins_prior"] - df["logins_recent"]) / np.maximum(df["logins_prior"], 1),
-            0.0
+            0.0,
         )
         df["ftd_volume_delta_pct"] = np.where(
             df["ftds_prior"] > 0,
             (df["ftds_recent"] - df["ftds_prior"]) / np.maximum(df["ftds_prior"], 1),
-            0.0
+            0.0,
         )
         df["inactive_days"] = np.where(
             df["last_active_date"].isna(),
             28.0,
-            (pd.to_datetime(as_of_date) - pd.to_datetime(df["last_active_date"])).dt.days.fillna(28.0)
+            (pd.to_datetime(as_of_date) - pd.to_datetime(df["last_active_date"])).dt.days.fillna(
+                28.0
+            ),
         )
 
         # 2. Communication
         df["sentiment_negative_ratio"] = np.where(
             df["total_tickets"] > 0,
             df["negative_tickets"] / np.maximum(df["total_tickets"], 1),
-            0.0
+            0.0,
         )
         df["unresolved_ticket_count"] = df["negative_tickets"]
 
@@ -133,7 +141,7 @@ class PartnerFeatureExtractor:
         df["commission_velocity_30d"] = np.where(
             df["comm_prior"] > 0,
             (df["comm_recent"] - df["comm_prior"]) / np.maximum(df["comm_prior"], 1.0),
-            0.0
+            0.0,
         )
 
         # 5. Competitive
@@ -158,58 +166,68 @@ class PartnerFeatureExtractor:
         contributions: list[SignalContribution] = []
 
         # 1. Behavioral
-        contributions.append(SignalContribution(
-            signal_family=SignalFamily.BEHAVIORAL,
-            metric_name="login_velocity_decay_3w",
-            observed_value=float(row.get("logins_recent", 0)),
-            baseline_value=float(row.get("logins_prior", 0)),
-            relative_delta=float(row.get("login_velocity_decay_3w", 0.0)),
-            hazard_weight=1.8,
-            citation_ref="DP9:partner_engagement_signals",
-        ))
+        contributions.append(
+            SignalContribution(
+                signal_family=SignalFamily.BEHAVIORAL,
+                metric_name="login_velocity_decay_3w",
+                observed_value=float(row.get("logins_recent", 0)),
+                baseline_value=float(row.get("logins_prior", 0)),
+                relative_delta=float(row.get("login_velocity_decay_3w", 0.0)),
+                hazard_weight=1.8,
+                citation_ref="DP9:partner_engagement_signals",
+            )
+        )
 
         # 2. Communication
-        contributions.append(SignalContribution(
-            signal_family=SignalFamily.COMMUNICATION,
-            metric_name="negative_tickets",
-            observed_value=float(row.get("negative_tickets", 0)),
-            baseline_value=0.0,
-            relative_delta=float(row.get("sentiment_negative_ratio", 0.0)),
-            hazard_weight=1.4,
-            citation_ref="DP10:partner_comms",
-        ))
+        contributions.append(
+            SignalContribution(
+                signal_family=SignalFamily.COMMUNICATION,
+                metric_name="negative_tickets",
+                observed_value=float(row.get("negative_tickets", 0)),
+                baseline_value=0.0,
+                relative_delta=float(row.get("sentiment_negative_ratio", 0.0)),
+                hazard_weight=1.4,
+                citation_ref="DP10:partner_comms",
+            )
+        )
 
         # 3. Relationship
-        contributions.append(SignalContribution(
-            signal_family=SignalFamily.RELATIONSHIP,
-            metric_name="tenure_months",
-            observed_value=float(row.get("tenure_months", 0)),
-            baseline_value=12.0,
-            relative_delta=float(row.get("tenure_months_log", 0.0)),
-            hazard_weight=-0.8,
-            citation_ref="DP6:partner_360",
-        ))
+        contributions.append(
+            SignalContribution(
+                signal_family=SignalFamily.RELATIONSHIP,
+                metric_name="tenure_months",
+                observed_value=float(row.get("tenure_months", 0)),
+                baseline_value=12.0,
+                relative_delta=float(row.get("tenure_months_log", 0.0)),
+                hazard_weight=-0.8,
+                citation_ref="DP6:partner_360",
+            )
+        )
 
         # 4. Financial
-        contributions.append(SignalContribution(
-            signal_family=SignalFamily.FINANCIAL,
-            metric_name="commission_velocity_30d",
-            observed_value=float(row.get("comm_recent", 0.0)),
-            baseline_value=float(row.get("comm_prior", 0.0)),
-            relative_delta=float(row.get("commission_velocity_30d", 0.0)),
-            hazard_weight=1.5,
-            citation_ref="DP8:commission_ledger",
-        ))
+        contributions.append(
+            SignalContribution(
+                signal_family=SignalFamily.FINANCIAL,
+                metric_name="commission_velocity_30d",
+                observed_value=float(row.get("comm_recent", 0.0)),
+                baseline_value=float(row.get("comm_prior", 0.0)),
+                relative_delta=float(row.get("commission_velocity_30d", 0.0)),
+                hazard_weight=1.5,
+                citation_ref="DP8:commission_ledger",
+            )
+        )
 
         # 5. Competitive
-        contributions.append(SignalContribution(
-            signal_family=SignalFamily.COMPETITIVE,
-            metric_name="competitor_mention_flag",
-            observed_value=float(row.get("competitor_mention_flag", 0)),
-            baseline_value=0.0,
-            relative_delta=float(row.get("competitor_mention_flag", 0)),
-            hazard_weight=2.2,
-            citation_ref="DP10:partner_comms",
-        ))
+        contributions.append(
+            SignalContribution(
+                signal_family=SignalFamily.COMPETITIVE,
+                metric_name="competitor_mention_flag",
+                observed_value=float(row.get("competitor_mention_flag", 0)),
+                baseline_value=0.0,
+                relative_delta=float(row.get("competitor_mention_flag", 0)),
+                hazard_weight=2.2,
+                citation_ref="DP10:partner_comms",
+            )
+        )
 
         return contributions

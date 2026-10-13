@@ -4,6 +4,8 @@ Executes and verifies Scenarios 1 through 6 defined in specs/011-governed-action
 """
 
 import pytest
+
+from eios.conversation.specialists.governance import GovernanceAuditorSpecialist
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
     ActionIntentHub,
@@ -15,7 +17,6 @@ from eios.ontology.actions.outcomes import DecisionOutcomesStore
 from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.sink import FaultMode, SimulatedWriteBackSink
 from eios.ontology.actions.worm import WORMAnchorService
-from eios.conversation.specialists.governance import GovernanceAuditorSpecialist
 from eios.ontology.omcp.server import OMCPServer
 
 
@@ -41,7 +42,9 @@ def test_quickstart_scenario_1_two_phase_commit_four_eyes():
     assert token.signature is not None
 
     # 2. Compliance Officer 1 approves
-    hub.approve_action(token.intent_id, approver_id="OFFICER_A", role="MLRO", comment="Flagged structuring")
+    hub.approve_action(
+        token.intent_id, approver_id="OFFICER_A", role="MLRO", comment="Flagged structuring"
+    )
     token = hub.get_status(token.intent_id)
     assert token.status == ActionStatus.PENDING  # Still PENDING: Four-Eyes mandated!
 
@@ -50,7 +53,9 @@ def test_quickstart_scenario_1_two_phase_commit_four_eyes():
         hub.execute_action(token.intent_id)
 
     # 4. Distinct Senior Officer approves
-    hub.approve_action(token.intent_id, approver_id="OFFICER_B", role="HEAD_OF_COMPLIANCE", comment="Confirmed")
+    hub.approve_action(
+        token.intent_id, approver_id="OFFICER_B", role="HEAD_OF_COMPLIANCE", comment="Confirmed"
+    )
     token = hub.get_status(token.intent_id)
     assert token.status == ActionStatus.APPROVED
 

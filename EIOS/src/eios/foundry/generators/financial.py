@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from eios.foundry.contracts import ContractValidator, DailyPnLRecord
 from eios.foundry.rng import RNGManager
 from eios.foundry.universe import GlobalEntityUniverse
@@ -19,10 +20,10 @@ class FinancialDataGenerator:
         self._gen = rng.get_generator("financial_pnl")
         self._validator = ContractValidator(DailyPnLRecord)
 
-    def generate_daily_pnl(self, days: int = 30) -> List[Dict[str, Any]]:
+    def generate_daily_pnl(self, days: int = 30) -> list[dict[str, Any]]:
         """Generates validated daily P&L entries with organic volume derivation."""
-        records: List[Dict[str, Any]] = []
-        base_date = datetime(2025, 1, 1, tzinfo=timezone.utc)
+        records: list[dict[str, Any]] = []
+        base_date = datetime(2025, 1, 1, tzinfo=UTC)
 
         for d in range(days):
             date_str = (base_date + timedelta(days=d)).strftime("%Y-%m-%d")

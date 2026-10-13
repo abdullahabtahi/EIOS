@@ -5,12 +5,12 @@ to provide verified multi-turn answers passing the Metric Auditor Gate (Principl
 """
 
 import re
-from typing import Any, Sequence
-from langchain_core.messages import AIMessage
-from langchain_core.tools import BaseTool
+from collections.abc import Sequence
+from typing import Any
 
-from eios.conversation.models import BlackboardState, SpecialistDomain
-from eios.conversation.specialists.base import BaseSpecialistAgent
+from langchain_core.messages import AIMessage
+
+from eios.conversation.models import SpecialistDomain
 from eios.ontology.omcp.server import OMCPServer
 
 
@@ -43,7 +43,9 @@ class ChurnRadarSpecialist:
         partner_id = self._extract_partner_id(text)
 
         # Check if cohort query
-        is_cohort_query = any(k in text.lower() for k in ["cohort", "cluster", "regional", "systemic", "sea"])
+        is_cohort_query = any(
+            k in text.lower() for k in ["cohort", "cluster", "regional", "systemic", "sea"]
+        )
 
         citations = ["DP6:partner_360", "DP9:partner_engagement_signals"]
 
@@ -63,7 +65,9 @@ class ChurnRadarSpecialist:
                 content = "No statistically significant regional cohort disengagement clusters currently active."
             citations.append("DP6:partner_360")
         elif partner_id and self.omcp_server:
-            signals_res = self.omcp_server.call_tool("get_partner_signals", {"partner_id": partner_id})
+            signals_res = self.omcp_server.call_tool(
+                "get_partner_signals", {"partner_id": partner_id}
+            )
             hazard = signals_res["hazard_probability_30d"]
             priority = signals_res["priority_score"]
             risk_tier = signals_res["risk_tier"]

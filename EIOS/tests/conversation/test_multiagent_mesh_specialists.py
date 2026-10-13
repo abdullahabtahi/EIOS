@@ -1,10 +1,10 @@
 """Tests for Multi-Agent Supervisory Mesh Specialists, Router, and Action Execution Sink (T029, T030, T040)."""
 
-import pytest
 from langchain_core.messages import HumanMessage
-from eios.conversation.router import SupervisoryRouter
+
+from eios.conversation.graph import ActionExecutionSink
 from eios.conversation.models import SpecialistDomain
-from eios.conversation.graph import ActionExecutionSink, BlackboardState
+from eios.conversation.router import SupervisoryRouter
 from eios.conversation.specialists.aml import SentinelAMLSpecialist
 from eios.conversation.specialists.churn import ChurnRadarSpecialist
 from eios.conversation.specialists.fraud import PartnerFraudSpecialist
@@ -94,8 +94,9 @@ def test_specialists_invoke_offline():
 
 def test_create_conversational_graph_compiles_and_runs():
     from unittest.mock import MagicMock
-    from eios.ontology.auditor.gate import MetricAuditorGate
+
     from eios.conversation.graph import create_conversational_graph
+    from eios.ontology.auditor.gate import MetricAuditorGate
 
     gateway = MagicMock()
     auditor = MetricAuditorGate(relative_tolerance=0.01)
@@ -117,6 +118,7 @@ def test_create_conversational_graph_compiles_and_runs():
 
 def test_conversation_engine_facade():
     from unittest.mock import MagicMock
+
     from eios.conversation.engine import ConversationEngine
     from eios.conversation.models import ConversationQueryRequest
     from eios.ontology.auditor.gate import MetricAuditorGate
@@ -130,18 +132,14 @@ def test_conversation_engine_facade():
 
     # 1. Speculative query refusal test
     req_spec = ConversationQueryRequest(
-        user_query="Please make a speculative guess on future rates",
-        session_id="sess_test_1"
+        user_query="Please make a speculative guess on future rates", session_id="sess_test_1"
     )
     res_spec = engine.query(req_spec)
     assert "cannot answer" in res_spec.response_markdown.lower()
 
     # 2. Regular query
     req_norm = ConversationQueryRequest(
-        user_query="What is the forecast?",
-        session_id="sess_test_2"
+        user_query="What is the forecast?", session_id="sess_test_2"
     )
     res_norm = engine.query(req_norm)
     assert res_norm.session_id == "sess_test_2"
-
-

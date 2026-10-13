@@ -1,6 +1,7 @@
 """Tests for Copilot Engine Dual-Engine Grounding and Auditor Integration (F018, T010)."""
 
 import pytest
+
 from eios.conversation.copilot_engine import CopilotEngine
 from eios.conversation.models import OperatorRole
 
@@ -44,6 +45,7 @@ def test_copilot_engine_executes_net_revenue_offline_query(copilot):
 def test_copilot_engine_live_mocked_execution():
     """Verifies live Gemini execution flow with tool function calling and auditor pass."""
     from unittest.mock import MagicMock
+
     from eios.conversation.client import GeminiClientManager
 
     mock_client = MagicMock()
@@ -75,4 +77,3 @@ def test_copilot_engine_live_mocked_execution():
     res = engine.process_query(query="Check net revenue", role=OperatorRole.EXECUTIVE)
     assert res.auditor_status == "PASS"
     assert "3,820,000" in res.response_markdown
-

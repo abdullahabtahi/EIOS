@@ -4,7 +4,6 @@ Implements the pre-registered baseline: "no login > 14 days = churn".
 Used as the benchmark that the Discrete-Time Hazard Model must beat by >= 0.10 PR-AUC.
 """
 
-from typing import Any
 import numpy as np
 import pandas as pd
 from sklearn.metrics import average_precision_score, brier_score_loss, roc_auc_score
@@ -18,11 +17,13 @@ class NaiveRuleBaseline:
 
     def predict_proba(self, inactive_days: pd.Series | np.ndarray) -> np.ndarray:
         """Assign continuous risk probability scaling with inactive days.
-        
+
         Partners with inactivity >= threshold get 1.0; others get inactive_days / (2 * threshold).
         """
         arr = np.asarray(inactive_days, dtype=float)
-        probs = np.where(arr >= self.inactivity_threshold_days, 1.0, arr / (2.0 * self.inactivity_threshold_days))
+        probs = np.where(
+            arr >= self.inactivity_threshold_days, 1.0, arr / (2.0 * self.inactivity_threshold_days)
+        )
         return np.clip(probs, 0.0, 1.0)
 
     def predict(self, inactive_days: pd.Series | np.ndarray) -> np.ndarray:

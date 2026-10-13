@@ -2,8 +2,10 @@
 
 import os
 from unittest import mock
+
 import pytest
-from eios.foundry.manifest import FoundryManifest, validate_manifest_dict
+
+from eios.foundry.manifest import validate_manifest_dict
 
 
 def test_sealed_tier_local_blocked() -> None:

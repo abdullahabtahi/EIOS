@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
-import polars as pl
+from typing import Any
 
 from eios.foundry.contracts import (
     ComplianceCaseRecord,
@@ -25,7 +24,7 @@ class AMLDataGenerator:
         self,
         universe: GlobalEntityUniverse,
         rng: RNGManager,
-        truth_store: Optional[EvalGroundTruthStore] = None,
+        truth_store: EvalGroundTruthStore | None = None,
     ) -> None:
         self.universe = universe
         self.rng = rng
@@ -36,10 +35,10 @@ class AMLDataGenerator:
         self._validator_trade = ContractValidator(TradeExecutionRecord)
         self._validator_case = ContractValidator(ComplianceCaseRecord)
 
-    def generate_transactions(self, count: int = 100) -> List[Dict[str, Any]]:
+    def generate_transactions(self, count: int = 100) -> list[dict[str, Any]]:
         """Emits validated transaction_aml records."""
-        records: List[Dict[str, Any]] = []
-        base_dt = datetime(2025, 2, 1, 12, 0, 0, tzinfo=timezone.utc)
+        records: list[dict[str, Any]] = []
+        base_dt = datetime(2025, 2, 1, 12, 0, 0, tzinfo=UTC)
         directions = ["DEPOSIT", "WITHDRAWAL", "INTERNAL_TRANSFER"]
 
         for idx in range(count):
@@ -67,10 +66,10 @@ class AMLDataGenerator:
         self._validator_tx.validate_batch(records)
         return records
 
-    def generate_trades(self, count: int = 100) -> List[Dict[str, Any]]:
+    def generate_trades(self, count: int = 100) -> list[dict[str, Any]]:
         """Emits validated trade_execution records."""
-        records: List[Dict[str, Any]] = []
-        base_dt = datetime(2025, 2, 1, 12, 0, 0, tzinfo=timezone.utc)
+        records: list[dict[str, Any]] = []
+        base_dt = datetime(2025, 2, 1, 12, 0, 0, tzinfo=UTC)
         symbols = ["EURUSD", "GBPUSD", "USDJPY", "BTCUSD", "Volatility 100 Index"]
 
         for idx in range(count):
@@ -104,10 +103,10 @@ class AMLDataGenerator:
         self._validator_trade.validate_batch(records)
         return records
 
-    def generate_compliance_cases(self, count: int = 50) -> List[Dict[str, Any]]:
+    def generate_compliance_cases(self, count: int = 50) -> list[dict[str, Any]]:
         """Emits validated compliance_cases calibrated to ~95% benign false positives."""
-        records: List[Dict[str, Any]] = []
-        base_dt = datetime(2025, 2, 1, 12, 0, 0, tzinfo=timezone.utc)
+        records: list[dict[str, Any]] = []
+        base_dt = datetime(2025, 2, 1, 12, 0, 0, tzinfo=UTC)
         alert_types = [
             "RAPID_MOVEMENT_OF_FUNDS",
             "STRUCTURING_DEPOSIT_VELOCITY",
@@ -120,7 +119,7 @@ class AMLDataGenerator:
             account = self.universe.accounts[idx % len(self.universe.accounts)]
             dt = base_dt + timedelta(hours=idx * 2)
             # 95% false positive rate (1 in 20 true positive)
-            is_tp = (idx % 20 == 0)
+            is_tp = idx % 20 == 0
             severity = "CRITICAL" if is_tp else severities[idx % len(severities)]
             decision = "SAR_FILED" if is_tp else ("DISMISS" if idx % 2 == 0 else "ESCALATE")
 
@@ -139,7 +138,7 @@ class AMLDataGenerator:
         self._validator_case.validate_batch(records)
         return records
 
-    def inject_syndicate_ring_and_round_trip(self) -> Dict[str, Any]:
+    def inject_syndicate_ring_and_round_trip(self) -> dict[str, Any]:
         """Injects 47-account syndicate ring, round-trip laundering typology, and writes to eval-truth."""
         syndicate_accounts = self.universe.accounts[:47]
         client_uuids = [acc.client_id for acc in syndicate_accounts]
@@ -149,8 +148,8 @@ class AMLDataGenerator:
         # 4 shared IPs across 47 accounts
         ip_addresses = [f"198.51.200.{10 + i}" for i in range(4)]
 
-        round_trip_tx_ids: List[str] = []
-        base_dt = datetime(2025, 3, 1, 10, 0, 0, tzinfo=timezone.utc)
+        round_trip_tx_ids: list[str] = []
+        base_dt = datetime(2025, 3, 1, 10, 0, 0, tzinfo=UTC)
 
         for idx, client_id in enumerate(client_uuids):
             dev = device_hashes[idx % len(device_hashes)]
@@ -179,10 +178,14 @@ class AMLDataGenerator:
 
         return truth_payload
 
-    def generate_kyc_burst_transactions(self, burst_account_count: int = 10) -> List[Dict[str, Any]]:
+    def generate_kyc_burst_transactions(
+        self, burst_account_count: int = 10
+    ) -> list[dict[str, Any]]:
         """Generates suspicious transaction bursts concentrated within 72 hours of KYC approval."""
-        eligible_accounts = [acc for acc in self.universe.accounts if acc.kyc_approved_at is not None][:burst_account_count]
-        records: List[Dict[str, Any]] = []
+        eligible_accounts = [
+            acc for acc in self.universe.accounts if acc.kyc_approved_at is not None
+        ][:burst_account_count]
+        records: list[dict[str, Any]] = []
         tx_counter = 0
 
         for account in eligible_accounts:

@@ -16,7 +16,6 @@ class PublishError(Exception):
     pass
 
 
-
 class PubSubPublisher:
     def __init__(self, client: typing.Any = None) -> None:
         self._client = client
@@ -36,7 +35,9 @@ class PubSubPublisher:
 
 
 class ProbeMessage:
-    def __init__(self, payload: dict[str, typing.Any], attributes: dict[str, str], data: bytes) -> None:
+    def __init__(
+        self, payload: dict[str, typing.Any], attributes: dict[str, str], data: bytes
+    ) -> None:
         self.payload = payload
         self.attributes = attributes
         self.data = data
@@ -64,13 +65,16 @@ def load_settings(repo: Path, env: str) -> dict[str, typing.Any]:
         raise EiosError("budget file invalid")
     try:
         _ = data["environments"]["dev"]["amount"]
-    except (KeyError, TypeError):
+    except KeyError, TypeError:
         raise EiosError("dev amount missing")
     return data
 
 
 def build_message(
-    settings: dict[str, typing.Any], threshold: float, now: datetime | None = None, probe_id: str | None = None
+    settings: dict[str, typing.Any],
+    threshold: float,
+    now: datetime | None = None,
+    probe_id: str | None = None,
 ) -> ProbeMessage:
     if threshold not in settings.get("thresholds_percent", []):
         raise BoundaryValidationError(f"threshold {threshold} not configured")

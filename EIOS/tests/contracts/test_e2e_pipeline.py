@@ -1,15 +1,14 @@
 """End-to-End Pipeline Integration Test for Layer 1 Ingestion Spine & Contract Gateway (T047)."""
 
-from datetime import datetime, timezone, timedelta
-from fastapi.testclient import TestClient
-import pytest
+from datetime import UTC, datetime
 
-from eios.contracts.base import DataProductEnum, TenantEnum
-from eios.ingestion.hot_state import HotStateEngine
-from eios.ingestion.vault import TokenVault
-from eios.ingestion.router import create_ingestion_app
+from fastapi.testclient import TestClient
+
 from eios.ingestion.entity_resolution.coordinator import SCVCoordinator
 from eios.ingestion.entity_resolution.deterministic import ClientProfileRecord
+from eios.ingestion.hot_state import HotStateEngine
+from eios.ingestion.router import create_ingestion_app
+from eios.ingestion.vault import TokenVault
 
 
 def test_full_e2e_ingestion_lifecycle():
@@ -28,7 +27,7 @@ def test_full_e2e_ingestion_lifecycle():
         "event_id": "99999999-0000-0000-0000-000000000001",
         "product_name": "trading_activity",
         "schema_version": "1.0.0",
-        "event_timestamp": datetime.now(timezone.utc).isoformat(),
+        "event_timestamp": datetime.now(UTC).isoformat(),
         "tenant_id": "DERIV_MFSA",
         "payload": {
             "trade_id": "TRD_E2E_01",
@@ -37,7 +36,7 @@ def test_full_e2e_ingestion_lifecycle():
             "side": "BUY",
             "volume": 3.0,
             "open_price": 750.25,
-            "open_ts": datetime.now(timezone.utc).isoformat(),
+            "open_ts": datetime.now(UTC).isoformat(),
         },
     }
     resp = client.post("/v1/events/ingest", json=trade_evt)
@@ -50,7 +49,7 @@ def test_full_e2e_ingestion_lifecycle():
         "event_id": "99999999-0000-0000-0000-000000000002",
         "product_name": "trading_activity",
         "schema_version": "1.0.0",
-        "event_timestamp": datetime.now(timezone.utc).isoformat(),
+        "event_timestamp": datetime.now(UTC).isoformat(),
         "tenant_id": "DERIV_MFSA",
         "payload": {
             "trade_id": "TRD_E2E_BAD",
@@ -59,7 +58,7 @@ def test_full_e2e_ingestion_lifecycle():
             "side": "BUY",
             "volume": -10.0,  # Negative volume breach
             "open_price": 750.25,
-            "open_ts": datetime.now(timezone.utc).isoformat(),
+            "open_ts": datetime.now(UTC).isoformat(),
         },
     }
     resp_bad = client.post("/v1/events/ingest", json=malformed_evt)
@@ -74,7 +73,7 @@ def test_full_e2e_ingestion_lifecycle():
         "event_id": "99999999-0000-0000-0000-000000000003",
         "product_name": "client_360",
         "schema_version": "1.0.0",
-        "event_timestamp": datetime.now(timezone.utc).isoformat(),
+        "event_timestamp": datetime.now(UTC).isoformat(),
         "tenant_id": "DERIV_MFSA",
         "payload": {
             "client_id": "CLI_E2E_JOHN",
@@ -93,7 +92,9 @@ def test_full_e2e_ingestion_lifecycle():
 
     # Verify DuckDB hot state contains pseudonymized data, zero plaintext PII
     cursor = engine.get_cursor()
-    stored = cursor.execute("SELECT tax_id, full_name, email, phone FROM client_360 WHERE client_id = 'CLI_E2E_JOHN'").fetchone()
+    stored = cursor.execute(
+        "SELECT tax_id, full_name, email, phone FROM client_360 WHERE client_id = 'CLI_E2E_JOHN'"
+    ).fetchone()
     assert stored is not None
     assert "john.doe@deriv.com" not in stored[2]
     assert stored[0].startswith("tok_client_")

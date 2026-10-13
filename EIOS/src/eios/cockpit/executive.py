@@ -9,10 +9,11 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
-from eios.cockpit.provenance import ProvenanceResolver, ProvenanceMetadata
+from eios.cockpit.provenance import ProvenanceMetadata, ProvenanceResolver
 from eios.cockpit.schemas import validate_contract
 
 
@@ -43,12 +44,12 @@ class StrategicOpportunity(BaseModel):
 class MorningBriefingDossier(BaseModel):
     briefing_id: str
     generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    horizons: List[HorizonSummary]
-    risks: List[StrategicRisk]
-    opportunities: List[StrategicOpportunity]
+    horizons: list[HorizonSummary]
+    risks: list[StrategicRisk]
+    opportunities: list[StrategicOpportunity]
     is_cached_fallback: bool = False
 
-    def to_contract_dict(self) -> Dict[str, Any]:
+    def to_contract_dict(self) -> dict[str, Any]:
         data = {
             "briefing_id": self.briefing_id,
             "generated_at": self.generated_at.isoformat(),
@@ -114,10 +115,10 @@ class CausalEdge(BaseModel):
 class CausalDAGGraph(BaseModel):
     dag_version: str = "scm_v2.1"
     as_of: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    nodes: List[CausalNode]
-    edges: List[CausalEdge]
+    nodes: list[CausalNode]
+    edges: list[CausalEdge]
 
-    def to_contract_dict(self) -> Dict[str, Any]:
+    def to_contract_dict(self) -> dict[str, Any]:
         data = {
             "dag_version": self.dag_version,
             "as_of": self.as_of.isoformat(),
@@ -148,10 +149,10 @@ class CausalDAGGraph(BaseModel):
 class ExecutiveCockpitService:
     """Service providing executive briefing, causal DAG, and parametric shock simulation."""
 
-    def __init__(self, provenance_resolver: Optional[ProvenanceResolver] = None) -> None:
+    def __init__(self, provenance_resolver: ProvenanceResolver | None = None) -> None:
         self.provenance_resolver = provenance_resolver or ProvenanceResolver()
 
-    def get_morning_briefing(self, as_of: Optional[datetime] = None) -> MorningBriefingDossier:
+    def get_morning_briefing(self, as_of: datetime | None = None) -> MorningBriefingDossier:
         """Assembles the 4-horizon Morning Briefing with verified citations."""
         as_of_time = as_of or datetime.now(UTC)
 
@@ -170,7 +171,9 @@ class ExecutiveCockpitService:
                 primary_metric_id="realized_volume_30d_usd",
                 observed_value=1240000.0,
                 delta_period_pct=-14.2,
-                provenance=self.provenance_resolver.resolve("realized_volume_30d_usd", as_of=as_of_time),
+                provenance=self.provenance_resolver.resolve(
+                    "realized_volume_30d_usd", as_of=as_of_time
+                ),
             ),
             HorizonSummary(
                 horizon_name="Client",
@@ -178,7 +181,9 @@ class ExecutiveCockpitService:
                 primary_metric_id="realized_deposit_volume_30d_usd",
                 observed_value=845000.0,
                 delta_period_pct=24.5,
-                provenance=self.provenance_resolver.resolve("realized_deposit_volume_30d_usd", as_of=as_of_time),
+                provenance=self.provenance_resolver.resolve(
+                    "realized_deposit_volume_30d_usd", as_of=as_of_time
+                ),
             ),
             HorizonSummary(
                 horizon_name="Financial",
@@ -196,14 +201,18 @@ class ExecutiveCockpitService:
                 title="Partner AP-1029 disengagement to Exness",
                 severity="HIGH",
                 exposure_usd=145000.0,
-                provenance=self.provenance_resolver.resolve("realized_volume_30d_usd", as_of=as_of_time),
+                provenance=self.provenance_resolver.resolve(
+                    "realized_volume_30d_usd", as_of=as_of_time
+                ),
             ),
             StrategicRisk(
                 risk_id="rsk_mule_syndicate",
                 title="Client deposit discrepancy syndicate #14",
                 severity="HIGH",
                 exposure_usd=82000.0,
-                provenance=self.provenance_resolver.resolve("realized_deposit_volume_30d_usd", as_of=as_of_time),
+                provenance=self.provenance_resolver.resolve(
+                    "realized_deposit_volume_30d_usd", as_of=as_of_time
+                ),
             ),
         ]
 
@@ -316,7 +325,7 @@ class ExecutiveCockpitService:
         self,
         shock_param: str,
         magnitude_pct: float,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Executes sub-200ms parametric propagation across precomputed SCM equations."""
         t0 = time.perf_counter()
 
@@ -358,5 +367,8 @@ class ExecutiveCockpitService:
                 {"driver": "Client Turnover Drag", "contribution_pct": attr_client},
             ],
             "attribution_sum_pct": attribution_sum,
-            "confidence_interval": [round(delta_ebitda_usd * 1.15, 2), round(delta_ebitda_usd * 0.85, 2)],
+            "confidence_interval": [
+                round(delta_ebitda_usd * 1.15, 2),
+                round(delta_ebitda_usd * 0.85, 2),
+            ],
         }

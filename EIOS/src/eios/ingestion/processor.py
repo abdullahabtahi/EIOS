@@ -1,19 +1,19 @@
 """Unified Ingestion Pipeline core shared across HTTP Push and Pub/Sub Pull ingress."""
 
-from dataclasses import dataclass, field
 import logging
+from dataclasses import dataclass, field
 from typing import Any
 from uuid import uuid4
 
 from eios.contracts.base import DataProductEvent
-from eios.ingestion.config import IngestionConfig, get_ingestion_config
-from eios.ingestion.validator import ContractValidator, ValidationErrorDetail
-from eios.ingestion.dlq import DLQDispatcher, BreachType, ContractBreachRecord
 from eios.ingestion.circuit_breaker import IngestionCircuitBreaker
-from eios.ingestion.hot_state import HotStateEngine
-from eios.ingestion.vault import TokenVault
+from eios.ingestion.config import IngestionConfig, get_ingestion_config
+from eios.ingestion.dlq import BreachType, DLQDispatcher
 from eios.ingestion.dq import DQMonitor
+from eios.ingestion.hot_state import HotStateEngine
 from eios.ingestion.queue import IngestionQueue, get_ingestion_queue
+from eios.ingestion.validator import ContractValidator, ValidationErrorDetail
+from eios.ingestion.vault import TokenVault
 
 logger = logging.getLogger("eios.ingestion.processor")
 
@@ -21,6 +21,7 @@ logger = logging.getLogger("eios.ingestion.processor")
 @dataclass
 class IngestionEventResult:
     """Result of processing a single operational telemetry event."""
+
     is_accepted: bool
     event: DataProductEvent | None = None
     dlq_id: str | None = None
@@ -30,6 +31,7 @@ class IngestionEventResult:
 @dataclass
 class IngestionBatchResult:
     """Aggregated batch ingestion summary."""
+
     status: str
     accepted_count: int
     rejected_count: int
@@ -56,7 +58,9 @@ class IngestionPipeline:
         self.dlq_dispatcher = dlq_dispatcher or DLQDispatcher(dlq_topic=self.config.dlq_topic_id)
         self.circuit_breaker = circuit_breaker or IngestionCircuitBreaker()
         self.hot_state = hot_state or HotStateEngine()
-        salt_bytes = getattr(self.config, "token_vault_salt", "deriv-eios-dev-salt-32bytes-secret").encode("utf-8")
+        salt_bytes = getattr(
+            self.config, "token_vault_salt", "deriv-eios-dev-salt-32bytes-secret"
+        ).encode("utf-8")
         self.vault = vault or TokenVault(master_salt=salt_bytes)
         self.dq_monitor = dq_monitor or DQMonitor()
         self.queue = queue or get_ingestion_queue()
@@ -64,15 +68,14 @@ class IngestionPipeline:
     def process_event(self, event: DataProductEvent) -> IngestionEventResult:
         """Process an individual event through full governance lifecycle."""
         val_res = self.validator.validate(event.product_name, event.payload)
-        
+
         if not val_res.is_valid:
             self.circuit_breaker.record_breach(event.product_name)
             breach_record = self.dlq_dispatcher.create_breach_record(
                 product_name=event.product_name,
                 raw_payload=event.payload,
                 errors=[
-                    {"loc": err.field_path.split("."), "msg": err.message}
-                    for err in val_res.errors
+                    {"loc": err.field_path.split("."), "msg": err.message} for err in val_res.errors
                 ],
                 breach_type=BreachType.SCHEMA_TYPE_ERROR,
                 source_topic=f"eios.l1.{event.product_name.value}.v1",
@@ -128,12 +131,14 @@ class IngestionPipeline:
             if res.is_accepted:
                 accepted_count += 1
             else:
-                breach_summary.append({
-                    "event_id": str(event.event_id),
-                    "product_name": event.product_name.value,
-                    "dlq_id": res.dlq_id,
-                    "errors": [err.message for err in res.errors],
-                })
+                breach_summary.append(
+                    {
+                        "event_id": str(event.event_id),
+                        "product_name": event.product_name.value,
+                        "dlq_id": res.dlq_id,
+                        "errors": [err.message for err in res.errors],
+                    }
+                )
 
         return IngestionBatchResult(
             status="ACCEPTED",

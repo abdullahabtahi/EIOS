@@ -7,10 +7,10 @@ import json
 import logging
 import threading
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from eios.ontology.actions.models import LedgerEntry
-from eios.ontology.actions.sequencer import GENESIS_ANCHOR, LedgerSequencer
+from eios.ontology.actions.sequencer import GENESIS_ANCHOR
 
 logger = logging.getLogger("eios.ontology.actions.bigquery_sync")
 
@@ -38,10 +38,10 @@ class BigQueryLedgerExporter:
         self.dataset_id = dataset_id
         self.table_id = table_id
         self.dry_run = dry_run
-        self._buffered_rows: List[Dict[str, Any]] = []
+        self._buffered_rows: list[dict[str, Any]] = []
         self._lock = threading.Lock()
 
-    def format_row(self, entry: LedgerEntry) -> Dict[str, Any]:
+    def format_row(self, entry: LedgerEntry) -> dict[str, Any]:
         """Formats ledger entry into BigQuery external table schema."""
         current_hash = getattr(entry, "current_hash", getattr(entry, "entry_hash", ""))
         return {
@@ -64,7 +64,7 @@ class BigQueryLedgerExporter:
             "ingested_to_bq_at": datetime.now(UTC).isoformat(),
         }
 
-    def stream_entry(self, entry: LedgerEntry) -> Dict[str, Any]:
+    def stream_entry(self, entry: LedgerEntry) -> dict[str, Any]:
         """Streams a finalized ledger entry with atomic sequence to BigQuery buffer."""
         row = self.format_row(entry)
         with self._lock:
@@ -78,15 +78,15 @@ class BigQueryLedgerExporter:
         )
         return row
 
-    def get_buffered_rows(self) -> List[Dict[str, Any]]:
+    def get_buffered_rows(self) -> list[dict[str, Any]]:
         with self._lock:
             return list(self._buffered_rows)
 
     def verify_lakehouse_integrity(
         self,
-        lakehouse_records: Optional[List[Dict[str, Any]]] = None,
-        expected_head_hash: Optional[str] = None,
-    ) -> Tuple[bool, List[str]]:
+        lakehouse_records: list[dict[str, Any]] | None = None,
+        expected_head_hash: str | None = None,
+    ) -> tuple[bool, list[str]]:
         """Cryptographically verifies monotonic SHA-256 hash chaining of BigQuery records.
 
         Evaluates H_i = SHA-256(prev_hash || ledger_seq || payload_digest).
@@ -96,7 +96,7 @@ class BigQueryLedgerExporter:
         if not records:
             return True, []
 
-        findings: List[str] = []
+        findings: list[str] = []
         expected_prev = GENESIS_ANCHOR
         expected_seq = 1
 
@@ -119,9 +119,7 @@ class BigQueryLedgerExporter:
                 )
 
             # 3. Cryptographic Recalculation Check
-            computed_hash = hashlib.sha256(
-                f"{prev_hash}{seq}{payload_digest}".encode("utf-8")
-            ).hexdigest()
+            computed_hash = hashlib.sha256(f"{prev_hash}{seq}{payload_digest}".encode()).hexdigest()
             if computed_hash != entry_hash:
                 findings.append(
                     f"Cryptographic divergence at seq {seq}: computed hash '{computed_hash}' != stored entry_hash '{entry_hash}' (tampered record!)"

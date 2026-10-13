@@ -8,16 +8,15 @@ Authoritative References:
 - .specify/memory/constitution.md (Principles I, II, IV, VII, VIII)
 """
 
+import uuid
 from datetime import UTC, datetime
 from typing import Any
-import uuid
 
 from eios.aml.models import (
     AMLAlert,
     AMLCaseDossier,
     AMLPriorityTier,
     RoundTripTypology,
-    SARDraft,
 )
 from eios.ingestion.hot_state import HotStateEngine
 
@@ -179,7 +178,9 @@ class AMLDossierAssembler:
             narrative_parts.append(
                 f"Deposited ${dep:,.2f} USD and requested withdrawal of ${wth:,.2f} USD ({deposit_withdrawal_ratio:.1%} turnover) with net trading P&L of ${n_pl:,.2f} USD."
             )
-        if rt_events or (dep > 0.0 and deposit_withdrawal_ratio >= 0.90 and abs(n_pl) / max(dep, 1.0) <= 0.02):
+        if rt_events or (
+            dep > 0.0 and deposit_withdrawal_ratio >= 0.90 and abs(n_pl) / max(dep, 1.0) <= 0.02
+        ):
             narrative_parts.append(
                 "Activity matches structuring and rapid micro-P&L round-trip laundering typology with negligible market exposure."
             )

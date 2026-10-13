@@ -1,6 +1,5 @@
 """Tests for carrier-NAT hub suppression noise and high-degree IP collision (SC-006, FR-023)."""
 
-import pytest
 from eios.foundry.noise.hard_negatives import CarrierNATHubGenerator
 from eios.foundry.rng import DeterministicRNG
 from eios.foundry.universe import GlobalEntityUniverse

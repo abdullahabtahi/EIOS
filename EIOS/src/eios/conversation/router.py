@@ -6,6 +6,7 @@ Authoritative References:
 """
 
 from typing import Any
+
 from eios.conversation.models import RouteDecision, SpecialistDomain
 from eios.conversation.specialists.governance import GovernanceAuditorSpecialist
 
@@ -22,7 +23,17 @@ class SupervisoryRouter:
         """Route user query to appropriate specialist domain."""
         text = query.lower()
 
-        if any(term in text for term in ["governance", "ledger", "audit", "hash chain", "action intent", "four-eyes"]):
+        if any(
+            term in text
+            for term in [
+                "governance",
+                "ledger",
+                "audit",
+                "hash chain",
+                "action intent",
+                "four-eyes",
+            ]
+        ):
             return RouteDecision(
                 route=SpecialistDomain.GOVERNANCE,
                 confidence=0.98,

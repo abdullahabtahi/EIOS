@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import time
+from datetime import UTC, datetime, timedelta
+
 import pytest
 
 from eios.observability.buffer import ServiceLevelIndicatorMeasurement
 from eios.observability.schemas import validate_contract
-from eios.observability.slo_catalog import SLICategory, SLOTier, list_slo_configs
+from eios.observability.slo_catalog import SLICategory, list_slo_configs
 from eios.observability.slo_engine import (
     ErrorBudgetHealth,
-    ErrorBudgetStatus,
     SLOMonitoringEngine,
     error_budget_to_contract_dict,
 )
@@ -20,7 +20,7 @@ from eios.observability.slo_engine import (
 def test_slo_engine_healthy_budget():
     """Verify healthy error budget calculation with high compliance."""
     engine = SLOMonitoringEngine()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Ingest 1000 events: 998 compliant, 2 failed for METRIC_QUERY_LATENCY (target: 99.5%)
     for i in range(1000):
@@ -49,7 +49,7 @@ def test_slo_engine_healthy_budget():
 def test_slo_engine_warning_and_freeze_transitions():
     """Verify budget transitions into WARNING (< 20%) and FEATURE_FREEZE (<= 0%)."""
     engine = SLOMonitoringEngine()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Ingest for INGESTION_FRESHNESS: target is 99.0% (allowed failure = 1%)
     # Out of 1000 events:
@@ -77,7 +77,7 @@ def test_slo_engine_warning_and_freeze_transitions():
 def test_slo_engine_contract_schema_compliance():
     """Verify error budget status payload conforms to error-budget-status.schema.json."""
     engine = SLOMonitoringEngine()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     engine.record_event(
         sli_name=SLICategory.APPROVAL_SERVICE_AVAILABILITY,
@@ -96,7 +96,7 @@ def test_slo_engine_contract_schema_compliance():
 def test_slo_engine_sub_100ms_evaluation_latency():
     """Verify evaluating all 10 production SLOs takes strictly < 100ms (performance requirement)."""
     engine = SLOMonitoringEngine()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Seed 500 events across each SLO
     for sli in list_slo_configs():
@@ -133,10 +133,10 @@ def test_slo_catalog_helpers():
 
 def test_buffer_pruning_and_observed_values():
     """Verify buffer pruning, clear, and observed values extraction."""
-    from eios.observability.buffer import SLIEventBufferManager, ServiceLevelIndicatorMeasurement
+    from eios.observability.buffer import SLIEventBufferManager
 
     mgr = SLIEventBufferManager(max_capacity_per_sli=100)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for i in range(10):
         mgr.record_measurement(
@@ -152,7 +152,9 @@ def test_buffer_pruning_and_observed_values():
         )
 
     assert mgr.total_events_count() == 10
-    values = mgr.get_observed_values(SLICategory.METRIC_QUERY_LATENCY, start_time=now - timedelta(days=40))
+    values = mgr.get_observed_values(
+        SLICategory.METRIC_QUERY_LATENCY, start_time=now - timedelta(days=40)
+    )
     assert len(values) == 10
 
     # Prune older than 28 days
@@ -162,4 +164,3 @@ def test_buffer_pruning_and_observed_values():
 
     mgr.clear()
     assert mgr.total_events_count() == 0
-

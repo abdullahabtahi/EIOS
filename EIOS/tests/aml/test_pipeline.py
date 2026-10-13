@@ -7,8 +7,8 @@ Authoritative References:
 """
 
 from datetime import UTC, datetime, timedelta
+
 import pandas as pd
-import pytest
 
 from eios.aml.pipeline import ClientAMLPipeline
 from eios.ingestion.hot_state import HotStateEngine
@@ -30,37 +30,58 @@ def test_client_aml_pipeline_end_to_end() -> None:
         t_tr = t_dep + timedelta(minutes=5)
         t_wth = t_dep + timedelta(minutes=20)
 
-        txns.append({
-            "transaction_id": f"TX-D-{i}",
-            "client_id": cid,
-            "transaction_type": "DEPOSIT",
-            "amount": 500.0,
-            "timestamp": t_dep,
-            "kyc_approved_at": t_dep - timedelta(hours=10),
-        })
-        trades.append({
-            "trade_id": f"TR-{i}",
-            "client_id": cid,
-            "symbol": "EURUSD",
-            "volume": 0.01,
-            "profit_loss": 0.01,
-            "open_ts": t_tr,
-            "close_ts": t_tr + timedelta(minutes=2),
-        })
-        txns.append({
-            "transaction_id": f"TX-W-{i}",
-            "client_id": cid,
-            "transaction_type": "WITHDRAWAL",
-            "amount": 499.50,
-            "timestamp": t_wth,
-            "kyc_approved_at": t_dep - timedelta(hours=10),
-        })
+        txns.append(
+            {
+                "transaction_id": f"TX-D-{i}",
+                "client_id": cid,
+                "transaction_type": "DEPOSIT",
+                "amount": 500.0,
+                "timestamp": t_dep,
+                "kyc_approved_at": t_dep - timedelta(hours=10),
+            }
+        )
+        trades.append(
+            {
+                "trade_id": f"TR-{i}",
+                "client_id": cid,
+                "symbol": "EURUSD",
+                "volume": 0.01,
+                "profit_loss": 0.01,
+                "open_ts": t_tr,
+                "close_ts": t_tr + timedelta(minutes=2),
+            }
+        )
+        txns.append(
+            {
+                "transaction_id": f"TX-W-{i}",
+                "client_id": cid,
+                "transaction_type": "WITHDRAWAL",
+                "amount": 499.50,
+                "timestamp": t_wth,
+                "kyc_approved_at": t_dep - timedelta(hours=10),
+            }
+        )
 
     # 2. Mule Ring edges: 3 accounts sharing device token
     edges = [
-        {"source_id": "C-PIPE-MULE-1", "target_id": "DEV-TOK-1", "edge_type": "DEVICE_FINGERPRINT", "is_shared_context": False},
-        {"source_id": "C-PIPE-MULE-2", "target_id": "DEV-TOK-1", "edge_type": "DEVICE_FINGERPRINT", "is_shared_context": False},
-        {"source_id": "C-PIPE-MULE-3", "target_id": "DEV-TOK-1", "edge_type": "DEVICE_FINGERPRINT", "is_shared_context": False},
+        {
+            "source_id": "C-PIPE-MULE-1",
+            "target_id": "DEV-TOK-1",
+            "edge_type": "DEVICE_FINGERPRINT",
+            "is_shared_context": False,
+        },
+        {
+            "source_id": "C-PIPE-MULE-2",
+            "target_id": "DEV-TOK-1",
+            "edge_type": "DEVICE_FINGERPRINT",
+            "is_shared_context": False,
+        },
+        {
+            "source_id": "C-PIPE-MULE-3",
+            "target_id": "DEV-TOK-1",
+            "edge_type": "DEVICE_FINGERPRINT",
+            "is_shared_context": False,
+        },
     ]
 
     tx_df = pd.DataFrame(txns)

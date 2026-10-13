@@ -7,35 +7,31 @@ break-glass authorization.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from enum import Enum
-import math
 import threading
-from typing import Any, Dict, List, Optional, Tuple
 import uuid
+from datetime import UTC, datetime, timedelta
+from enum import Enum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from eios.observability.buffer import (
-    SLIEventBufferManager,
     ServiceLevelIndicatorMeasurement,
+    SLIEventBufferManager,
 )
 from eios.observability.slo_catalog import (
     DEFAULT_SLO_CATALOG,
+    ServiceLevelObjectiveConfig,
     SLICategory,
     SLOTier,
-    ServiceLevelObjectiveConfig,
-    get_slo_config,
-    is_tier_1_critical,
-    list_slo_configs,
 )
 
 
 class ErrorBudgetHealth(str, Enum):
     """Operational health state determined by remaining error budget balance."""
 
-    HEALTHY = "HEALTHY"                # Budget remaining >= 20.0%
-    WARNING = "WARNING"                # 0.0% < Budget remaining < 20.0%
+    HEALTHY = "HEALTHY"  # Budget remaining >= 20.0%
+    WARNING = "WARNING"  # 0.0% < Budget remaining < 20.0%
     FEATURE_FREEZE = "FEATURE_FREEZE"  # Budget remaining <= 0.0%
 
 
@@ -47,22 +43,40 @@ class ErrorBudgetStatus(BaseModel):
     total_events: int = Field(..., ge=0, description="Total observed events in window")
     compliant_events: int = Field(..., ge=0, description="Total compliant events in window")
     failed_events: int = Field(..., ge=0, description="Total non-compliant events in window")
-    compliance_percentage: float = Field(..., ge=0.0, le=100.0, description="Observed compliance percentage")
-    target_percentage: float = Field(..., ge=0.0, le=100.0, description="Target SLO percentage (e.g. 99.5)")
-    budget_remaining_pct: float = Field(..., description="Remaining error budget percentage (may be negative if depleted)")
-    burn_rate_1h: float = Field(default=0.0, ge=0.0, description="Observed 1-hour burn rate multiplier")
-    burn_rate_6h: float = Field(default=0.0, ge=0.0, description="Observed 6-hour burn rate multiplier")
-    burn_rate_24h: float = Field(default=0.0, ge=0.0, description="Observed 24-hour burn rate multiplier")
+    compliance_percentage: float = Field(
+        ..., ge=0.0, le=100.0, description="Observed compliance percentage"
+    )
+    target_percentage: float = Field(
+        ..., ge=0.0, le=100.0, description="Target SLO percentage (e.g. 99.5)"
+    )
+    budget_remaining_pct: float = Field(
+        ..., description="Remaining error budget percentage (may be negative if depleted)"
+    )
+    burn_rate_1h: float = Field(
+        default=0.0, ge=0.0, description="Observed 1-hour burn rate multiplier"
+    )
+    burn_rate_6h: float = Field(
+        default=0.0, ge=0.0, description="Observed 6-hour burn rate multiplier"
+    )
+    burn_rate_24h: float = Field(
+        default=0.0, ge=0.0, description="Observed 24-hour burn rate multiplier"
+    )
     status: ErrorBudgetHealth = Field(..., description="Operational status based on budget balance")
-    is_frozen: bool = Field(..., description="True if release freeze is active due to Tier 1 budget exhaustion")
+    is_frozen: bool = Field(
+        ..., description="True if release freeze is active due to Tier 1 budget exhaustion"
+    )
 
 
 class BreakGlassOverrideRequest(BaseModel):
     """Four-Eyes break-glass authorization request."""
 
     approver_1: str = Field(..., description="Primary authenticated human approver identifier")
-    approver_2: str = Field(..., description="Secondary distinct authenticated human approver identifier")
-    justification: str = Field(..., min_length=10, description="Operational justification for hotfix")
+    approver_2: str = Field(
+        ..., description="Secondary distinct authenticated human approver identifier"
+    )
+    justification: str = Field(
+        ..., min_length=10, description="Operational justification for hotfix"
+    )
     expires_at: datetime = Field(..., description="Expiration timestamp for the override")
 
 
@@ -84,8 +98,10 @@ class ReleaseGateVerdict(BaseModel):
     is_allowed: bool = Field(..., description="True if deployment/release is permitted")
     status: ErrorBudgetHealth = Field(..., description="Overall platform reliability health")
     reason: str = Field(..., description="Explanation of gate verdict")
-    active_frozen_slis: List[SLICategory] = Field(default_factory=list, description="Frozen Tier 1 SLIs")
-    override_id: Optional[str] = Field(None, description="Active break-glass override ID if used")
+    active_frozen_slis: list[SLICategory] = Field(
+        default_factory=list, description="Frozen Tier 1 SLIs"
+    )
+    override_id: str | None = Field(None, description="Active break-glass override ID if used")
 
 
 class SLOMonitoringEngine:
@@ -93,12 +109,12 @@ class SLOMonitoringEngine:
 
     def __init__(
         self,
-        buffer_manager: Optional[SLIEventBufferManager] = None,
-        slo_catalog: Optional[Dict[SLICategory, ServiceLevelObjectiveConfig]] = None,
+        buffer_manager: SLIEventBufferManager | None = None,
+        slo_catalog: dict[SLICategory, ServiceLevelObjectiveConfig] | None = None,
     ) -> None:
         self.buffer_manager = buffer_manager or SLIEventBufferManager()
         self.catalog = slo_catalog or DEFAULT_SLO_CATALOG
-        self._overrides: Dict[str, BreakGlassOverride] = {}
+        self._overrides: dict[str, BreakGlassOverride] = {}
         self._lock = threading.RLock()
 
     def record_event(
@@ -108,14 +124,14 @@ class SLOMonitoringEngine:
         target_threshold: float,
         is_compliant: bool,
         correlation_id: str,
-        service_name: Optional[str] = None,
-        timestamp: Optional[datetime] = None,
-        attributes: Optional[Dict[str, Any]] = None,
+        service_name: str | None = None,
+        timestamp: datetime | None = None,
+        attributes: dict[str, Any] | None = None,
     ) -> ServiceLevelIndicatorMeasurement:
         """Records an SLI observation into the rolling ring buffer."""
         measurement = ServiceLevelIndicatorMeasurement(
             measurement_id=str(uuid.uuid4()),
-            timestamp=timestamp or datetime.now(timezone.utc),
+            timestamp=timestamp or datetime.now(UTC),
             sli_name=sli_name,
             observed_value=observed_value,
             target_threshold=target_threshold,
@@ -152,12 +168,12 @@ class SLOMonitoringEngine:
     def evaluate_slo(
         self,
         sli_name: SLICategory,
-        reference_time: Optional[datetime] = None,
+        reference_time: datetime | None = None,
     ) -> ErrorBudgetStatus:
         """Evaluates 28-day error budget and multi-window burn rates for an SLI."""
-        ref_time = reference_time or datetime.now(timezone.utc)
+        ref_time = reference_time or datetime.now(UTC)
         if ref_time.tzinfo is None:
-            ref_time = ref_time.replace(tzinfo=timezone.utc)
+            ref_time = ref_time.replace(tzinfo=UTC)
 
         config = self.catalog[sli_name]
         window_start = ref_time - timedelta(days=config.window_days)
@@ -182,9 +198,15 @@ class SLOMonitoringEngine:
             budget_remaining_pct = (1.0 - budget_spent_ratio) * 100.0
 
         # Multi-window burn rates
-        burn_1h = self._compute_burn_rate(sli_name, config.target_percentage, timedelta(hours=1), ref_time)
-        burn_6h = self._compute_burn_rate(sli_name, config.target_percentage, timedelta(hours=6), ref_time)
-        burn_24h = self._compute_burn_rate(sli_name, config.target_percentage, timedelta(hours=24), ref_time)
+        burn_1h = self._compute_burn_rate(
+            sli_name, config.target_percentage, timedelta(hours=1), ref_time
+        )
+        burn_6h = self._compute_burn_rate(
+            sli_name, config.target_percentage, timedelta(hours=6), ref_time
+        )
+        burn_24h = self._compute_burn_rate(
+            sli_name, config.target_percentage, timedelta(hours=24), ref_time
+        )
 
         # Health state determination
         if budget_remaining_pct <= 0.0:
@@ -195,7 +217,9 @@ class SLOMonitoringEngine:
             status = ErrorBudgetHealth.HEALTHY
 
         # Release freeze applies only to Tier 1 Critical services when budget exhausted
-        is_frozen = (status == ErrorBudgetHealth.FEATURE_FREEZE) and (config.tier == SLOTier.TIER_1_CRITICAL)
+        is_frozen = (status == ErrorBudgetHealth.FEATURE_FREEZE) and (
+            config.tier == SLOTier.TIER_1_CRITICAL
+        )
 
         return ErrorBudgetStatus(
             sli_name=sli_name,
@@ -213,21 +237,23 @@ class SLOMonitoringEngine:
             is_frozen=is_frozen,
         )
 
-    def evaluate_all_slos(
-        self, reference_time: Optional[datetime] = None
-    ) -> List[ErrorBudgetStatus]:
+    def evaluate_all_slos(self, reference_time: datetime | None = None) -> list[ErrorBudgetStatus]:
         """Evaluates all registered production SLOs."""
         return [self.evaluate_slo(sli, reference_time) for sli in self.catalog.keys()]
 
-    def authorize_break_glass(
-        self, request: BreakGlassOverrideRequest
-    ) -> BreakGlassOverride:
+    def authorize_break_glass(self, request: BreakGlassOverrideRequest) -> BreakGlassOverride:
         """Authorizes a Four-Eyes break-glass override for emergency hotfix releases."""
-        now = datetime.now(timezone.utc)
-        req_exp = request.expires_at if request.expires_at.tzinfo else request.expires_at.replace(tzinfo=timezone.utc)
+        now = datetime.now(UTC)
+        req_exp = (
+            request.expires_at
+            if request.expires_at.tzinfo
+            else request.expires_at.replace(tzinfo=UTC)
+        )
 
         if request.approver_1 == request.approver_2:
-            raise ValueError("Two distinct approvers required for Four-Eyes break-glass authorization (Principle II).")
+            raise ValueError(
+                "Two distinct approvers required for Four-Eyes break-glass authorization (Principle II)."
+            )
 
         if req_exp <= now:
             raise ValueError("Override expiration must be in the future.")
@@ -249,11 +275,11 @@ class SLOMonitoringEngine:
     def evaluate_release_gate(
         self,
         service_name: str,
-        override_id: Optional[str] = None,
-        reference_time: Optional[datetime] = None,
+        override_id: str | None = None,
+        reference_time: datetime | None = None,
     ) -> ReleaseGateVerdict:
         """Checks if a deployment/release is permitted given current error budget state."""
-        ref_time = reference_time or datetime.now(timezone.utc)
+        ref_time = reference_time or datetime.now(UTC)
         all_statuses = self.evaluate_all_slos(ref_time)
         frozen_slis = [s.sli_name for s in all_statuses if s.is_frozen]
 
@@ -285,7 +311,7 @@ class SLOMonitoringEngine:
         )
 
 
-def error_budget_to_contract_dict(status: ErrorBudgetStatus) -> Dict[str, Any]:
+def error_budget_to_contract_dict(status: ErrorBudgetStatus) -> dict[str, Any]:
     """Converts ErrorBudgetStatus to dictionary matching error-budget-status.schema.json."""
     return {
         "sli_name": status.sli_name.value,

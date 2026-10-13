@@ -1,13 +1,14 @@
 """Deterministic exact key entity resolution using connected components (US4)."""
 
-from dataclasses import dataclass, field
 import threading
+from dataclasses import dataclass
 from uuid import uuid4
 
 
 @dataclass
 class ClientProfileRecord:
     """Input record from fragmented platform accounts."""
+
     account_id: str
     platform: str
     tax_id: str | None = None

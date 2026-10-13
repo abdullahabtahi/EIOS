@@ -1,6 +1,5 @@
 """Tests for Module A AML data product schema compliance (SC-002, FR-017, FR-025)."""
 
-import pytest
 from eios.foundry.contracts import (
     ComplianceCaseRecord,
     ContractValidator,

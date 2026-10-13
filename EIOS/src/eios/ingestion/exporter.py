@@ -1,14 +1,15 @@
 """Parquet Lakehouse micro-batch exporter with immutable _lineage.json manifests (US6)."""
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import hashlib
 import json
 import os
-from pathlib import Path
 import tempfile
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 from uuid import uuid4
+
 import duckdb
 
 from eios.contracts.base import DataProductEnum
@@ -17,6 +18,7 @@ from eios.contracts.base import DataProductEnum
 @dataclass
 class ExportResult:
     """Artifact references from an export run."""
+
     parquet_file: Path
     lineage_file: Path
     record_count: int
@@ -40,7 +42,7 @@ class ParquetLakehouseExporter:
 
         product_name = product.value if isinstance(product, DataProductEnum) else str(product)
         batch_id = f"batch_{uuid4().hex[:12]}"
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         date_str = now.strftime("%Y-%m-%d")
 
         # Partitioned lakehouse directory

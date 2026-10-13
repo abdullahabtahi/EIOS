@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import tracemalloc
-from typing import Dict, List, Optional, Tuple
 import uuid
+from datetime import UTC, datetime
+
 import numpy as np
 
 from eios.hardening.models import SoakTestTelemetryReport
@@ -25,14 +25,14 @@ class MemoryLeakDetector:
 
     def __init__(self, leak_threshold_mb_per_k: float = 0.05) -> None:
         self.leak_threshold = leak_threshold_mb_per_k
-        self.snapshots: List[MemorySnapshot] = []
+        self.snapshots: list[MemorySnapshot] = []
 
     def start_tracking(self) -> None:
         """Starts Python tracemalloc if not already active."""
         if not tracemalloc.is_tracing():
             tracemalloc.start()
 
-    def record_snapshot(self, event_count: int, memory_mb: Optional[float] = None) -> MemorySnapshot:
+    def record_snapshot(self, event_count: int, memory_mb: float | None = None) -> MemorySnapshot:
         """Records a point-in-time memory allocation sample."""
         if memory_mb is None:
             if tracemalloc.is_tracing():
@@ -51,7 +51,7 @@ class MemoryLeakDetector:
         self.snapshots.append(snapshot)
         return snapshot
 
-    def compute_slope(self) -> Tuple[float, bool]:
+    def compute_slope(self) -> tuple[float, bool]:
         """Calculates linear regression slope (MB per 1,000 events) and leak-free flag."""
         if len(self.snapshots) < 2:
             return 0.0, True
@@ -60,7 +60,7 @@ class MemoryLeakDetector:
         y = np.array([s.memory_mb for s in self.snapshots], dtype=np.float64)
 
         x_dev = x - np.mean(x)
-        denom = float(np.sum(x_dev ** 2))
+        denom = float(np.sum(x_dev**2))
         if denom == 0.0:
             slope = 0.0
         else:
@@ -74,7 +74,7 @@ class HardeningTelemetryCollector:
     """Tracks latency distributions and operational metrics across test runs."""
 
     def __init__(self) -> None:
-        self._latencies: Dict[str, List[float]] = {}
+        self._latencies: dict[str, list[float]] = {}
         self.leak_detector = MemoryLeakDetector()
 
     def record_latency(self, operation: str, latency_ms: float) -> None:
@@ -83,7 +83,7 @@ class HardeningTelemetryCollector:
             self._latencies[operation] = []
         self._latencies[operation].append(float(latency_ms))
 
-    def get_percentiles(self, operation: str) -> Tuple[float, float, float]:
+    def get_percentiles(self, operation: str) -> tuple[float, float, float]:
         """Computes (p50, p95, p99) latencies for an operation."""
         data = self._latencies.get(operation, [])
         if not data:

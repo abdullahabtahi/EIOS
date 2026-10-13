@@ -5,7 +5,8 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Set
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from eios.cockpit.schemas import validate_contract
@@ -27,7 +28,7 @@ class WorkstationTab(str, Enum):
     DATA_OPS_BOARD = "DATA_OPS_BOARD"
 
 
-ROLE_TAB_PERMISSIONS: Dict[OperatorRole, Set[WorkstationTab]] = {
+ROLE_TAB_PERMISSIONS: dict[OperatorRole, set[WorkstationTab]] = {
     OperatorRole.EXECUTIVE: {
         WorkstationTab.EXECUTIVE_SYNTHESIS,
         WorkstationTab.AML_TRIAGE_DOSSIER,
@@ -54,7 +55,7 @@ ROLE_TAB_PERMISSIONS: Dict[OperatorRole, Set[WorkstationTab]] = {
     },
 }
 
-DEFAULT_TAB_PER_ROLE: Dict[OperatorRole, WorkstationTab] = {
+DEFAULT_TAB_PER_ROLE: dict[OperatorRole, WorkstationTab] = {
     OperatorRole.EXECUTIVE: WorkstationTab.EXECUTIVE_SYNTHESIS,
     OperatorRole.AML_INVESTIGATOR: WorkstationTab.AML_TRIAGE_DOSSIER,
     OperatorRole.PARTNER_MANAGER: WorkstationTab.PARTNER_CHURN_RADAR,
@@ -68,10 +69,10 @@ class WorkstationViewSession(BaseModel):
     operator_id: str
     role: OperatorRole
     active_tab: WorkstationTab
-    applied_filters: Dict[str, str] = Field(default_factory=dict)
+    applied_filters: dict[str, str] = Field(default_factory=dict)
     last_active_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    def to_contract_dict(self) -> Dict[str, Any]:
+    def to_contract_dict(self) -> dict[str, Any]:
         data = {
             "session_id": self.session_id,
             "operator_id": self.operator_id,
@@ -88,13 +89,13 @@ class SessionManager:
     """Manages active operator workstation sessions and enforces RBAC."""
 
     def __init__(self) -> None:
-        self._sessions: Dict[str, WorkstationViewSession] = {}
+        self._sessions: dict[str, WorkstationViewSession] = {}
 
     def create_session(
         self,
         operator_id: str,
         role: OperatorRole,
-        active_tab: Optional[WorkstationTab] = None,
+        active_tab: WorkstationTab | None = None,
     ) -> WorkstationViewSession:
         if active_tab is None or active_tab not in ROLE_TAB_PERMISSIONS[role]:
             active_tab = DEFAULT_TAB_PER_ROLE[role]
@@ -107,7 +108,7 @@ class SessionManager:
         self._sessions[session.session_id] = session
         return session
 
-    def get_session(self, session_id: str) -> Optional[WorkstationViewSession]:
+    def get_session(self, session_id: str) -> WorkstationViewSession | None:
         return self._sessions.get(session_id)
 
     def switch_tab(self, session_id: str, new_tab: WorkstationTab) -> WorkstationViewSession:
@@ -124,7 +125,7 @@ class SessionManager:
         session.last_active_at = datetime.now(UTC)
         return session
 
-    def update_filters(self, session_id: str, filters: Dict[str, str]) -> WorkstationViewSession:
+    def update_filters(self, session_id: str, filters: dict[str, str]) -> WorkstationViewSession:
         session = self._sessions.get(session_id)
         if not session:
             raise KeyError(f"Session {session_id} not found")

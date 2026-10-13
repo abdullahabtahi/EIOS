@@ -1,6 +1,5 @@
 """Unit tests for Governed Retention Playbooks and Doubly Robust AIPW Flywheel (T027 / US5)."""
 
-from datetime import UTC, date, datetime
 import numpy as np
 import pandas as pd
 import pytest
@@ -12,7 +11,6 @@ from eios.ontology.actions.intent_hub import (
     ActionIntentHub,
     ActionSeverity,
     ActionStatus,
-    InvalidActionParameterError,
 )
 from eios.ontology.actions.signer import LocalDevActionSigner
 
@@ -81,12 +79,14 @@ def test_aipw_estimator_unbiases_confounding_by_indication():
     noise = np.random.normal(0, 500.0, size=n)
     observed_revenue = baseline_revenue + W * true_tau + noise
 
-    df = pd.DataFrame({
-        "treatment_assigned": W,
-        "observed_retained_revenue_60d": observed_revenue,
-        "propensity_score": propensity,
-        "risk_covariate": X,
-    })
+    df = pd.DataFrame(
+        {
+            "treatment_assigned": W,
+            "observed_retained_revenue_60d": observed_revenue,
+            "propensity_score": propensity,
+            "risk_covariate": X,
+        }
+    )
 
     # Naive estimator
     mean_treated = df[df["treatment_assigned"] == 1]["observed_retained_revenue_60d"].mean()
@@ -119,30 +119,34 @@ def test_playbook_recalibration_from_hot_state():
         # PB-A: treated gets +5000
         w_a = int(np.random.rand() < 0.6)
         rev_a = 10000.0 + (5000.0 if w_a == 1 else 0.0) + np.random.normal(0, 200)
-        recalibrator.record_outcome(DecisionOutcomeRecord(
-            outcome_id=f"OUT-A-{i}",
-            intent_id=f"INT-A-{i}",
-            partner_id=f"P-A-{i}",
-            playbook_id="Offer_Tier_Upgrade",
-            treatment_assigned=w_a,
-            propensity_score=0.6,
-            observed_retained_revenue_60d=rev_a,
-            actual_churn_60d=False,
-        ))
+        recalibrator.record_outcome(
+            DecisionOutcomeRecord(
+                outcome_id=f"OUT-A-{i}",
+                intent_id=f"INT-A-{i}",
+                partner_id=f"P-A-{i}",
+                playbook_id="Offer_Tier_Upgrade",
+                treatment_assigned=w_a,
+                propensity_score=0.6,
+                observed_retained_revenue_60d=rev_a,
+                actual_churn_60d=False,
+            )
+        )
 
         # PB-B: treated gets -1000 (churn acceleration)
         w_b = int(np.random.rand() < 0.5)
         rev_b = 8000.0 + (-1000.0 if w_b == 1 else 0.0) + np.random.normal(0, 200)
-        recalibrator.record_outcome(DecisionOutcomeRecord(
-            outcome_id=f"OUT-B-{i}",
-            intent_id=f"INT-B-{i}",
-            partner_id=f"P-B-{i}",
-            playbook_id="Standard_Email_Outreach",
-            treatment_assigned=w_b,
-            propensity_score=0.5,
-            observed_retained_revenue_60d=rev_b,
-            actual_churn_60d=True if w_b == 1 else False,
-        ))
+        recalibrator.record_outcome(
+            DecisionOutcomeRecord(
+                outcome_id=f"OUT-B-{i}",
+                intent_id=f"INT-B-{i}",
+                partner_id=f"P-B-{i}",
+                playbook_id="Standard_Email_Outreach",
+                treatment_assigned=w_b,
+                propensity_score=0.5,
+                observed_retained_revenue_60d=rev_b,
+                actual_churn_60d=True if w_b == 1 else False,
+            )
+        )
 
     weights = recalibrator.recalibrate_playbook_weights()
 

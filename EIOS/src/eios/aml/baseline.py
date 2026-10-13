@@ -12,7 +12,7 @@ Pre-registered Baseline Rules:
 """
 
 from dataclasses import dataclass
-from typing import Any
+
 from eios.aml.models import AMLAlert
 
 
@@ -44,17 +44,23 @@ class NaiveThresholdBaseline:
 
         # Rule 1: Static Amount Threshold
         if alert.amount_usd > self.high_amount_threshold:
-            reasons.append(f"Amount {alert.amount_usd} exceeds threshold {self.high_amount_threshold}")
+            reasons.append(
+                f"Amount {alert.amount_usd} exceeds threshold {self.high_amount_threshold}"
+            )
 
         # Rule 2: Withdrawal Velocity from attributes if present
         withdrawal_count = alert.attributes.get("withdrawal_count_24h", 0)
         if withdrawal_count > self.max_withdrawal_velocity_24h:
-            reasons.append(f"Withdrawal velocity {withdrawal_count} > {self.max_withdrawal_velocity_24h}")
+            reasons.append(
+                f"Withdrawal velocity {withdrawal_count} > {self.max_withdrawal_velocity_24h}"
+            )
 
         # Rule 3: Rapid Gap from attributes if present
         gap_mins = alert.attributes.get("deposit_withdrawal_gap_mins", 999.0)
         if gap_mins < self.min_deposit_withdrawal_gap_mins:
-            reasons.append(f"Deposit-withdrawal gap {gap_mins}m < {self.min_deposit_withdrawal_gap_mins}m")
+            reasons.append(
+                f"Deposit-withdrawal gap {gap_mins}m < {self.min_deposit_withdrawal_gap_mins}m"
+            )
 
         if len(reasons) >= 2:
             score = 0.90

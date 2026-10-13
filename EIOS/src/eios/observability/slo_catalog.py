@@ -8,7 +8,7 @@ windows and SRE governance tiers.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, List, Optional
+
 from pydantic import BaseModel, Field
 
 
@@ -31,8 +31,8 @@ class SLICategory(str, Enum):
 class SLOTier(str, Enum):
     """Operational governance tiers defining budget exhaustion blast radius."""
 
-    TIER_1_CRITICAL = "TIER_1_CRITICAL"       # Depletion triggers automated FEATURE_FREEZE
-    TIER_2_OPERATIONAL = "TIER_2_OPERATIONAL" # Depletion triggers high-priority ticket
+    TIER_1_CRITICAL = "TIER_1_CRITICAL"  # Depletion triggers automated FEATURE_FREEZE
+    TIER_2_OPERATIONAL = "TIER_2_OPERATIONAL"  # Depletion triggers high-priority ticket
 
 
 class ServiceLevelObjectiveConfig(BaseModel):
@@ -41,15 +41,19 @@ class ServiceLevelObjectiveConfig(BaseModel):
     sli_name: SLICategory = Field(..., description="Canonical SLI category")
     display_name: str = Field(..., description="Human-readable SLO name")
     description: str = Field(..., description="Operational definition and scope")
-    target_percentage: float = Field(..., ge=0.0, le=1.0, description="Target compliance percentage (e.g. 0.995 for 99.5%)")
-    target_threshold: float = Field(..., ge=0.0, description="Quantitative SLA boundary (e.g. 30.0 for seconds or 500.0 for ms)")
+    target_percentage: float = Field(
+        ..., ge=0.0, le=1.0, description="Target compliance percentage (e.g. 0.995 for 99.5%)"
+    )
+    target_threshold: float = Field(
+        ..., ge=0.0, description="Quantitative SLA boundary (e.g. 30.0 for seconds or 500.0 for ms)"
+    )
     unit: str = Field(..., description="Measurement unit (e.g. 'seconds', 'ms', 'pct', 'count')")
     window_days: int = Field(default=28, ge=1, description="Evaluation window duration in days")
     tier: SLOTier = Field(default=SLOTier.TIER_1_CRITICAL, description="Governance severity tier")
 
 
 # Canonical production catalog of all 10 platform SLOs + Principle I Auditor Gate
-DEFAULT_SLO_CATALOG: Dict[SLICategory, ServiceLevelObjectiveConfig] = {
+DEFAULT_SLO_CATALOG: dict[SLICategory, ServiceLevelObjectiveConfig] = {
     SLICategory.INGESTION_FRESHNESS: ServiceLevelObjectiveConfig(
         sli_name=SLICategory.INGESTION_FRESHNESS,
         display_name="Data Ingestion Freshness",
@@ -173,7 +177,7 @@ def get_slo_config(sli_name: SLICategory | str) -> ServiceLevelObjectiveConfig:
     return DEFAULT_SLO_CATALOG[sli_name]
 
 
-def list_slo_configs() -> List[ServiceLevelObjectiveConfig]:
+def list_slo_configs() -> list[ServiceLevelObjectiveConfig]:
     """Returns a list of all configured production SLOs."""
     return list(DEFAULT_SLO_CATALOG.values())
 

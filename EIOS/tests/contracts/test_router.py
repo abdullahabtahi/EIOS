@@ -1,8 +1,9 @@
 """Tests for FastAPI Ingestion Router and Webhook Ingress (US1)."""
 
 import time
-from fastapi.testclient import TestClient
+
 import pytest
+from fastapi.testclient import TestClient
 
 from eios.ingestion.router import create_ingestion_app
 
@@ -119,4 +120,3 @@ def test_ingest_contract_breach_routes_to_dlq(api_client: TestClient):
     assert data["rejected_count"] == 1
     assert len(data["breach_summary"]) == 1
     assert "dlq_id" in data["breach_summary"][0]
-

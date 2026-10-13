@@ -1,8 +1,5 @@
 """Unit tests for GenAI Emerging Pattern Discovery and Conversational Specialist (T032 / US6)."""
 
-from datetime import UTC, datetime
-import pytest
-
 from eios.churn.models import DisengagementTheme, SignalFamily
 from eios.churn.pattern_discovery import PatternDiscoverySpecialist
 from eios.churn.sanitizer import PIISanitizer
@@ -61,7 +58,10 @@ def test_pattern_discovery_clusters_unstructured_tickets():
     assert isinstance(theme, DisengagementTheme)
     assert "MT5" in theme.title or "WebSocket" in theme.title
     assert theme.affected_partner_count >= 1
-    assert SignalFamily.BEHAVIORAL in theme.signal_families_implicated or SignalFamily.COMMUNICATION in theme.signal_families_implicated
+    assert (
+        SignalFamily.BEHAVIORAL in theme.signal_families_implicated
+        or SignalFamily.COMMUNICATION in theme.signal_families_implicated
+    )
     assert theme.confidence_score >= 0.70
     assert len(theme.supporting_ticket_ids) >= 1
     assert len(theme.actionable_remediation) > 0
@@ -79,8 +79,9 @@ def test_replay_fallback_when_offline():
 
 def test_conversational_churn_radar_specialist(seeded_hot_state: HotStateEngine):
     """Verify ChurnRadarSpecialist integrates with OMCP tools and generates verified narrative."""
-    from eios.churn.pipeline import ChurnRadarPipeline
     from datetime import date
+
+    from eios.churn.pipeline import ChurnRadarPipeline
 
     # Score partners first
     pipeline = ChurnRadarPipeline(hot_state=seeded_hot_state)
@@ -90,7 +91,13 @@ def test_conversational_churn_radar_specialist(seeded_hot_state: HotStateEngine)
     specialist = ChurnRadarSpecialist(omcp_server=omcp_server)
 
     state = {
-        "messages": [type("Msg", (), {"content": "What is the churn risk and priority for partner P-CHURN-DRIFT?"})()],
+        "messages": [
+            type(
+                "Msg",
+                (),
+                {"content": "What is the churn risk and priority for partner P-CHURN-DRIFT?"},
+            )()
+        ],
         "reflection_cycles": 0,
     }
 

@@ -1,6 +1,7 @@
 """Tests for Metric Auditor Gate bridge with legal citation normalization (F018, T005)."""
 
 import pytest
+
 from eios.conversation.auditor_bridge import ConversationAuditorBridge
 from eios.ontology.auditor.gate import MetricAuditorGate
 
@@ -22,7 +23,9 @@ def test_auditor_bridge_passes_anchored_tool_metrics(bridge):
             },
         }
     ]
-    narrative = "Entity CR84920 observed with a 16.0x discrepancy multiplier and $8,000 in turnover."
+    narrative = (
+        "Entity CR84920 observed with a 16.0x discrepancy multiplier and $8,000 in turnover."
+    )
     record = bridge.audit_turn(narrative, tool_trace, trace_id="tr_valid")
     assert record.passed is True
     assert record.status.value == "PASS"
@@ -45,7 +48,9 @@ def test_auditor_bridge_exempts_statutory_and_legal_citations(bridge):
     record = bridge.audit_turn(narrative, tool_trace, trace_id="tr_legal")
     assert record.passed is True
     assert record.status.value == "PASS"
-    assert any("1020.320" in c or "111" in c or "314" in c for c in record.exempted_statutory_citations)
+    assert any(
+        "1020.320" in c or "111" in c or "314" in c for c in record.exempted_statutory_citations
+    )
 
 
 def test_auditor_bridge_blocks_unanchored_kpi_metrics(bridge):

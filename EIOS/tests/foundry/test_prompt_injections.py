@@ -1,6 +1,5 @@
 """Tests for adversarial prompt-injection test strings embedded in partner comms (FR-042, Red-Line RL-6)."""
 
-import pytest
 from eios.foundry.contracts import ContractValidator, PartnerCommsRecord
 from eios.foundry.noise.prompt_injections import PromptInjectionGenerator
 from eios.foundry.rng import DeterministicRNG
@@ -29,10 +28,13 @@ def test_prompt_injection_embedding_in_partner_comms():
     ]
 
     found_injections = [
-        rec for rec in comms_records
+        rec
+        for rec in comms_records
         if any(sig.lower() in rec["body_text"].lower() for sig in injection_signatures)
     ]
-    assert len(found_injections) >= 5, f"Expected at least 5 injection strings, found {len(found_injections)}"
+    assert len(found_injections) >= 5, (
+        f"Expected at least 5 injection strings, found {len(found_injections)}"
+    )
 
     # Ensure bounds on body text length
     for rec in comms_records:

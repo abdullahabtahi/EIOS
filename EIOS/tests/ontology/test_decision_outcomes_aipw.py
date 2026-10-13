@@ -1,11 +1,11 @@
 """Unit and causal estimation tests for Decision Outcomes Ledger and Doubly Robust AIPW (US5)."""
 
+import numpy as np
+
 from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.actions.intent_hub import ActionIntentHub
 from eios.ontology.actions.models import DecisionOutcomeRecord
 from eios.ontology.actions.outcomes import DecisionOutcomesStore
-import numpy as np
-import pytest
 
 
 def test_decision_outcomes_store_records_proposal_and_overrides():

@@ -66,7 +66,10 @@ def _terraform_findings(root: Path, directory: Path) -> list[Finding]:
 
 def _tflint_findings(root: Path, directory: Path, tflint: str) -> list[Finding]:
     finding = _step(
-        root, directory, "terraform-tflint", [tflint, "--no-color", "--minimum-failure-severity=error"]
+        root,
+        directory,
+        "terraform-tflint",
+        [tflint, "--no-color", "--minimum-failure-severity=error"],
     )
     return [finding] if finding is not None else []
 

@@ -7,8 +7,8 @@ Authoritative References:
 - specs/009-partner-fraud/quickstart.md (Scenario 2)
 """
 
-from datetime import UTC, date, datetime
-import duckdb
+from datetime import UTC, datetime
+
 import pandas as pd
 
 from eios.fraud.bonus_abuse import BonusAbuseScorer
@@ -93,7 +93,14 @@ class PartnerFraudPipeline:
             ring_attr = self.ring_engine.attribute_partner_ring(pid) if tree_records else None
             bonus_profile = self.bonus_scorer.score_partner_portfolio(pid, client_records or [])
             traffic_signal = (
-                next((s for s in self.traffic_detector.evaluate_funnels(funnel_records or []) if s.partner_id == pid), None)
+                next(
+                    (
+                        s
+                        for s in self.traffic_detector.evaluate_funnels(funnel_records or [])
+                        if s.partner_id == pid
+                    ),
+                    None,
+                )
                 if funnel_records
                 else None
             )

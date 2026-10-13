@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
-from eios.flywheel.ledger import DecisionOutcomesLedger, compute_record_lineage_hash
+from eios.flywheel.ledger import DecisionOutcomesLedger
 from eios.flywheel.models import DecisionOutcomeRecord, MilestoneStatus
 
 
@@ -15,10 +16,10 @@ class ReconciliationResult(BaseModel):
 
     reconciled_count: int = Field(..., ge=0)
     failed_count: int = Field(..., ge=0)
-    residuals_by_horizon: Dict[str, List[float]] = Field(default_factory=dict)
-    mean_residual_30d: Optional[float] = None
-    mean_residual_60d: Optional[float] = None
-    mean_residual_90d: Optional[float] = None
+    residuals_by_horizon: dict[str, list[float]] = Field(default_factory=dict)
+    mean_residual_30d: float | None = None
+    mean_residual_60d: float | None = None
+    mean_residual_90d: float | None = None
     lineage_verified: bool = True
 
 
@@ -42,8 +43,8 @@ class MilestoneReconciliationEngine:
         self,
         decision_id: str,
         actual_impact: float,
-        horizon: Optional[str] = None,
-        observed_at: Optional[datetime] = None,
+        horizon: str | None = None,
+        observed_at: datetime | None = None,
     ) -> DecisionOutcomeRecord:
         """Reconciles a single decision record with realized actual impact."""
         record = self.ledger.get_by_id(decision_id)
@@ -65,7 +66,7 @@ class MilestoneReconciliationEngine:
 
     def batch_reconcile(
         self,
-        observations: List[Dict[str, Any]],
+        observations: list[dict[str, Any]],
     ) -> ReconciliationResult:
         """Reconciles a batch of observations and computes summary diagnostics.
 
@@ -77,7 +78,7 @@ class MilestoneReconciliationEngine:
         """
         reconciled = 0
         failed = 0
-        residuals: Dict[str, List[float]] = {"30d": [], "60d": [], "90d": []}
+        residuals: dict[str, list[float]] = {"30d": [], "60d": [], "90d": []}
 
         for obs in observations:
             did = obs.get("decision_id")

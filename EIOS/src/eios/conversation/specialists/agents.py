@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List
+from collections.abc import Callable
+from typing import Any
+
 from eios.conversation.rag_tools import query_policy_search, query_sar_precedents
 from eios.conversation.tools import (
     get_governed_metric,
@@ -17,15 +19,19 @@ from eios.conversation.tools import (
 class SpecialistAgent:
     """Base class for domain specialists in the conversational mesh."""
 
-    def __init__(self, name: str, allowed_tools: List[Callable[..., Any]], system_prompt: str) -> None:
+    def __init__(
+        self, name: str, allowed_tools: list[Callable[..., Any]], system_prompt: str
+    ) -> None:
         self.name = name
         self.allowed_tools = {t.__name__: t for t in allowed_tools}
         self.system_prompt = system_prompt
 
-    def execute_tool(self, tool_name: str, **kwargs: Any) -> Dict[str, Any]:
+    def execute_tool(self, tool_name: str, **kwargs: Any) -> dict[str, Any]:
         """Execute a tool strictly validated against the specialist's allow-list."""
         if tool_name not in self.allowed_tools:
-            raise PermissionError(f"Specialist '{self.name}' is not authorized to call tool '{tool_name}'")
+            raise PermissionError(
+                f"Specialist '{self.name}' is not authorized to call tool '{tool_name}'"
+            )
         return self.allowed_tools[tool_name](**kwargs)
 
 

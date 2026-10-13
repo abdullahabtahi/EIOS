@@ -1,8 +1,8 @@
 """Continuous Cryptographic Audit Walker and Tamper Localization (US4)."""
 
-from datetime import UTC, datetime
 import time
 import uuid
+from datetime import UTC, datetime
 
 from eios.ontology.actions.models import AuditVerificationReport
 from eios.ontology.actions.sequencer import GENESIS_ANCHOR, LedgerSequencer

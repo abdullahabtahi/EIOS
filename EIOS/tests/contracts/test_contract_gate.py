@@ -1,10 +1,11 @@
 """Tests for Contract Validation Gate across all 14 Layer 1 Data Products."""
 
-from datetime import datetime, timezone, date
+from datetime import UTC, datetime
+
 import pytest
 
-from eios.contracts.base import DataProductEnum, TenantEnum
-from eios.ingestion.validator import ContractValidator, ValidationResult
+from eios.contracts.base import DataProductEnum
+from eios.ingestion.validator import ContractValidator
 
 
 @pytest.fixture
@@ -20,7 +21,7 @@ def test_validator_accepts_valid_transaction_aml(validator: ContractValidator):
         "amount": 1500.50,
         "currency": "USD",
         "payment_method_id": "pm_visa_01",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "is_first_deposit": False,
         "status": "COMPLETED",
     }
@@ -39,7 +40,7 @@ def test_validator_rejects_missing_required_field(validator: ContractValidator):
         "amount": 250.0,
         "currency": "USD",
         "payment_method_id": "pm_bank_01",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
     result = validator.validate(DataProductEnum.TRANSACTIONS_AML, invalid_payload)
     assert result.is_valid is False
@@ -55,7 +56,7 @@ def test_validator_rejects_range_breach_negative_amount(validator: ContractValid
         "amount": -50.0,  # gt=0.0 violation
         "currency": "USD",
         "payment_method_id": "pm_bank_01",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
     result = validator.validate(DataProductEnum.TRANSACTIONS_AML, invalid_payload)
     assert result.is_valid is False
@@ -70,7 +71,7 @@ def test_validator_rejects_schema_type_error(validator: ContractValidator):
         "amount": 100.0,
         "currency": "USD",
         "payment_method_id": "pm_bank_01",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
     result = validator.validate(DataProductEnum.TRANSACTIONS_AML, invalid_payload)
     assert result.is_valid is False

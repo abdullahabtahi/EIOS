@@ -5,7 +5,8 @@ from __future__ import annotations
 import hashlib
 import os
 from pathlib import Path
-from typing import Dict, Literal
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -18,7 +19,7 @@ class FoundryManifest(BaseModel):
     seed_tier: Literal["dev", "validation", "sealed"]
     git_sha: str = Field(min_length=40, max_length=40)
     spec_hash: str = Field(min_length=64, max_length=64)
-    generator_versions: Dict[str, str]
+    generator_versions: dict[str, str]
     dataset_hash: str = Field(min_length=64, max_length=64)
     generated_at: str
 

@@ -11,12 +11,12 @@ passing the Metric Auditor Gate with deterministic fallback under outage.
 """
 
 import re
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
+
 from langchain_core.messages import AIMessage
-from langchain_core.tools import BaseTool
 
 from eios.conversation.models import SpecialistDomain
-from eios.conversation.specialists.base import BaseSpecialistAgent
 from eios.fraud.sanitizer import FraudComplianceSanitizer
 from eios.ontology.omcp.server import OMCPServer
 

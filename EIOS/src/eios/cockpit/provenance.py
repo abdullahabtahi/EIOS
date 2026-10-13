@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 from eios.cockpit.schemas import validate_contract
-from eios.ontology.metrics.registry import MetricRegistry, MetricNotFoundError
+from eios.ontology.metrics.registry import MetricNotFoundError, MetricRegistry
 
 
 class ProvenanceMetadata(BaseModel):
@@ -21,10 +22,10 @@ class ProvenanceMetadata(BaseModel):
     as_of_timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     computation_source: str = "SemanticRegistry.DuckDB"
     owner_role: str
-    formula_summary: Optional[str] = None
+    formula_summary: str | None = None
     is_replayed: bool = False
 
-    def to_contract_dict(self) -> Dict[str, Any]:
+    def to_contract_dict(self) -> dict[str, Any]:
         data = {
             "metric_id": self.metric_id,
             "definition_version": self.definition_version,
@@ -42,7 +43,7 @@ class ProvenanceResolver:
     """In-memory high-speed provenance resolver with sub-50ms SLA."""
 
     # Default fallback definitions for canonical enterprise metrics
-    _CANONICAL_DEFAULTS: Dict[str, Dict[str, Any]] = {
+    _CANONICAL_DEFAULTS: dict[str, dict[str, Any]] = {
         "net_revenue_usd": {
             "owner_role": "Chief Financial Officer",
             "version": "1.4.0",
@@ -93,15 +94,15 @@ class ProvenanceResolver:
         },
     }
 
-    def __init__(self, metric_registry: Optional[MetricRegistry] = None) -> None:
+    def __init__(self, metric_registry: MetricRegistry | None = None) -> None:
         self._registry = metric_registry
-        self._cache: Dict[str, ProvenanceMetadata] = {}
+        self._cache: dict[str, ProvenanceMetadata] = {}
 
     def resolve(
         self,
         metric_id: str,
-        version: Optional[str] = None,
-        as_of: Optional[datetime] = None,
+        version: str | None = None,
+        as_of: datetime | None = None,
         is_replayed: bool = False,
     ) -> ProvenanceMetadata:
         """Resolves provenance metadata in < 50ms."""

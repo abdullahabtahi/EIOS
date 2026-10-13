@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import time
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from typing import Any
 
-from eios.ontology.actions.sequencer import LedgerSequencer
+from pydantic import BaseModel
+
 from eios.ontology.actions.audit import ContinuousAuditWalker
+from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.worm import WORMAnchorService
 
 
@@ -45,8 +46,8 @@ class FourEyesAuditRecord(BaseModel):
     second_approver_id: str
     second_approver_role: str
     second_approved_at: datetime
-    execution_receipt_id: Optional[str] = None
-    override_reason: Optional[str] = None
+    execution_receipt_id: str | None = None
+    override_reason: str | None = None
 
 
 class ComplianceExplorerService:
@@ -54,15 +55,15 @@ class ComplianceExplorerService:
 
     def __init__(
         self,
-        sequencer: Optional[LedgerSequencer] = None,
-        audit_walker: Optional[ContinuousAuditWalker] = None,
-        worm_service: Optional[WORMAnchorService] = None,
+        sequencer: LedgerSequencer | None = None,
+        audit_walker: ContinuousAuditWalker | None = None,
+        worm_service: WORMAnchorService | None = None,
     ) -> None:
         self.sequencer = sequencer
         self.audit_walker = audit_walker
         self.worm_service = worm_service
 
-    def get_ledger_timeline(self, start_seq: int = 1, limit: int = 20) -> List[Dict[str, Any]]:
+    def get_ledger_timeline(self, start_seq: int = 1, limit: int = 20) -> list[dict[str, Any]]:
         """Returns sequential monotonic ledger records."""
         # If live sequencer has entries, retrieve from hot state
         if self.sequencer and len(self.sequencer.entries) > 0:
@@ -119,14 +120,16 @@ class ComplianceExplorerService:
             },
         ]
 
-    def verify_hash_chain_interactive(self) -> Dict[str, Any]:
+    def verify_hash_chain_interactive(self) -> dict[str, Any]:
         """Executes full cryptographic hash chain verification walking."""
         t0 = time.perf_counter()
 
         if self.audit_walker:
             report = self.audit_walker.verify_ledger()
             elapsed_ms = (time.perf_counter() - t0) * 1000.0
-            corrupted = [report.tampered_sequence_id] if report.tampered_sequence_id is not None else []
+            corrupted = (
+                [report.tampered_sequence_id] if report.tampered_sequence_id is not None else []
+            )
             return {
                 "total_entries_verified": report.total_entries,
                 "is_chain_unbroken": report.is_valid,
@@ -152,7 +155,7 @@ class ComplianceExplorerService:
             "integrity_score_pct": 100.0,
         }
 
-    def get_worm_compliance_proofs(self) -> List[Dict[str, Any]]:
+    def get_worm_compliance_proofs(self) -> list[dict[str, Any]]:
         """Returns verified immutable WORM compliance retention proofs."""
         now = datetime.now(UTC)
         expiration = datetime(2033, 10, 9, 0, 0, tzinfo=UTC)  # 7-year statutory retention
@@ -169,7 +172,7 @@ class ComplianceExplorerService:
             }
         ]
 
-    def get_four_eyes_approval_log(self) -> List[Dict[str, Any]]:
+    def get_four_eyes_approval_log(self) -> list[dict[str, Any]]:
         """Returns dual human approval log entries for High-severity mutations."""
         now = datetime.now(UTC)
         return [

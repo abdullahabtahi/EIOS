@@ -1,7 +1,7 @@
 """Tests for deterministic Parquet partition writing."""
 
 from pathlib import Path
-import pytest
+
 from eios.foundry.storage.parquet_writer import write_deterministic_parquet
 
 

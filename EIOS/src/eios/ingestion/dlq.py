@@ -1,11 +1,11 @@
 """Dead-Letter Queue (DLQ) envelope builder, dispatcher, and structured Cloud Logging emitter."""
 
 import base64
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum
 import json
 import logging
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from enum import Enum
 from typing import Any
 from uuid import uuid4
 
@@ -16,6 +16,7 @@ logger = logging.getLogger("eios.ingestion.dlq")
 
 class BreachType(str, Enum):
     """Categorical typology of validation failure."""
+
     SCHEMA_TYPE_ERROR = "SCHEMA_TYPE_ERROR"
     MISSING_REQUIRED_FIELD = "MISSING_REQUIRED_FIELD"
     NULL_RATE_EXCEEDED = "NULL_RATE_EXCEEDED"
@@ -27,6 +28,7 @@ class BreachType(str, Enum):
 @dataclass
 class ContractBreachRecord:
     """Standardized Dead-Letter Queue envelope matching schemas/dlq-envelope.schema.json."""
+
     dlq_id: str
     event_id: str
     product_name: DataProductEnum
@@ -43,9 +45,13 @@ class ContractBreachRecord:
         out = {
             "dlq_id": self.dlq_id,
             "event_id": self.event_id,
-            "product_name": self.product_name.value if isinstance(self.product_name, DataProductEnum) else str(self.product_name),
+            "product_name": self.product_name.value
+            if isinstance(self.product_name, DataProductEnum)
+            else str(self.product_name),
             "breach_timestamp": self.breach_timestamp.isoformat(),
-            "breach_type": self.breach_type.value if isinstance(self.breach_type, BreachType) else str(self.breach_type),
+            "breach_type": self.breach_type.value
+            if isinstance(self.breach_type, BreachType)
+            else str(self.breach_type),
             "field_paths": self.field_paths,
             "error_messages": self.error_messages,
             "raw_payload_bytes": self.raw_payload_bytes,
@@ -95,17 +101,18 @@ class DLQDispatcher:
             dlq_id=str(uuid4()),
             event_id=event_id or f"evt_syn_{uuid4().hex[:12]}",
             product_name=product_name,
-            breach_timestamp=datetime.now(timezone.utc),
+            breach_timestamp=datetime.now(UTC),
             breach_type=breach_type,
             field_paths=field_paths,
             error_messages=error_msgs,
             raw_payload_bytes=raw_b64,
-            source_topic=source_topic or f"eios.l1.{product_name.value if isinstance(product_name, DataProductEnum) else product_name}.v1",
+            source_topic=source_topic
+            or f"eios.l1.{product_name.value if isinstance(product_name, DataProductEnum) else product_name}.v1",
             ingestion_metadata=ingestion_metadata,
         )
 
         self._buffer.append(record)
-        
+
         # Structured Cloud Logging JSON (Principle IV)
         log_payload = {
             "severity": "WARNING",

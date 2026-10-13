@@ -1,10 +1,9 @@
 """Parquet Warm-Start Loader for cold-boot in-memory hot-state rehydration (ADR-012)."""
 
+import logging
+import time
 from dataclasses import dataclass
 from pathlib import Path
-import time
-from typing import Any
-import logging
 
 from eios.contracts.base import DataProductEnum
 from eios.ingestion.hot_state import HotStateEngine
@@ -15,6 +14,7 @@ logger = logging.getLogger("eios.ingestion.warm_start")
 @dataclass
 class WarmStartSummary:
     """Telemetry summary of warm-start cold-boot execution."""
+
     total_rows_loaded: int
     load_duration_ms: float
     products_loaded: list[str]
@@ -52,7 +52,10 @@ class ParquetWarmStartLoader:
             glob_pattern = str(prod_dir / "*.parquet")
             try:
                 # Vectorized DuckDB Parquet read with column name alignment
-                cursor.execute(f"INSERT INTO {product.value} BY NAME SELECT * FROM read_parquet(?)", [glob_pattern])
+                cursor.execute(
+                    f"INSERT INTO {product.value} BY NAME SELECT * FROM read_parquet(?)",
+                    [glob_pattern],
+                )
                 count = cursor.execute(f"SELECT count(*) FROM {product.value}").fetchone()[0]
                 total_rows += count
                 products_loaded.append(product.value)

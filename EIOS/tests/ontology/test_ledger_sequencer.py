@@ -1,14 +1,13 @@
 """Unit and property tests for Upstream Monotonic Sequencer and Cryptographic Hash Chaining (US1)."""
 
 import concurrent.futures
+
 from eios.ingestion.hot_state import HotStateEngine
-from eios.ontology.actions.models import LedgerEntry, LedgerEventType
+from eios.ontology.actions.models import LedgerEventType
 from eios.ontology.actions.sequencer import (
     GENESIS_ANCHOR,
     LedgerSequencer,
-    SequenceIntegrityError,
 )
-import pytest
 
 
 def test_sequencer_initializes_with_genesis_anchor():

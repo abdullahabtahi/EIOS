@@ -1,11 +1,10 @@
 """Tests for OMCP analytical tools wrapping DuckDB, AML, and Causal DAG engines (F018, T009)."""
 
-import pytest
 from eios.conversation.tools import (
     get_governed_metric,
     inspect_aml_entity,
-    query_graph_topology,
     inspect_partner_churn,
+    query_graph_topology,
     run_causal_what_if,
 )
 

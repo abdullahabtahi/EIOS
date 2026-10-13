@@ -1,6 +1,7 @@
 """Tests for end-to-end byte-for-byte run determinism across all 14 data products (SC-001, FR-002)."""
 
 from pathlib import Path
+
 from eios.foundry.cli import run_pipeline
 
 EXPECTED_PRODUCTS = [

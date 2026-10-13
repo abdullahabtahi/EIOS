@@ -8,19 +8,19 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from typing import Any
+
+from pydantic import BaseModel
 
 from eios.cockpit.schemas import validate_contract
 from eios.ontology.actions.intent_hub import TokenExpiredError
-from eios.ontology.actions.record_store import ModelStore, RecordStore, default_record_store
-from eios.ontology.actions.signer import ActionSigner
 from eios.ontology.actions.models import (
     ActionIntentToken,
-    ActionSeverity,
     ActionStatus,
     ApprovalRecord,
 )
+from eios.ontology.actions.record_store import ModelStore, RecordStore, default_record_store
+from eios.ontology.actions.signer import ActionSigner
 
 _LOG = logging.getLogger("eios.cockpit.governance_shelf")
 
@@ -36,13 +36,13 @@ class GovernedActionCard(BaseModel):
     target_entity_id: str
     severity: str
     requires_four_eyes: bool
-    first_approver_id: Optional[str] = None
-    second_approver_id: Optional[str] = None
+    first_approver_id: str | None = None
+    second_approver_id: str | None = None
     kms_signature_verified: bool
     status: str
     seconds_remaining: int
 
-    def to_contract_dict(self) -> Dict[str, Any]:
+    def to_contract_dict(self) -> dict[str, Any]:
         mapped_action_type = _ACTION_TYPE_CONTRACT_MAP.get(self.action_type, self.action_type)
         data = {
             "intent_id": self.intent_id,
@@ -101,9 +101,9 @@ class GovernedActionShelf:
         self._local_tokens.put(token.intent_id, token)
         return self.present_card(token)
 
-    def get_token(self, intent_id: str) -> Optional[ActionIntentToken]:
+    def get_token(self, intent_id: str) -> ActionIntentToken | None:
         if self.intent_hub is not None:
-            found: Optional[ActionIntentToken] = self.intent_hub.find(intent_id)
+            found: ActionIntentToken | None = self.intent_hub.find(intent_id)
             return found
         return self._local_tokens.get(intent_id)
 
@@ -113,9 +113,9 @@ class GovernedActionShelf:
             raise KeyError(f"Action intent {intent_id} not found in shelf")
         return token
 
-    def _all_tokens(self) -> List[ActionIntentToken]:
+    def _all_tokens(self) -> list[ActionIntentToken]:
         if self.intent_hub is not None:
-            tokens: List[ActionIntentToken] = self.intent_hub.list_tokens()
+            tokens: list[ActionIntentToken] = self.intent_hub.list_tokens()
             return tokens
         return sorted(self._local_tokens.list(), key=lambda t: t.issued_at)
 
@@ -179,7 +179,7 @@ class GovernedActionShelf:
         intent_id: str,
         officer_id: str,
         officer_role: str,
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Provides full contextual state and eligibility checks for the Four-Eyes approval modal."""
         token = self._require(intent_id)
 
@@ -273,7 +273,7 @@ class GovernedActionShelf:
         self,
         intent_id: str,
         caller_role: str = "COMPLIANCE_HEAD",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         """Commit an approved intent to the write-back sink and return its receipt."""
         token = self._require(intent_id)
         if token.status != ActionStatus.APPROVED:
@@ -315,6 +315,6 @@ class GovernedActionShelf:
             )
         )
 
-    def list_cards(self) -> List[GovernedActionCard]:
+    def list_cards(self) -> list[GovernedActionCard]:
         """Lists all action cards in the shelf, oldest first."""
         return [self.present_card(t) for t in self._all_tokens()]

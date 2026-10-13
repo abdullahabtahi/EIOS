@@ -10,9 +10,10 @@ Solves the cold-start problem by evaluating new accounts against peer cohorts,
 smoothly transitioning to robust personalized baselines as account history matures.
 """
 
-from dataclasses import dataclass, field
 import math
+from dataclasses import dataclass, field
 from typing import Any
+
 import numpy as np
 
 

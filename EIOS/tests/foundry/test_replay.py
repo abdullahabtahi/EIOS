@@ -1,8 +1,7 @@
 """Tests for streaming replay engine and Pub/Sub emulator publisher (T057, T060)."""
 
-from pathlib import Path
 from unittest.mock import MagicMock
-import pytest
+
 from eios.foundry.replay import StreamingReplayEngine
 
 
@@ -18,8 +17,7 @@ def test_streaming_replay_velocity_and_publishing():
     )
 
     records = [
-        {"transaction_id": f"TX-{i:05d}", "amount": "100.00", "currency": "USD"}
-        for i in range(25)
+        {"transaction_id": f"TX-{i:05d}", "amount": "100.00", "currency": "USD"} for i in range(25)
     ]
 
     published_count = engine.replay_batch(records)

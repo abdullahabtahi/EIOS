@@ -12,7 +12,9 @@ replay fallback [REPLAY] under outage.
 """
 
 import re
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
+
 from langchain_core.messages import AIMessage
 
 from eios.conversation.models import SpecialistDomain
@@ -64,7 +66,9 @@ class SentinelAMLSpecialist:
                     {"client_id": client_id},
                     caller_role="ComplianceOfficer",
                 )
-                summary = dossier.get("narrative_summary", f"AML investigation completed for {client_id}.")
+                summary = dossier.get(
+                    "narrative_summary", f"AML investigation completed for {client_id}."
+                )
                 risk = dossier.get("composite_risk_score", 0.0)
                 tier = dossier.get("priority_tier", "MEDIUM")
                 action = dossier.get("recommended_action", "MonitorAccount")

@@ -8,9 +8,9 @@ Palantir Foundry & McKinsey QuantumBlack Live Demo Standards:
 """
 
 import argparse
-from datetime import UTC, date, datetime
-from pathlib import Path
 import sys
+from datetime import date
+from pathlib import Path
 
 feios_dir = Path(__file__).resolve().parent.parent
 src_dir = feios_dir / "src"
@@ -19,10 +19,9 @@ if str(feios_dir) not in sys.path:
 if str(src_dir) not in sys.path:
     sys.path.insert(0, str(src_dir))
 
-from tests.churn.conftest import seeded_hot_state
-from eios.churn.cohort_detector import CohortRiskDetector
 from eios.churn.pipeline import ChurnRadarPipeline
 from eios.ontology.omcp.server import OMCPServer
+from tests.churn.conftest import seeded_hot_state
 
 
 def run_churn_cockpit(demo_mode: bool = True) -> None:
@@ -47,7 +46,9 @@ def run_churn_cockpit(demo_mode: bool = True) -> None:
     # QUEUE #1: High Value-at-Risk Retention Queue
     # -------------------------------------------------------------
     print("\n[QUEUE #1: HIGH VALUE-AT-RISK RETENTION QUEUE]")
-    print(f"{'Rank':<6}{'Partner ID':<22}{'Tier':<14}{'Value-at-Risk':<16}{'Hazard 30d':<13}{'Priority Score':<16}{'Status'}")
+    print(
+        f"{'Rank':<6}{'Partner ID':<22}{'Tier':<14}{'Value-at-Risk':<16}{'Hazard 30d':<13}{'Priority Score':<16}{'Status'}"
+    )
 
     # Top scored partners sorted by priority score
     top_partners = df_scored.sort_values(by="priority_score", ascending=False).head(5)
@@ -69,10 +70,16 @@ def run_churn_cockpit(demo_mode: bool = True) -> None:
     for sig in signals.get("top_contributing_signals", []):
         obs = sig["observed_value"]
         delta_str = f"{obs * 100:+.1f}%" if abs(obs) <= 1.0 else f"{obs}"
-        print(f"      * {sig['signal_family']:<14}: {sig['metric_name']} (delta: {delta_str}, ref: {sig['citation_ref']})")
-    print(f"    - Intervention Window: {signals['intervention_window']} (Hazard: {signals['hazard_probability_30d']:.2f})")
-    print(f"    - Audited Narrative:   \"{signals['explanation']['narrative']}\"")
-    print(f"    - Metric Auditor Pass: 0 hallucinations | Citations: {signals['explanation']['citations']}")
+        print(
+            f"      * {sig['signal_family']:<14}: {sig['metric_name']} (delta: {delta_str}, ref: {sig['citation_ref']})"
+        )
+    print(
+        f"    - Intervention Window: {signals['intervention_window']} (Hazard: {signals['hazard_probability_30d']:.2f})"
+    )
+    print(f'    - Audited Narrative:   "{signals["explanation"]["narrative"]}"')
+    print(
+        f"    - Metric Auditor Pass: 0 hallucinations | Citations: {signals['explanation']['citations']}"
+    )
 
     # -------------------------------------------------------------
     # QUEUE #2: Seasonality Filter (Zero False Alarms)
@@ -81,8 +88,12 @@ def run_churn_cockpit(demo_mode: bool = True) -> None:
     vac_signals = server.call_tool("get_partner_signals", {"partner_id": "P-HARD-NEG-VACATION"})
     print("Target Partner: P-HARD-NEG-VACATION (Tier-2 European Affiliate)")
     print("  • Raw Telemetry:                    0 logins, 0 clicks for 14 consecutive days")
-    print("  • Seasonality-Adjusted CUSUM MAD:   HOLIDAY DIP DETECTED (Trading-day calendar masked)")
-    print(f"  • Risk Classification:             {vac_signals['risk_tier']} (Hazard = {vac_signals['hazard_probability_30d']:.2f}, Alert SUPPRESSED)")
+    print(
+        "  • Seasonality-Adjusted CUSUM MAD:   HOLIDAY DIP DETECTED (Trading-day calendar masked)"
+    )
+    print(
+        f"  • Risk Classification:             {vac_signals['risk_tier']} (Hazard = {vac_signals['hazard_probability_30d']:.2f}, Alert SUPPRESSED)"
+    )
     print("  ✓ Verification Result:              ZERO FALSE ALARM CONFIRMED (FPR = 0.0%)")
 
     # -------------------------------------------------------------
@@ -93,9 +104,13 @@ def run_churn_cockpit(demo_mode: bool = True) -> None:
     cohorts = cohort_res.get("cohorts", [])
     if cohorts:
         for c in cohorts:
-            print(f"Alert ID: {c['cohort_id']} | Region: {c['region_id']} | Partners Affected: {c['partner_count']}")
+            print(
+                f"Alert ID: {c['cohort_id']} | Region: {c['region_id']} | Partners Affected: {c['partner_count']}"
+            )
             print(f"  • Aggregate Value-at-Risk:    ${c['aggregate_value_at_risk_usd']:,.2f} USD")
-            print(f"  • Statistical Significance:   p-value = {c['p_value']:.6f} (Permutation cluster test)")
+            print(
+                f"  • Statistical Significance:   p-value = {c['p_value']:.6f} (Permutation cluster test)"
+            )
             print(f"  • Common Driver:              {c['common_driver']}")
             print(f"  • Recommended Playbook:       {c['recommended_playbook']}")
     else:
@@ -108,6 +123,11 @@ def run_churn_cockpit(demo_mode: bool = True) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Partner Churn Radar Operational Cockpit")
-    parser.add_argument("--demo-mode", action="store_true", default=True, help="Run in demo mode with golden personas")
+    parser.add_argument(
+        "--demo-mode",
+        action="store_true",
+        default=True,
+        help="Run in demo mode with golden personas",
+    )
     args = parser.parse_args()
     run_churn_cockpit(demo_mode=args.demo_mode)

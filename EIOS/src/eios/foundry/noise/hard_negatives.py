@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List
+from typing import Any
+
 from eios.foundry.rng import RNGManager
 from eios.foundry.universe import GlobalEntityUniverse
 
@@ -15,13 +16,13 @@ class CarrierNATHubGenerator:
         self.rng = rng
         self._gen = rng.get_generator("hub_suppression")
 
-    def generate_hub_edges(self, target_account_count: int = 500) -> List[Dict[str, Any]]:
+    def generate_hub_edges(self, target_account_count: int = 500) -> list[dict[str, Any]]:
         """Maps target_account_count accounts to a single shared carrier-NAT hub IP."""
         hub_ip = "100.64.0.1"
         hub_device_hash = "cgnat_hub_fingerprint_dummy"
 
         selected_accounts = self.universe.accounts[:target_account_count]
-        edges: List[Dict[str, Any]] = []
+        edges: list[dict[str, Any]] = []
 
         for idx, account in enumerate(selected_accounts):
             edges.append(

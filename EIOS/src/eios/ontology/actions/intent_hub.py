@@ -1,10 +1,10 @@
 """Governed Action Intent Hub and Four-Eyes Approval State Machine (Principle II, US6, US2)."""
 
-from datetime import UTC, datetime, timedelta
 import json
 import secrets
-from typing import Any
 import uuid
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.actions.models import (
@@ -13,7 +13,6 @@ from eios.ontology.actions.models import (
     ActionStatus,
     ApprovalRecord,
     ExecutionReceipt,
-    ExecutionStatus,
     LedgerEventType,
 )
 from eios.ontology.actions.record_store import ModelStore, RecordStore, default_record_store

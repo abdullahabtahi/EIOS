@@ -1,5 +1,6 @@
 """Governed Action Intent Hub, Upstream Sequencer, and Cryptographic Ledger (Slice S5 / F10)."""
 
+from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
     CANONICAL_ACTION_SPECS,
     ActionExecutionError,
@@ -22,9 +23,7 @@ from eios.ontology.actions.models import (
     LedgerEventType,
     WORMAnchorCheckpoint,
 )
-from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.outcomes import DecisionOutcomesStore
-
 from eios.ontology.actions.sequencer import (
     GENESIS_ANCHOR,
     LedgerSequencer,

@@ -3,19 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-import json
+from collections.abc import AsyncIterable
 from datetime import UTC, datetime
-from typing import Any, AsyncIterable, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, Query, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter
 from fastapi.sse import EventSourceResponse, ServerSentEvent
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from eios.cockpit.partner import PartnerWorkstationService
-from eios.churn.cohort_detector import CohortRiskDetector
-from eios.churn.hazard_model import DiscreteTimeHazardModel
-from eios.llm_gateway.providers.gemini_client import GeminiClientManager, DEFAULT_MODEL
+from eios.llm_gateway.providers.gemini_client import DEFAULT_MODEL, GeminiClientManager
 
 router = APIRouter(tags=["Partner Churn"])
 partner_svc = PartnerWorkstationService()
@@ -30,7 +27,7 @@ WHAT_IF_PATH = "/api/v1/churn/partner/{partner_id}/what-if"
 
 
 @router.get(RADAR_PATH)
-def get_churn_radar() -> Dict[str, Any]:
+def get_churn_radar() -> dict[str, Any]:
     """Returns live 30D partner churn radar scatter with survival hazard probabilities and 30D VaR."""
     scatter = partner_svc.get_churn_radar_scatter()
     contract_data = scatter.to_contract_dict()
@@ -49,7 +46,7 @@ def get_churn_radar() -> Dict[str, Any]:
 
 
 @router.get(COHORTS_PATH)
-def get_churn_cohorts() -> Dict[str, Any]:
+def get_churn_cohorts() -> dict[str, Any]:
     """Returns SEA cohort anomaly clusters with verified semantic provenance."""
     now = datetime.now(UTC).isoformat()
     return {
@@ -99,13 +96,15 @@ class WhatIfRequest(BaseModel):
 
 
 @router.get(ONTOLOGY_PARTNER_PATH)
-def get_partner_ontology_360(partner_id: str) -> Dict[str, Any]:
+def get_partner_ontology_360(partner_id: str) -> dict[str, Any]:
     """Returns canonical EIOS Ontology Object 360 representation of the Partner entity."""
     return {
         "object_type": "Partner",
         "primary_key": partner_id,
         "security_markings": ["TLP:AMBER", "COMMERCIAL_SENSITIVE"],
-        "lifecycle_state": "AT_RISK_POACHING" if "1029" in partner_id or "882" in partner_id else "HEALTHY",
+        "lifecycle_state": "AT_RISK_POACHING"
+        if "1029" in partner_id or "882" in partner_id
+        else "HEALTHY",
         "schema_version": "v2.1.0",
         "hot_state_sha256": f"SHA256:7f8a{partner_id.lower()}920485bf2d",
         "as_of": datetime.now(UTC).isoformat(),
@@ -214,7 +213,7 @@ def get_partner_ontology_360(partner_id: str) -> Dict[str, Any]:
 
 
 @router.get(BATTLECARDS_PATH)
-def get_partner_genai_battlecards(partner_id: str) -> Dict[str, Any]:
+def get_partner_genai_battlecards(partner_id: str) -> dict[str, Any]:
     """Generates Gemini 3.8 Flash multi-signal forensic diagnostic narrative & WhatsApp/Telegram battlecards."""
     now = datetime.now(UTC).isoformat()
     return {
@@ -282,7 +281,7 @@ def get_partner_genai_battlecards(partner_id: str) -> Dict[str, Any]:
 
 
 @router.post(WHAT_IF_PATH)
-def simulate_partner_what_if(partner_id: str, payload: WhatIfRequest) -> Dict[str, Any]:
+def simulate_partner_what_if(partner_id: str, payload: WhatIfRequest) -> dict[str, Any]:
     """Evaluates partner retention counterfactual deal scenarios using Gemini 3.8 Flash and SCM."""
     prompt = payload.proposal_prompt
     is_rev_share = "rev" in prompt.lower() or "share" in prompt.lower()
@@ -333,5 +332,3 @@ def simulate_partner_what_if(partner_id: str, payload: WhatIfRequest) -> Dict[st
         "governed_decision_rationale": rationale,
         "causal_refuter_p_value": 0.44,
     }
-
-

@@ -1,20 +1,17 @@
 """Tests for conversational agent data models and serialization (F018, T004)."""
 
+from datetime import UTC, datetime
+
 import pytest
-from datetime import datetime, UTC
+
 from eios.conversation.models import (
-    ConversationSession,
-    BlackboardState,
-    OperatorRole,
-    SpecialistRoute,
-    ProvenanceCitation,
-    CitationType,
-    ToolExecutionTrace,
     ActionIntentToken,
     ActionSeverity,
     ActionStatus,
-    AuditorRecord,
-    AuditorStatus,
+    BlackboardState,
+    ConversationSession,
+    OperatorRole,
+    SpecialistRoute,
     sanitize_for_state_storage,
 )
 
@@ -91,4 +88,3 @@ def test_copilot_tracer():
 
     assert "duration_ms" in meta
     assert meta["auditor_status"] == "PASS"
-

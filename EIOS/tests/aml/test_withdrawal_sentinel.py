@@ -8,7 +8,7 @@ Authoritative References:
 """
 
 import time
-import pytest
+
 from eios.aml.models import WithdrawalDisposition
 from eios.aml.withdrawal_sentinel import WithdrawalSentinel
 from eios.ingestion.hot_state import HotStateEngine

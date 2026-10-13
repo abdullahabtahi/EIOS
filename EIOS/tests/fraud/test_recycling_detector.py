@@ -7,24 +7,29 @@ Authoritative References:
 """
 
 from datetime import datetime
-import pytest
 
 from eios.fraud.recycling_detector import ClientRecyclingDetector
 
 
-def test_recycling_detector_clusters_multi_affiliate_promotion_harvesters(synthetic_identity_clusters: list[dict]) -> None:
+def test_recycling_detector_clusters_multi_affiliate_promotion_harvesters(
+    synthetic_identity_clusters: list[dict],
+) -> None:
     detector = ClientRecyclingDetector(min_distinct_partners=2)
     clusters = detector.detect_recycling_clusters(synthetic_identity_clusters)
 
     # Must detect syndicate token tok_id_cluster_a1b2c3d4e5f60001 across 4 partners
-    syn_cluster = next((c for c in clusters if c.identity_cluster_key == "tok_id_cluster_a1b2c3d4e5f60001"), None)
+    syn_cluster = next(
+        (c for c in clusters if c.identity_cluster_key == "tok_id_cluster_a1b2c3d4e5f60001"), None
+    )
     assert syn_cluster is not None
     assert len(syn_cluster.distinct_partner_ids) == 4
     assert syn_cluster.total_promotions_harvested_usd == 3200.0
     assert syn_cluster.syndicate_risk_score >= 0.85
 
     # Solo token tok_id_cluster_0011223344556677 with 1 partner should not be flagged as a recycling syndicate
-    solo_cluster = next((c for c in clusters if c.identity_cluster_key == "tok_id_cluster_0011223344556677"), None)
+    solo_cluster = next(
+        (c for c in clusters if c.identity_cluster_key == "tok_id_cluster_0011223344556677"), None
+    )
     assert solo_cluster is None
 
 

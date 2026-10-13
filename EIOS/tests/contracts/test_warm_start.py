@@ -1,15 +1,15 @@
 """Tests for Parquet Warm-Start Cold-Boot Engine and /readyz probe (US3)."""
 
-from pathlib import Path
-import tempfile
 import time
+from pathlib import Path
+
 import duckdb
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
 from eios.ingestion.hot_state import HotStateEngine
-from eios.ingestion.warm_start import ParquetWarmStartLoader
 from eios.ingestion.router import create_ingestion_app
+from eios.ingestion.warm_start import ParquetWarmStartLoader
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def synthetic_parquet_dir(tmp_path: Path) -> Path:
     data_dir = tmp_path / "raw" / "trading_activity"
     data_dir.mkdir(parents=True, exist_ok=True)
     file_path = data_dir / "snapshot_001.parquet"
-    
+
     con = duckdb.connect()
     con.execute(f"""
         COPY (
@@ -41,7 +41,7 @@ def test_warm_start_loads_100k_records_under_3_seconds(synthetic_parquet_dir: Pa
     """ADR-012 benchmark: cold boot must rehydrate 100,000 rows in < 3.0s."""
     engine = HotStateEngine()
     loader = ParquetWarmStartLoader(engine=engine, base_dir=synthetic_parquet_dir)
-    
+
     start = time.perf_counter()
     summary = loader.load_all()
     duration = time.perf_counter() - start
@@ -49,7 +49,7 @@ def test_warm_start_loads_100k_records_under_3_seconds(synthetic_parquet_dir: Pa
     assert duration < 3.0  # ADR-012 target
     assert summary.total_rows_loaded >= 100000
     assert summary.load_duration_ms < 3000.0
-    
+
     # Verify DuckDB has the records
     cursor = engine.get_cursor()
     count = cursor.execute("SELECT count(*) FROM trading_activity").fetchone()[0]
@@ -62,7 +62,7 @@ def test_readyz_probe_lifecycle(synthetic_parquet_dir: Path):
     app = create_ingestion_app()
     # Explicitly set app ready state to False
     app.state.is_ready = False
-    
+
     client = TestClient(app)
     resp = client.get("/readyz")
     assert resp.status_code == 503

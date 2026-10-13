@@ -1,6 +1,7 @@
 """Unit tests for EIOS Layer 1 Base Contracts and Enums."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 import pytest
 from pydantic import ValidationError
 
@@ -55,7 +56,7 @@ def test_valid_data_product_event_parsing():
     assert str(event.event_id) == "11111111-2222-3333-4444-555555555555"
     assert event.product_name == DataProductEnum.TRADING_ACTIVITY
     assert event.tenant_id == TenantEnum.DERIV_MFSA
-    assert event.event_timestamp == datetime(2026, 10, 4, 12, 0, 0, tzinfo=timezone.utc)
+    assert event.event_timestamp == datetime(2026, 10, 4, 12, 0, 0, tzinfo=UTC)
     assert event.payload["trade_id"] == "T001"
 
 

@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-import pytest
+from datetime import UTC, datetime, timedelta
 
 from eios.observability.alerts import (
     SREAlertEngine,
-    SREAlertEvent,
     SREAlertSeverity,
     alert_to_contract_dict,
 )
@@ -20,7 +18,7 @@ def test_page_sev1_fires_with_dual_window_confirmation():
     """Verify Page SEV-1 fires when BOTH long window (1h) and short window (5m) burn >= 14.4x."""
     slo_engine = SLOMonitoringEngine()
     alert_engine = SREAlertEngine(slo_engine=slo_engine)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Ingest sustained rapid burn for INGESTION_FRESHNESS (target 99.0%, allowed error = 1.0%)
     # Burn rate 14.4x means actual error rate = 14.4 * 1% = 14.4%.
@@ -34,7 +32,8 @@ def test_page_sev1_fires_with_dual_window_confirmation():
             is_compliant=is_compliant,
             correlation_id=f"alert-sustained-{i}",
             service_name="ingestion_pipeline",
-            timestamp=now - timedelta(seconds=i * 15),  # within past 50 minutes, and also within past 5 minutes
+            timestamp=now
+            - timedelta(seconds=i * 15),  # within past 50 minutes, and also within past 5 minutes
         )
 
     alerts = alert_engine.evaluate_alerts(reference_time=now)
@@ -50,7 +49,7 @@ def test_page_sev1_suppressed_if_short_window_healthy():
     """Verify Page SEV-1 is SUPPRESSED if 1h window has errors but 5m short window is healthy."""
     slo_engine = SLOMonitoringEngine()
     alert_engine = SREAlertEngine(slo_engine=slo_engine)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Ingest heavy errors between 40 and 20 minutes ago
     for i in range(100):
@@ -85,7 +84,7 @@ def test_page_sev1_suppressed_if_short_window_healthy():
 def test_immediate_sev1_on_ledger_mismatch():
     """Verify immediate Page SEV-1 alert on cryptographic ledger sequence mismatch."""
     alert_engine = SREAlertEngine()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     alert = alert_engine.emit_ledger_integrity_alert(
         service_name="ledger_sequencer",
@@ -105,7 +104,7 @@ def test_immediate_sev1_on_ledger_mismatch():
 def test_sev2_on_dlq_backlog_breach():
     """Verify Ticket SEV-2 alert when Dead-Letter Queue exceeds threshold."""
     alert_engine = SREAlertEngine()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     alert = alert_engine.emit_dlq_backlog_alert(
         service_name="omcp_router",
@@ -122,7 +121,7 @@ def test_sev2_on_dlq_backlog_breach():
 def test_alert_contract_schema_compliance():
     """Verify SREAlertEvent payload conforms to sre-alert-event.schema.json."""
     alert_engine = SREAlertEngine()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     alert = alert_engine.emit_dlq_backlog_alert(
         service_name="omcp_router",
@@ -139,7 +138,7 @@ def test_ticket_sev3_burn_rate_and_resolve():
     """Verify Ticket SEV-3 policy triggers on 1.0x burn over 24h + 2h and can be resolved."""
     slo_engine = SLOMonitoringEngine()
     alert_engine = SREAlertEngine(slo_engine=slo_engine)
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Ingest baseline 1.5x burn for AGENT_TURN_FIRST_TOKEN (target 99.0%, allowed failure 1.0%)
     # 1.5% failures across 24h and 2h
@@ -168,4 +167,3 @@ def test_ticket_sev3_burn_rate_and_resolve():
     alert_engine.resolve_alert(alert_id)
     active_after = alert_engine.get_active_alerts()
     assert not any(a.alert_id == alert_id for a in active_after)
-

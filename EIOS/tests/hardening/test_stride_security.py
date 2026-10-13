@@ -1,8 +1,5 @@
 """Tests for User Story 4: STRIDE Threat Model Mitigations & Red-Line Security Verification."""
 
-from datetime import UTC, datetime
-import pytest
-
 from eios.hardening.models import SecurityThreatDrillResult, STRIDECategory
 from eios.hardening.schemas import validate_contract
 from eios.hardening.stride import STRIDESecuritySuite
@@ -18,7 +15,10 @@ def test_prompt_injection_neutralization():
     result = suite.test_prompt_injection(adversarial_prompt)
 
     assert isinstance(result, SecurityThreatDrillResult)
-    assert result.stride_category in (STRIDECategory.TAMPERING, STRIDECategory.ELEVATION_OF_PRIVILEGE)
+    assert result.stride_category in (
+        STRIDECategory.TAMPERING,
+        STRIDECategory.ELEVATION_OF_PRIVILEGE,
+    )
     assert result.bypass_attempted is True
     assert result.attack_blocked is True
     assert result.mitigation_verified == "PromptSanitizer"

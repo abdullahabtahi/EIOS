@@ -1,7 +1,7 @@
 """Unit tests for Systemic Regional & Cohort Risk Detection (T023 / US4)."""
 
-import pytest
 from datetime import date
+
 from eios.churn.cohort_detector import CohortRiskDetector
 from eios.churn.pipeline import ChurnRadarPipeline
 from eios.ingestion.hot_state import HotStateEngine

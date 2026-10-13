@@ -2,7 +2,6 @@
 
 import json
 from pathlib import Path
-import pytest
 
 from eios.contracts.base import DataProductEnum
 from eios.ingestion.exporter import ParquetLakehouseExporter
@@ -31,7 +30,7 @@ def test_exporter_writes_parquet_and_lineage_manifest(tmp_path: Path):
     assert export_res.lineage_file.exists()
 
     # Verify _lineage.json contents
-    with open(export_res.lineage_file, "r", encoding="utf-8") as f:
+    with open(export_res.lineage_file, encoding="utf-8") as f:
         lineage = json.load(f)
 
     assert lineage["product_name"] == "trading_activity"

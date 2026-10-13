@@ -1,7 +1,7 @@
 """Tests for EIOS Live Backend API Routes and Native SSE Streaming (F019 Phase 2)."""
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
 from eios.api.app import app
 
@@ -124,4 +124,3 @@ def test_partner_ontology_and_genai_battlecards(client):
     assert sim_data["evaluator_model"] is not None
     assert sim_data["projected_retention_lift_pct"] == 82.0
     assert sim_data["causal_refuter_p_value"] > 0.05
-

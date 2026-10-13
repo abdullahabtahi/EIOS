@@ -8,10 +8,8 @@ Demonstrates:
 5. Doubly Robust AIPW causal estimation recovering unbiased treatment effect
 """
 
-from datetime import UTC, datetime
-import json
-from pathlib import Path
 import sys
+from pathlib import Path
 
 # Ensure src is on python path
 src_dir = Path(__file__).resolve().parent.parent / "src"
@@ -20,10 +18,10 @@ if str(src_dir) not in sys.path:
 
 import numpy as np
 
-from eios.churn.flywheel import AIPWCausalEstimator, PlaybookRecalibrator
+from eios.churn.flywheel import PlaybookRecalibrator
 from eios.churn.models import ActionIntentProposal, DecisionOutcomeRecord
 from eios.ingestion.hot_state import HotStateEngine
-from eios.ontology.actions.intent_hub import ActionIntentHub, ActionStatus
+from eios.ontology.actions.intent_hub import ActionIntentHub
 from eios.ontology.actions.signer import KMSActionSigner
 
 
@@ -34,7 +32,9 @@ def run_retention_intent_demo() -> None:
 
     # 1. Initialize Hot State & Governance Hub
     engine = HotStateEngine(":memory:")
-    signer = KMSActionSigner(key_id="projects/feios-prod/locations/global/keyRings/eios/cryptoKeys/action-signer-p256")
+    signer = KMSActionSigner(
+        key_id="projects/feios-prod/locations/global/keyRings/eios/cryptoKeys/action-signer-p256"
+    )
     hub = ActionIntentHub(signer=signer)
 
     print("\n[1] Proposing Governed Action Intent for Persona: P-CHURN-DRIFT")
@@ -101,30 +101,34 @@ def run_retention_intent_demo() -> None:
         w_vip = int(np.random.rand() < 0.7)
         # Treatment provides +8000 revenue
         rev_vip = 30000.0 + (8000.0 if w_vip == 1 else 0.0) + np.random.normal(0, 500)
-        recalibrator.record_outcome(DecisionOutcomeRecord(
-            outcome_id=f"OUT-VIP-{i}",
-            intent_id=f"INT-VIP-{i}",
-            partner_id=f"P-VIP-{i}",
-            playbook_id="VIP_Master_Retention",
-            treatment_assigned=w_vip,
-            propensity_score=0.7,
-            observed_retained_revenue_60d=rev_vip,
-            actual_churn_60d=False,
-        ))
+        recalibrator.record_outcome(
+            DecisionOutcomeRecord(
+                outcome_id=f"OUT-VIP-{i}",
+                intent_id=f"INT-VIP-{i}",
+                partner_id=f"P-VIP-{i}",
+                playbook_id="VIP_Master_Retention",
+                treatment_assigned=w_vip,
+                propensity_score=0.7,
+                observed_retained_revenue_60d=rev_vip,
+                actual_churn_60d=False,
+            )
+        )
 
         # Standard Email Outreach Playbook (ineffective)
         w_std = int(np.random.rand() < 0.4)
         rev_std = 15000.0 + (-500.0 if w_std == 1 else 0.0) + np.random.normal(0, 500)
-        recalibrator.record_outcome(DecisionOutcomeRecord(
-            outcome_id=f"OUT-STD-{i}",
-            intent_id=f"INT-STD-{i}",
-            partner_id=f"P-STD-{i}",
-            playbook_id="Standard_Email_Outreach",
-            treatment_assigned=w_std,
-            propensity_score=0.4,
-            observed_retained_revenue_60d=rev_std,
-            actual_churn_60d=True if w_std == 1 else False,
-        ))
+        recalibrator.record_outcome(
+            DecisionOutcomeRecord(
+                outcome_id=f"OUT-STD-{i}",
+                intent_id=f"INT-STD-{i}",
+                partner_id=f"P-STD-{i}",
+                playbook_id="Standard_Email_Outreach",
+                treatment_assigned=w_std,
+                propensity_score=0.4,
+                observed_retained_revenue_60d=rev_std,
+                actual_churn_60d=True if w_std == 1 else False,
+            )
+        )
 
     recalibrated_weights = recalibrator.recalibrate_playbook_weights()
     print("\n  Updated Playbook Selection Probabilities (AIPW Causal Uplift):")

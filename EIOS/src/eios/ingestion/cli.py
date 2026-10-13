@@ -1,11 +1,8 @@
 import argparse
-from datetime import datetime, timezone
-import json
-import os
-from pathlib import Path
 import sys
 import tempfile
 import time
+from pathlib import Path
 
 # Ensure src/ is on sys.path
 _src_dir = Path(__file__).resolve().parents[2]
@@ -16,8 +13,8 @@ import duckdb
 
 from eios.contracts.base import DataProductEnum
 from eios.ingestion.hot_state import HotStateEngine
-from eios.ingestion.warm_start import ParquetWarmStartLoader
 from eios.ingestion.validator import ContractValidator
+from eios.ingestion.warm_start import ParquetWarmStartLoader
 
 
 def benchmark_warm_start(record_count: int = 100000) -> None:
@@ -46,12 +43,14 @@ def benchmark_warm_start(record_count: int = 100000) -> None:
 
         engine = HotStateEngine()
         loader = ParquetWarmStartLoader(engine=engine, base_dir=tmpdir)
-        
+
         start = time.perf_counter()
         summary = loader.load_all()
         elapsed_s = time.perf_counter() - start
 
-        print(f"[+] Warm Start Completed: {summary.total_rows_loaded:,} rows loaded in {elapsed_s:.4f}s ({summary.load_duration_ms:.2f}ms)")
+        print(
+            f"[+] Warm Start Completed: {summary.total_rows_loaded:,} rows loaded in {elapsed_s:.4f}s ({summary.load_duration_ms:.2f}ms)"
+        )
         if elapsed_s < 3.0:
             print("[✓] PASS: Met ADR-012 cold-boot SLA (< 3.0s)")
         else:
@@ -61,7 +60,7 @@ def benchmark_warm_start(record_count: int = 100000) -> None:
 def verify_contracts() -> None:
     """Validate all 14 data product schemas against the validator catalog."""
     validator = ContractValidator()
-    print(f"[*] Verifying contract validator catalog across all 14 Data Products...")
+    print("[*] Verifying contract validator catalog across all 14 Data Products...")
     for product in DataProductEnum:
         assert product in validator.supported_products
         print(f"  [✓] {product.value:<30} -> Registered and active")
@@ -71,7 +70,9 @@ def verify_contracts() -> None:
 def run_gateway(host: str = "0.0.0.0", port: int = 8000) -> None:
     """Start uvicorn gateway server."""
     import uvicorn
+
     from eios.ingestion.router import create_ingestion_app
+
     app = create_ingestion_app()
     uvicorn.run(app, host=host, port=port)
 
@@ -81,8 +82,12 @@ def main() -> None:
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     # benchmark-warm-start
-    bench_parser = subparsers.add_parser("benchmark-warm-start", help="Benchmark Parquet cold-boot rehydration")
-    bench_parser.add_argument("--records", type=int, default=100000, help="Number of synthetic records")
+    bench_parser = subparsers.add_parser(
+        "benchmark-warm-start", help="Benchmark Parquet cold-boot rehydration"
+    )
+    bench_parser.add_argument(
+        "--records", type=int, default=100000, help="Number of synthetic records"
+    )
 
     # verify-contracts
     subparsers.add_parser("verify-contracts", help="Verify all 14 data product contracts")

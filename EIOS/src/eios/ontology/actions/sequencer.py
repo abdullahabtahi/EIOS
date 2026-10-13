@@ -1,8 +1,8 @@
 """Upstream Atomic Monotonic Sequencer and Cryptographic Hash Chain Ledger (ADR-017 / US1)."""
 
-from datetime import UTC, datetime
 import hashlib
 import json
+from datetime import UTC, datetime
 from typing import Any
 
 from eios.ingestion.hot_state import HotStateEngine
@@ -83,7 +83,7 @@ class LedgerSequencer:
 
     def compute_entry_hash(self, prev_hash: str, ledger_seq: int, payload_digest: str) -> str:
         """Compute cryptographic hash link H_i = SHA-256(prev_hash || ledger_seq || payload_digest)."""
-        chain_bytes = f"{prev_hash}{ledger_seq}{payload_digest}".encode("utf-8")
+        chain_bytes = f"{prev_hash}{ledger_seq}{payload_digest}".encode()
         return hashlib.sha256(chain_bytes).hexdigest()
 
     def record_event(

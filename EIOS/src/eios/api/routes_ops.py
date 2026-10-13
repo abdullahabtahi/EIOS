@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
 from eios.cockpit.operations import DataPlatformOperationsService
@@ -18,7 +18,7 @@ DLQ_PATH = "/api/v1/ops/dlq"
 DLQ_REDRIVE_PATH = "/api/v1/ops/dlq/redrive"
 
 # Mock DLQ storage
-_DLQ_STORE: List[Dict[str, Any]] = [
+_DLQ_STORE: list[dict[str, Any]] = [
     {
         "dlq_id": "dlq_rec_90112",
         "source_stream": "kafka.raw.trade_events.v2",
@@ -53,11 +53,13 @@ _DLQ_STORE: List[Dict[str, Any]] = [
 
 class RedriveRequest(BaseModel):
     dlq_id: str = Field(..., description="Target quarantined DLQ record ID")
-    sanitized_payload: Optional[Dict[str, Any]] = Field(None, description="Optional corrected payload fields")
+    sanitized_payload: dict[str, Any] | None = Field(
+        None, description="Optional corrected payload fields"
+    )
 
 
 @router.get(TELEMETRY_PATH)
-def get_ops_telemetry() -> Dict[str, Any]:
+def get_ops_telemetry() -> dict[str, Any]:
     """Returns operational health, SLAs, and active alerts across all 6 core data products."""
     products = [p.to_contract_dict() for p in ops_svc.get_data_products()]
     alerts = ops_svc.get_contract_breach_alerts()
@@ -75,7 +77,7 @@ def get_ops_telemetry() -> Dict[str, Any]:
 
 
 @router.get(DLQ_PATH)
-def get_dlq_records() -> Dict[str, Any]:
+def get_dlq_records() -> dict[str, Any]:
     """Returns quarantined Dead Letter Queue records for operator inspection."""
     return {
         "as_of": datetime.now(UTC).isoformat(),
@@ -85,7 +87,7 @@ def get_dlq_records() -> Dict[str, Any]:
 
 
 @router.post(DLQ_REDRIVE_PATH)
-def redrive_dlq_record(req: RedriveRequest) -> Dict[str, Any]:
+def redrive_dlq_record(req: RedriveRequest) -> dict[str, Any]:
     """Redrives quarantined DLQ record back into live processing pipeline after schema repair."""
     target = next((r for r in _DLQ_STORE if r["dlq_id"] == req.dlq_id), None)
     if not target:

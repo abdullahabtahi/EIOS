@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 from eios.foundry.contracts import ContractValidator, OperationalMetricRecord
 from eios.foundry.rng import RNGManager
 
@@ -18,10 +19,10 @@ class OperationalDataGenerator:
         self._gen = rng.get_generator("operational_metrics")
         self._validator = ContractValidator(OperationalMetricRecord)
 
-    def generate_metrics(self, hours: int = 48) -> List[Dict[str, Any]]:
+    def generate_metrics(self, hours: int = 48) -> list[dict[str, Any]]:
         """Generates validated hourly operational telemetry containing 1 incident shock."""
-        records: List[Dict[str, Any]] = []
-        base_dt = datetime(2025, 3, 10, 0, 0, 0, tzinfo=timezone.utc)
+        records: list[dict[str, Any]] = []
+        base_dt = datetime(2025, 3, 10, 0, 0, 0, tzinfo=UTC)
 
         # Planted shock between hour 20 and 24
         shock_start_hour = 20

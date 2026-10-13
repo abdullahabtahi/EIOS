@@ -6,7 +6,6 @@ Authoritative References:
 """
 
 from datetime import datetime, timedelta
-import pytest
 
 from eios.fraud.emerging_patterns import EmergingPatternMiner, TemporalDriftAnalyzer
 
@@ -35,22 +34,26 @@ def test_temporal_drift_analyzer_flags_abrupt_partner_behavioral_shift() -> None
     weekly_history = []
     base_date = datetime(2026, 8, 1)
     for w in range(8):
-        weekly_history.append({
-            "week_start": base_date + timedelta(weeks=w),
-            "referred_count": 5,
-            "avg_lot_size": 1.2,
-            "micro_trade_pct": 5.0,
-            "withdrawal_72h_pct": 2.0,
-        })
+        weekly_history.append(
+            {
+                "week_start": base_date + timedelta(weeks=w),
+                "referred_count": 5,
+                "avg_lot_size": 1.2,
+                "micro_trade_pct": 5.0,
+                "withdrawal_72h_pct": 2.0,
+            }
+        )
     # Weeks 9 and 10: abrupt shift
     for w in range(8, 10):
-        weekly_history.append({
-            "week_start": base_date + timedelta(weeks=w),
-            "referred_count": 65,
-            "avg_lot_size": 0.01,
-            "micro_trade_pct": 95.0,
-            "withdrawal_72h_pct": 88.0,
-        })
+        weekly_history.append(
+            {
+                "week_start": base_date + timedelta(weeks=w),
+                "referred_count": 65,
+                "avg_lot_size": 0.01,
+                "micro_trade_pct": 95.0,
+                "withdrawal_72h_pct": 88.0,
+            }
+        )
 
     analyzer = TemporalDriftAnalyzer()
     drift = analyzer.detect_behavioral_shift("P-SHIFTING-01", weekly_history)
@@ -58,4 +61,7 @@ def test_temporal_drift_analyzer_flags_abrupt_partner_behavioral_shift() -> None
     assert drift.partner_id == "P-SHIFTING-01"
     assert drift.shift_detected is True
     assert drift.shift_magnitude >= 0.75
-    assert "pre-fraud signature" in drift.alert_message.lower() or "behavior shift" in drift.alert_message.lower()
+    assert (
+        "pre-fraud signature" in drift.alert_message.lower()
+        or "behavior shift" in drift.alert_message.lower()
+    )

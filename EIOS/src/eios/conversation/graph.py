@@ -1,26 +1,25 @@
 """LangGraph Supervisor Pattern and Action Execution Sink (US5, FR-021)."""
 
-from typing import Annotated, Any, TypedDict
 import operator
+from typing import Annotated, Any, TypedDict
 
-from langgraph.graph import StateGraph, END
-from langchain_core.messages import BaseMessage, AIMessage
+from langchain_core.messages import AIMessage, BaseMessage
+from langgraph.graph import END, StateGraph
 
-from eios.llm_gateway.gateway import Gateway
-from eios.llm_gateway.models import GatewayRequest
-from eios.ontology.auditor.gate import MetricAuditorGate
 from eios.conversation.auditor_bridge import ConversationAuditorBridge
-from eios.conversation.specialists.synthesis import SynthesisSpecialist
+from eios.conversation.memory import ConversationMemoryManager
 from eios.conversation.specialists.aml import SentinelAMLSpecialist
 from eios.conversation.specialists.churn import ChurnRadarSpecialist
 from eios.conversation.specialists.fraud import PartnerFraudSpecialist
 from eios.conversation.specialists.governance import GovernanceAuditorSpecialist
-from eios.conversation.models import RouteDecision, SpecialistDomain
-from eios.conversation.memory import ConversationMemoryManager
+from eios.llm_gateway.gateway import Gateway
+from eios.llm_gateway.models import GatewayRequest
+from eios.ontology.auditor.gate import MetricAuditorGate
 
 
 class BlackboardState(TypedDict):
     """LangGraph shared state matching the Blackboard topology."""
+
     messages: Annotated[list[BaseMessage], operator.add]
     next_agent: str
     reflection_cycles: int
@@ -31,17 +30,17 @@ class BlackboardState(TypedDict):
 
 class ActionExecutionSink:
     """Stages non-autonomous recommendation cards with zero direct database write execution."""
-    
+
     def __init__(self) -> None:
         self.staged_cards: list[dict[str, Any]] = []
-        
+
     def stage_action(self, action_type: str, payload: dict[str, Any]) -> dict[str, Any]:
         """Stage an action for human review instead of executing it directly."""
         card = {
             "type": "RecommendationCard",
             "action": action_type,
             "payload": payload,
-            "status": "STAGED_FOR_REVIEW"
+            "status": "STAGED_FOR_REVIEW",
         }
         self.staged_cards.append(card)
         return card
@@ -49,32 +48,32 @@ class ActionExecutionSink:
 
 def create_conversational_graph(gateway: Gateway, auditor: MetricAuditorGate) -> StateGraph:
     """Build the conversational multi-agent mesh using LangGraph."""
-    
+
     action_sink = ActionExecutionSink()
     bridge = ConversationAuditorBridge(auditor)
     memory_manager = ConversationMemoryManager()
-    
+
     def supervisor_node(state: BlackboardState) -> dict[str, Any]:
         """Supervisory Router: decides next agent or finishes."""
         if state.get("reflection_cycles", 0) >= 3:
             return {"next_agent": "FINISH"}
-            
+
         # T024: Statutory compliance arbitration
         if state.get("compliance_hold", False) and state.get("staged_actions", []):
             return {
                 "next_agent": "FINISH",
-                "final_response": "Action blocked due to active AML/Sanctions compliance hold."
+                "final_response": "Action blocked due to active AML/Sanctions compliance hold.",
             }
-            
+
         # Compact context
         compacted = memory_manager.compact_context(state["messages"])
         last_msg = compacted[-1]
-        
+
         # Resolve pronominal entities based on anchors (mocked)
         anchors = state.get("entity_anchors", {})
         query = memory_manager.resolve_pronominal_entities(str(last_msg.content), anchors)
         text = query.lower()
-        
+
         # Simple fallback routing logic for demonstration
         if "forecast" in text or "synthesis" in text:
             return {"next_agent": "synthesis"}
@@ -88,7 +87,7 @@ def create_conversational_graph(gateway: Gateway, auditor: MetricAuditorGate) ->
             return {"next_agent": "governance"}
         else:
             return {"next_agent": "FINISH"}
-            
+
     def synthesis_node(state: BlackboardState) -> dict[str, Any]:
         """Synthesis Specialist node generating response via Gateway."""
         req = GatewayRequest(
@@ -98,25 +97,25 @@ def create_conversational_graph(gateway: Gateway, auditor: MetricAuditorGate) ->
             correlation_id="corr_synthesis_conv",
             caller="conversation.synthesis",
         )
-        
+
         # Wrap calls in Gateway.complete
         try:
             resp = gateway.complete(req)
             content = resp.content or "Synthesis response generated."
         except Exception:
             content = "Synthesis fallback response."
-            
+
         return {
             "messages": [AIMessage(content=content)],
             "reflection_cycles": state.get("reflection_cycles", 0) + 1,
-            "next_agent": "supervisor"
+            "next_agent": "supervisor",
         }
-        
+
     def aml_node(state: BlackboardState) -> dict[str, Any]:
         """AML Specialist node."""
         agent = SentinelAMLSpecialist()
         return agent.invoke(state)
-        
+
     def churn_node(state: BlackboardState) -> dict[str, Any]:
         """Churn Specialist node."""
         agent = ChurnRadarSpecialist()
@@ -131,21 +130,20 @@ def create_conversational_graph(gateway: Gateway, auditor: MetricAuditorGate) ->
         """Governance Specialist node."""
         agent = GovernanceAuditorSpecialist(omcp_server=state.get("omcp_server"))
         return agent.invoke(state)
-        
+
     def egress_firewall(state: BlackboardState) -> dict[str, Any]:
         """Final output scanner via MetricAuditorGate (Principle I)."""
         last_msg = state["messages"][-1]
         text = str(last_msg.content)
-        
+
         safe_text = bridge.scan_egress_response(
-            response_text=text,
-            evidence_ledger=state.get("extracted_evidence", [])
+            response_text=text, evidence_ledger=state.get("extracted_evidence", [])
         )
-            
+
         return {"final_response": safe_text}
-        
+
     workflow = StateGraph(BlackboardState)
-    
+
     workflow.add_node("supervisor", supervisor_node)
     workflow.add_node("synthesis", synthesis_node)
     workflow.add_node("aml", aml_node)
@@ -153,14 +151,14 @@ def create_conversational_graph(gateway: Gateway, auditor: MetricAuditorGate) ->
     workflow.add_node("fraud", fraud_node)
     workflow.add_node("governance", governance_node)
     workflow.add_node("egress", egress_firewall)
-    
+
     workflow.set_entry_point("supervisor")
-    
+
     def route(state: BlackboardState) -> str:
         if state["next_agent"] == "FINISH":
             return "egress"
         return state["next_agent"]
-        
+
     workflow.add_conditional_edges(
         "supervisor",
         route,
@@ -170,15 +168,15 @@ def create_conversational_graph(gateway: Gateway, auditor: MetricAuditorGate) ->
             "churn": "churn",
             "fraud": "fraud",
             "governance": "governance",
-            "egress": "egress"
-        }
+            "egress": "egress",
+        },
     )
-    
+
     workflow.add_edge("synthesis", "supervisor")
     workflow.add_edge("aml", "supervisor")
     workflow.add_edge("churn", "supervisor")
     workflow.add_edge("fraud", "supervisor")
     workflow.add_edge("governance", "supervisor")
     workflow.add_edge("egress", END)
-    
+
     return workflow.compile()

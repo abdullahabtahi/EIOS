@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
-import re
-from typing import Any, Dict, Literal
-from langgraph.graph import StateGraph, END
+from typing import Any
+
+from langgraph.graph import END, StateGraph
 
 from eios.conversation.models import BlackboardState, SpecialistRoute
 from eios.conversation.specialists.agents import ALL_SPECIALISTS
@@ -24,15 +24,24 @@ class ConversationalSupervisor:
         clean_q = query.lower()
 
         # 1. AML / Mule check
-        if any(w in clean_q for w in ["aml", "mule", "cr84920", "sar", "structuring", "discrepancy multiplier"]):
+        if any(
+            w in clean_q
+            for w in ["aml", "mule", "cr84920", "sar", "structuring", "discrepancy multiplier"]
+        ):
             return SpecialistRoute.AML_INVESTIGATOR
 
         # 2. Compliance / Regulatory / WORM audit
-        if any(w in clean_q for w in ["compliance", "audit proof", "worm", "fincen", "statute", "31 cfr", "fatf"]):
+        if any(
+            w in clean_q
+            for w in ["compliance", "audit proof", "worm", "fincen", "statute", "31 cfr", "fatf"]
+        ):
             return SpecialistRoute.GOVERNANCE_COMPLIANCE
 
         # 3. Partner Churn / Retention
-        if any(w in clean_q for w in ["churn", "retention", "ap-1029", "p-882", "spread decay", "rebate"]):
+        if any(
+            w in clean_q
+            for w in ["churn", "retention", "ap-1029", "p-882", "spread decay", "rebate"]
+        ):
             return SpecialistRoute.PARTNER_RETENTION
 
         # 4. Partner Fraud / Collusion
@@ -44,7 +53,7 @@ class ConversationalSupervisor:
 
     def evaluate_priority_transition(self, state: BlackboardState) -> str:
         """Evaluates Compliance Priority Hierarchy (Principle VII).
-        
+
         If an active AML or sanctions compliance hold is detected, commercial actions
         are preemptively redirected to governance and compliance review.
         """
@@ -63,7 +72,7 @@ class ConversationalSupervisor:
         builder = StateGraph(BlackboardState)
 
         # Supervisor node
-        def supervisor_node(state: BlackboardState) -> Dict[str, Any]:
+        def supervisor_node(state: BlackboardState) -> dict[str, Any]:
             route = state.active_route
             agent_map = {
                 SpecialistRoute.EXECUTIVE_SYNTHESIS: "executive_synthesis",
@@ -81,13 +90,16 @@ class ConversationalSupervisor:
 
         # Specialist execution nodes
         for name, spec in self.specialists.items():
+
             def make_node(agent_name: str):
-                def node_fn(state: BlackboardState) -> Dict[str, Any]:
+                def node_fn(state: BlackboardState) -> dict[str, Any]:
                     return {"next_agent": "egress_synthesis"}
+
                 return node_fn
+
             builder.add_node(name, make_node(name))
 
-        def egress_node(state: BlackboardState) -> Dict[str, Any]:
+        def egress_node(state: BlackboardState) -> dict[str, Any]:
             return {"final_response": "Grounded synthesis complete"}
 
         builder.add_node("egress_synthesis", egress_node)

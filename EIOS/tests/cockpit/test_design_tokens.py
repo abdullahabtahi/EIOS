@@ -1,6 +1,5 @@
 """Tests for Institutional Light-Mode Design Token Registry (Palantir x QBDS)."""
 
-import pytest
 from eios.cockpit.tokens import (
     INSTITUTIONAL_LIGHT_TOKENS,
     calculate_contrast_ratio,

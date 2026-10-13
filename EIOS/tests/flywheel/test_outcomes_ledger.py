@@ -1,14 +1,15 @@
 """Tests for User Story 1: Multi-Horizon Decision Outcomes Ledger & Reconciliation."""
 
-from datetime import UTC, datetime, timedelta
 import threading
 import time
 import uuid
+from datetime import UTC, datetime
+
 import pytest
 
-from eios.flywheel.models import DecisionOutcomeRecord, MilestoneStatus
+from eios.flywheel.covariates import CovariateMatrixBuilder, clip_propensity_scores
 from eios.flywheel.ledger import DecisionOutcomesLedger, compute_record_lineage_hash
-from eios.flywheel.covariates import clip_propensity_scores, CovariateMatrixBuilder
+from eios.flywheel.models import DecisionOutcomeRecord, MilestoneStatus
 from eios.flywheel.schemas import validate_contract
 
 
@@ -171,7 +172,7 @@ def test_ledger_concurrency_and_performance():
     threads = []
     chunk_size = 250
     for i in range(0, records_to_add, chunk_size):
-        t = threading.Thread(target=worker, args=(records[i:i + chunk_size],))
+        t = threading.Thread(target=worker, args=(records[i : i + chunk_size],))
         threads.append(t)
         t.start()
 
@@ -193,10 +194,12 @@ def test_milestone_reconciliation_engine():
     ledger.append_decision(rec2)
 
     engine = MilestoneReconciliationEngine(ledger=ledger)
-    res = engine.batch_reconcile([
-        {"decision_id": rec1.decision_id, "actual_impact": 1200.0, "horizon": "30d"},
-        {"decision_id": rec2.decision_id, "actual_impact": 1900.0, "horizon": "30d"},
-    ])
+    res = engine.batch_reconcile(
+        [
+            {"decision_id": rec1.decision_id, "actual_impact": 1200.0, "horizon": "30d"},
+            {"decision_id": rec2.decision_id, "actual_impact": 1900.0, "horizon": "30d"},
+        ]
+    )
 
     assert res.reconciled_count == 2
     assert res.failed_count == 0

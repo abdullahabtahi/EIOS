@@ -5,7 +5,6 @@ from eios.ontology.actions.intent_hub import ActionIntentHub, ActionStatus
 from eios.ontology.actions.models import ExecutionReceipt, ExecutionStatus
 from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.sink import FaultMode, SimulatedWriteBackSink
-import pytest
 
 
 def test_simulated_sink_normal_execution_commits_action():

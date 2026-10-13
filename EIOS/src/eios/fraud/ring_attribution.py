@@ -6,8 +6,9 @@ Authoritative References:
 - specs/009-partner-fraud/research.md §2
 """
 
-from collections import deque
 import math
+from collections import deque
+
 import networkx as nx
 
 from eios.fraud.models import ReferralRingNode, RingAttribution
@@ -111,7 +112,9 @@ class ReferralRingAttributionEngine:
             attrs = self.node_attrs.get(curr_id, {})
             direct_clients = attrs.get("direct_referred_clients", 0)
             direct_comm = attrs.get("direct_commission_usd", 0.0)
-            graph_out_degree = self.g_down.out_degree(curr_id) if self.g_down.has_node(curr_id) else 0
+            graph_out_degree = (
+                self.g_down.out_degree(curr_id) if self.g_down.has_node(curr_id) else 0
+            )
             sub_count = max(graph_out_degree, attrs.get("sub_affiliate_count", 0))
 
             ring_nodes_map[curr_id] = ReferralRingNode(

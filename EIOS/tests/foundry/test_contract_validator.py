@@ -2,7 +2,8 @@
 
 import pytest
 from pydantic import BaseModel, Field
-from eios.foundry.contracts import ContractValidator, ContractValidationError
+
+from eios.foundry.contracts import ContractValidationError, ContractValidator
 
 
 class SampleClientRecord(BaseModel):
@@ -29,5 +30,5 @@ def test_contract_validator_failure_raises_contract_error() -> None:
     ]
     with pytest.raises(ContractValidationError) as exc_info:
         validator.validate_batch(records)
-    
+
     assert "kyc_level" in str(exc_info.value)

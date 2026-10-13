@@ -11,10 +11,10 @@ Applies degree-penalized hub suppression to filter legitimate public Wi-Fi and C
 preventing false syndicate mergers.
 """
 
-from datetime import datetime, timezone
 import math
 import uuid
-from typing import Any
+from datetime import UTC, datetime
+
 import networkx as nx
 import pandas as pd
 
@@ -53,7 +53,9 @@ class MuleRingDetector:
             is_shared_context = bool(row.get("is_shared_context", False))
 
             B.add_node(client_id, bipartite=0)
-            B.add_node(token_id, bipartite=1, edge_type=edge_type, is_shared_context=is_shared_context)
+            B.add_node(
+                token_id, bipartite=1, edge_type=edge_type, is_shared_context=is_shared_context
+            )
             B.add_edge(client_id, token_id, edge_type=edge_type)
 
         # 2. Hub Suppression
@@ -114,18 +116,24 @@ class MuleRingDetector:
                         shared_ips.add(t)
 
             cluster_size = len(member_ids)
-            is_syndicate = (cluster_size >= 3) and (len(shared_payments) > 0 or len(shared_devices) > 0)
+            is_syndicate = (cluster_size >= 3) and (
+                len(shared_payments) > 0 or len(shared_devices) > 0
+            )
 
             # Generate non-technical explanation
             parts = [f"Identified network of {cluster_size} linked accounts."]
             if shared_payments:
                 parts.append(f"Sharing {len(shared_payments)} verified payment method token(s).")
             if shared_devices:
-                parts.append(f"Sharing {len(shared_devices)} common hardware device fingerprint(s).")
+                parts.append(
+                    f"Sharing {len(shared_devices)} common hardware device fingerprint(s)."
+                )
             if shared_ips:
                 parts.append(f"Sharing {len(shared_ips)} private network connection(s).")
             if self.suppressed_hubs:
-                parts.append(f"Suppressed {len(self.suppressed_hubs)} high-degree public gateway(s) to avoid false merges.")
+                parts.append(
+                    f"Suppressed {len(self.suppressed_hubs)} high-degree public gateway(s) to avoid false merges."
+                )
 
             explanation = " ".join(parts)
 
@@ -138,7 +146,9 @@ class MuleRingDetector:
                     shared_ip_tokens=sorted(list(shared_ips)),
                     suppressed_hub_tokens=sorted(list(self.suppressed_hubs)),
                     cluster_size=cluster_size,
-                    total_volume_usd=round(cluster_size * 5200.0, 2),  # illustrative aggregate volume
+                    total_volume_usd=round(
+                        cluster_size * 5200.0, 2
+                    ),  # illustrative aggregate volume
                     is_syndicate=is_syndicate,
                     plain_language_explanation=explanation,
                 )
@@ -151,7 +161,7 @@ class MuleRingDetector:
         if not self.hot_state:
             return 0
         cursor = self.hot_state.get_cursor()
-        now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        now_str = datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
 
         count = 0
         for c in clusters:

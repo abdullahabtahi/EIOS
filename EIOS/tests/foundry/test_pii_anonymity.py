@@ -1,10 +1,8 @@
 """Tests for synthetic PII anonymity and real competitor name suppression (SC-003)."""
 
-import pytest
+from eios.foundry.generators.client import ClientDataGenerator
 from eios.foundry.rng import DeterministicRNG
 from eios.foundry.universe import GlobalEntityUniverse
-from eios.foundry.generators.client import ClientDataGenerator
-
 
 REAL_BROKER_BLACKLIST = [
     "etoro",

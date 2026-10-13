@@ -1,7 +1,6 @@
 """Unit tests for feature contribution calculations and citations across 5 signal families (T014)."""
 
 import pandas as pd
-import pytest
 
 from eios.churn.explainer import ChurnSignalExplainer
 from eios.churn.models import SignalFamily
@@ -11,20 +10,22 @@ def test_signal_contributions_all_families():
     """Verify that ChurnSignalExplainer calculates contributions with citations across all 5 families."""
     explainer = ChurnSignalExplainer()
 
-    row = pd.Series({
-        "partner_id": "P-CHURN-DRIFT",
-        "logins_recent": 12,
-        "logins_prior": 20,
-        "login_velocity_decay_3w": 0.40,
-        "negative_tickets": 2,
-        "sentiment_negative_ratio": 0.67,
-        "tenure_months": 18,
-        "tenure_months_log": 2.94,
-        "comm_recent": 36900.0,
-        "comm_prior": 45000.0,
-        "commission_velocity_30d": -0.18,
-        "competitor_mention_flag": 1.0,
-    })
+    row = pd.Series(
+        {
+            "partner_id": "P-CHURN-DRIFT",
+            "logins_recent": 12,
+            "logins_prior": 20,
+            "login_velocity_decay_3w": 0.40,
+            "negative_tickets": 2,
+            "sentiment_negative_ratio": 0.67,
+            "tenure_months": 18,
+            "tenure_months_log": 2.94,
+            "comm_recent": 36900.0,
+            "comm_prior": 45000.0,
+            "commission_velocity_30d": -0.18,
+            "competitor_mention_flag": 1.0,
+        }
+    )
 
     contributions = explainer.compute_contributions(row)
     assert len(contributions) == 5

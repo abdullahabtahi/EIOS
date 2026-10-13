@@ -1,8 +1,7 @@
 """Tests for bounded deliberation and reflection cycle cap (Principle VII, T028)."""
 
-import pytest
-from eios.conversation.supervisor import ConversationalSupervisor
 from eios.conversation.models import BlackboardState
+from eios.conversation.supervisor import ConversationalSupervisor
 
 
 def test_supervisor_halts_after_3_reflection_cycles():

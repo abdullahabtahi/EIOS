@@ -1,8 +1,9 @@
 """DuckDB in-process columnar Hot-State Engine for real-time analytical queries (US3)."""
 
-from datetime import datetime, timezone, timedelta
 import threading
+from datetime import UTC, datetime, timedelta
 from typing import Any
+
 import duckdb
 
 from eios.contracts.base import DataProductEnum
@@ -463,13 +464,20 @@ class HotStateEngine:
             cursor.execute(schema_sql)
         # Extend decision_outcomes_ledger with multi-horizon columns if missing
         try:
-            cursor.execute("ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS observed_retained_revenue_30d DOUBLE")
-            cursor.execute("ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS clawback_recovered_usd_90d DOUBLE")
-            cursor.execute("ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS reconciled_at TIMESTAMP")
-            cursor.execute("ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS causal_features JSON")
+            cursor.execute(
+                "ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS observed_retained_revenue_30d DOUBLE"
+            )
+            cursor.execute(
+                "ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS clawback_recovered_usd_90d DOUBLE"
+            )
+            cursor.execute(
+                "ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS reconciled_at TIMESTAMP"
+            )
+            cursor.execute(
+                "ALTER TABLE decision_outcomes_ledger ADD COLUMN IF NOT EXISTS causal_features JSON"
+            )
         except Exception:
             pass
-
 
     def get_cursor(self) -> duckdb.DuckDBPyConnection:
         """Provide a new cursor connection sharing the same database state."""
@@ -491,11 +499,13 @@ class HotStateEngine:
         query = f"INSERT INTO {table_name} ({col_names}) VALUES ({placeholders})"
         self._get_local_cursor().execute(query, values)
 
-    def evict_older_than(self, product: DataProductEnum, timestamp_col: str, hours: int = 24) -> int:
+    def evict_older_than(
+        self, product: DataProductEnum, timestamp_col: str, hours: int = 24
+    ) -> int:
         """Sliding-window eviction: remove records older than cutoff hours."""
         table_name = product.value if isinstance(product, DataProductEnum) else str(product)
-        cutoff_dt = datetime.now(timezone.utc) - timedelta(hours=hours)
-        
+        cutoff_dt = datetime.now(UTC) - timedelta(hours=hours)
+
         cursor = self._get_local_cursor()
         # Count rows to be deleted
         pre_count = cursor.execute(f"SELECT count(*) FROM {table_name}").fetchone()[0]
@@ -513,9 +523,9 @@ class HotStateEngine:
     ) -> dict[str, int]:
         """Prunes time-series tables older than max_age_days to enforce hot-state scale ceiling."""
         if as_of_ts is None:
-            as_of_ts = datetime.now(timezone.utc)
+            as_of_ts = datetime.now(UTC)
         elif as_of_ts.tzinfo is None:
-            as_of_ts = as_of_ts.replace(tzinfo=timezone.utc)
+            as_of_ts = as_of_ts.replace(tzinfo=UTC)
 
         cutoff_dt = as_of_ts - timedelta(days=max_age_days)
         cursor = self._get_local_cursor()

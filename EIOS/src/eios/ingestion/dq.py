@@ -1,9 +1,9 @@
 """Real-time Data Quality & Freshness SLA Monitoring Registry (US6)."""
 
+import threading
 from collections import defaultdict
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-import threading
+from datetime import UTC, datetime
 from typing import Any
 
 from eios.contracts.base import DataProductEnum
@@ -30,6 +30,7 @@ FRESHNESS_SLAS: dict[DataProductEnum, float] = {
 @dataclass
 class ProductDQStatus:
     """Operational DQ and Freshness SLA metrics for a single data product."""
+
     product_name: str
     freshness_lag_seconds: float
     freshness_sla_seconds: float
@@ -47,8 +48,12 @@ class DQMonitor:
         self._lock = threading.RLock()
         self._latest_timestamps: dict[DataProductEnum, datetime] = {}
         self._total_events: dict[DataProductEnum, int] = defaultdict(int)
-        self._field_counts: dict[DataProductEnum, dict[str, int]] = defaultdict(lambda: defaultdict(int))
-        self._null_counts: dict[DataProductEnum, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self._field_counts: dict[DataProductEnum, dict[str, int]] = defaultdict(
+            lambda: defaultdict(int)
+        )
+        self._null_counts: dict[DataProductEnum, dict[str, int]] = defaultdict(
+            lambda: defaultdict(int)
+        )
 
     def record_event(
         self,
@@ -87,7 +92,7 @@ class DQMonitor:
         health_status: ProductHealthStatus = ProductHealthStatus.HEALTHY,
     ) -> ProductDQStatus:
         """Calculate real-time SLA metrics for a product."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         sla_seconds = FRESHNESS_SLAS.get(product, 300.0)
 
         with self._lock:
@@ -98,7 +103,7 @@ class DQMonitor:
         if latest_ts is not None:
             # Ensure timezone awareness
             if latest_ts.tzinfo is None:
-                latest_ts = latest_ts.replace(tzinfo=timezone.utc)
+                latest_ts = latest_ts.replace(tzinfo=UTC)
             lag_sec = max(0.0, (now - latest_ts).total_seconds())
         else:
             lag_sec = 0.0
@@ -143,7 +148,9 @@ class DQMonitor:
             }
 
         return {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "overall_status": "DEGRADED" if any(s["health_status"] == "DEGRADED" for s in statuses.values()) else "HEALTHY",
+            "timestamp": datetime.now(UTC).isoformat(),
+            "overall_status": "DEGRADED"
+            if any(s["health_status"] == "DEGRADED" for s in statuses.values())
+            else "HEALTHY",
             "products": statuses,
         }

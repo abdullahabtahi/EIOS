@@ -7,8 +7,7 @@ Authoritative References:
 """
 
 import pandas as pd
-import pytest
-from eios.aml.models import MuleRingCluster
+
 from eios.aml.mule_ring_detector import MuleRingDetector
 from eios.ingestion.hot_state import HotStateEngine
 
@@ -46,7 +45,9 @@ def test_mule_ring_detector_recovers_ring_and_suppresses_hub(
     public_syndicates = [
         c for c in clusters if any(m.startswith("C-PUBLIC") for m in c.member_client_ids)
     ]
-    assert len(public_syndicates) == 0, "Public Wi-Fi accounts were falsely clustered as syndicates!"
+    assert len(public_syndicates) == 0, (
+        "Public Wi-Fi accounts were falsely clustered as syndicates!"
+    )
 
 
 def test_mule_ring_detector_generates_plain_language_explanation(

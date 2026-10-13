@@ -1,19 +1,20 @@
 """Tests for Phase 8: Strict JSON Schema Draft 2020-12 Contract Validation (T017)."""
 
 from datetime import UTC, datetime
-import pytest
+
 import jsonschema
+import pytest
 
 from eios.hardening.models import (
     ChaosExperimentRecord,
     ChaosExperimentStatus,
     DisasterRecoveryDrillReport,
     DRDrillStatus,
-    SoakTestTelemetryReport,
-    SecurityThreatDrillResult,
-    STRIDECategory,
     RunbookExecutionProof,
     RunbookResolutionStatus,
+    SecurityThreatDrillResult,
+    SoakTestTelemetryReport,
+    STRIDECategory,
 )
 from eios.hardening.schemas import (
     list_registered_schemas,

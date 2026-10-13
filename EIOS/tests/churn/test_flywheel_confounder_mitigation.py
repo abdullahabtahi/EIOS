@@ -1,9 +1,9 @@
 """Tests for AIPW confounder mitigation and manager override adjustment (FM-2 Countermeasure)."""
 
 from datetime import UTC, datetime
+
 import numpy as np
 import pandas as pd
-import duckdb
 
 from eios.churn.flywheel import AIPWCausalEstimator, PlaybookRecalibrator
 from eios.churn.models import DecisionOutcomeRecord
@@ -23,15 +23,19 @@ def test_aipw_estimator_handles_manager_override_covariates():
     propensity = np.clip(propensity, 0.05, 0.95)
     treatment = np.random.binomial(1, propensity, n)
     # True treatment effect is 2500.0, plus confounding from override
-    revenue = 8000.0 + 2500.0 * treatment + 3000.0 * override + 500.0 * proxy + np.random.normal(0, 50, n)
+    revenue = (
+        8000.0 + 2500.0 * treatment + 3000.0 * override + 500.0 * proxy + np.random.normal(0, 50, n)
+    )
 
-    df = pd.DataFrame({
-        "treatment_assigned": treatment,
-        "observed_retained_revenue_60d": revenue,
-        "propensity_score": propensity,
-        "manager_override_flag": override,
-        "unobserved_signal_proxy": proxy,
-    })
+    df = pd.DataFrame(
+        {
+            "treatment_assigned": treatment,
+            "observed_retained_revenue_60d": revenue,
+            "propensity_score": propensity,
+            "manager_override_flag": override,
+            "unobserved_signal_proxy": proxy,
+        }
+    )
 
     res = estimator.estimate_ate(df)
     assert res["sample_size"] == n

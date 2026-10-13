@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import pytest
 
 from eios.observability.llm_telemetry import (
-    AuditorGateTelemetry,
     AuditorVerdict,
-    LLMInvocationTelemetry,
     LLMTelemetryCollector,
     ModelPricingConfig,
     auditor_telemetry_to_contract_dict,

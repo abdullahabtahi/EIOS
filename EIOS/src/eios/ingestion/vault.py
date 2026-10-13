@@ -5,6 +5,7 @@ import hmac
 import os
 import threading
 from typing import Any
+
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 from eios.contracts.base import DataProductEnum
@@ -23,7 +24,7 @@ class TokenVault:
         # 256-bit AES key derived from salt for reversible store
         self._aes_key = hashlib.sha256(self.master_salt + b"::aes_key::").digest()
         self._aesgcm = AESGCM(self._aes_key)
-        
+
         # Token -> (nonce, ciphertext)
         self._vault_store: dict[str, tuple[bytes, bytes]] = {}
         self._lock = threading.Lock()
@@ -34,7 +35,7 @@ class TokenVault:
             return raw_value
 
         norm_val = raw_value.strip()
-        data = f"{field_context.lower()}:{norm_val}".encode("utf-8")
+        data = f"{field_context.lower()}:{norm_val}".encode()
         h = hmac.new(self.master_salt, data, hashlib.sha256)
         token = f"tok_client_{h.hexdigest()[:16]}"
 
@@ -56,7 +57,9 @@ class TokenVault:
         plaintext_bytes = self._aesgcm.decrypt(nonce, ciphertext, None)
         return plaintext_bytes.decode("utf-8")
 
-    def pseudonymize_payload(self, product_name: DataProductEnum, payload: dict[str, Any]) -> dict[str, Any]:
+    def pseudonymize_payload(
+        self, product_name: DataProductEnum, payload: dict[str, Any]
+    ) -> dict[str, Any]:
         """Transform all Marking P fields into surrogate tokens."""
         fields_to_tokenize = MARKING_P_FIELDS.get(product_name, set())
         if not fields_to_tokenize:

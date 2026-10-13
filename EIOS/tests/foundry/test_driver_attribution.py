@@ -1,7 +1,9 @@
 """Tests for ground-truth forecast driver attribution sum constraint (SC-008, FR-049)."""
 
 from pathlib import Path
+
 import pytest
+
 from eios.foundry.generators.causal_truth import CausalTruthGenerator
 from eios.foundry.rng import DeterministicRNG
 from eios.foundry.storage.eval_truth_store import EvalGroundTruthStore

@@ -2,19 +2,18 @@
 
 from __future__ import annotations
 
-import os
 from datetime import UTC, datetime
-from typing import Any, Dict
+from typing import Any
 
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from eios.api.routes_aml import router as aml_router
 from eios.api.routes_churn import router as churn_router
 from eios.api.routes_fraud import router as fraud_router
-from eios.api.routes_aml import router as aml_router
+from eios.api.routes_ops import router as ops_router
 from eios.api.routes_synthesis import router as synthesis_router
 from eios.api.routes_webhooks import router as webhooks_router
-from eios.api.routes_ops import router as ops_router
 from eios.cockpit.auth import cors_origins, current_operator
 from eios.cockpit.server import public_router as cockpit_public_router
 from eios.cockpit.server import router as cockpit_router
@@ -51,7 +50,7 @@ def create_app() -> FastAPI:
 
     @app.get(HEALTH_PATH)
     @app.get(API_HEALTH_PATH)
-    def health_check() -> Dict[str, Any]:
+    def health_check() -> dict[str, Any]:
         return {
             "status": "UP",
             "version": "0.19.0",

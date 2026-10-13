@@ -1,6 +1,5 @@
 """Tests for analyst label noise injection and ambiguity rate bounds (FR-050)."""
 
-import pytest
 from eios.foundry.noise.label_noise import inject_analyst_label_noise
 from eios.foundry.rng import DeterministicRNG
 
@@ -20,7 +19,8 @@ def test_analyst_label_noise_bounds():
 
     # Count flips
     flipped_count = sum(
-        1 for orig, noisy in zip(base_cases, noisy_cases)
+        1
+        for orig, noisy in zip(base_cases, noisy_cases)
         if orig["analyst_decision"] != noisy["analyst_decision"]
     )
     flip_rate = (flipped_count / len(base_cases)) * 100.0

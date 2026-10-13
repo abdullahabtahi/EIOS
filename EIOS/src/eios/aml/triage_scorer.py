@@ -10,16 +10,14 @@ Compresses ~2,000 raw surveillance alerts into <= 50 high-confidence investigati
 retaining >= 90% of true positive laundering events while filtering false alarms.
 """
 
-from datetime import datetime, timezone
 import math
-from typing import Any
+from datetime import datetime
+
 import numpy as np
 
 from eios.aml.models import (
     AMLAlert,
     AMLPriorityTier,
-    AMLTriggerType,
-    AMLTypology,
 )
 from eios.ingestion.hot_state import HotStateEngine
 
@@ -27,7 +25,9 @@ from eios.ingestion.hot_state import HotStateEngine
 class AlertTriageScorer:
     """Calibrated alert prioritization model and queue compressor."""
 
-    def __init__(self, hot_state: HotStateEngine | None = None, min_score_threshold: float = 0.60) -> None:
+    def __init__(
+        self, hot_state: HotStateEngine | None = None, min_score_threshold: float = 0.60
+    ) -> None:
         self.hot_state = hot_state
         self.min_score_threshold = min_score_threshold
 
@@ -124,7 +124,7 @@ class AlertTriageScorer:
     def score_queue(self, alerts: list[AMLAlert]) -> list[AMLAlert]:
         """Score all alerts and mark the top 50 prioritized cases while preserving input order."""
         scored = [self.score_single_alert(a) for a in alerts]
-        
+
         # Identify top 50 alert IDs by risk score
         sorted_indices = sorted(
             range(len(scored)),
@@ -170,7 +170,11 @@ class AlertTriageScorer:
         cursor = self.hot_state.get_cursor()
         inserted = 0
         for a in alerts:
-            ts_str = a.triggered_at.strftime("%Y-%m-%d %H:%M:%S") if isinstance(a.triggered_at, datetime) else str(a.triggered_at)
+            ts_str = (
+                a.triggered_at.strftime("%Y-%m-%d %H:%M:%S")
+                if isinstance(a.triggered_at, datetime)
+                else str(a.triggered_at)
+            )
             cursor.execute(
                 """
                 INSERT OR REPLACE INTO aml_alert_scores (
@@ -181,9 +185,13 @@ class AlertTriageScorer:
                 [
                     a.alert_id,
                     a.client_id,
-                    a.trigger_type.value if hasattr(a.trigger_type, "value") else str(a.trigger_type),
+                    a.trigger_type.value
+                    if hasattr(a.trigger_type, "value")
+                    else str(a.trigger_type),
                     a.risk_score,
-                    a.priority_tier.value if hasattr(a.priority_tier, "value") else str(a.priority_tier),
+                    a.priority_tier.value
+                    if hasattr(a.priority_tier, "value")
+                    else str(a.priority_tier),
                     a.typology.value if hasattr(a.typology, "value") else str(a.typology),
                     a.amount_usd,
                     a.is_triage_top50,

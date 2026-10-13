@@ -6,17 +6,18 @@ Usage:
 """
 
 import argparse
+
 from eios.ontology.actions.intent_hub import (
     ActionIntentHub,
-    ActionSeverity,
-    ActionStatus,
     FourEyesApprovalRequiredError,
 )
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Test partner fraud action intent governance.")
-    parser.add_argument("--case-id", default="CASE-FRAUD-OPPOSITE-01", help="Target case identifier")
+    parser.add_argument(
+        "--case-id", default="CASE-FRAUD-OPPOSITE-01", help="Target case identifier"
+    )
     args = parser.parse_args()
 
     print(f"Initializing ActionIntentHub for case {args.case_id}...")

@@ -1,6 +1,5 @@
 """Tests for competitive market intel events with generic aliases (FR-044, SC-003)."""
 
-import pytest
 from eios.foundry.contracts import CompetitorEventRecord, ContractValidator
 from eios.foundry.generators.competitive import CompetitiveDataGenerator
 from eios.foundry.rng import DeterministicRNG

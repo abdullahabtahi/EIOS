@@ -1,6 +1,5 @@
 """Tests for Partner Layer 1 data product contracts (T064, FR-026, FR-034)."""
 
-import pytest
 from eios.foundry.contracts import (
     CommissionLedgerRecord,
     ContractValidator,

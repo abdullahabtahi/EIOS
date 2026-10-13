@@ -11,6 +11,7 @@ in the same currency pair in opposing directions (BUY vs SELL) within 30.0 secon
 
 from dataclasses import dataclass
 from datetime import datetime
+
 import pandas as pd
 
 
@@ -63,18 +64,24 @@ class NaiveOppositeTradeBaseline:
                         break
 
                     # Check different partners and accounts
-                    if r1["partner_id"] != r2["partner_id"] and r1["account_id"] != r2["account_id"]:
-                        is_opposite = (
-                            (r1["direction"] == "BUY" and r2["direction"] == "SELL")
-                            or (r1["direction"] == "SELL" and r2["direction"] == "BUY")
+                    if (
+                        r1["partner_id"] != r2["partner_id"]
+                        and r1["account_id"] != r2["account_id"]
+                    ):
+                        is_opposite = (r1["direction"] == "BUY" and r2["direction"] == "SELL") or (
+                            r1["direction"] == "SELL" and r2["direction"] == "BUY"
                         )
                         if is_opposite:
                             predictions.append(
                                 NaiveBaselinePrediction(
                                     account_a=min(r1["account_id"], r2["account_id"]),
                                     account_b=max(r1["account_id"], r2["account_id"]),
-                                    partner_a=r1["partner_id"] if r1["account_id"] < r2["account_id"] else r2["partner_id"],
-                                    partner_b=r2["partner_id"] if r1["account_id"] < r2["account_id"] else r1["partner_id"],
+                                    partner_a=r1["partner_id"]
+                                    if r1["account_id"] < r2["account_id"]
+                                    else r2["partner_id"],
+                                    partner_b=r2["partner_id"]
+                                    if r1["account_id"] < r2["account_id"]
+                                    else r1["partner_id"],
                                     symbol=symbol,
                                     score=1.0,
                                     flagged=True,

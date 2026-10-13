@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
+
 import faker
 
 from eios.foundry.rng import RNGManager
@@ -32,7 +32,7 @@ class ClientAccount:
     dp2p_nickname: str
     country: str
     kyc_tier: str
-    kyc_approved_at: Optional[str]
+    kyc_approved_at: str | None
     created_at: str
     status: str
     email: str
@@ -44,7 +44,7 @@ class Partner:
     partner_id: str
     person_id: str
     tier: int
-    parent_partner_id: Optional[str]
+    parent_partner_id: str | None
     country: str
     status: str = "ACTIVE"
 
@@ -59,7 +59,7 @@ class Device:
 class IPAddress:
     ip_address: str
     is_hub: bool = False
-    hub_type: Optional[str] = None
+    hub_type: str | None = None
 
 
 @dataclass(frozen=True)
@@ -92,21 +92,21 @@ class GlobalEntityUniverse:
         self._faker = faker.Faker()
         self._faker.seed_instance(rng.derive_faker_seed("universe"))
 
-        self.persons: List[PhysicalPerson] = []
-        self.accounts: List[ClientAccount] = []
-        self.partners: List[Partner] = []
-        self.devices: List[Device] = []
-        self.ips: List[IPAddress] = []
-        self.payment_methods: List[PaymentMethod] = []
+        self.persons: list[PhysicalPerson] = []
+        self.accounts: list[ClientAccount] = []
+        self.partners: list[Partner] = []
+        self.devices: list[Device] = []
+        self.ips: list[IPAddress] = []
+        self.payment_methods: list[PaymentMethod] = []
 
-        self._client_to_devices: Dict[str, List[Device]] = {}
-        self._client_to_ips: Dict[str, List[IPAddress]] = {}
+        self._client_to_devices: dict[str, list[Device]] = {}
+        self._client_to_ips: dict[str, list[IPAddress]] = {}
 
         self._generate_universe()
 
     def _generate_universe(self) -> None:
         """Deterministically generates entity pools and establishes referential mappings."""
-        base_time = datetime(2025, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+        base_time = datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
         namespace = uuid.uuid5(uuid.NAMESPACE_DNS, f"foundry.universe.{self.rng.master_seed}")
 
         # 1. Generate Devices
@@ -157,19 +157,23 @@ class GlobalEntityUniverse:
             kyc_tier = KYC_TIERS[c_idx % len(KYC_TIERS)]
 
             created_offset_days = int(self._gen.integers(0, 365))
-            created_dt = base_time + timedelta(days=created_offset_days, seconds=int(self._gen.integers(0, 86400)))
+            created_dt = base_time + timedelta(
+                days=created_offset_days, seconds=int(self._gen.integers(0, 86400))
+            )
             created_at = created_dt.isoformat()
 
             if kyc_tier != "TIER_0_UNVERIFIED":
-                kyc_dt = created_dt + timedelta(days=int(self._gen.integers(1, 10)), hours=int(self._gen.integers(1, 24)))
-                kyc_approved_at: Optional[str] = kyc_dt.isoformat()
+                kyc_dt = created_dt + timedelta(
+                    days=int(self._gen.integers(1, 10)), hours=int(self._gen.integers(1, 24))
+                )
+                kyc_approved_at: str | None = kyc_dt.isoformat()
             else:
                 kyc_approved_at = None
 
             status = ACCOUNT_STATUSES[c_idx % len(ACCOUNT_STATUSES)]
 
             # 5% domain variations / duplicate identity noise
-            has_identity_duplicate_noise = (c_idx % 20 == 0)
+            has_identity_duplicate_noise = c_idx % 20 == 0
             if has_identity_duplicate_noise:
                 domain = SAFE_DOMAINS[(c_idx + 1) % len(SAFE_DOMAINS)]
                 email = f"{person.email_base}.alt{c_idx}@{domain}"
@@ -221,8 +225,8 @@ class GlobalEntityUniverse:
                 )
             )
 
-    def get_devices_for_client(self, client_id: str) -> List[Device]:
+    def get_devices_for_client(self, client_id: str) -> list[Device]:
         return self._client_to_devices.get(client_id, [self.devices[0]])
 
-    def get_ips_for_client(self, client_id: str) -> List[IPAddress]:
+    def get_ips_for_client(self, client_id: str) -> list[IPAddress]:
         return self._client_to_ips.get(client_id, [self.ips[0]])

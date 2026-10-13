@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import time
-from typing import Any, Callable, Dict, List, Optional
 import uuid
+from datetime import UTC, datetime
 
 from eios.hardening.models import RunbookExecutionProof, RunbookResolutionStatus
 
-
-RUNBOOK_DEFINITIONS: Dict[str, Dict[str, str]] = {
+RUNBOOK_DEFINITIONS: dict[str, dict[str, str]] = {
     "RUNBOOK-01": {
         "title": "Contract Breach & DLQ Flood Triage",
         "trigger": "DLQ queue depth > 500 / unhandled validation breaches",
@@ -79,14 +77,11 @@ class RunbookVerificationEngine:
 
     def __init__(self) -> None:
         self.definitions = RUNBOOK_DEFINITIONS
-        self._execution_history: List[RunbookExecutionProof] = []
+        self._execution_history: list[RunbookExecutionProof] = []
 
-    def get_runbook_catalog(self) -> List[Dict[str, str]]:
+    def get_runbook_catalog(self) -> list[dict[str, str]]:
         """Returns catalog of all registered production runbooks."""
-        return [
-            {"runbook_id": r_id, **meta}
-            for r_id, meta in self.definitions.items()
-        ]
+        return [{"runbook_id": r_id, **meta} for r_id, meta in self.definitions.items()]
 
     def execute_runbook(self, runbook_id: str) -> RunbookExecutionProof:
         """Executes automated remediation workflow for a specific runbook."""
@@ -116,6 +111,6 @@ class RunbookVerificationEngine:
         self._execution_history.append(proof)
         return proof
 
-    def execute_all_runbooks(self) -> List[RunbookExecutionProof]:
+    def execute_all_runbooks(self) -> list[RunbookExecutionProof]:
         """Executes all 10 production runbooks and returns certified proofs."""
         return [self.execute_runbook(r_id) for r_id in sorted(self.definitions.keys())]

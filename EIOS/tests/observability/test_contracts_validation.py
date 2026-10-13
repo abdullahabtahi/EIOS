@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 import jsonschema
 import pytest
 
@@ -20,7 +21,6 @@ from eios.observability.llm_telemetry import (
 )
 from eios.observability.schemas import (
     list_registered_schemas,
-    load_schema,
     validate_contract,
 )
 from eios.observability.slo_catalog import SLICategory
@@ -53,7 +53,7 @@ def test_registered_schemas_count():
 
 def test_contract_trace_context_span_valid_and_invalid():
     """Verify trace-context-span schema validation and error detection."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     valid_span = TraceContextSpan(
         trace_id="4bf92f3577b34da6a3ce929d0e0e4736",
         span_id="00f067aa0ba902b7",
@@ -105,7 +105,7 @@ def test_contract_error_budget_status_valid_and_invalid():
 
 def test_contract_sre_alert_event_valid_and_invalid():
     """Verify sre-alert-event schema validation and error detection."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     valid_alert = SREAlertEvent(
         alert_id="alert-uuid-1",
         policy_name="Multi-Burn 14.4x",
@@ -129,7 +129,7 @@ def test_contract_sre_alert_event_valid_and_invalid():
 
 def test_contract_llm_invocation_telemetry_valid_and_invalid():
     """Verify llm-invocation-telemetry schema validation and error detection."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     valid_llm = LLMInvocationTelemetry(
         call_id="call-123",
         trace_id="4bf92f3577b34da6a3ce929d0e0e4736",
@@ -156,7 +156,7 @@ def test_contract_llm_invocation_telemetry_valid_and_invalid():
 
 def test_contract_auditor_gate_telemetry_valid_and_invalid():
     """Verify auditor-gate-telemetry schema validation and error detection."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     valid_audit = AuditorGateTelemetry(
         audit_id="aud-1",
         trace_id="4bf92f3577b34da6a3ce929d0e0e4736",
@@ -181,7 +181,7 @@ def test_contract_auditor_gate_telemetry_valid_and_invalid():
 
 def test_contract_service_golden_signals_valid_and_invalid():
     """Verify service-golden-signals schema validation and error detection."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     valid_signals = ServiceGoldenSignals(
         service_name="omcp_server",
         timestamp=now,

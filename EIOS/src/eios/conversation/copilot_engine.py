@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 import time
-from typing import Any, Dict, List, Optional
-from eios.conversation.client import types
+from typing import Any
 
 from eios.conversation.auditor_bridge import ConversationAuditorBridge
-from eios.conversation.client import GeminiClientManager
+from eios.conversation.checkpointer import ThreadCheckpointer
+from eios.conversation.client import GeminiClientManager, types
+from eios.conversation.memory import SessionMemoryManager
 from eios.conversation.models import (
     CitationType,
     ConversationQueryResponse,
@@ -19,6 +19,8 @@ from eios.conversation.models import (
     SpecialistDomain,
 )
 from eios.conversation.rag_tools import query_policy_search, should_route_to_policy_rag
+from eios.conversation.supervisor import ConversationalSupervisor
+from eios.conversation.telemetry import CopilotTracer
 from eios.conversation.tools import (
     OMCP_TOOLS,
     get_governed_metric,
@@ -28,11 +30,6 @@ from eios.conversation.tools import (
     run_causal_what_if,
     stage_action_intent,
 )
-
-from eios.conversation.memory import SessionMemoryManager
-from eios.conversation.checkpointer import ThreadCheckpointer
-from eios.conversation.supervisor import ConversationalSupervisor
-from eios.conversation.telemetry import CopilotTracer
 
 _LOG = logging.getLogger("eios.conversation.copilot_engine")
 
@@ -61,7 +58,7 @@ MAX_TOOL_ROUNDS = 4
 MAX_CORRECTIONS = 2  # within the 3-cycle reflection bound of ADR-016
 
 
-def correction_prompt(unanchored: List[str]) -> str:
+def correction_prompt(unanchored: list[str]) -> str:
     shown = ", ".join(sorted(set(unanchored))[:12]) or "some figures"
     return (
         "The Metric Auditor blocked your answer: these figures do not appear in any tool result: "
@@ -70,7 +67,7 @@ def correction_prompt(unanchored: List[str]) -> str:
     )
 
 
-def run_omcp_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+def run_omcp_tool(name: str, args: dict[str, Any]) -> dict[str, Any]:
     """Run one model-requested tool. Only OMCP tools in TOOL_MAP exist; failures are reported, never raised."""
     func = TOOL_MAP.get(name)
     if func is None:
@@ -88,9 +85,9 @@ class CopilotEngine:
 
     def __init__(
         self,
-        client_manager: Optional[GeminiClientManager] = None,
-        auditor_bridge: Optional[ConversationAuditorBridge] = None,
-        offline_mode: Optional[bool] = None,
+        client_manager: GeminiClientManager | None = None,
+        auditor_bridge: ConversationAuditorBridge | None = None,
+        offline_mode: bool | None = None,
     ) -> None:
         if offline_mode is None:
             # Default to offline if EIOS_OFFLINE_REPLAY=1 or in unit test mode
@@ -99,7 +96,7 @@ class CopilotEngine:
         self.client_manager = client_manager or GeminiClientManager(offline_mode=offline_mode)
         self.auditor_bridge = auditor_bridge or ConversationAuditorBridge()
         self.offline_mode = offline_mode or self.client_manager.offline_mode
-        self.memories: Dict[str, SessionMemoryManager] = {}
+        self.memories: dict[str, SessionMemoryManager] = {}
         self.checkpointer = ThreadCheckpointer()
         self.supervisor = ConversationalSupervisor()
         self.tracer = CopilotTracer()
@@ -108,8 +105,8 @@ class CopilotEngine:
         self,
         chat: Any,
         response: Any,
-        tool_traces: List[Dict[str, Any]],
-        citations: List[ProvenanceCitation],
+        tool_traces: list[dict[str, Any]],
+        citations: list[ProvenanceCitation],
     ) -> Any:
         """Run the tools the model asked for (allow-listed, bounded rounds) and return its next response."""
         for _ in range(MAX_TOOL_ROUNDS):
@@ -181,11 +178,11 @@ class CopilotEngine:
             )
 
         client = self.client_manager.get_client()
-        fallback_reason: Optional[str] = None
+        fallback_reason: str | None = None
         if self.offline_mode or client is None:
             fallback_reason = self.client_manager.offline_reason or "offline replay mode"
-        tool_traces: List[Dict[str, Any]] = []
-        citations: List[ProvenanceCitation] = []
+        tool_traces: list[dict[str, Any]] = []
+        citations: list[ProvenanceCitation] = []
 
         # Live Gemini with manual function calling: the model proposes tool calls, this engine runs
         # only allow-listed OMCP tools, and the Metric Auditor checks the final text against the traces.
@@ -261,7 +258,7 @@ class CopilotEngine:
         # Deterministic Grounded Execution (Offline / Fast Local Replay)
         tool_traces = []
         citations = []
-        staged_rec: Optional[Dict[str, Any]] = None
+        staged_rec: dict[str, Any] | None = None
 
         if "cr84920" in lower_q or "aml" in lower_q or role == OperatorRole.AML_INVESTIGATOR:
             aml_res = inspect_aml_entity("CR84920")

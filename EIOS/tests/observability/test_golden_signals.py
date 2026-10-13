@@ -2,23 +2,23 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+
 import pytest
 
+from eios.ingestion.hot_state import HotStateEngine
 from eios.observability.golden_signals import (
     GoldenSignalsCollector,
-    ServiceGoldenSignals,
     golden_signals_to_contract_dict,
 )
 from eios.observability.schemas import validate_contract
 from eios.ontology.omcp.server import OMCPServer
-from eios.ingestion.hot_state import HotStateEngine
 
 
 def test_golden_signals_collection_and_percentiles():
     """Verify Four Golden Signals calculation: throughput, p50/p90/p95/p99 latency, errors, saturation."""
     collector = GoldenSignalsCollector()
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Ingest 100 requests for omcp_server: latencies 10ms..1000ms
     for i in range(1, 101):

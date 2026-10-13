@@ -1,8 +1,6 @@
 """Tests for 2PC ActionIntentToken staging and Four-Eyes governance (Principle II, T021)."""
 
-import pytest
 from eios.conversation.tools import stage_action_intent
-from eios.conversation.models import ActionStatus
 
 
 def test_stage_action_intent_produces_signed_governed_token():

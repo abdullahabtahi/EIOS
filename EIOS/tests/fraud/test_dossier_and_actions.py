@@ -26,7 +26,12 @@ def test_dossier_assembler_creates_sanitized_case() -> None:
 
     assert case.partner_id == "P-FRAUD-01"
     assert case.status == "OPEN"
-    assert case.recommended_action in ["ClawbackCommission", "SuspendPartner", "AdjustPartnerTier", "ReviewAudit"]
+    assert case.recommended_action in [
+        "ClawbackCommission",
+        "SuspendPartner",
+        "AdjustPartnerTier",
+        "ReviewAudit",
+    ]
     assert "P-FRAUD-01" in case.narrative_summary
     # Check that inflammatory terms are not present
     assert "criminal ring" not in case.narrative_summary
@@ -51,7 +56,9 @@ def test_clawback_action_intent_requires_dual_approval() -> None:
     assert token.signature is not None
 
     # First approver signs
-    token = hub.approve_action(token.intent_id, approver_id="officer_alice", role="ComplianceOfficer")
+    token = hub.approve_action(
+        token.intent_id, approver_id="officer_alice", role="ComplianceOfficer"
+    )
     assert token.status == ActionStatus.PENDING
     assert len(token.approvals) == 1
 
@@ -75,7 +82,9 @@ def test_single_approver_cannot_bypass_four_eyes_on_high_severity() -> None:
     )
 
     # First approver
-    token = hub.approve_action(token.intent_id, approver_id="officer_alice", role="ComplianceOfficer")
+    token = hub.approve_action(
+        token.intent_id, approver_id="officer_alice", role="ComplianceOfficer"
+    )
 
     # Attempt execution with only 1 approval -> raises FourEyesApprovalRequiredError
     with pytest.raises(FourEyesApprovalRequiredError):

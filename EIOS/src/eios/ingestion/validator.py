@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass, field
 from typing import Any
+
 from pydantic import TypeAdapter, ValidationError
 
 from eios.contracts.base import DataProductEnum
@@ -9,24 +10,25 @@ from eios.contracts.models import (
     BaseDataProductModel,
     Client360Event,
     ClientFunnelEvent,
-    TransactionAMLEvent,
-    TradingActivityEvent,
-    DeviceGraphEdgeEvent,
-    Partner360Event,
-    ReferralTreeEdgeEvent,
     CommissionLedgerEvent,
-    PartnerSignalsEvent,
-    PartnerCommsEvent,
-    FinancialPnLEvent,
     CompetitorBenchmarkEvent,
-    PlatformOperationsEvent,
     ComplianceCaseEvent,
+    DeviceGraphEdgeEvent,
+    FinancialPnLEvent,
+    Partner360Event,
+    PartnerCommsEvent,
+    PartnerSignalsEvent,
+    PlatformOperationsEvent,
+    ReferralTreeEdgeEvent,
+    TradingActivityEvent,
+    TransactionAMLEvent,
 )
 
 
 @dataclass(frozen=True)
 class ValidationErrorDetail:
     """Structured detail of a single field breach."""
+
     field_path: str
     message: str
     error_type: str
@@ -35,6 +37,7 @@ class ValidationErrorDetail:
 @dataclass
 class ValidationResult:
     """Result of contract validation against a governed Data Product."""
+
     is_valid: bool
     errors: list[ValidationErrorDetail] = field(default_factory=list)
     validated_model: BaseDataProductModel | None = None
@@ -64,8 +67,7 @@ class ContractValidator:
 
     def __init__(self) -> None:
         self._adapters: dict[DataProductEnum, TypeAdapter[Any]] = {
-            product: TypeAdapter(model_cls)
-            for product, model_cls in PRODUCT_MODEL_REGISTRY.items()
+            product: TypeAdapter(model_cls) for product, model_cls in PRODUCT_MODEL_REGISTRY.items()
         }
 
     @property

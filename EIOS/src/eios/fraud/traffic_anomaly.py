@@ -6,7 +6,6 @@ Authoritative References:
 - specs/009-partner-fraud/research.md §5
 """
 
-import math
 from scipy import stats
 
 from eios.fraud.models import TrafficAnomalySignal

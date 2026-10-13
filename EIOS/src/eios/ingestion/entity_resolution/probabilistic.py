@@ -75,7 +75,9 @@ class ProbabilisticLinker:
     def __init__(self, threshold: float = 0.85) -> None:
         self.threshold = threshold
 
-    def evaluate_pair(self, profile1: dict[str, Any], profile2: dict[str, Any]) -> tuple[float, bool]:
+    def evaluate_pair(
+        self, profile1: dict[str, Any], profile2: dict[str, Any]
+    ) -> tuple[float, bool]:
         """Compute composite match probability score between two candidate client profiles."""
         weights = {
             "name": 0.45,

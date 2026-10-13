@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterable
 from datetime import UTC, datetime
-from typing import Any, AsyncIterable, Dict, List, Optional
+from typing import Any
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Query
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
 from eios.cockpit.aml import AMLWorkstationService
@@ -21,7 +22,9 @@ STREAM_PATH = "/api/v1/aml/stream"
 
 
 @router.get(TRIAGE_PATH)
-def get_aml_triage_queue(min_score: int = Query(default=50), limit: int = Query(default=20)) -> Dict[str, Any]:
+def get_aml_triage_queue(
+    min_score: int = Query(default=50), limit: int = Query(default=20)
+) -> dict[str, Any]:
     """Returns prioritized AML alert inbox items sorted by composite hazard score."""
     items = aml_svc.get_triage_queue(min_score=min_score, limit=limit)
     return {
@@ -32,7 +35,7 @@ def get_aml_triage_queue(min_score: int = Query(default=50), limit: int = Query(
 
 
 @router.get(DOSSIER_PATH)
-def get_aml_dossier(case_id: str) -> Dict[str, Any]:
+def get_aml_dossier(case_id: str) -> dict[str, Any]:
     """Returns 1-screen unified AML dossier with peer comparisons, velocity discrepancy, and SAR draft."""
     entity_id = case_id.replace("case_aml_", "").replace("ALT-", "")
     dossier = aml_svc.get_entity_dossier(entity_id=entity_id)
@@ -52,7 +55,7 @@ def get_aml_dossier(case_id: str) -> Dict[str, Any]:
 
 
 @router.get(GRAPH_PATH)
-def get_aml_graph(case_id: str, hub_threshold: int = Query(default=100)) -> Dict[str, Any]:
+def get_aml_graph(case_id: str, hub_threshold: int = Query(default=100)) -> dict[str, Any]:
     """Returns topological relational network graph for hardware-accelerated Canvas / WebGL rendering."""
     entity_id = case_id.replace("case_aml_", "").replace("ALT-", "")
     graph = aml_svc.get_kinetic_network_graph(entity_id=entity_id, hub_threshold=hub_threshold)
@@ -65,31 +68,37 @@ def get_aml_graph(case_id: str, hub_threshold: int = Query(default=100)) -> Dict
 
     for i in range(1, 25):
         mule_id = f"MULE-{seed[-4:]}-{i:02d}"
-        extra_nodes.append({
-            "node_id": mule_id,
-            "node_type": "CLIENT_ACCOUNT",
-            "label": f"Mule Account #{i}",
-            "degree": 3,
-            "is_hub_suppressed": False,
-            "collapsed_node_count": 0,
-        })
-        extra_edges.append({
-            "source_node_id": seed,
-            "target_node_id": mule_id,
-            "edge_type": "RAPID_INTERNAL_TRANSFER",
-            "transaction_volume_usd": 2500.0 + (i * 120.0),
-            "matched_timing_seconds": 18.0 + i,
-        })
+        extra_nodes.append(
+            {
+                "node_id": mule_id,
+                "node_type": "CLIENT_ACCOUNT",
+                "label": f"Mule Account #{i}",
+                "degree": 3,
+                "is_hub_suppressed": False,
+                "collapsed_node_count": 0,
+            }
+        )
+        extra_edges.append(
+            {
+                "source_node_id": seed,
+                "target_node_id": mule_id,
+                "edge_type": "RAPID_INTERNAL_TRANSFER",
+                "transaction_volume_usd": 2500.0 + (i * 120.0),
+                "matched_timing_seconds": 18.0 + i,
+            }
+        )
 
     # High-degree CGNAT proxy hub
-    extra_nodes.append({
-        "node_id": "IP-CGNAT-GATEWAY-88",
-        "node_type": "IP_ADDRESS",
-        "label": "Carrier CGNAT Gateway 103.24.12.0/24",
-        "degree": 148,
-        "is_hub_suppressed": True,
-        "collapsed_node_count": 148,
-    })
+    extra_nodes.append(
+        {
+            "node_id": "IP-CGNAT-GATEWAY-88",
+            "node_type": "IP_ADDRESS",
+            "label": "Carrier CGNAT Gateway 103.24.12.0/24",
+            "degree": 148,
+            "is_hub_suppressed": True,
+            "collapsed_node_count": 148,
+        }
+    )
 
     contract_graph["nodes"].extend(extra_nodes)
     contract_graph["edges"].extend(extra_edges)

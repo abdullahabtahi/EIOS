@@ -2,13 +2,13 @@
 
 import pytest
 
-from eios.ontology.branching.scenario_sandbox import ScenarioSandboxEngine
 from eios.monitoring.drift_surveillance import DriftSurveillanceEngine
 from eios.ontology.actions.outbox_ledger import (
-    PersistentActionOutboxLedger,
     FourEyesViolationError,
     OutboxState,
+    PersistentActionOutboxLedger,
 )
+from eios.ontology.branching.scenario_sandbox import ScenarioSandboxEngine
 
 
 def test_scenario_sandbox_branching_and_isolation():

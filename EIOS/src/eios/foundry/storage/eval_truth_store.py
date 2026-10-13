@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any
 
 
 class AccessDeniedError(PermissionError):
     """Raised when an unprivileged role attempts to read ground truth."""
+
     pass
 
 
@@ -22,7 +23,7 @@ class EvalTruthStore:
         self.base_dir = Path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
 
-    def write_truth(self, filename: str, data: Dict[str, Any]) -> Path:
+    def write_truth(self, filename: str, data: dict[str, Any]) -> Path:
         """Writes ground truth to isolated storage."""
         if not filename.endswith(".json"):
             filename = f"{filename}.json"
@@ -31,7 +32,7 @@ class EvalTruthStore:
         target_path.write_text(json.dumps(data, indent=2, sort_keys=True))
         return target_path
 
-    def read_truth(self, filename: str, role: str) -> Dict[str, Any]:
+    def read_truth(self, filename: str, role: str) -> dict[str, Any]:
         """Reads ground truth enforcing role-based access denial."""
         if role in self.DENIED_ROLES or role not in self.ALLOWED_ROLES:
             raise AccessDeniedError(f"Access to eval-truth denied for role: {role}")
@@ -46,4 +47,3 @@ class EvalTruthStore:
 
 
 EvalGroundTruthStore = EvalTruthStore
-

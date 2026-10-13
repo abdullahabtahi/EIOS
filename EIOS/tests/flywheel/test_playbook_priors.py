@@ -1,11 +1,12 @@
 """Tests for User Story 4: Decision Policy Confidence & Playbook Prior Recalibration."""
 
 from datetime import UTC, datetime
+
 import pytest
 
-from eios.flywheel.schemas import validate_contract
+from eios.flywheel.ledger import compute_record_lineage_hash
 from eios.flywheel.models import DecisionOutcomeRecord, MilestoneStatus, PlaybookPolicyPrior
-from eios.flywheel.ledger import DecisionOutcomesLedger, compute_record_lineage_hash
+from eios.flywheel.schemas import validate_contract
 
 
 def _create_mock_record(
@@ -55,7 +56,9 @@ def test_playbook_prior_updater():
     from eios.flywheel.playbook_priors import PlaybookPriorUpdater
 
     records = [
-        _create_mock_record(f"d-{i}", "fee_tier_restructure", actual_impact_60d=1200.0 if i < 8 else -200.0)
+        _create_mock_record(
+            f"d-{i}", "fee_tier_restructure", actual_impact_60d=1200.0 if i < 8 else -200.0
+        )
         for i in range(10)
     ]
     # 8 positive outcomes out of 10 -> win-rate = 0.80

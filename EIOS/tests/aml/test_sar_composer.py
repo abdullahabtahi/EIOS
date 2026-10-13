@@ -7,9 +7,7 @@ Authoritative References:
 - .specify/memory/constitution.md (Principles I, VII, VIII)
 """
 
-from datetime import datetime, timezone
 import time
-import pytest
 
 from eios.aml.dossier import AMLDossierAssembler
 from eios.aml.sar_composer import SARComposer
@@ -62,8 +60,12 @@ def test_sar_composer_generates_regulator_ready_draft() -> None:
     assert sar.client_id == "C-AML-ROUNDTRIP-01"
     assert sar.jurisdiction == "US_FINCEN"
     assert len(sar.chronological_transactions) >= 1
-    assert "31_CFR_1010" in sar.statutory_provisions or "31 CFR 1010" in str(sar.statutory_provisions)
-    assert "31_USC_5318" in sar.statutory_provisions or "31 U.S.C. 5318" in str(sar.statutory_provisions)
+    assert "31_CFR_1010" in sar.statutory_provisions or "31 CFR 1010" in str(
+        sar.statutory_provisions
+    )
+    assert "31_USC_5318" in sar.statutory_provisions or "31 U.S.C. 5318" in str(
+        sar.statutory_provisions
+    )
     assert len(sar.evidence_citations) >= 2
 
 

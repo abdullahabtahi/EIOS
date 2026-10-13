@@ -1,18 +1,19 @@
 """Contract validation tests for all 5 Closed-Loop Decision Learning Flywheel JSON Schemas."""
 
 from datetime import UTC, datetime
-import pytest
-import jsonschema
 
-from eios.flywheel.schemas import list_registered_schemas, load_schema, validate_contract
+import jsonschema
+import pytest
+
 from eios.flywheel.models import (
-    DecisionOutcomeRecord,
-    CausalUpliftEstimate,
-    SCMRecalibrationCheckpoint,
     CalibrationDiagnosticsReport,
-    PlaybookPolicyPrior,
+    CausalUpliftEstimate,
+    DecisionOutcomeRecord,
     MilestoneStatus,
+    PlaybookPolicyPrior,
+    SCMRecalibrationCheckpoint,
 )
+from eios.flywheel.schemas import list_registered_schemas, validate_contract
 
 
 def test_registered_schemas_count():

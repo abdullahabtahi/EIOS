@@ -4,8 +4,9 @@ import hashlib
 import hmac
 import json
 import time
-from fastapi.testclient import TestClient
+
 import pytest
+from fastapi.testclient import TestClient
 
 from eios.api.app import app
 from eios.api.routes_webhooks import WEBHOOK_SECRET

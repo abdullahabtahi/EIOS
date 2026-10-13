@@ -6,8 +6,8 @@ Authoritative Reference:
 
 import json
 from pathlib import Path
+
 import jsonschema
-import pytest
 
 
 def get_schema_path(rel_path: str) -> Path:
@@ -23,7 +23,9 @@ def get_schema_path(rel_path: str) -> Path:
 
 
 def test_roundtrip_structuring_alerts_schema_contract() -> None:
-    schema_path = get_schema_path("specs/010-client-aml/contracts/roundtrip-structuring-alerts.schema.json")
+    schema_path = get_schema_path(
+        "specs/010-client-aml/contracts/roundtrip-structuring-alerts.schema.json"
+    )
     assert schema_path.exists(), f"Contract schema not found: {schema_path}"
 
     schema = json.loads(schema_path.read_text(encoding="utf-8"))

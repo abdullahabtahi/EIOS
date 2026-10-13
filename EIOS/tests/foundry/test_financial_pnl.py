@@ -1,7 +1,5 @@
 """Tests for financial P&L generation and accounting identity ties (FR-043, SC-002)."""
 
-from decimal import Decimal
-import pytest
 from eios.foundry.contracts import ContractValidator, DailyPnLRecord
 from eios.foundry.generators.financial import FinancialDataGenerator
 from eios.foundry.rng import DeterministicRNG

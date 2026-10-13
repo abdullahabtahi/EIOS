@@ -2,10 +2,10 @@
 
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
-import duckdb
+
 import pytest
 
-from eios.churn.models import RiskTier, SignalFamily
+from eios.churn.models import RiskTier
 from eios.ingestion.hot_state import HotStateEngine
 
 
@@ -167,10 +167,13 @@ def seeded_hot_state() -> HotStateEngine:
                 drift_logins = max(2, int(20 * (1 - 0.40 * ((i - 13) / 14))))
                 drift_clicks = max(15, int(150 * (1 - 0.35 * ((i - 13) / 14))))
 
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO partner_engagement_signals VALUES
             ('P-CHURN-DRIFT', ?, ?, 5, 2, 0.08, ?)
-        """, (current_date, drift_logins, drift_clicks))
+        """,
+            (current_date, drift_logins, drift_clicks),
+        )
 
         # P-HARD-NEG-VACATION: 2 weeks holiday in the middle (days 10 to 23 = 0 logins, then recovers)
         if is_weekend:
@@ -184,25 +187,34 @@ def seeded_hot_state() -> HotStateEngine:
                 vac_logins = 12
                 vac_clicks = 80
 
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO partner_engagement_signals VALUES
             ('P-HARD-NEG-VACATION', ?, ?, 3, 1, 0.05, ?)
-        """, (current_date, vac_logins, vac_clicks))
+        """,
+            (current_date, vac_logins, vac_clicks),
+        )
 
     # Seed support ticket for P-CHURN-DRIFT
-    conn.execute("""
+    conn.execute(
+        """
         INSERT INTO partner_comms VALUES
         ('TICK-8492', 'P-CHURN-DRIFT', 'TICKET', 'NEGATIVE', 
          'Competitor XM is offering 60% revshare and zero spread markups in Southeast Asia. Can you match?',
          ?)
-    """, (datetime.now(UTC) - timedelta(days=3),))
+    """,
+        (datetime.now(UTC) - timedelta(days=3),),
+    )
 
     # Seed 15 SEA cohort partners
     for p_idx in range(1, 16):
         pid = f"P-SEA-{p_idx:02d}"
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO partner_360 VALUES (?, 'TIER_1', 'IDN_MYS', 12, 12000.0, 'MGR-SEA', 'ACTIVE')
-        """, (pid,))
+        """,
+            (pid,),
+        )
         for i in range(28):
             current_date = base_date + timedelta(days=i)
             # Synchronized drop in last 10 days (FTDs and logins decay)
@@ -212,16 +224,22 @@ def seeded_hot_state() -> HotStateEngine:
             else:
                 logins = 10
                 ftds = 3
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT INTO partner_engagement_signals VALUES (?, ?, ?, 1, ?, 0.04, 30)
-            """, (pid, current_date, logins, ftds))
+            """,
+                (pid, current_date, logins, ftds),
+            )
 
         # Seed competitor inquiry ticket for SEA cohort
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO partner_comms VALUES
             (?, ?, 'TICKET', 'NEGATIVE',
              'Exness and XM zero-swap promotion in Indonesia/Malaysia is pulling my sub-affiliates.',
              ?)
-        """, (f"TICK-SEA-{p_idx:02d}", pid, datetime.now(UTC) - timedelta(days=2)))
+        """,
+            (f"TICK-SEA-{p_idx:02d}", pid, datetime.now(UTC) - timedelta(days=2)),
+        )
 
     return hot_state

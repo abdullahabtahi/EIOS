@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import hashlib
-from typing import Dict
+
 import numpy as np
 
 
@@ -14,8 +14,7 @@ class RNGManager:
         actual_seed = seed if seed is not None else (master_seed if master_seed is not None else 42)
         self.master_seed = actual_seed
         self._seed_sequence = np.random.SeedSequence(actual_seed)
-        self._generators: Dict[str, np.random.Generator] = {}
-
+        self._generators: dict[str, np.random.Generator] = {}
 
     def get_generator(self, domain_name: str) -> np.random.Generator:
         """Returns or creates a deterministic Generator for a named domain."""
@@ -36,4 +35,3 @@ class RNGManager:
 
 
 DeterministicRNG = RNGManager
-

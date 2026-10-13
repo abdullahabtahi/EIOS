@@ -2,18 +2,19 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
+
 from eios.foundry.rng import RNGManager
 
 
 def inject_analyst_label_noise(
-    records: List[Dict[str, Any]],
+    records: list[dict[str, Any]],
     rng: RNGManager,
     flip_rate: float = 0.05,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Injects 3.0% to 8.0% label noise to simulate human analyst ambiguity."""
     gen = rng.get_generator("label_noise")
-    noisy_records: List[Dict[str, Any]] = []
+    noisy_records: list[dict[str, Any]] = []
 
     # Map of flip decisions
     flip_map = {
