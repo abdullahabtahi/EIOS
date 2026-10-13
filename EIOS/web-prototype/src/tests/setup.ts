@@ -1,3 +1,8 @@
+import * as workerThreads from 'node:worker_threads';
+if (typeof (workerThreads as any).markAsUncloneable !== 'function') {
+  (workerThreads as any).markAsUncloneable = () => {};
+}
+
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
