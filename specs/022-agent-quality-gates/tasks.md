@@ -188,9 +188,8 @@
 
 - [ ] T067 [P] [US6] Implement the stand-in adapters in `src/eios/agent_gates/adapters/standin.py` (`always42`, `scripted`)
 - [ ] T068 [P] [US6] Implement `to_agents_cli_case(record)` in `src/eios/agent_gates/records.py`
-- [ ] T069 [P] Validate any LLM-judged informational score on a human-labelled sample of 20 turns in `docs/agent-judge-validation.md` before it is shown in any report; if agreement is below the bar set in `evals/agent/thresholds.yaml`, drop the score from the report
-- [ ] T070 [P] [US6] Write the metric shims `evals/agent/metrics/faithfulness.py`, `trajectory.py`, `safety.py` (each `def evaluate(instance)`, loading `core/` by path, never `import eios`) and `evals/agent/eval_config.yaml`
-- [ ] T071 [US6] Add `tests/agent_gates/test_agents_cli_grade.py` (marked `requires_agents_cli`, skipped when the CLI is absent) that runs `agents-cli eval grade` on the recorded corpus and compares scores with our own suite
+- [ ] T069 [P] [US6] Write the metric shims `evals/agent/metrics/faithfulness.py`, `trajectory.py`, `safety.py` (each `def evaluate(instance)`, loading `core/` by path, never `import eios`) and `evals/agent/eval_config.yaml`
+- [ ] T070 [US6] Add `tests/agent_gates/test_agents_cli_grade.py` (marked `requires_agents_cli`, skipped when the CLI is absent) that runs `agents-cli eval grade` on the recorded corpus and compares scores with our own suite
 
 **Checkpoint**: all six stories work independently.
 
@@ -198,6 +197,7 @@
 
 ## Phase 9: Polish and cross-cutting
 
+- [ ] T071 [P] Validate any LLM-judged informational score on a human-labelled sample of 20 turns in `docs/agent-judge-validation.md` before it is shown in any report; if agreement is below the bar set in `evals/agent/thresholds.yaml`, drop the score from the report
 - [ ] T072 [P] Add `tests/agent_gates/test_gate_policy.py`: no registered gating suite uses an LLM judge (FR-017); every attack family has at least 3 cases (SC-004); the deterministic tiers finish within 10 minutes on a timed run (SC-009)
 - [ ] T073 [P] Raise coverage on `src/eios/agent_gates/` to at least 80% and add missing edge-case tests (spelled-out numbers at the extremes, empty answers, results with no numerics)
 - [ ] T074 [P] Run `make lint`, `make types` and `repo_checks` over `src/eios/agent_gates/` and `evals/agent/`; split any file above 400 lines; confirm frozen models everywhere
@@ -228,5 +228,5 @@
 1. **MVP = Phase 1, Phase 2 and US1.** It delivers a usable release gate (M3) on its own. Stop there for review.
 2. Add US2 next: the other P1 scope and the non-negotiable constitutional principle.
 3. US3 and US4 together give the baseline; do not start spec 023 or 021 before T058.
-4. US5 and US6 are P3 and can slip without blocking the baseline; US6's metric shims (T070) are needed before spec 021 can use `agents-cli eval generate`.
+4. US5 and US6 are P3 and can slip without blocking the baseline; US6's metric shims (T069) are needed before spec 021 can use `agents-cli eval generate`.
 5. Commit on `spec/022-agent-quality-gates` after each checkpoint; one PR (#37) carries the feature.
