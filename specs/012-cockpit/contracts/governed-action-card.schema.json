@@ -25,7 +25,12 @@
         "DeployRetentionVIPDeal",
         "AdjustPartnerTier",
         "EscalateToMLRO",
-        "FileSARDraft"
+        "FileSARDraft",
+        "DeployRetentionConcession",
+        "WhitelistDirectCashierRail",
+        "AllocateCoMarketingBudget",
+        "SuppressCGNATProxyCluster",
+        "LaunchRetentionPlaybook"
       ]
     },
     "target_entity_id": { "type": "string" },

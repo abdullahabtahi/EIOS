@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from eios.cockpit.governance_shelf import GovernedActionShelf
+from eios.ontology.actions.signer import LocalDevActionSigner
 from eios.cockpit.schemas import validate_contract
 from eios.ontology.actions.models import (
     ActionIntentToken,
@@ -40,9 +41,30 @@ def _make_dummy_token(
     )
 
 
+def _signed(token: ActionIntentToken, signer: LocalDevActionSigner) -> ActionIntentToken:
+    """Sign a token exactly as the intent hub does, so the shelf can really verify it."""
+    payload = {
+        "intent_id": token.intent_id,
+        "action_type": token.action_type,
+        "parameters": token.parameters,
+        "evidence_refs": token.evidence_refs,
+        "severity": token.severity.value,
+        "nonce": token.nonce,
+        "issued_at": token.issued_at.isoformat(),
+        "expires_at": token.expires_at.isoformat(),
+        "requester_agent_id": token.requester_agent_id,
+        "propensity_score": token.propensity_score,
+        "causal_context": token.causal_context,
+    }
+    return token.model_copy(
+        update={"signature": signer.sign_payload(payload), "kms_key_id": signer.key_id}
+    )
+
+
 def test_staged_token_card_contract_validation():
-    shelf = GovernedActionShelf()
-    token = _make_dummy_token(action_type="HoldWithdrawal")
+    signer = LocalDevActionSigner()
+    shelf = GovernedActionShelf(signer=signer)
+    token = _signed(_make_dummy_token(action_type="HoldWithdrawal"), signer)
     card = shelf.stage_token(token)
 
     contract_dict = card.to_contract_dict()
@@ -58,7 +80,9 @@ def test_staged_token_card_contract_validation():
 
 def test_four_eyes_dual_approval_enforcement():
     shelf = GovernedActionShelf()
-    token = _make_dummy_token(action_type="FreezeAccount", severity=ActionSeverity.HIGH, requires_dual=True)
+    token = _make_dummy_token(
+        action_type="FreezeAccount", severity=ActionSeverity.HIGH, requires_dual=True
+    )
     shelf.stage_token(token)
 
     # First approval by AML Investigator
@@ -82,11 +106,15 @@ def test_four_eyes_dual_approval_enforcement():
         )
 
     # Modal context check for Alice vs Bob
-    alice_modal = shelf.get_approval_modal_context(token.intent_id, "officer_alice_aml", "AML_INVESTIGATOR")
+    alice_modal = shelf.get_approval_modal_context(
+        token.intent_id, "officer_alice_aml", "AML_INVESTIGATOR"
+    )
     assert alice_modal["can_approve"] is False
     assert "already signed" in alice_modal["ineligibility_reason"]
 
-    bob_modal = shelf.get_approval_modal_context(token.intent_id, "officer_bob_head", "COMPLIANCE_HEAD")
+    bob_modal = shelf.get_approval_modal_context(
+        token.intent_id, "officer_bob_head", "COMPLIANCE_HEAD"
+    )
     assert bob_modal["can_approve"] is True
 
     # Second approval by distinct Compliance Head
@@ -108,7 +136,11 @@ def test_single_approver_fast_path():
     token = ActionIntentToken(
         intent_id=str(uuid.uuid4()),
         action_type="LaunchRetentionPlaybook",
-        parameters={"partner_id": "AP-1029", "budget": 1200.0, "playbook_id": "play_vip_spread_discount"},
+        parameters={
+            "partner_id": "AP-1029",
+            "budget": 1200.0,
+            "playbook_id": "play_vip_spread_discount",
+        },
         evidence_refs=["ev_churn_882"],
         severity=ActionSeverity.MEDIUM,
         status=ActionStatus.PENDING,
@@ -152,7 +184,7 @@ def test_execution_state_transition():
 
     assert res["status"] == "COMMITTED"
     assert "receipt_id" in res
-    assert shelf.present_card(token).status == "EXECUTED"
+    assert shelf.present_card(shelf.get_token(token.intent_id)).status == "EXECUTED"
 
 
 def test_token_expiration_transition():
@@ -169,3 +201,9 @@ def test_token_expiration_transition():
     ctx = shelf.get_approval_modal_context(token.intent_id, "officer_eve", "AML_INVESTIGATOR")
     assert ctx["can_approve"] is False
     assert "expired" in ctx["ineligibility_reason"]
+
+
+def test_unsigned_shelf_never_claims_a_verified_signature():
+    shelf = GovernedActionShelf()
+    card = shelf.stage_token(_make_dummy_token())
+    assert card.kms_signature_verified is False
