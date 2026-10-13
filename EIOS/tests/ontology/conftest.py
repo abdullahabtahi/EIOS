@@ -153,9 +153,9 @@ def sample_tool_trace():
 @pytest.fixture
 def mock_kms_signer():
     """KMSActionSigner instance with local SECP256R1 keypair."""
-    from eios.ontology.actions.signer import KMSActionSigner
+    from eios.ontology.actions.signer import LocalDevActionSigner
 
-    return KMSActionSigner(key_id="test-mock-kms-p256")
+    return LocalDevActionSigner(key_id="test-mock-kms-p256")
 
 
 @pytest.fixture

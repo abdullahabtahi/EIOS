@@ -16,7 +16,7 @@ from eios.ontology.actions.models import (
     ExecutionStatus,
     LedgerEventType,
 )
-from eios.ontology.actions.signer import KMSActionSigner
+from eios.ontology.actions.signer import ActionSigner, default_action_signer
 
 
 class InvalidActionParameterError(Exception):
@@ -90,13 +90,13 @@ class ActionIntentHub:
 
     def __init__(
         self,
-        signer: KMSActionSigner | None = None,
+        signer: ActionSigner | None = None,
         sequencer: Any | None = None,
         sink: Any | None = None,
         hot_state_engine: HotStateEngine | None = None,
         outcomes_store: Any | None = None,
     ) -> None:
-        self.signer = signer or KMSActionSigner()
+        self.signer = signer or default_action_signer()
         self.sequencer = sequencer
         self.sink = sink
         self.hot_state = hot_state_engine

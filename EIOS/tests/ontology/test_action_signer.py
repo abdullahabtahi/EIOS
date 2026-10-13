@@ -2,11 +2,11 @@
 
 import pytest
 
-from eios.ontology.actions.signer import KMSActionSigner, SignatureVerificationError
+from eios.ontology.actions.signer import LocalDevActionSigner, SignatureVerificationError
 
 
 def test_action_signer_generates_and_verifies_valid_signature():
-    signer = KMSActionSigner()  # uses in-memory mock key pair by default
+    signer = LocalDevActionSigner()  # uses in-memory mock key pair by default
     payload = {
         "intent_id": "c62040b2-2974-4b47-975c-42cb1a3a3e6f",
         "action_type": "FreezeAccount",
@@ -24,7 +24,7 @@ def test_action_signer_generates_and_verifies_valid_signature():
 
 
 def test_action_signer_detects_tampered_payload():
-    signer = KMSActionSigner()
+    signer = LocalDevActionSigner()
     payload = {
         "intent_id": "c62040b2-2974-4b47-975c-42cb1a3a3e6f",
         "action_type": "FreezeAccount",
