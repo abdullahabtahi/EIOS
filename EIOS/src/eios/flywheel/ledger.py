@@ -11,7 +11,7 @@ from typing import Any
 from eios.flywheel.models import DecisionOutcomeRecord, MilestoneStatus
 
 
-def compute_record_lineage_hash(
+def compute_record_lineage_hash(  # noqa: PLR0913
     decision_id: str,
     intent_id: str,
     timestamp: datetime | str,
@@ -99,7 +99,7 @@ class DecisionOutcomesLedger:
             ids = self._entity_index.get(entity_id, [])
             return [self._records[did] for did in ids if did in self._records]
 
-    def query_records(
+    def query_records(  # noqa: C901, PLR0913
         self,
         service_name: str | None = None,
         action_type: str | None = None,

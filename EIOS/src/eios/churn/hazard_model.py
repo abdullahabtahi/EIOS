@@ -79,7 +79,7 @@ class DiscreteTimeHazardModel:
         # Apply seasonal dip suppression (zero false alarm filter)
         if "seasonal_dip_flag" in res_df.columns:
             # If seasonal dip detected (e.g. vacation), cap hazard at 0.15
-            seasonal_mask = res_df["seasonal_dip_flag"] == True
+            seasonal_mask = res_df["seasonal_dip_flag"].eq(True)
             cumulative_hazard_30d = np.where(
                 seasonal_mask, np.minimum(cumulative_hazard_30d, 0.15), cumulative_hazard_30d
             )

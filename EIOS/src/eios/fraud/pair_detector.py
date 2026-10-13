@@ -32,7 +32,7 @@ class TimeBucketedPairDetector:
        - Composite collusion score
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         bucket_window_sec: float = 30.0,
         tau_timing_sec: float = 5.0,
@@ -52,7 +52,7 @@ class TimeBucketedPairDetector:
         self.w_timing = w_timing
         self.w_zero_sum = w_zero_sum
 
-    def detect_pairs(self, trade_df: pd.DataFrame) -> list[TradingPairCorrelation]:
+    def detect_pairs(self, trade_df: pd.DataFrame) -> list[TradingPairCorrelation]:  # noqa: C901, PLR0912, PLR0915
         """Execute candidate pruning and bilateral scoring over trade log."""
         if trade_df.empty:
             return []

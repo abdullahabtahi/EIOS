@@ -25,7 +25,7 @@ class SessionMemoryManager:
         extracted_entities: dict[str, str],
     ) -> None:
         """Records entities extracted from an inquiry turn, updating the active anchor."""
-        for key, entity_id in extracted_entities.items():
+        for _key, entity_id in extracted_entities.items():
             if entity_id:
                 clean_id = entity_id.strip()
                 self._active_anchor = clean_id

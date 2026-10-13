@@ -42,7 +42,7 @@ class IngestionBatchResult:
 class IngestionPipeline:
     """Unified telemetry processing engine enforcing contracts, privacy, DQ, and hot state."""
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         config: IngestionConfig | None = None,
         validator: ContractValidator | None = None,

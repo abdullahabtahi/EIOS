@@ -147,7 +147,7 @@ def test_continuous_audit_walker_detects_worm_anchor_mismatch():
             payload={"step": i},
         )
 
-    cp = worm_service.create_checkpoint()
+    worm_service.create_checkpoint()
 
     # Adversary forges the head hash of entry 3 in the ledger
     with sequencer._lock:

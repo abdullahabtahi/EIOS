@@ -152,12 +152,12 @@ def _decision(
     raw: Mapping[str, object], index: int, lines: Mapping[str, int], shared: Mapping[str, object]
 ) -> Decision:
     raw_rules = raw["rules"]
-    assert isinstance(raw_rules, list)  # noqa: S101 - the schema guarantees an array
+    assert isinstance(raw_rules, list)  # noqa: S101
     rules = tuple(
         _rule(rule, f"decisions[{index}].rules[{j}]", shared) for j, rule in enumerate(raw_rules)
     )
     lifted = raw["lifted_when"]
-    assert isinstance(lifted, Mapping)  # noqa: S101 - the schema guarantees an object
+    assert isinstance(lifted, Mapping)  # noqa: S101
     adr = str(raw["adr"])
     return Decision(
         adr=adr,
@@ -187,7 +187,7 @@ def load_config(repo_root: Path) -> OpenDecisionsConfig:
     if not path.is_file():
         raise ConfigError(CONFIG_PATH, "$", "open-decision configuration file not found")
     data = load_validated(path, _SCHEMA)
-    assert isinstance(data, dict)  # noqa: S101 - the schema guarantees an object
+    assert isinstance(data, dict)  # noqa: S101
     lines = _adr_lines(path)
     shared = data.get("spec_text", {})
     decisions = tuple(_decision(raw, i, lines, shared) for i, raw in enumerate(data["decisions"]))

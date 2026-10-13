@@ -32,7 +32,7 @@ _PATTERNS = (
 
 def _tracked_files(repo_root: Path) -> list[str] | None:
     try:
-        result = subprocess.run(  # noqa: S603 - fixed argv, no shell
+        result = subprocess.run(
             ["git", "ls-files", "-z"],  # noqa: S607
             cwd=repo_root,
             check=True,

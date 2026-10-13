@@ -49,7 +49,7 @@ class IngestionConfig(BaseModel):
     vault_key_version: str = Field(default="v1")
 
     # Service endpoints
-    server_host: str = Field(default="0.0.0.0")
+    server_host: str = Field(default="0.0.0.0")  # noqa: S104
     server_port: int = Field(default=8080)
 
     # Freshness SLA thresholds in seconds

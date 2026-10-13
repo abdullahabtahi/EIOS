@@ -389,7 +389,7 @@ class OMCPServer:
         try:
             score_row = cursor.execute(
                 """
-                SELECT 
+                SELECT
                     hazard_probability_30d,
                     priority_score,
                     risk_tier,
@@ -511,7 +511,7 @@ class OMCPServer:
 
         cursor = self.hot_state.get_cursor()
         rows = cursor.execute("""
-            SELECT 
+            SELECT
                 alert_id,
                 region_id,
                 partner_count,
@@ -530,7 +530,7 @@ class OMCPServer:
                     continue
                 aff_rows = cursor.execute(
                     """
-                    SELECT p.partner_id 
+                    SELECT p.partner_id
                     FROM partner_360 p
                     JOIN churn_radar_scores s ON p.partner_id = s.partner_id
                     WHERE p.region = ? AND s.hazard_probability_30d >= 0.50

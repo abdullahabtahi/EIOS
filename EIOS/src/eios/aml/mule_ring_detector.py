@@ -36,7 +36,7 @@ class MuleRingDetector:
         self.min_cluster_size = min_cluster_size
         self.suppressed_hubs: set[str] = set()
 
-    def detect_mule_rings(self, network_edges_df: pd.DataFrame) -> list[MuleRingCluster]:
+    def detect_mule_rings(self, network_edges_df: pd.DataFrame) -> list[MuleRingCluster]:  # noqa: C901, PLR0912, PLR0915
         """Process entity edges, filter high-degree hubs, and extract mule clusters."""
         if network_edges_df.empty:
             return []
@@ -105,7 +105,7 @@ class MuleRingDetector:
 
             # Inspect all tokens linking this component
             sub_g = client_graph.subgraph(member_ids)
-            for u, v, d in sub_g.edges(data=True):
+            for u, v, d in sub_g.edges(data=True):  # noqa: B007
                 for t in d.get("tokens", []):
                     edge_type = B.nodes[t].get("edge_type", "")
                     if "PAYMENT" in edge_type or "card" in t or "tok_pay" in t:

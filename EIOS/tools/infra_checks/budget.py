@@ -1,7 +1,5 @@
-# ruff: noqa: E501, C901, PLR0912, PLR0915, S307
 from pathlib import Path
 
-# ruff: noqa: E501
 import yaml
 
 from tools.common.findings import Finding
@@ -12,7 +10,7 @@ MODULE = "budget_alerts"
 THRESHOLDS = (50, 80, 100)
 
 
-def check_budgets(root: Path, tree: InfraTree) -> tuple[Finding, ...]:
+def check_budgets(root: Path, tree: InfraTree) -> tuple[Finding, ...]:  # noqa: C901, PLR0912, PLR0915
     findings: list[Finding] = []
 
     config_file = root / BUDGETS_PATH
@@ -138,7 +136,7 @@ def check_budgets(root: Path, tree: InfraTree) -> tuple[Finding, ...]:
         elif isinstance(thresh_raw, str) and thresh_raw.strip().startswith("["):
             is_literal = True
             try:
-                thresh_val = eval(thresh_raw)
+                thresh_val = eval(thresh_raw)  # noqa: S307
             except Exception:
                 thresh_val = []
         elif isinstance(thresh_raw, str) and ("other.yaml" in thresh_raw or "slice(" in thresh_raw):

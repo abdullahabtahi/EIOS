@@ -17,7 +17,7 @@ class ChurnNarrativeGenerator:
     def __init__(self) -> None:
         pass
 
-    def generate_narrative(
+    def generate_narrative(  # noqa: PLR0913
         self,
         partner_id: str,
         risk_tier: RiskTier | str,

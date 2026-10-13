@@ -7,7 +7,7 @@ from eios.churn.baseline import NaiveRuleBaseline
 from eios.churn.hazard_model import DiscreteTimeHazardModel
 
 
-def test_hazard_beats_baseline():
+def test_hazard_beats_baseline():  # noqa: PLR0915
     """Verify that Discrete-Time Hazard Model beats Naive Rule baseline by >= 0.10 PR-AUC on holdout seed."""
     np.random.seed(1337)
     n_partners = 400

@@ -9,12 +9,12 @@ _src_dir = Path(__file__).resolve().parents[2]
 if str(_src_dir) not in sys.path:
     sys.path.insert(0, str(_src_dir))
 
-import duckdb
+import duckdb  # noqa: E402
 
-from eios.contracts.base import DataProductEnum
-from eios.ingestion.hot_state import HotStateEngine
-from eios.ingestion.validator import ContractValidator
-from eios.ingestion.warm_start import ParquetWarmStartLoader
+from eios.contracts.base import DataProductEnum  # noqa: E402
+from eios.ingestion.hot_state import HotStateEngine  # noqa: E402
+from eios.ingestion.validator import ContractValidator  # noqa: E402
+from eios.ingestion.warm_start import ParquetWarmStartLoader  # noqa: E402
 
 
 def benchmark_warm_start(record_count: int = 100000) -> None:
@@ -28,7 +28,7 @@ def benchmark_warm_start(record_count: int = 100000) -> None:
         con = duckdb.connect()
         con.execute(f"""
             COPY (
-                SELECT 
+                SELECT
                     'trd_' || range::VARCHAR AS trade_id,
                     'cli_' || (range % 1000)::VARCHAR AS client_id,
                     'VOL_75' AS symbol,
@@ -38,7 +38,7 @@ def benchmark_warm_start(record_count: int = 100000) -> None:
                     now() - INTERVAL (range % 3600) SECOND AS open_ts
                 FROM range({record_count})
             ) TO '{pq_path}' (FORMAT PARQUET)
-        """)
+        """)  # noqa: S608
         con.close()
 
         engine = HotStateEngine()
@@ -62,12 +62,12 @@ def verify_contracts() -> None:
     validator = ContractValidator()
     print("[*] Verifying contract validator catalog across all 14 Data Products...")
     for product in DataProductEnum:
-        assert product in validator.supported_products
+        assert product in validator.supported_products  # noqa: S101
         print(f"  [✓] {product.value:<30} -> Registered and active")
     print(f"[+] All {len(validator.supported_products)} contracts verified successfully.")
 
 
-def run_gateway(host: str = "0.0.0.0", port: int = 8000) -> None:
+def run_gateway(host: str = "0.0.0.0", port: int = 8000) -> None:  # noqa: S104
     """Start uvicorn gateway server."""
     import uvicorn
 
@@ -94,7 +94,7 @@ def main() -> None:
 
     # run-gateway
     run_parser = subparsers.add_parser("run-gateway", help="Run FastAPI Ingestion Gateway")
-    run_parser.add_argument("--host", default="0.0.0.0", help="Bind host")
+    run_parser.add_argument("--host", default="0.0.0.0", help="Bind host")  # noqa: S104
     run_parser.add_argument("--port", type=int, default=8000, help="Bind port")
 
     args = parser.parse_args()

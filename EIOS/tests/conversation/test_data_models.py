@@ -37,7 +37,7 @@ def test_blackboard_state_reflection_bounded():
     )
     assert state.reflection_cycles == 2
 
-    with pytest.raises(Exception):
+    with pytest.raises(Exception):  # noqa: B017
         # Reflection cycles hard capped at 3
         BlackboardState(reflection_cycles=4)
 

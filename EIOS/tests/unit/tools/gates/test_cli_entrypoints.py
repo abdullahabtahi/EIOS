@@ -291,7 +291,7 @@ def test_evals_cli_refuses_both_an_sbom_ref_and_generate_sbom(tmp_path: Path) ->
 @pytest.mark.parametrize("module", ["tools.gates.local", "tools.gates.run_gate", "evals.cli"])
 def test_entry_points_import_without_pythonpath(module: str) -> None:
     env = {k: v for k, v in os.environ.items() if not k.startswith(("PYTHONPATH", "COV_CORE"))}
-    completed = subprocess.run(  # noqa: S603 - fixed argv in a test
+    completed = subprocess.run(  # noqa: S603
         [sys.executable, "-m", module, "--help"],
         cwd=REPO,
         env=env,
@@ -311,7 +311,7 @@ def test_entry_points_import_without_pythonpath(module: str) -> None:
 def test_tools_run_directly_without_the_project_installed(module: str) -> None:
     env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
     code = f"import runpy; runpy.run_module({module!r}, run_name='not_main')"
-    done = subprocess.run(  # noqa: S603 - fixed argv, interpreter under test
+    done = subprocess.run(  # noqa: S603
         [sys.executable, "-c", code], cwd=REPO, env=env, capture_output=True, text=True, check=False
     )
     assert done.returncode == 0, done.stderr

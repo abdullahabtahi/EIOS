@@ -114,5 +114,5 @@ def test_validation_error_never_echoes_provider_output() -> None:
 
 def test_provider_result_is_frozen() -> None:
     result = ProviderResult(content="x", tokens_in=0, tokens_out=0)
-    with pytest.raises(ValueError):  # noqa: PT011
+    with pytest.raises(ValueError):
         result.content = "y"

@@ -34,7 +34,7 @@ def _get_referencing_registry() -> Registry:
                     resource = Resource.from_contents(content)
                     registry = registry.with_resource(p.name, resource)
                     registry = registry.with_resource(p.resolve().as_uri(), resource)
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
     _REGISTRY = registry
     return _REGISTRY

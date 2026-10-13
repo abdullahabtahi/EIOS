@@ -157,7 +157,7 @@ class ComplianceExplorerService:
 
     def get_worm_compliance_proofs(self) -> list[dict[str, Any]]:
         """Returns verified immutable WORM compliance retention proofs."""
-        now = datetime.now(UTC)
+        datetime.now(UTC)
         expiration = datetime(2033, 10, 9, 0, 0, tzinfo=UTC)  # 7-year statutory retention
 
         return [

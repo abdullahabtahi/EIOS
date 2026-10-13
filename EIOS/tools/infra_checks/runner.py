@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """Aggregator: run every infra check and return the combined findings.
 
 ``python -m tools.infra_checks [--repo-root DIR]`` exits 0 on a clean tree, 1 on findings,

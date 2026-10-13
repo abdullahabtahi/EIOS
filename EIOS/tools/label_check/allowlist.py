@@ -46,5 +46,5 @@ def load_allowlist(path: Path) -> tuple[AllowEntry, ...]:
     if not path.is_file():
         return ()
     data = load_validated(path, _SCHEMA)
-    assert isinstance(data, dict)  # noqa: S101 - the schema guarantees an object
+    assert isinstance(data, dict)  # noqa: S101
     return tuple(AllowEntry(e["path"], e["literal"], e["reason"]) for e in data["entries"])

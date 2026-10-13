@@ -7,10 +7,10 @@
 #     owner: <named owner, a person or team>
 #     expires: <ISO date, YYYY-MM-DD; valid through that day>
 #     reason: <why the gate is quarantined>
-- gate_id: lint
+- gate_id: repo_checks
   owner: abdullahabtahi
   expires: 2026-10-27
-  reason: "Pre-existing ruff formatting debt across legacy scripts/ and evals/ slated for dedicated cleanup pass"
+  reason: "155 pre-existing findings (147 non-frozen models, 6 forbidden literals, 2 oversized files); fixing them changes behavior, tracked as its own change"
 
 - gate_id: types
   owner: abdullahabtahi

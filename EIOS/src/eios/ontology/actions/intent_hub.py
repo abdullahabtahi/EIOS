@@ -224,7 +224,7 @@ class ActionIntentHub:
             ],
         )
 
-    def propose_action(
+    def propose_action(  # noqa: PLR0913
         self,
         action_type: str,
         parameters: dict[str, Any],
@@ -480,7 +480,7 @@ class ActionIntentHub:
                     auto_approved.append(intent_id)
         return auto_approved
 
-    def execute_action(
+    def execute_action(  # noqa: C901
         self,
         intent_id: str,
         idempotency_key: str | None = None,

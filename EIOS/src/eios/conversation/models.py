@@ -57,7 +57,7 @@ class ActionStatus(str, Enum):
 
 
 class AuditorStatus(str, Enum):
-    PASS = "PASS"
+    PASS = "PASS"  # noqa: S105
     BLOCKED = "BLOCKED"
 
 

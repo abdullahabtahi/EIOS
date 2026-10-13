@@ -18,7 +18,7 @@ class SLICategory(str, Enum):
     INGESTION_FRESHNESS = "ingestion_freshness"
     CONTRACT_ENFORCEMENT = "contract_enforcement"
     METRIC_QUERY_LATENCY = "metric_query_latency"
-    AGENT_TURN_FIRST_TOKEN = "agent_turn_first_token"
+    AGENT_TURN_FIRST_TOKEN = "agent_turn_first_token"  # noqa: S105
     AGENT_TURN_FULL_ANSWER = "agent_turn_full_answer"
     ALERT_DOSSIER_ASSEMBLY = "alert_dossier_assembly"
     PRE_WITHDRAWAL_DECISION = "pre_withdrawal_decision"
@@ -173,7 +173,7 @@ def get_slo_config(sli_name: SLICategory | str) -> ServiceLevelObjectiveConfig:
         try:
             sli_name = SLICategory(sli_name)
         except ValueError:
-            raise KeyError(f"Unknown SLI category: {sli_name}")
+            raise KeyError(f"Unknown SLI category: {sli_name}")  # noqa: B904
     return DEFAULT_SLO_CATALOG[sli_name]
 
 

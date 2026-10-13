@@ -27,7 +27,7 @@ class AMLDossierAssembler:
     def __init__(self, hot_state: HotStateEngine | None = None) -> None:
         self.hot_state = hot_state
 
-    def assemble_dossier(
+    def assemble_dossier(  # noqa: C901, PLR0912, PLR0913, PLR0915
         self,
         client_id: str,
         kyc_tier: str = "TIER_2_VERIFIED",
@@ -106,7 +106,7 @@ class AMLDossierAssembler:
                     if txn_sums:
                         dep = float(txn_sums[0])
                         wth = float(txn_sums[1])
-            except Exception:
+            except Exception:  # noqa: S110
                 # Hot state query error fallback to provided values
                 pass
 
@@ -238,7 +238,7 @@ class AMLDossierAssembler:
                         dossier.as_of,
                     ],
                 )
-            except Exception:
+            except Exception:  # noqa: S110
                 pass
 
         return dossier

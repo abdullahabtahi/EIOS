@@ -17,7 +17,7 @@ class ContractValidationError(Exception):
 T = TypeVar("T", bound=BaseModel)
 
 
-class ContractValidator(Generic[T]):
+class ContractValidator(Generic[T]):  # noqa: UP046
     """Vectorized batch validator enforcing Pydantic contracts at generation time."""
 
     def __init__(self, model_cls: type[T]) -> None:

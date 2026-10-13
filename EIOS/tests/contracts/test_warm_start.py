@@ -22,7 +22,7 @@ def synthetic_parquet_dir(tmp_path: Path) -> Path:
     con = duckdb.connect()
     con.execute(f"""
         COPY (
-            SELECT 
+            SELECT
                 'trd_' || range::VARCHAR AS trade_id,
                 'cli_' || (range % 1000)::VARCHAR AS client_id,
                 'VOL_75' AS symbol,
@@ -32,7 +32,7 @@ def synthetic_parquet_dir(tmp_path: Path) -> Path:
                 now() - INTERVAL (range % 3600) SECOND AS open_ts
             FROM range(100000)
         ) TO '{file_path}' (FORMAT PARQUET)
-    """)
+    """)  # noqa: S608
     con.close()
     return tmp_path
 

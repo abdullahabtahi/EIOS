@@ -31,7 +31,7 @@ class PartnerFraudPipeline:
         self.traffic_detector = TrafficAnomalyDetector()
         self.dossier_assembler = FraudDossierAssembler()
 
-    def run_pipeline(
+    def run_pipeline(  # noqa: C901, PLR0912
         self,
         trade_df: pd.DataFrame | None = None,
         tree_records: list[dict] | None = None,

@@ -78,7 +78,6 @@ class WithdrawalSentinel:
         if risk_score >= self.hold_risk_threshold:
             recommendation = WithdrawalDisposition.PROPOSE_HOLD
             action_type = "HoldWithdrawal"
-            requires_dual = amount_usd > 2500.0
 
             # Propose Action Intent via IntentHub (Principle II)
             token = self.intent_hub.propose_action(

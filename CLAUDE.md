@@ -16,7 +16,7 @@ Backend (run from `EIOS/`, Python 3.14 via `uv`):
 - `make setup` (uv sync), `make test` (pytest `-n auto`), `make lint` (ruff check + format check), `make types` (strict mypy)
 - **Single test**: `uv run pytest tests/cockpit/test_server_gateway.py::test_name -q`
 - **Network-enabled tests**: `EIOS_TEST_NETWORK=1 uv run pytest -q` (default runs are offline; markers `requires_network`, `requires_emulator`, `requires_cloud`)
-- **All 13 PR gates**: `make check`. Same gates and same `config/gates.yaml` as `.github/workflows/pr.yml`; reports land in `evals/reports/`.
+- **All 14 PR gates**: `make check`. Same gates and same `config/gates.yaml` as `.github/workflows/pr.yml`; reports land in `evals/reports/`.
 - Cockpit gateway: `uv run uvicorn eios.cockpit.server:app --port 8002` (the port `api-bridge.ts` falls back to on localhost)
 
 Web (run from `EIOS/web-prototype/`): `npm run dev` / `build` (both `--webpack`), `npm run lint`, `npm test` (vitest; single file: `npx vitest run <path>`), `npx tsc --noEmit` must be 0 errors.

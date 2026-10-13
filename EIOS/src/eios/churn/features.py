@@ -37,7 +37,7 @@ class PartnerFeatureExtractor:
                 WHERE status = 'ACTIVE'
             ),
             behav_recent AS (
-                SELECT 
+                SELECT
                     partner_id,
                     SUM(CASE WHEN date >= ? - INTERVAL 14 DAY THEN logins ELSE 0 END) AS logins_recent,
                     SUM(CASE WHEN date < ? - INTERVAL 14 DAY AND date >= ? - INTERVAL 28 DAY THEN logins ELSE 0 END) AS logins_prior,

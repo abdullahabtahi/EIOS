@@ -27,7 +27,7 @@ def test_causal_dag_structural_equations_and_placebo_edge(tmp_path: Path):
     assert "PARTNER->CLIENT" in edge_map
     assert "CLIENT->FINANCIAL" in edge_map
 
-    for e_name, edge in edge_map.items():
+    for _e_name, edge in edge_map.items():
         if not edge.get("is_placebo"):
             assert edge["true_structural_coefficient"] != 0.0
 

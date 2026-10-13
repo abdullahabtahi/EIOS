@@ -215,7 +215,7 @@ def test_audit_verify_walks_the_real_ledger(client):
 def test_audit_verify_detects_tampering(client):
     from eios.cockpit import server
 
-    intent_id = _stage(client).json()["card"]["intent_id"]
+    _stage(client).json()["card"]["intent_id"]
     seq = server.governance.sequencer.current_seq
     server.governance.sequencer.tamper_payload_for_testing(seq, "action_type", "Forged")
     body = client.get("/api/cockpit/audit/verify").json()

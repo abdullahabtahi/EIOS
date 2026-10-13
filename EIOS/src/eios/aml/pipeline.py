@@ -37,7 +37,7 @@ class ClientAMLPipeline:
         self.triage_scorer = AlertTriageScorer(hot_state=hot_state)
         self.dossier_assembler = AMLDossierAssembler(hot_state=hot_state)
 
-    def run_pipeline(
+    def run_pipeline(  # noqa: C901, PLR0912
         self,
         transactions_df: pd.DataFrame | None = None,
         trading_df: pd.DataFrame | None = None,
@@ -45,7 +45,7 @@ class ClientAMLPipeline:
         kyc_df: pd.DataFrame | None = None,
     ) -> dict[str, int]:
         """Execute full batch surveillance run and persist state into DuckDB hot state."""
-        cursor = self.hot_state.get_cursor()
+        self.hot_state.get_cursor()
 
         # 1. Round-Trip Structuring Detection
         combined_events = pd.DataFrame()

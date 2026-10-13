@@ -32,7 +32,7 @@ _TRACEPARENT_PATTERN = re.compile(r"^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})
 _PROPAGATOR = TraceContextTextMapPropagator()
 
 # Task-local baggage store
-_CURRENT_BAGGAGE: ContextVar[dict[str, str]] = ContextVar("eios_baggage", default={})
+_CURRENT_BAGGAGE: ContextVar[dict[str, str]] = ContextVar("eios_baggage", default={})  # noqa: B039
 
 
 @dataclass(frozen=True)

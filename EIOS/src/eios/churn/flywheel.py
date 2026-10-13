@@ -165,7 +165,7 @@ class PlaybookRecalibrator:
         """Compute Doubly Robust ATE for each playbook and derive updated selection probabilities."""
         cursor = self._get_cursor()
         rows = cursor.execute("""
-            SELECT 
+            SELECT
                 playbook_id,
                 treatment_assigned,
                 propensity_score,
@@ -205,4 +205,4 @@ class PlaybookRecalibrator:
         exp_z = np.exp(z - np.max(z))
         weights = exp_z / np.sum(exp_z)
 
-        return {pid: round(float(w), 4) for pid, w in zip(pb_ids, weights)}
+        return {pid: round(float(w), 4) for pid, w in zip(pb_ids, weights)}  # noqa: B905

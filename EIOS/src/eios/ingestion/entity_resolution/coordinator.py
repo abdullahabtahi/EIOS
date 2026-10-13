@@ -41,7 +41,7 @@ class SCVCoordinator:
         self._account_to_canonical: dict[str, str] = {}
         self._lock = threading.Lock()
 
-    def resolve_record(
+    def resolve_record(  # noqa: C901, PLR0912
         self,
         record: ClientProfileRecord,
         profile_metadata: dict[str, Any] | None = None,

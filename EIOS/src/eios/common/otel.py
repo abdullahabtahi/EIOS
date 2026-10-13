@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """Telemetry setup (FR-036): tracer, structured JSON logs and trace-context propagation.
 
 This is the only module allowed to import the telemetry SDK (ruff ``TID251`` ignores this file

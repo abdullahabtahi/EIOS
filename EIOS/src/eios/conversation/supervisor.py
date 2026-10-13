@@ -89,7 +89,7 @@ class ConversationalSupervisor:
         builder.add_node("supervisor", supervisor_node)
 
         # Specialist execution nodes
-        for name, spec in self.specialists.items():
+        for name, _spec in self.specialists.items():
 
             def make_node(agent_name: str):
                 def node_fn(state: BlackboardState) -> dict[str, Any]:

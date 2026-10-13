@@ -20,7 +20,7 @@ def test_analyst_label_noise_bounds():
     # Count flips
     flipped_count = sum(
         1
-        for orig, noisy in zip(base_cases, noisy_cases)
+        for orig, noisy in zip(base_cases, noisy_cases)  # noqa: B905
         if orig["analyst_decision"] != noisy["analyst_decision"]
     )
     flip_rate = (flipped_count / len(base_cases)) * 100.0

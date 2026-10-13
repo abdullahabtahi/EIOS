@@ -58,7 +58,7 @@ class InMemPropertyGraph:
                 SELECT source_id, target_id, edge_type, session_count
                 FROM device_network_graph
                 {time_filter_dev}
-            """
+            """  # noqa: S608
             dev_edges = cursor.execute(dev_query, params).fetchall()
 
             # 2. Partner referral tree edges
@@ -66,7 +66,7 @@ class InMemPropertyGraph:
                 SELECT parent_id, child_id, 'REFERRED_BY' as edge_type, 1 as session_count
                 FROM partner_referral_tree
                 {time_filter_partner}
-            """
+            """  # noqa: S608
             partner_edges = cursor.execute(partner_query, params).fetchall()
         finally:
             cursor.close()

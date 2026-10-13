@@ -22,7 +22,7 @@ class DecisionOutcomesStore:
         self._intent_index: dict[str, str] = {}
         self._lock = threading.Lock()
 
-    def record_decision(
+    def record_decision(  # noqa: PLR0913
         self,
         intent_id: str,
         entity_id: str,

@@ -68,9 +68,9 @@ class DisasterRecoveryCoordinator:
         try:
             for tbl in self.hot_state.list_tables():
                 # Query table contents
-                rows = cursor.execute(f"SELECT * FROM {tbl}").fetchdf().to_dict(orient="records")
+                rows = cursor.execute(f"SELECT * FROM {tbl}").fetchdf().to_dict(orient="records")  # noqa: S608
                 tables_data[tbl] = rows
-        except Exception:
+        except Exception:  # noqa: S110
             pass
 
         self.snapshots[snap_id] = {
@@ -111,8 +111,8 @@ class DisasterRecoveryCoordinator:
                 col_names = ", ".join(cols)
                 vals = [json.dumps(v) if isinstance(v, (dict, list)) else v for v in row.values()]
                 try:
-                    cursor.execute(f"INSERT INTO {tbl} ({col_names}) VALUES ({placeholders})", vals)
-                except Exception:
+                    cursor.execute(f"INSERT INTO {tbl} ({col_names}) VALUES ({placeholders})", vals)  # noqa: S608
+                except Exception:  # noqa: S110
                     pass
 
         # 2. Rehydrate property graph

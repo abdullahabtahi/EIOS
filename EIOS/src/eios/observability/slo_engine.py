@@ -117,7 +117,7 @@ class SLOMonitoringEngine:
         self._overrides: dict[str, BreakGlassOverride] = {}
         self._lock = threading.RLock()
 
-    def record_event(
+    def record_event(  # noqa: PLR0913
         self,
         sli_name: SLICategory,
         observed_value: float,

@@ -10,7 +10,7 @@ import numpy as np
 class RNGManager:
     """Manages independent, deterministic pseudo-random number generator streams."""
 
-    def __init__(self, seed: Optional[int] = None, *, master_seed: Optional[int] = None) -> None:
+    def __init__(self, seed: int | None = None, *, master_seed: int | None = None) -> None:
         actual_seed = seed if seed is not None else (master_seed if master_seed is not None else 42)
         self.master_seed = actual_seed
         self._seed_sequence = np.random.SeedSequence(actual_seed)

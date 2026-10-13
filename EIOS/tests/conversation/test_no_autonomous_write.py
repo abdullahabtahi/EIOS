@@ -28,7 +28,7 @@ def test_zero_autonomous_sql_mutations_in_conversation_mesh():
             code = f.read()
 
         # Parse AST to ensure valid syntax
-        tree = ast.parse(code, filename=str(py_file))
+        ast.parse(code, filename=str(py_file))
 
         # Check raw code and docstrings
         for line_num, line in enumerate(code.splitlines(), start=1):

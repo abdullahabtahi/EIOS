@@ -1,4 +1,3 @@
-# ruff: noqa: E501
 """Budget alert rules (FR-038, acceptance scenario 3): ``--rules budget`` over config and Terraform."""
 
 from __future__ import annotations

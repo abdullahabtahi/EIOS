@@ -238,7 +238,7 @@ def parse_text(path: str, text: str) -> tuple[Block, ...]:
     """Parse one Terraform file; raises ``ValueError`` with the line on a syntax error."""
     try:
         data = hcl2.loads(text)
-    except Exception as exc:  # noqa: BLE001 - hcl2/lark raise several unrelated exception types
+    except Exception as exc:
         line = getattr(exc, "line", None)
         where = f" at line {line}" if isinstance(line, int) else ""
         raise ValueError(f"cannot parse Terraform{where}: {type(exc).__name__}") from exc
@@ -249,7 +249,7 @@ def parse_attributes(text: str) -> dict[str, Any]:
     """Parse an attribute-only file such as ``*.tfvars``; raises ``ValueError`` on bad syntax."""
     try:
         return dict(_clean(hcl2.loads(text)))
-    except Exception as exc:  # noqa: BLE001 - see parse_text
+    except Exception as exc:
         raise ValueError(f"cannot parse attributes: {type(exc).__name__}") from exc
 
 

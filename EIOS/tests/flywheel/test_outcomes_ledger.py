@@ -13,7 +13,7 @@ from eios.flywheel.models import DecisionOutcomeRecord, MilestoneStatus
 from eios.flywheel.schemas import validate_contract
 
 
-def _make_dummy_record(
+def _make_dummy_record(  # noqa: PLR0913
     decision_id: str | None = None,
     intent_id: str | None = None,
     action_type: str = "fee_tier_restructure",

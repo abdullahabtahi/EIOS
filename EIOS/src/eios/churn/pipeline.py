@@ -62,9 +62,9 @@ class ChurnRadarPipeline:
         for pid in df_features["partner_id"]:
             hist_rows = self.conn.execute(
                 """
-                SELECT date, logins 
-                FROM partner_engagement_signals 
-                WHERE partner_id = ? 
+                SELECT date, logins
+                FROM partner_engagement_signals
+                WHERE partner_id = ?
                 ORDER BY date
             """,
                 [str(pid)],

@@ -92,7 +92,7 @@ class LLMTelemetryCollector:
         with self._lock:
             self._pricing_tables[model_id] = pricing
 
-    def record_invocation(
+    def record_invocation(  # noqa: PLR0913
         self,
         trace_id: str,
         correlation_id: str,
@@ -131,7 +131,7 @@ class LLMTelemetryCollector:
             self._invocations.append(record)
             return record
 
-    def record_auditor_gate(
+    def record_auditor_gate(  # noqa: PLR0913
         self,
         trace_id: str,
         correlation_id: str,

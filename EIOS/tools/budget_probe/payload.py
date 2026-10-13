@@ -1,4 +1,3 @@
-# ruff: noqa: E501, B904
 import importlib
 import json
 import typing
@@ -26,12 +25,12 @@ class PubSubPublisher:
                 pubsub_v1 = importlib.import_module("google.cloud.pubsub_v1")
                 self._client = pubsub_v1.PublisherClient()
             except ImportError as e:
-                raise PublishError(f"google-cloud-pubsub is not installed: {e}")
+                raise PublishError(f"google-cloud-pubsub is not installed: {e}")  # noqa: B904
         try:
             future = self._client.publish(topic, data, **attributes)
             return str(future.result(timeout=10.0))
         except Exception as e:
-            raise PublishError(str(e))
+            raise PublishError(str(e))  # noqa: B904
 
 
 class ProbeMessage:
@@ -60,13 +59,13 @@ def load_settings(repo: Path, env: str) -> dict[str, typing.Any]:
         with budget_file.open() as f:
             data = yaml.safe_load(f)
     except Exception as e:
-        raise EiosError(f"broken budget file: {e}")
+        raise EiosError(f"broken budget file: {e}")  # noqa: B904
     if not isinstance(data, dict):
         raise EiosError("budget file invalid")
     try:
         _ = data["environments"]["dev"]["amount"]
     except KeyError, TypeError:
-        raise EiosError("dev amount missing")
+        raise EiosError("dev amount missing")  # noqa: B904
     return data
 
 

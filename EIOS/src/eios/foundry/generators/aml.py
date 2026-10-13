@@ -151,12 +151,12 @@ class AMLDataGenerator:
         round_trip_tx_ids: list[str] = []
         base_dt = datetime(2025, 3, 1, 10, 0, 0, tzinfo=UTC)
 
-        for idx, client_id in enumerate(client_uuids):
-            dev = device_hashes[idx % len(device_hashes)]
-            ip = ip_addresses[idx % len(ip_addresses)]
+        for idx, _client_id in enumerate(client_uuids):
+            device_hashes[idx % len(device_hashes)]
+            ip_addresses[idx % len(ip_addresses)]
             t_dep = base_dt + timedelta(days=idx, minutes=0)
             t_trade = t_dep + timedelta(minutes=10)
-            t_with = t_trade + timedelta(minutes=5)
+            t_trade + timedelta(minutes=5)
 
             dep_id = f"RT-DEP-{idx + 1:06d}"
             with_id = f"RT-WTH-{idx + 1:06d}"

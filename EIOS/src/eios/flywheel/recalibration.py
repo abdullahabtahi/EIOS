@@ -59,7 +59,7 @@ class SCMRecalibrator:
 
     def __init__(
         self,
-        initial_weights: Optional[dict[str, float]] = None,
+        initial_weights: dict[str, float] | None = None,
         learning_rate: float = 0.05,
         l2_reg: float = 0.01,
         weight_bounds: tuple[float, float] = (-2.0, 2.0),

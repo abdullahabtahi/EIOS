@@ -59,7 +59,7 @@ class CohortRiskDetector:
 
         # Query all active partners with latest hazard score and value_at_risk
         query = """
-            SELECT 
+            SELECT
                 p.partner_id,
                 p.region,
                 p.tier,
@@ -69,8 +69,8 @@ class CohortRiskDetector:
                 COALESCE(s.top_driver_family, 'BEHAVIORAL') AS top_driver_family,
                 COALESCE(s.top_driver_metric, 'login_decay') AS top_driver_metric
             FROM partner_360 p
-            LEFT JOIN churn_radar_scores s 
-                ON p.partner_id = s.partner_id 
+            LEFT JOIN churn_radar_scores s
+                ON p.partner_id = s.partner_id
                 AND s.as_of_date = ?
             WHERE p.status = 'ACTIVE'
         """

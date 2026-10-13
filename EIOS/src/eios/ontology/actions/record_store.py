@@ -134,7 +134,7 @@ class FirestoreRecordStore:
                     raise  # a rejected mutation, not contention
                 last_error = exc
                 delay = min(BACKOFF_CAP_SECONDS, BACKOFF_BASE_SECONDS * 2**attempt)
-                time.sleep(random.uniform(0, delay))  # noqa: S311 - jitter, not cryptography
+                time.sleep(random.uniform(0, delay))  # noqa: S311
         raise RuntimeError("record contended beyond the retry budget") from last_error
 
     def list(self) -> list[Record]:

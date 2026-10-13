@@ -21,7 +21,6 @@ gates:
     command:
       - python -m ruff check .
       - python -m ruff format --check .
-      - python -m tools.repo_checks
 
   - id: types
     blocking: true
@@ -107,6 +106,13 @@ gates:
     proof_fixture: tests/fixtures/faulty_changes/adr_check
     command:
       - python -m tools.adr_check
+
+  - id: repo_checks
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/repo_checks
+    command:
+      - python -m tools.repo_checks
 
   - id: validation
     blocking: true

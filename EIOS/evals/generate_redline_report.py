@@ -28,7 +28,7 @@ def generate_compliance_report() -> dict:
         hasher.update(f"{res['test_id']}:{res['passed']}:{res['violations_detected']}".encode())
     manifest_hash = hasher.hexdigest()
 
-    git_sha = hashlib.sha1(manifest_hash.encode()).hexdigest()  # 40-char hex string
+    git_sha = hashlib.sha1(manifest_hash.encode()).hexdigest()  # 40-char hex string  # noqa: S324
 
     red_line_results = []
     for r in summary["results"]:

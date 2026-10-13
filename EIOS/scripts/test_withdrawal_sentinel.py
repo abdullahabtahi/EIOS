@@ -22,7 +22,7 @@ from eios.ontology.actions.intent_hub import (
 )
 
 
-def main() -> None:
+def main() -> None:  # noqa: PLR0915
     parser = argparse.ArgumentParser(
         description="Test real-time pre-withdrawal evaluation and action intent governance."
     )
@@ -69,9 +69,9 @@ def main() -> None:
     print(f"   Recommendation:   {assessment.recommendation.value}")
     print(f"   Intent ID:        {assessment.intent_id}")
 
-    assert latency_ms < 2000.0, "SLO latency exceeded 2000ms"
-    assert assessment.recommendation == WithdrawalDisposition.PROPOSE_HOLD
-    assert assessment.intent_id is not None
+    assert latency_ms < 2000.0, "SLO latency exceeded 2000ms"  # noqa: S101
+    assert assessment.recommendation == WithdrawalDisposition.PROPOSE_HOLD  # noqa: S101
+    assert assessment.intent_id is not None  # noqa: S101
 
     token = intent_hub.get_status(assessment.intent_id)
     print("\n2. Inspecting emitted Cloud KMS Action Intent Proposal:")

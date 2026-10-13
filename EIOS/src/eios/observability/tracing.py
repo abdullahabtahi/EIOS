@@ -160,7 +160,7 @@ class OpenTelemetrySpine:
                 should_record = True
             elif duration_ms >= self.latency_tail_threshold_ms:
                 should_record = True
-            elif self.sample_rate >= 1.0 or random.random() <= self.sample_rate:
+            elif self.sample_rate >= 1.0 or random.random() <= self.sample_rate:  # noqa: S311
                 should_record = True
 
             if should_record:

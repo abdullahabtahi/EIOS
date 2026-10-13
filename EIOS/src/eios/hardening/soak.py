@@ -83,7 +83,7 @@ class AcceleratedSoakTestRunner:
             total_events += self.events_per_day
 
             # 2. Analytical metric query phase
-            for q in range(self.queries_per_day):
+            for _q in range(self.queries_per_day):
                 q_start = time.perf_counter()
                 cursor.execute("SELECT count(*), coalesce(avg(amount), 0.0) FROM transactions_aml;")
                 cursor.fetchall()

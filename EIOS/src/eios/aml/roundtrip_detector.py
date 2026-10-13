@@ -27,7 +27,7 @@ class RoundTripDetector:
     def __init__(self, hot_state: HotStateEngine | None = None) -> None:
         self.hot_state = hot_state
 
-    def detect_roundtrips(
+    def detect_roundtrips(  # noqa: C901, PLR0912, PLR0915
         self,
         events_df: pd.DataFrame,
         window_hours: float = 72.0,
@@ -97,7 +97,7 @@ class RoundTripDetector:
                         holding_secs = 0.0
 
                     market_risk_pct = round(abs(net_pl) / max(dep_amt, 1.0), 5)
-                    turnaround_hours = (wdl_ts - dep_ts).total_seconds() / 3600.0
+                    (wdl_ts - dep_ts).total_seconds() / 3600.0
 
                     if pd.notna(kyc_dt) and kyc_dt is not None:
                         hours_since_kyc = max(

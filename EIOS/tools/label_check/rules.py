@@ -131,7 +131,7 @@ def load_rules(path: Path) -> LabelRules:
     """Load ``path``; raises ``ConfigError`` naming the file and the offending key."""
     file = str(path)
     data = load_validated(path, _SCHEMA)
-    assert isinstance(data, dict)  # noqa: S101 - the schema guarantees an object
+    assert isinstance(data, dict)  # noqa: S101
     evidence = {tag: str(rule["evidence"]) for tag, rule in data["tags"].items()}
     _check_tag_set(file, evidence)
     if set(data["claim_scope"]) != _CLAIM_SCOPE or len(data["claim_scope"]) != 3:

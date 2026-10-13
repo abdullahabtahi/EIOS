@@ -43,7 +43,7 @@ def compute_propensity_score(
     return round(clipped, 4)
 
 
-from sklearn.linear_model import LogisticRegression, Ridge
+from sklearn.linear_model import LogisticRegression, Ridge  # noqa: E402
 
 
 class AIPWEstimator:

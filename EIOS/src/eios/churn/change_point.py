@@ -64,7 +64,7 @@ class SeasonalityChangePointDetector:
 
         latest_ratio = wow_ratios[-1]
         latest_vol = float(weekly_vol.iloc[-1])
-        prior_vol = float(weekly_vol.iloc[-2]) if len(weekly_vol) >= 2 else latest_vol
+        float(weekly_vol.iloc[-2]) if len(weekly_vol) >= 2 else latest_vol
 
         # Check for recovery: if latest week recovered significantly vs prior week, it was a temporary dip!
         if latest_ratio >= 1.5 and latest_vol > 15:

@@ -19,7 +19,6 @@ class CarrierNATHubGenerator:
     def generate_hub_edges(self, target_account_count: int = 500) -> list[dict[str, Any]]:
         """Maps target_account_count accounts to a single shared carrier-NAT hub IP."""
         hub_ip = "100.64.0.1"
-        hub_device_hash = "cgnat_hub_fingerprint_dummy"
 
         selected_accounts = self.universe.accounts[:target_account_count]
         edges: list[dict[str, Any]] = []

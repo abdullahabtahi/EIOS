@@ -32,7 +32,7 @@ class OperationalDataGenerator:
             current_dt = base_dt + timedelta(hours=h)
             is_shock = shock_start_hour <= h < shock_end_hour
 
-            for s_idx, service in enumerate(SERVICES):
+            for _s_idx, service in enumerate(SERVICES):
                 if is_shock and service == "payment-gateway":
                     latency = float(self._gen.uniform(1200.0, 1800.0))
                     disputes = int(self._gen.integers(15, 30))

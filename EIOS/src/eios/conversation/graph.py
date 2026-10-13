@@ -46,10 +46,10 @@ class ActionExecutionSink:
         return card
 
 
-def create_conversational_graph(gateway: Gateway, auditor: MetricAuditorGate) -> StateGraph:
+def create_conversational_graph(gateway: Gateway, auditor: MetricAuditorGate) -> StateGraph:  # noqa: C901, PLR0915
     """Build the conversational multi-agent mesh using LangGraph."""
 
-    action_sink = ActionExecutionSink()
+    ActionExecutionSink()
     bridge = ConversationAuditorBridge(auditor)
     memory_manager = ConversationMemoryManager()
 

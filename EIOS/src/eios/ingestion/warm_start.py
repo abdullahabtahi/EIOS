@@ -53,10 +53,10 @@ class ParquetWarmStartLoader:
             try:
                 # Vectorized DuckDB Parquet read with column name alignment
                 cursor.execute(
-                    f"INSERT INTO {product.value} BY NAME SELECT * FROM read_parquet(?)",
+                    f"INSERT INTO {product.value} BY NAME SELECT * FROM read_parquet(?)",  # noqa: S608
                     [glob_pattern],
                 )
-                count = cursor.execute(f"SELECT count(*) FROM {product.value}").fetchone()[0]
+                count = cursor.execute(f"SELECT count(*) FROM {product.value}").fetchone()[0]  # noqa: S608
                 total_rows += count
                 products_loaded.append(product.value)
                 logger.info(f"Loaded {count} rows for {product.value} from Parquet lakehouse.")

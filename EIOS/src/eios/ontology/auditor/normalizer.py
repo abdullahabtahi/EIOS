@@ -26,7 +26,7 @@ class NumericTokenNormalizer:
     def __init__(self) -> None:
         pass
 
-    def _find_excluded_spans(self, text: str) -> list[tuple[int, int]]:
+    def _find_excluded_spans(self, text: str) -> list[tuple[int, int]]:  # noqa: C901
         """Identify text spans that should be excluded from numeric metric extraction."""
         spans: list[tuple[int, int]] = []
 

@@ -397,7 +397,7 @@ def test_terraform_validate_with_backend_disabled(environment: str, tmp_path: Pa
     directory = copy / "envs" / environment
     terraform = shutil.which("terraform") or "terraform"
     for argv in (["init", "-backend=false", "-input=false"], ["validate"]):
-        result = subprocess.run(  # noqa: S603 - fixed argv, resolved binary
+        result = subprocess.run(  # noqa: S603
             [terraform, *argv], cwd=directory, capture_output=True, text=True, check=False
         )
         assert result.returncode == 0, result.stdout + result.stderr

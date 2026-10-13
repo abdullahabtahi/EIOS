@@ -215,7 +215,7 @@ def test_secret_manager_source_reads_the_latest_version() -> None:
 
 
 def test_secret_manager_not_found_maps_to_none(monkeypatch: pytest.MonkeyPatch) -> None:
-    class NotFound(Exception):  # noqa: N818 - mirrors the third-party class name
+    class NotFound(Exception):
         pass
 
     exceptions = types.ModuleType("google.api_core.exceptions")

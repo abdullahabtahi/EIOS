@@ -11,7 +11,7 @@ from eios.foundry.cli import run_pipeline
 def test_unified_ground_truth_matches_json_schema(tmp_path: Path):
     """Verifies that run_pipeline emits eval-ground-truth.json valid against JSON schema."""
     output_dir = tmp_path / "run_eval_truth"
-    manifest = run_pipeline(seed=42, tier="dev", output_dir=output_dir, scale=0.5)
+    run_pipeline(seed=42, tier="dev", output_dir=output_dir, scale=0.5)
 
     truth_file = output_dir / "eval_truth" / "eval-ground-truth.json"
     assert truth_file.exists(), f"Missing unified ground truth file: {truth_file}"

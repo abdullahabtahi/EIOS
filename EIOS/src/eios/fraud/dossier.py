@@ -27,7 +27,7 @@ class FraudDossierAssembler:
     def __init__(self, sanitizer: FraudComplianceSanitizer | None = None) -> None:
         self.sanitizer = sanitizer or FraudComplianceSanitizer()
 
-    def assemble_dossier(
+    def assemble_dossier(  # noqa: C901, PLR0912, PLR0915
         self,
         partner_id: str,
         trading_pairs: list[TradingPairCorrelation] | None = None,

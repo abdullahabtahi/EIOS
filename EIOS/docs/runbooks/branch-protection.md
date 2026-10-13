@@ -8,7 +8,8 @@ Configure the protected branch so that every one of these checks is required and
 
 | Required check (gate id) | What it blocks |
 |---|---|
-| `lint` | style, formatting, repository hygiene checks |
+| `lint` | ruff lint and formatting |
+| `repo_checks` | repository hygiene: frozen models, file size, forbidden literals, pinned dependencies |
 | `types` | strict type errors |
 | `coverage` | coverage below 80% `[TARGET]` |
 | `contract` | broken data-contract suites registered in `evals/registry.yaml` |

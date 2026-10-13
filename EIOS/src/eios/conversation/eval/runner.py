@@ -16,7 +16,7 @@ from eios.conversation.models import OperatorRole
 _LOG = logging.getLogger("eios.conversation.eval.runner")
 
 
-def run_benchmark(dataset_path: Path | None = None) -> dict[str, Any]:
+def run_benchmark(dataset_path: Path | None = None) -> dict[str, Any]:  # noqa: PLR0915
     """Executes the golden benchmark evaluation suite across all personas and red-lines."""
     if dataset_path is None:
         dataset_path = Path(__file__).parent / "golden_dataset.json"
@@ -119,7 +119,7 @@ def run_benchmark(dataset_path: Path | None = None) -> dict[str, Any]:
 def main() -> None:
     parser = argparse.ArgumentParser(description="EIOS GenAI Conversational Agent Eval Harness")
     parser.add_argument("--benchmark", action="store_true", help="Run full benchmark suite")
-    args = parser.parse_args()
+    parser.parse_args()
 
     results = run_benchmark()
     if not results["all_passed"]:

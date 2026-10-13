@@ -25,7 +25,7 @@ class ChurnDataGenerator:
         base_date = datetime(2025, 1, 6, tzinfo=UTC)
         sig_counter = 0
 
-        for p_idx, partner in enumerate(self.universe.partners):
+        for _p_idx, partner in enumerate(self.universe.partners):
             for w in range(weeks):
                 sig_counter += 1
                 week_start = (base_date + timedelta(weeks=w)).strftime("%Y-%m-%d")

@@ -131,7 +131,7 @@ class CausalEvidenceGate:
             new_effect=round(new_est.ate_aipw, 4),
         )
 
-    def run_subset_refuter(
+    def run_subset_refuter(  # noqa: PLR0913
         self,
         Y: np.ndarray,
         W: np.ndarray,

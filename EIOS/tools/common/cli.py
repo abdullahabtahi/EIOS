@@ -70,6 +70,6 @@ def run_tool(
         return int(_execute(name, func, argv, report_extra))
     except EiosError as exc:
         print(f"{name}: error: {exc}", file=sys.stderr)
-    except Exception as exc:  # noqa: BLE001 - reported on stderr, mapped to exit code 2
+    except Exception as exc:
         print(f"{name}: unexpected error: {type(exc).__name__}: {exc}", file=sys.stderr)
     return int(ExitCode.ERROR)

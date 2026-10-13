@@ -106,7 +106,7 @@ class ProvenanceResolver:
         is_replayed: bool = False,
     ) -> ProvenanceMetadata:
         """Resolves provenance metadata in < 50ms."""
-        start_time = time.perf_counter()
+        time.perf_counter()
         as_of_time = as_of or datetime.now(UTC)
 
         # Check in-memory cache first

@@ -76,6 +76,9 @@
             "context": "adr_check"
           },
           {
+            "context": "repo_checks"
+          },
+          {
             "context": "frontend-check"
           }
         ]

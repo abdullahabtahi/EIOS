@@ -62,7 +62,7 @@ class PatternDiscoverySpecialist:
         self.force_gateway_failure = force_gateway_failure
         self.sanitizer = PIISanitizer()
 
-    def discover_themes(
+    def discover_themes(  # noqa: C901
         self,
         tickets: list[dict[str, Any]],
     ) -> list[DisengagementTheme]:

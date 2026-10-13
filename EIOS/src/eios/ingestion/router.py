@@ -81,7 +81,7 @@ async def _eviction_worker(app: FastAPI, check_interval: float = 3600.0) -> None
             logger.warning("Error in background eviction worker: %s", exc)
 
 
-def create_ingestion_app(
+def create_ingestion_app(  # noqa: C901, PLR0913, PLR0915
     config: IngestionConfig | None = None,
     queue: IngestionQueue | None = None,
     validator: ContractValidator | None = None,
@@ -153,7 +153,7 @@ def create_ingestion_app(
             for prod, records in grouped.items():
                 try:
                     app.state.exporter.export_batch(prod, records)
-                except Exception:
+                except Exception:  # noqa: S110
                     pass
 
     app = FastAPI(

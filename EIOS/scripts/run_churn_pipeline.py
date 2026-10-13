@@ -24,7 +24,7 @@ from eios.ontology.omcp.server import OMCPServer
 from tests.churn.conftest import seeded_hot_state
 
 
-def run_churn_cockpit(demo_mode: bool = True) -> None:
+def run_churn_cockpit(demo_mode: bool = True) -> None:  # noqa: PLR0915
     # 1. Initialize Hot State with seeded personas
     hot_state_fn = seeded_hot_state.__wrapped__
     engine = hot_state_fn()

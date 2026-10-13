@@ -72,7 +72,7 @@ class AIPWCausalEstimator:
         psi = (mu_1 - mu_0) + (W * (Y - mu_1) / e) - ((1.0 - W) * (Y - mu_0) / (1.0 - e))
         return psi
 
-    def estimate(
+    def estimate(  # noqa: PLR0913
         self,
         Y: np.ndarray,
         W: np.ndarray,

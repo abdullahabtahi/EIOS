@@ -32,7 +32,7 @@ from eios.foundry.storage.parquet_writer import write_deterministic_parquet
 from eios.foundry.universe import GlobalEntityUniverse
 
 
-def run_pipeline(
+def run_pipeline(  # noqa: PLR0915
     seed: int,
     tier: str,
     output_dir: Path | str,
@@ -311,7 +311,7 @@ def _write_product(
     )
 
 
-def _build_unified_ground_truth(
+def _build_unified_ground_truth(  # noqa: PLR0913
     run_uuid: str,
     tier: str,
     universe: GlobalEntityUniverse,

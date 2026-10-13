@@ -177,7 +177,7 @@ def _ensure_default_staged_cards() -> None:
     governance.seed_demo_intents()
 
 
-def _build_contract_state(role_str: str, operator_id: str | None = None) -> dict[str, Any]:
+def _build_contract_state(role_str: str, operator_id: str | None = None) -> dict[str, Any]:  # noqa: PLR0915
     """Compiles the full CockpitUiContract JSON structure for a role."""
     norm_role = role_str.lower().strip()
     now_iso = _get_utc_now()
@@ -895,7 +895,8 @@ def _resolve_parameters(
 
 @router.post(STAGE_ACTION_PATH)
 def stage_governed_action(
-    req: StageActionRequest, operator: Operator | None = Depends(require_roles(STAGE_ROLES))
+    req: StageActionRequest,
+    operator: Operator | None = Depends(require_roles(STAGE_ROLES)),  # noqa: B008
 ) -> dict[str, Any]:
     """Propose an action through the intent hub: validated, KMS-signed, nonce-registered and ledgered."""
     action_type = _ACTION_ALIASES.get(req.action_type, req.action_type)
@@ -922,7 +923,8 @@ def stage_governed_action(
 
 @router.post(AUTHORIZE_ACTION_PATH)
 def authorize_governed_action(
-    req: AuthorizeActionRequest, operator: Operator | None = Depends(require_roles(APPROVE_ROLES))
+    req: AuthorizeActionRequest,
+    operator: Operator | None = Depends(require_roles(APPROVE_ROLES)),  # noqa: B008
 ) -> dict[str, Any]:
     """Record a Four-Eyes approval; commit the action once every required approval is in."""
     try:
@@ -1055,7 +1057,7 @@ app.include_router(router)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="EIOS Cockpit Presentation Gateway")
-    parser.add_argument("--host", default="0.0.0.0", help="Host interface to bind to")
+    parser.add_argument("--host", default="0.0.0.0", help="Host interface to bind to")  # noqa: S104
     parser.add_argument("--port", type=int, default=8000, help="Port to listen on")
     args = parser.parse_args()
 

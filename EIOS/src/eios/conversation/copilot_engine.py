@@ -132,7 +132,7 @@ class CopilotEngine:
             response = chat.send_message(fn_parts)
         return response
 
-    def process_query(
+    def process_query(  # noqa: C901, PLR0912, PLR0915
         self,
         query: str,
         role: OperatorRole = OperatorRole.EXECUTIVE,

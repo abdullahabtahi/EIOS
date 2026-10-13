@@ -35,7 +35,7 @@ class ServiceLevelIndicatorMeasurement(BaseModel):
     )
 
 
-class TimestampedItem(Generic[T]):
+class TimestampedItem(Generic[T]):  # noqa: UP046
     """Wrapper holding an item and its UTC timestamp."""
 
     __slots__ = ("item", "timestamp")
@@ -48,7 +48,7 @@ class TimestampedItem(Generic[T]):
         self.item = item
 
 
-class RollingEventBuffer(Generic[T]):
+class RollingEventBuffer(Generic[T]):  # noqa: UP046
     """Thread-safe bounded circular buffer holding timestamped events."""
 
     def __init__(self, max_capacity: int = 50_000) -> None:

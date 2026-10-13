@@ -45,7 +45,7 @@ def golden_personas() -> dict[str, dict[str, Any]]:
 
 
 @pytest.fixture
-def seeded_hot_state() -> HotStateEngine:
+def seeded_hot_state() -> HotStateEngine:  # noqa: PLR0912
     """Provides an in-memory DuckDB HotStateEngine initialized with Churn Radar tables."""
     hot_state = HotStateEngine(db_path=":memory:")
     conn = hot_state._conn
@@ -144,7 +144,7 @@ def seeded_hot_state() -> HotStateEngine:
 
     # Seed P-CHURN-DRIFT
     conn.execute("""
-        INSERT INTO partner_360 VALUES 
+        INSERT INTO partner_360 VALUES
         ('P-CHURN-DRIFT', 'VIP_MASTER', 'IDN_MYS', 18, 45000.0, 'MGR-01', 'ACTIVE'),
         ('P-HARD-NEG-VACATION', 'TIER_2', 'EUR_DEU', 24, 8500.0, 'MGR-02', 'ACTIVE');
     """)
@@ -199,7 +199,7 @@ def seeded_hot_state() -> HotStateEngine:
     conn.execute(
         """
         INSERT INTO partner_comms VALUES
-        ('TICK-8492', 'P-CHURN-DRIFT', 'TICKET', 'NEGATIVE', 
+        ('TICK-8492', 'P-CHURN-DRIFT', 'TICKET', 'NEGATIVE',
          'Competitor XM is offering 60% revshare and zero spread markups in Southeast Asia. Can you match?',
          ?)
     """,

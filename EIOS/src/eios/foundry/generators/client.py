@@ -72,7 +72,6 @@ class ClientDataGenerator:
     def generate_client_funnel(self) -> list[dict[str, Any]]:
         """Emits validated client_funnel progression event records."""
         events: list[dict[str, Any]] = []
-        steps = ["VISIT", "SIGNUP", "KYC_SUBMIT", "FIRST_DEPOSIT"]
         event_counter = 0
 
         for account in self.universe.accounts:

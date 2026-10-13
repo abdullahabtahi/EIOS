@@ -104,7 +104,7 @@ class GlobalEntityUniverse:
 
         self._generate_universe()
 
-    def _generate_universe(self) -> None:
+    def _generate_universe(self) -> None:  # noqa: PLR0915
         """Deterministically generates entity pools and establishes referential mappings."""
         base_time = datetime(2025, 1, 1, 0, 0, 0, tzinfo=UTC)
         namespace = uuid.uuid5(uuid.NAMESPACE_DNS, f"foundry.universe.{self.rng.master_seed}")

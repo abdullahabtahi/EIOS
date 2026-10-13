@@ -43,6 +43,7 @@ jobs:
           - open_decision_check
           - label_check
           - adr_check
+          - repo_checks
     env:
       EIOS_REQUIRE_TFLINT: "1"
     steps:
