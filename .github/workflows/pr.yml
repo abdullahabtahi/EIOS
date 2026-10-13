@@ -89,6 +89,8 @@ jobs:
         run: npm ci
       - name: type check
         run: npx tsc --noEmit
+      - name: audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
       - name: lint
         run: npm run lint
       - name: test
