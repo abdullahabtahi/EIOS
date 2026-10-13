@@ -130,6 +130,17 @@ describe('workstation proxy', () => {
     expect(unsigned.kmsSignatureBadge.verified).toBe(false);
   });
 
+  it('labels backend data as fixture unless the backend itself says it is live', async () => {
+    fetchMock.mockResolvedValue(json({ fallback_state: { is_active: false, badge_label: '[ILLUSTRATIVE]' } }));
+    expect((await (await get()).json()).dataOrigin).toBe('fixture');
+
+    fetchMock.mockResolvedValue(json({}));
+    expect((await (await get()).json()).dataOrigin).toBe('fixture');
+
+    fetchMock.mockResolvedValue(json({ fallback_state: { is_active: false, badge_label: '[LIVE]' } }));
+    expect((await (await get()).json()).dataOrigin).toBe('live');
+  });
+
   it('relays 401/403 and labels any outage fallback as a replay', async () => {
     fetchMock.mockResolvedValue(json({ detail: 'expired' }, 401));
     expect((await get()).status).toBe(401);

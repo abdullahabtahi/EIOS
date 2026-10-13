@@ -91,7 +91,7 @@ describe('Governed Action Shelf never offers to execute an expired intent', () =
 
 describe('Telemetry is derived from state, not hard-coded', () => {
   it('header no longer prints a literal Lag: 18.4s or an unconditional Synced', async () => {
-    mockFetchWith({ ...getMockWorkstationState('executive') });
+    mockFetchWith({ ...getMockWorkstationState('executive'), dataOrigin: 'live' });
     render(
       <CockpitProvider>
         <HeaderNav />

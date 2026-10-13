@@ -1,11 +1,28 @@
 import { describe, it, expect } from 'vitest';
 import { getPipelineStatus } from '@/components/cockpit/state/pipeline-status';
 
-const base = { isLiveConnected: true, isCachedFallback: false, isSimulatedOutage: false, isLoading: false };
+const base = {
+  isLiveConnected: true,
+  isCachedFallback: false,
+  isSimulatedOutage: false,
+  isLoading: false,
+  dataOrigin: 'live' as const,
+};
 
 describe('getPipelineStatus (derived, never hard-coded)', () => {
   it('is Live only when connected, not cached and not in a simulated outage', () => {
     expect(getPipelineStatus(base)).toEqual({ label: 'Live', tone: 'ok' });
+  });
+
+  it('is Fixture, not Live, when the connection is up but the data is fixture', () => {
+    expect(getPipelineStatus({ ...base, dataOrigin: 'fixture' })).toEqual({ label: 'Fixture', tone: 'warn' });
+  });
+
+  it('still reports Offline, Replay and Syncing ahead of Fixture', () => {
+    const fixture = { ...base, dataOrigin: 'fixture' as const };
+    expect(getPipelineStatus({ ...fixture, isLiveConnected: false })).toEqual({ label: 'Offline', tone: 'bad' });
+    expect(getPipelineStatus({ ...fixture, isCachedFallback: true })).toEqual({ label: 'Replay', tone: 'warn' });
+    expect(getPipelineStatus({ ...fixture, isLoading: true })).toEqual({ label: 'Syncing', tone: 'neutral' });
   });
 
   it('is Replay when serving a cached fallback snapshot', () => {
