@@ -9,6 +9,7 @@ import {
   WorkstationApiResponse,
 } from './cockpit-types';
 import { getFallbackWorkstationData } from './fixtures';
+import { authFetch } from '@/lib/auth/token';
 
 export const BACKEND_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||
@@ -71,7 +72,7 @@ export function subscribeToSseStream<T>(
  */
 export async function fetchChurnRadar(): Promise<any> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/v1/churn/radar`, {
+    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/churn/radar`, {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
@@ -106,7 +107,7 @@ export async function fetchChurnRadar(): Promise<any> {
  */
 export async function fetchFraudTree(partnerId = 'AP-1029'): Promise<any> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/v1/fraud/tree?partner_id=${partnerId}`, {
+    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/fraud/tree?partner_id=${partnerId}`, {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
@@ -130,7 +131,7 @@ export async function fetchFraudTree(partnerId = 'AP-1029'): Promise<any> {
  */
 export async function fetchAmlDossier(caseId: string): Promise<any> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/v1/aml/dossier/${caseId}`, {
+    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/aml/dossier/${caseId}`, {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
@@ -158,7 +159,7 @@ export async function fetchAmlDossier(caseId: string): Promise<any> {
  */
 export async function fetchAmlGraph(caseId: string, hubThreshold = 100): Promise<any> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/v1/aml/dossier/${caseId}/graph?hub_threshold=${hubThreshold}`, {
+    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/aml/dossier/${caseId}/graph?hub_threshold=${hubThreshold}`, {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
@@ -188,7 +189,7 @@ export async function fetchAmlGraph(caseId: string, hubThreshold = 100): Promise
  */
 export async function executeWhatIfSimulation(shockParam: string, magnitudePct: number): Promise<any> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/v1/synthesis/what-if`, {
+    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/synthesis/what-if`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ shock_param: shockParam, magnitude_pct: magnitudePct }),
@@ -217,7 +218,7 @@ export async function executeWhatIfSimulation(shockParam: string, magnitudePct: 
  */
 export async function loadWorkstationData(role: PersonaRole): Promise<WorkstationApiResponse> {
   try {
-    const res = await fetch(`/api/cockpit/workstations/${role}`, {
+    const res = await authFetch(`/api/cockpit/workstations/${role}`, {
       method: 'GET',
       headers: { Accept: 'application/json' },
     });
@@ -283,7 +284,7 @@ export function getFallbackPartnerOntology(partnerId: string): any {
  */
 export async function fetchPartnerOntology(partnerId: string): Promise<any> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/v1/churn/partner/${encodeURIComponent(partnerId)}/ontology`);
+    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/churn/partner/${encodeURIComponent(partnerId)}/ontology`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
@@ -348,7 +349,7 @@ export function getFallbackPartnerBattlecards(partnerId: string): any {
  */
 export async function fetchPartnerBattlecards(partnerId: string): Promise<any> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/v1/churn/partner/${encodeURIComponent(partnerId)}/battlecards`);
+    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/churn/partner/${encodeURIComponent(partnerId)}/battlecards`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
@@ -362,7 +363,7 @@ export async function fetchPartnerBattlecards(partnerId: string): Promise<any> {
  */
 export async function simulatePartnerWhatIf(partnerId: string, prompt: string): Promise<any> {
   try {
-    const res = await fetch(`${BACKEND_BASE_URL}/api/v1/churn/partner/${encodeURIComponent(partnerId)}/what-if`, {
+    const res = await authFetch(`${BACKEND_BASE_URL}/api/v1/churn/partner/${encodeURIComponent(partnerId)}/what-if`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ proposal_prompt: prompt }),

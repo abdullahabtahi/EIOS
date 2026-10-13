@@ -9,7 +9,7 @@ import {
 } from '@/components/cockpit/state/cockpit-types';
 import { getMockWorkstationState } from '@/components/cockpit/state/fixtures';
 
-const BACKEND_URL = process.env.EIOS_BACKEND_URL || 'http://127.0.0.1:8002';
+import { callBackend, relayError } from '@/lib/server/backend';
 
 function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationApiResponse {
   const mock = getMockWorkstationState(role);
@@ -147,16 +147,12 @@ export async function GET(
   const validRole = role as PersonaRole;
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 1500);
-
-    const res = await fetch(`${BACKEND_URL}/api/cockpit/workstations/${role}`, {
+    const res = await callBackend(req, `/api/cockpit/workstations/${role}`, {
       headers: { Accept: 'application/json' },
-      signal: controller.signal,
     });
-    clearTimeout(timeoutId);
+    if (res && (res.status === 401 || res.status === 403)) return relayError(res);
 
-    if (res.ok) {
+    if (res?.ok) {
       const raw = await res.json();
       const normalized = normalizeBackendWorkstation(raw, validRole);
       return NextResponse.json(normalized);
