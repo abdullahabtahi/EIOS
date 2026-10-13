@@ -113,6 +113,9 @@ class CopilotEngine:
             )
 
         client = self.client_manager.get_client()
+        fallback_reason: Optional[str] = None
+        if self.offline_mode or client is None:
+            fallback_reason = self.client_manager.offline_reason or "offline replay mode"
         tool_traces: List[Dict[str, Any]] = []
         citations: List[ProvenanceCitation] = []
 
@@ -174,9 +177,11 @@ class CopilotEngine:
                         turn_latency_ms=latency_ms,
                         auditor_status=audit_res.status.value,
                     )
-                _LOG.warning("Live response failed audit or lacked mandatory tool grounding, falling back to deterministic replay")
+                fallback_reason = "live response failed audit or lacked mandatory tool grounding"
+                _LOG.warning("%s; falling back to deterministic replay", fallback_reason)
             except Exception as e:
-                _LOG.warning("Live Gemini execution failed, degrading to deterministic replay: %s", e)
+                fallback_reason = f"live Gemini call failed: {e}"
+                _LOG.warning("%s; degrading to deterministic replay", fallback_reason)
 
         # Deterministic Grounded Execution (Offline / Fast Local Replay)
         tool_traces = []
@@ -360,7 +365,8 @@ class CopilotEngine:
             citations=[c.citation_id for c in citations],
             provenance_citations=citations,
             staged_recommendation=staged_rec,
-            is_replay_fallback=False,
+            is_replay_fallback=True,
+            fallback_reason=fallback_reason or "deterministic grounded replay",
             turn_latency_ms=latency_ms,
             auditor_status=audit_res.status.value,
         )

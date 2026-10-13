@@ -171,6 +171,7 @@ class ConversationQueryResponse(BaseModel):
     evidence_ledger: List[EvidenceItem] = Field(default_factory=list)
     staged_recommendation: Optional[Dict[str, Any]] = None
     is_replay_fallback: bool = False
+    fallback_reason: Optional[str] = None
     turn_latency_ms: float = 0.0
     reflection_cycles_used: int = 0
     auditor_status: Optional[str] = "PASS"
