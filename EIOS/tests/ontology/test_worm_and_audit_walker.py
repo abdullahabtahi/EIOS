@@ -8,7 +8,7 @@ from eios.ontology.actions.models import (
     WORMAnchorCheckpoint,
 )
 from eios.ontology.actions.sequencer import LedgerSequencer
-from eios.ontology.actions.signer import KMSActionSigner
+from eios.ontology.actions.signer import LocalDevActionSigner
 from eios.ontology.actions.worm import WORMAnchorService, WORMRetentionViolationError
 import pytest
 
@@ -16,7 +16,7 @@ import pytest
 def test_worm_anchor_checkpoint_creation_and_immutability():
     engine = HotStateEngine(db_path=":memory:")
     sequencer = LedgerSequencer(hot_state_engine=engine)
-    signer = KMSActionSigner(key_id="worm-test-key")
+    signer = LocalDevActionSigner(key_id="worm-test-key")
     worm_service = WORMAnchorService(sequencer=sequencer, signer=signer, hot_state_engine=engine)
 
     # Ingest 5 events

@@ -7,7 +7,7 @@ from typing import Any
 from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.actions.models import WORMAnchorCheckpoint
 from eios.ontology.actions.sequencer import LedgerSequencer
-from eios.ontology.actions.signer import KMSActionSigner
+from eios.ontology.actions.signer import ActionSigner, default_action_signer
 
 
 class WORMRetentionViolationError(Exception):
@@ -24,11 +24,11 @@ class WORMAnchorService:
     def __init__(
         self,
         sequencer: LedgerSequencer,
-        signer: KMSActionSigner | None = None,
+        signer: ActionSigner | None = None,
         hot_state_engine: HotStateEngine | None = None,
     ) -> None:
         self.sequencer = sequencer
-        self.signer = signer or KMSActionSigner(key_id="worm-anchor-signer-p256")
+        self.signer = signer or default_action_signer()
         self.hot_state = hot_state_engine
         self._checkpoints: list[WORMAnchorCheckpoint] = []
         self._lock = threading.Lock()

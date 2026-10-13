@@ -30,12 +30,21 @@ from eios.ontology.actions.sequencer import (
     LedgerSequencer,
     SequenceIntegrityError,
 )
-from eios.ontology.actions.signer import KMSActionSigner, SignatureVerificationError
+from eios.ontology.actions.signer import (
+    ActionSigner,
+    CloudKMSActionSigner,
+    LocalDevActionSigner,
+    SignatureVerificationError,
+    default_action_signer,
+)
 from eios.ontology.actions.sink import FaultMode, SimulatedWriteBackSink
 from eios.ontology.actions.worm import WORMAnchorService, WORMRetentionViolationError
 
 __all__ = [
-    "KMSActionSigner",
+    "ActionSigner",
+    "CloudKMSActionSigner",
+    "LocalDevActionSigner",
+    "default_action_signer",
     "SignatureVerificationError",
     "ActionIntentHub",
     "CANONICAL_ACTION_SPECS",

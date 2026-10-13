@@ -15,7 +15,7 @@ from eios.ontology.actions.intent_hub import (
     ActionSeverity,
     FourEyesApprovalRequiredError,
 )
-from eios.ontology.actions.signer import KMSActionSigner, SignatureVerificationError
+from eios.ontology.actions.signer import ActionSigner, SignatureVerificationError, default_action_signer
 
 
 class STRIDESecuritySuite:
@@ -31,11 +31,11 @@ class STRIDESecuritySuite:
 
     def __init__(
         self,
-        signer: Optional[KMSActionSigner] = None,
+        signer: Optional[ActionSigner] = None,
         vault: Optional[TokenVault] = None,
         intent_hub: Optional[ActionIntentHub] = None,
     ) -> None:
-        self.signer = signer or KMSActionSigner()
+        self.signer = signer or default_action_signer()
         self.vault = vault or TokenVault()
         self.intent_hub = intent_hub or ActionIntentHub(signer=self.signer)
 

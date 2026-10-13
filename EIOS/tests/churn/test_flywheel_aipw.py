@@ -14,12 +14,12 @@ from eios.ontology.actions.intent_hub import (
     ActionStatus,
     InvalidActionParameterError,
 )
-from eios.ontology.actions.signer import KMSActionSigner
+from eios.ontology.actions.signer import LocalDevActionSigner
 
 
 def test_action_intent_token_ecdsa_signature():
     """Verify LaunchRetentionPlaybook generates a valid KMS ECDSA P-256 signed ActionIntentToken."""
-    signer = KMSActionSigner()
+    signer = LocalDevActionSigner()
     hub = ActionIntentHub(signer=signer)
 
     proposal = ActionIntentProposal(
