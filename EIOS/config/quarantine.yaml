@@ -9,15 +9,15 @@
 #     reason: <why the gate is quarantined>
 - gate_id: repo_checks
   owner: abdullahabtahi
-  expires: 2026-10-27
-  reason: "155 pre-existing findings (147 non-frozen models, 6 forbidden literals, 2 oversized files); fixing them changes behavior, tracked as its own change"
+  expires: 2026-11-24
+  reason: "155 pre-existing findings (147 non-frozen models, 6 forbidden literals, 2 oversized files); fixing them changes behavior. Renewed once (was 2026-10-27). Exit: freeze the models behind tests, then split cockpit/server.py and omcp/server.py. The plan/state/key guard runs separately as the forbidden_artifacts gate, so it is not skipped"
 
 - gate_id: types
   owner: abdullahabtahi
-  expires: 2026-10-27
-  reason: "Pre-existing strict mypy untyped-def debt across legacy test suites slated for dedicated typing pass"
+  expires: 2026-11-24
+  reason: "Pre-existing strict mypy debt (about 890 errors across 266 files, mostly untyped defs in legacy tests). Renewed once (was 2026-10-27). Exit: a dedicated typing pass, source packages first, then tests"
 
 - gate_id: coverage
   owner: abdullahabtahi
-  expires: 2026-10-27
-  reason: "Repository-wide branch coverage below 80% pending unit test expansion for data pipelines"
+  expires: 2026-11-24
+  reason: "Repository-wide branch coverage below 80% pending unit test expansion for data pipelines. Renewed once (was 2026-10-27). Exit: measure the real figure, then raise it with tests for the wired cockpit and conversation paths first"
