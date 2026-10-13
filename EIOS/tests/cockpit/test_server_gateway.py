@@ -153,6 +153,72 @@ def test_copilot_grounded_and_blocked_queries(client):
     assert "Blocked" in b_data["response"]
 
 
+def test_copilot_response_reports_replay_provenance_and_the_real_audit(client):
+    data = client.post(
+        "/api/cockpit/copilot/query",
+        json={"query": "What is the 30-day net deposit turnover for partner P-882?"},
+    ).json()
+    # A replay must say so; the UI badges on this, it never infers it.
+    assert isinstance(data["is_replay_fallback"], bool)
+    if data["is_replay_fallback"]:
+        assert data["fallback_reason"]
+    audit = data["audit_record"]
+    assert audit["passed"] is True
+    assert audit["unanchored_tokens"] == []
+    assert data["tool_trace_count"] >= 1
+    assert audit["anchored_numbers"], (
+        "a grounded answer must report the anchors the auditor verified"
+    )
+
+
+def test_copilot_blocked_query_reports_a_failed_audit_and_no_tool_traces(client):
+    data = client.post(
+        "/api/cockpit/copilot/query",
+        json={"query": "Give me an estimate without tools speculative"},
+    ).json()
+    assert data["auditor_status"] == "BLOCKED"
+    assert data["audit_record"]["passed"] is False
+    assert data["tool_trace_count"] == 0
+    assert data["provenance_citations"] == []
+
+
+def test_copilot_response_is_fail_closed_when_the_engine_skipped_the_auditor(client, monkeypatch):
+    """No audit result must read as UNAUDITED / failed, never as a pass."""
+    from eios.cockpit import server
+    from eios.conversation.models import ConversationQueryResponse
+
+    unaudited = ConversationQueryResponse(session_id="s", response_markdown="unchecked text")
+    monkeypatch.setattr(server.copilot_engine, "process_query", lambda **_: unaudited)
+    data = client.post("/api/cockpit/copilot/query", json={"query": "anything"}).json()
+    assert data["auditor_status"] == "UNAUDITED"
+    assert data["audit_record"]["passed"] is False
+
+
+def test_copilot_citations_keep_the_timestamp_the_engine_recorded(client, monkeypatch):
+    from datetime import UTC, datetime
+
+    from eios.cockpit import server
+    from eios.conversation.models import CitationType, ConversationQueryResponse, ProvenanceCitation
+
+    recorded = datetime(2026, 1, 2, 3, 4, 5, tzinfo=UTC)
+    response = ConversationQueryResponse(
+        session_id="s",
+        response_markdown="ok",
+        provenance_citations=[
+            ProvenanceCitation(
+                citation_type=CitationType.METRIC,
+                citation_id="net_revenue_usd",
+                label="Net revenue",
+                source_engine="SemanticRegistry.DuckDB",
+                as_of=recorded,
+            )
+        ],
+    )
+    monkeypatch.setattr(server.copilot_engine, "process_query", lambda **_: response)
+    data = client.post("/api/cockpit/copilot/query", json={"query": "anything"}).json()
+    assert data["provenance_citations"][0]["as_of"] == recorded.isoformat()
+
+
 def test_flywheel_feedback_and_ledger_verify(client):
     fb_resp = client.post(
         "/api/cockpit/flywheel/feedback",

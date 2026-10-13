@@ -1,5 +1,7 @@
 """Tests for OMCP analytical tools wrapping DuckDB, AML, and Causal DAG engines (F018, T009)."""
 
+import pytest
+
 from eios.conversation.tools import (
     get_governed_metric,
     inspect_aml_entity,
@@ -46,4 +48,32 @@ def test_run_causal_what_if():
     res = run_causal_what_if(shock_param="competitor_spread_delta_bps", magnitude_pct=20.0)
     assert "deltas" in res
     assert "confidence_interval_95" in res
-    assert res["refuter_passed"] is True
+    # Principle III: no placebo refuter ran, so no pass may be claimed; this is correlation only.
+    assert res["refuter_passed"] is None
+    assert res["placebo_p_value"] is None
+    assert res["causal_status"] == "CORRELATION_ONLY"
+
+
+def test_unknown_metric_is_an_error_not_an_invented_number():
+    with pytest.raises(ValueError, match="unknown governed metric"):
+        get_governed_metric(metric_id="made_up_metric")
+
+
+def test_unknown_entity_for_a_known_metric_is_an_error_not_the_portfolio_default():
+    with pytest.raises(ValueError, match="no governed value"):
+        get_governed_metric(metric_id="net_revenue_usd", entity_id="P-999")
+
+
+def test_portfolio_level_metric_without_an_entity_still_resolves():
+    assert get_governed_metric(metric_id="net_revenue_usd")["value"] == 3820000.0
+
+
+def test_every_fixture_tool_labels_its_origin():
+    outputs = [
+        get_governed_metric(metric_id="net_revenue_usd"),
+        inspect_aml_entity(entity_id="CR84920"),
+        query_graph_topology(entity_id="CR84920"),
+        inspect_partner_churn(partner_id="AP-1029"),
+        run_causal_what_if(shock_param="competitor_spread_delta_bps", magnitude_pct=20.0),
+    ]
+    assert all("ILLUSTRATIVE" in out["data_origin"] for out in outputs)

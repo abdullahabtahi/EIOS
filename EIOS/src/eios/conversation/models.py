@@ -193,7 +193,10 @@ class ConversationQueryResponse(BaseModel):
     fallback_reason: str | None = None
     turn_latency_ms: float = 0.0
     reflection_cycles_used: int = 0
-    auditor_status: str | None = "PASS"
+    # Fail closed: nothing is PASS unless the Metric Auditor actually ran and said so.
+    auditor_status: str | None = None
+    audit_record: AuditorRecord | None = None
+    tool_trace_count: int = 0
 
 
 def sanitize_for_state_storage(obj: Any) -> Any:
