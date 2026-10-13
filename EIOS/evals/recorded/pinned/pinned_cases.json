@@ -1,0 +1,1068 @@
+[
+ {
+  "record_id": "pinned_multiplier.0",
+  "case_id": "pinned_multiplier",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "CR84920 shows a 16.0x discrepancy multiplier.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": true
+ },
+ {
+  "record_id": "pinned_revenue.0",
+  "case_id": "pinned_revenue",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue is $3,820,000 USD.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": true
+ },
+ {
+  "record_id": "pinned_date_and_count.0",
+  "case_id": "pinned_date_and_count",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "As of 2026-10-13 the ring has 23 accounts.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": true
+ },
+ {
+  "record_id": "pinned_invented_ring_size.0",
+  "case_id": "pinned_invented_ring_size",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The ring has 47 members.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": false
+ },
+ {
+  "record_id": "pinned_invented_rounded_revenue.0",
+  "case_id": "pinned_invented_rounded_revenue",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Revenue is $3.9 million.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": false
+ },
+ {
+  "record_id": "pinned_unanchored_derived_percent.0",
+  "case_id": "pinned_unanchored_derived_percent",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Deposits were 16 times income, i.e. 1,500% higher.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": false
+ },
+ {
+  "record_id": "pinned_wrong_field.0",
+  "case_id": "pinned_wrong_field",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The composite risk score of CR84920 is 16.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": false
+ },
+ {
+  "record_id": "pinned_hundred_times_too_small.0",
+  "case_id": "pinned_hundred_times_too_small",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue is $38,200 USD.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": false
+ },
+ {
+  "record_id": "pinned_hundred_times_too_large.0",
+  "case_id": "pinned_hundred_times_too_large",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The velocity is 1600 transfers.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": false
+ },
+ {
+  "record_id": "pinned_spelled_out_numbers.0",
+  "case_id": "pinned_spelled_out_numbers",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue is about three million dollars and sixteen accounts are linked.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": false
+ },
+ {
+  "record_id": "pinned_wrong_unit.0",
+  "case_id": "pinned_wrong_unit",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Declared income was $500 per week.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": false
+ },
+ {
+  "record_id": "pinned_million_shorthand.0",
+  "case_id": "pinned_million_shorthand",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Revenue is about $3.8 million.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": true
+ },
+ {
+  "record_id": "pinned_harmless_counts.0",
+  "case_id": "pinned_harmless_counts",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "pinned",
+  "turn_index": 1,
+  "operator_id": "tok_op_pinned",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "question": "Check CR84920 and net revenue",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "capability": "aml.dossier",
+    "arguments": {
+     "entity_id": "CR84920"
+    },
+    "result": {
+     "entity_id": "CR84920",
+     "composite_risk_score": 89,
+     "kyc_declared_monthly_income_usd": 500.0,
+     "net_deposit_volume_30d_usd": 8000.0,
+     "discrepancy_multiplier": 16.0,
+     "syndicate_ring_size": 23,
+     "velocity_transfers_count": 16,
+     "average_transfer_usd": 500.0,
+     "recommended_action": "HoldWithdrawal",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "get_governed_metric",
+    "capability": "metric.get",
+    "arguments": {
+     "metric_id": "net_revenue_usd"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "entity_id": null,
+     "value": 3820000.0,
+     "unit": "USD",
+     "definition_version": "v1.4.0",
+     "steward": "FinancialOperationsSteward",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   },
+   {
+    "name": "run_causal_what_if",
+    "capability": "exec.what_if",
+    "arguments": {
+     "shock_param": "competitor_spread_delta_bps",
+     "magnitude_pct": 20.0
+    },
+    "result": {
+     "shock_parameter": "competitor_spread_delta_bps",
+     "magnitude_percentage": 20.0,
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0,
+      "partner_churn_hazard_delta": 0.18
+     },
+     "confidence_interval_95": [
+      -974864.0,
+      -1240736.0
+     ],
+     "refuter_passed": null,
+     "placebo_p_value": null,
+     "causal_status": "CORRELATION_ONLY",
+     "baseline_model_version": "SCM_v2.1_DoWhy",
+     "data_origin": "FIXTURE [ILLUSTRATIVE]"
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "There are 3 key findings across 2 sources.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "expected_supported": true
+ }
+]
