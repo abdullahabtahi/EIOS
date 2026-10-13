@@ -1,7 +1,7 @@
-"""``python -m tools.repo_checks [service-docs] [--repo-root DIR]``; exits 0, 1 findings, 2 error.
+"""``python -m tools.repo_checks [service-docs|forbidden-artifacts] [--repo-root DIR]``; exits 0, 1 findings, 2 error.
 
 Without a subcommand every enabled hygiene check runs; ``service-docs`` runs only the service
-documentation check (FR-039).
+documentation check (FR-039); ``forbidden-artifacts`` runs only the tracked plan/state/key guard.
 """
 
 from __future__ import annotations
