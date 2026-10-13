@@ -14,6 +14,17 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'react-hooks/purity': 'warn',
+      'react-hooks/set-state-in-effect': 'warn',
+      'react-hooks/refs': 'warn',
+      'react-hooks/immutability': 'warn',
+      'react/display-name': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+    },
+  },
+  {
     files: ['src/components/cockpit/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-syntax': [

@@ -422,6 +422,14 @@ export function TopologicalGraphCanvas() {
     tickCountRef.current = 0;
   }, [rawNodes, rawEdges, suppressCgnat, hopFilter, isFullscreen, layoutMode, minVolumeThreshold, timelineDay, focalId]);
 
+  // Counterparties for selected node
+  const selectedConnectedEdges = React.useMemo(() => {
+    if (!selectedNode) return [];
+    return simEdgesRef.current.filter(
+      (e) => e.source.id === selectedNode.id || e.target.id === selectedNode.id
+    );
+  }, [selectedNode, simEdgesRef.current]);
+
   // Canvas Animation & Physics Simulation Loop
   React.useEffect(() => {
     const canvas = canvasRef.current;
@@ -1133,14 +1141,6 @@ export function TopologicalGraphCanvas() {
 
   const visibleNodesCount = simNodesRef.current.length;
   const visibleEdgesCount = simEdgesRef.current.length;
-
-  // Counterparties for selected node
-  const selectedConnectedEdges = React.useMemo(() => {
-    if (!selectedNode) return [];
-    return simEdgesRef.current.filter(
-      (e) => e.source.id === selectedNode.id || e.target.id === selectedNode.id
-    );
-  }, [selectedNode, simEdgesRef.current]);
 
   return (
     <div
