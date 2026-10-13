@@ -19,6 +19,22 @@ Evidence tiers: **RUN** executed by me, **SRC** read in code or package source, 
 - **Alternatives rejected**: an LLM judge (non-deterministic, forbidden to gate by FR-017); ADK `hallucinations_v1` (LLM-based; reported for information only); the Check Grounding API (built for prose claims, untested on numbers).
 - **Known limit**: label matching can reject a faithful answer that uses an unlisted synonym. The failure direction is safe (blocks), and per-case aliases plus the paraphrase corpus bound it. Measure the false-block rate at the baseline.
 
+### R-2 results `[MEASURED]` (2026-10-14, T024)
+
+Corpora: the 13 pinned cases; 23 hand-written mutants and 20 faithful paraphrases; and a seeded generator (`evals/agent/build_corpus.py`, five workstations, about 230 records per seed) with the expected outcome known by construction.
+
+| Stage | Wrong answers blocked | Faithful answers accepted |
+|---|---|---|
+| Pinned 13 | 8 of 8 | 5 of 5 |
+| First run on the generated corpus (seed 2210, before any fix) | 87 of 89 | 44 of 52 |
+| After the fixes below, eight seeds | 1,014 of 1,014 | 832 of 832 |
+
+First-run failures and fixes: two figures in one sentence borrowed each other's labels (context now limited to the clause); a statistic name such as `p95` was read as an invented identifier (new `quantile_label` exemption); a minus sign before a currency symbol was dropped; a top-level `unit` hint leaked into nested fields (hints and metric names now apply to direct children only); the scale test was too loose; a figure for the net revenue *forecast* was accepted as "net revenue" (new rule: reject when the clause describes a different field with a different value better); a synonym the field name lacks ("first deposits" for `ftd_decay_pct`) is blocked until an alias supplies it, by design; one generator record was mislabelled. Two seeds then exposed one more miss (a current figure labelled as the forecast); the rule was tightened to compare how many words of the clause each field covers.
+
+**How far to trust this.** The generator was written by the same author as the judge, from templates, so it measures coverage of the families I thought of, not general accuracy (the constitution's anti-circularity concern). Fixes were made after seeing failures on seeds 2210, 31337 and 777; seeds 12345, 55555 and 808 were first judged after the last fix (381 wrong and 312 faithful, all correct). The decisive test is the live baseline on the real copilot's answers (T058), with a human-labelled sample of its figures. Expect new failure families there and treat each as a regression test.
+
+**Known limits.** Spelled-out decimals ("three point five million") are not parsed. A synonym not in the field name needs a per-case alias. A figure whose clause names no field is `wrong_field` (blocked), not guessed.
+
 ## R-3. Turn Record shape
 
 - **Decision**: One frozen record: question, verified role and operator (with the source of the identity), entity context, ordered tool calls (name, arguments, result, error, latency), rounds, final answer, structured bindings if any, replay flag and reason, audit verdict, citations, timing, tokens and cost, data origin, and the repeat index. A pure function maps it to the `agents-cli` trace shape (`agent_data` plus `responses`).

@@ -62,7 +62,7 @@ def content_tokens(text: str) -> list[str]:
     """Words that can label a figure: no stop words, no number words, no digits-first tokens."""
     out: list[str] = []
     for tok in raw_tokens(text):
-        if tok in STOPWORDS or tok in NUMBER_WORDS or tok[0].isdigit():
+        if len(tok) < 2 or tok in STOPWORDS or tok in NUMBER_WORDS or tok[0].isdigit():
             continue
         out.append(singular(tok))
     return out

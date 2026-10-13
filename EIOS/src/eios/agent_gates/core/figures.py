@@ -37,7 +37,7 @@ _PERIODS = (
     (re.compile(r"\b(?:per|a|each|every)\s+year\b|\bannual(?:ly)?\b|\byearly\b", re.I), "year"),
 )
 _NUMBER = re.compile(
-    r"(?<![\w.])(?P<pre>[$€£]|(?:USD|EUR|GBP)\s?)?(?P<sign>[-−–])?"
+    r"(?<![\w.])(?P<sign0>[-−–])?(?P<pre>[$€£]|(?:USD|EUR|GBP)\s?)?(?P<sign>[-−–])?"
     r"(?P<num>\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)"
 )
 _SUFFIX = re.compile(
@@ -48,6 +48,8 @@ _SUFFIX = re.compile(
     re.I,
 )
 _WORD = re.compile(r"[A-Za-z]+(?:-[A-Za-z]+)?")
+# Words that label a figure are those in its own clause: "the entries is 1,842 and the head sequence is 1,842".
+_CLAUSE = re.compile(r"\s(?:and|but|while|whereas)\s|[,;:]")
 
 
 @dataclass(frozen=True)
@@ -106,8 +108,8 @@ def _make_figure(
     spelled: bool,
 ) -> Figure:
     left, right = _sentence_bounds(text, start, end)
-    before = content_tokens(text[left:start])[-8:]
-    after = content_tokens(text[end:right])[:6]
+    before = content_tokens(_CLAUSE.split(text[left:start])[-1])[-8:]
+    after = content_tokens(_CLAUSE.split(text[end:right])[0])[:6]
     window = text[max(left, start - 30) : min(right, end + 30)]
     return Figure(
         text=text[start:end].strip(),
@@ -135,7 +137,8 @@ def _digit_figures(text: str) -> list[Figure]:
             continue
         mag_key = (suffix.group("mag_a") or suffix.group("mag_w") or "").lower()
         multiplier = _MAGNITUDE.get(mag_key, 1.0)
-        value = float(num.replace(",", "")) * multiplier * (-1 if match.group("sign") else 1)
+        negative = bool(match.group("sign0") or match.group("sign"))
+        value = float(num.replace(",", "")) * multiplier * (-1 if negative else 1)
         unit = _classify_unit(match.group("pre"), suffix.group("unit"))
         end = suffix.end()
         figures.append(

@@ -31,7 +31,7 @@ def test_all_thirteen_pinned_cases_are_present() -> None:
 @pytest.mark.parametrize("record", RECORDS, ids=[str(r["case_id"]) for r in RECORDS])
 def test_each_pinned_case_is_classified_correctly(record: dict[str, Any]) -> None:
     result = judge(record)
-    assert result.passed is record["expected_supported"], [
+    assert result.passed is record["eval"]["expected_supported"], [
         (v.text, v.verdict, v.reason) for v in result.verdicts
     ]
 

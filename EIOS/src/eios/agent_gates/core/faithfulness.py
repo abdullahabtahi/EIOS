@@ -105,7 +105,7 @@ def _overlap(fig: Figure, fact: Fact) -> int:
 
 
 def _is_scale_error(fig: Figure, fact: Fact) -> bool:
-    for target in (fact.value, fact.value * 100):
+    for target in {fact.value, *_targets(fig, fact)}:
         if target == 0 or fig.value == 0:
             continue
         ratio = abs(fig.value / target)
@@ -128,14 +128,35 @@ def _verdict(
     )
 
 
-def _labelled(fig: Figure, hits: list[Fact]) -> FigureVerdict:
-    """Value, unit and label all agree for at least one fact; check period and ambiguity."""
+def _coverage(fig: Figure, fact: Fact) -> float:
+    """How much of a field's name the figure's own clause mentions (1.0 = every word of it)."""
+    return _overlap(fig, fact) / max(len(fact.label_tokens), 1)
+
+
+def _describes_better(fig: Figure, rival: Fact, best: Fact) -> bool:
+    """The clause covers more of the rival's name, or equally much but through more of its words."""
+    rc, bc = _coverage(fig, rival), _coverage(fig, best)
+    return rc > bc or (rc == bc and _overlap(fig, rival) > _overlap(fig, best))
+
+
+def _labelled(fig: Figure, hits: list[Fact], facts: Sequence[Fact]) -> FigureVerdict:
+    """Value, unit and label agree for at least one fact; check period, then rival readings.
+
+    Ambiguity fails closed: if the clause describes some OTHER field with a different value better than it
+    describes the matched one (it says "net revenue" and the match is the net revenue FORECAST), the figure
+    is not supported.
+    """
     fitting = [f for f in hits if not (fig.period and f.period and fig.period != f.period)]
     if not fitting:
         return _verdict(fig, False, "wrong_unit", cands=hits)
-    if fig.unit == "none" and len({f.unit for f in fitting}) > 1:
-        return _verdict(fig, False, "ambiguous", cands=fitting)
-    best = max(fitting, key=lambda f: _overlap(fig, f))
+    best = max(fitting, key=lambda f: (_coverage(fig, f), _overlap(fig, f)))
+    rivals = [
+        f
+        for f in facts
+        if not _value_matches(fig, f) and _unit_ok(fig, f) and _describes_better(fig, f, best)
+    ]
+    if rivals:
+        return _verdict(fig, False, "ambiguous", cands=[best, *rivals])
     return _verdict(fig, True, "ok", best, fitting)
 
 
@@ -165,7 +186,7 @@ def _judge_figure(fig: Figure, facts: Sequence[Fact]) -> FigureVerdict:
     unit_hits = [f for f in value_hits if _unit_ok(fig, f)]
     label_hits = [f for f in unit_hits if _overlap(fig, f) > 0]
     if label_hits:
-        return _labelled(fig, label_hits)
+        return _labelled(fig, label_hits, facts)
     if value_hits and not unit_hits:
         return _verdict(fig, False, "wrong_unit", cands=value_hits)
     if unit_hits:

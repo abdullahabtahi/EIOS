@@ -1,0 +1,1719 @@
+[
+ {
+  "record_id": "data_operations_001.0",
+  "case_id": "data_operations_001",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the dead letter queue depth stands at 3, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_002.0",
+  "case_id": "data_operations_002",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 3 for the dead letter queue depth.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_003.0",
+  "case_id": "data_operations_003",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Dead letter queue depth came to 300 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_004.0",
+  "case_id": "data_operations_004",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Dead letter queue depth came to 0.03 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_005.0",
+  "case_id": "data_operations_005",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Dead letter queue depth came to 30 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_006.0",
+  "case_id": "data_operations_006",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Dead letter queue depth came to 7 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_007.0",
+  "case_id": "data_operations_007",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The ingest p95 latency is 142.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_008.0",
+  "case_id": "data_operations_008",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the ingest p95 latency stands at 142, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_009.0",
+  "case_id": "data_operations_009",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 14,200 for the ingest p95 latency.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_010.0",
+  "case_id": "data_operations_010",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 1 for the ingest p95 latency.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_011.0",
+  "case_id": "data_operations_011",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Ingest p95 latency came to 1,420 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_012.0",
+  "case_id": "data_operations_012",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Ingest p95 latency came to 341 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_013.0",
+  "case_id": "data_operations_013",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The contract breaches is 5.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_014.0",
+  "case_id": "data_operations_014",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the contract breaches stands at 5, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_015.0",
+  "case_id": "data_operations_015",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The contract breaches is 500.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_016.0",
+  "case_id": "data_operations_016",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The contract breaches is 0.05.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_017.0",
+  "case_id": "data_operations_017",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 50 for the contract breaches.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_018.0",
+  "case_id": "data_operations_018",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Contract breaches came to 12 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_019.0",
+  "case_id": "data_operations_019",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The freshness SLA is 15 minutes.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_020.0",
+  "case_id": "data_operations_020",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 15 minutes for the freshness SLA.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_021.0",
+  "case_id": "data_operations_021",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Freshness sla came to 1500 minutes in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_022.0",
+  "case_id": "data_operations_022",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The freshness SLA is 0 minutes.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_023.0",
+  "case_id": "data_operations_023",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the freshness SLA stands at 150 minutes, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_024.0",
+  "case_id": "data_operations_024",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The freshness SLA is 36 minutes.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_025.0",
+  "case_id": "data_operations_025",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the success rate stands at 99.2%, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_026.0",
+  "case_id": "data_operations_026",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Success rate came to 99.2% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_027.0",
+  "case_id": "data_operations_027",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the success rate stands at 9920%, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_028.0",
+  "case_id": "data_operations_028",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the success rate stands at 1%, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_029.0",
+  "case_id": "data_operations_029",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The success rate is 992%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_030.0",
+  "case_id": "data_operations_030",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Success rate came to 159% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_031.0",
+  "case_id": "data_operations_031",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The dead letter queue depth is 5.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:field_swap",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_032.0",
+  "case_id": "data_operations_032",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The dead letter queue depth is 3 and the ingest p95 latency is 142.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_033.0",
+  "case_id": "data_operations_033",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The dead letter queue depth is 3 and the ingest p95 latency is 14,200.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_034.0",
+  "case_id": "data_operations_034",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The ingest p95 latency is 142 and the contract breaches is 5.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_035.0",
+  "case_id": "data_operations_035",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The ingest p95 latency is 142 and the contract breaches is 500.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_036.0",
+  "case_id": "data_operations_036",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The contract breaches is 5 and the freshness SLA is 15 minutes.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_037.0",
+  "case_id": "data_operations_037",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The contract breaches is 5 and the freshness SLA is 1500 minutes.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_038.0",
+  "case_id": "data_operations_038",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The freshness SLA is 15 minutes and the success rate is 99.2%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_039.0",
+  "case_id": "data_operations_039",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The freshness SLA is 15 minutes and the success rate is 9920%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_040.0",
+  "case_id": "data_operations_040",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "I looked at pipeline and nothing needs your attention beyond what the dossier shows.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "no_figures",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_041.0",
+  "case_id": "data_operations_041",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": {
+     "dlq_depth": 3,
+     "ingest_p95_ms": 142.0,
+     "contract_breaches_24h": 5,
+     "freshness_sla_minutes": 15,
+     "success_rate_pct": 99.2
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The data for that is unavailable right now, so I will not give a figure.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "refusal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "data_operations_042.0",
+  "case_id": "data_operations_042",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "data_operations",
+  "entity_context": {
+   "entity_id": "pipeline"
+  },
+  "question": "Tell me about pipeline",
+  "tool_calls": [
+   {
+    "name": "get_data_quality_board",
+    "arguments": {
+     "entity_id": "pipeline"
+    },
+    "result": null,
+    "error": "DATA_UNAVAILABLE"
+   }
+  ],
+  "rounds": 1,
+  "answer": "The dead letter queue depth is 3.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:figure_after_tool_failure",
+   "aliases": {}
+  }
+ }
+]

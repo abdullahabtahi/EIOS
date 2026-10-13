@@ -79,7 +79,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": true
+  "eval": {
+   "expected_supported": true,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_revenue.0",
@@ -161,7 +164,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": true
+  "eval": {
+   "expected_supported": true,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_date_and_count.0",
@@ -243,7 +249,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": true
+  "eval": {
+   "expected_supported": true,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_invented_ring_size.0",
@@ -325,7 +334,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": false
+  "eval": {
+   "expected_supported": false,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_invented_rounded_revenue.0",
@@ -407,7 +419,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": false
+  "eval": {
+   "expected_supported": false,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_unanchored_derived_percent.0",
@@ -489,7 +504,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": false
+  "eval": {
+   "expected_supported": false,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_wrong_field.0",
@@ -571,7 +589,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": false
+  "eval": {
+   "expected_supported": false,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_hundred_times_too_small.0",
@@ -653,7 +674,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": false
+  "eval": {
+   "expected_supported": false,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_hundred_times_too_large.0",
@@ -735,7 +759,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": false
+  "eval": {
+   "expected_supported": false,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_spelled_out_numbers.0",
@@ -817,7 +844,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": false
+  "eval": {
+   "expected_supported": false,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_wrong_unit.0",
@@ -899,7 +929,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": false
+  "eval": {
+   "expected_supported": false,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_million_shorthand.0",
@@ -981,7 +1014,10 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": true
+  "eval": {
+   "expected_supported": true,
+   "kind": "pinned"
+  }
  },
  {
   "record_id": "pinned_harmless_counts.0",
@@ -1063,6 +1099,9 @@
   "data_origin": "fixture",
   "latency_ms": 1.0,
   "outcome": "completed",
-  "expected_supported": true
+  "eval": {
+   "expected_supported": true,
+   "kind": "pinned"
+  }
  }
 ]

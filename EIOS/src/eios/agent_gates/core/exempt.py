@@ -6,6 +6,7 @@ Designed from a taxonomy, not ported from the legacy checker (research R-14). Ca
 - version          `v1.4.0`, `version 2.3`
 - legal_citation   `31 CFR 1020.320`, `Form 111`, `FATF Recommendation 20`, `S.L. 373.01`, `Section 5(a)`
 - period_label     `Q3`, `FY2026`, a year after "in", "since", ...
+- quantile_label   `p50`, `p95`, `p99` (the name of a statistic, not a count)
 - identifier       `CR84920`, `PTR-882`, exempt only when a tool, the question or the context produced it
 - structure_count  the answer counting its own structure (`3 key findings`, `two sources`)
 - list_marker      `1.`, `(2)`, `1st`
@@ -55,6 +56,7 @@ _PATTERNS: tuple[tuple[str, int, re.Pattern[str]], ...] = (
         r"|(?<=\bin )(?:19|20)\d{2}\b|(?<=\bof )(?:19|20)\d{2}\b|(?<=\bsince )(?:19|20)\d{2}\b"
         r"|(?<=\bby )(?:19|20)\d{2}\b|(?<=\byear )(?:19|20)\d{2}\b"
     )),
+    ("quantile_label", 3, re.compile(r"\b[pP]\d{2,3}\b")),
     ("identifier", 4, re.compile(r"\b[A-Za-z][A-Za-z0-9_-]*\d{2,}[A-Za-z0-9_-]*\b")),
     ("structure_count", 5, re.compile(
         rf"\b\d+\s+(?:[A-Za-z-]+\s+){{0,2}}{_STRUCTURE_NOUNS}\b"

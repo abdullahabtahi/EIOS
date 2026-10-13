@@ -22,7 +22,7 @@ A release owner needs to know, before approving a release, that every figure the
 
 **Why this priority**: Constitution Principle I and lighthouse metric M3 (100% faithful, a release blocker). A wrong figure in a financial-crime dossier is the failure that destroys trust fastest. Nothing else about the agent matters if this fails.
 
-**Independent Test**: Run the gate over the 13 pinned cases already in the repository (5 wrong figures that must be blocked, 2 faithful answers that must be accepted, 6 further answers that must survive). It delivers value on its own: it is a usable release gate even with no other story built.
+**Independent Test**: Run the gate over the 13 pinned cases already in the repository (5 wrong figures that must be blocked, 2 faithful answers that must be accepted, and 6 answers whose current behaviour must hold: 3 faithful ones stay accepted and 3 wrong ones stay blocked). It delivers value on its own: it is a usable release gate even with no other story built.
 
 **Acceptance Scenarios**:
 
@@ -201,7 +201,7 @@ The engineer rebuilding the agent needs the same suites to run unchanged against
 
 ### Measurable Outcomes
 
-- **SC-001**: 13 of 13 pinned cases are classified correctly by the faithfulness gate (5 blocked, 8 accepted).
+- **SC-001**: 13 of 13 pinned cases are classified correctly by the faithfulness gate (8 blocked, 5 accepted).
 - **SC-002**: Re-judging a stored run gives identical verdicts in 100% of cases across two consecutive runs.
 - **SC-003**: Re-judging a stored run of 200 turns completes in under 2 minutes `[ASSUMPTION]`.
 - **SC-004**: Every red line RL-1 to RL-7 has at least one blocking behavioural check, and each of the five attack families has at least 3 distinct cases `[ASSUMPTION]`.

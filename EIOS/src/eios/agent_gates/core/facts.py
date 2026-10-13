@@ -122,7 +122,11 @@ def _walk(
         raw_hint = node.get("unit")
         hint = raw_hint if isinstance(raw_hint, str) else inherited_hint
         for key, child in node.items():
-            _walk(call_index, child, [*parts, str(key)], aliases, out, labels, hint)
+            direct = _is_number(
+                child
+            )  # a unit or metric name describes its own sibling values only
+            sub_labels, sub_hint = (labels, hint) if direct else ((), None)
+            _walk(call_index, child, [*parts, str(key)], aliases, out, sub_labels, sub_hint)
     elif isinstance(node, list):
         for i, child in enumerate(node):
             _walk(call_index, child, [*parts[:-1], f"{parts[-1]}[{i}]"] if parts else [f"[{i}]"], aliases, out,

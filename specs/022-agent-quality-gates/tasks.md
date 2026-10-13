@@ -46,7 +46,7 @@
 
 **Goal**: a deterministic faithfulness gate that classifies every figure in an answer and blocks a release on any unsupported figure.
 
-**Independent Test**: the 13 pinned cases classify correctly (5 blocked, 8 accepted) and judging a stored run twice gives identical verdicts with no model call.
+**Independent Test**: the 13 pinned cases classify correctly (8 blocked, 5 accepted) and judging a stored run twice gives identical verdicts with no model call.
 
 ### Tests for User Story 1 (write first, see them fail)
 
@@ -63,11 +63,11 @@
 - [X] T021 [P] [US1] Implement fact flattening in `src/eios/agent_gates/core/facts.py`
 - [X] T022 [P] [US1] Implement the exempt-category taxonomy as the single reviewed list in `src/eios/agent_gates/core/exempt.py`, designed from the taxonomy and not ported from the legacy regexes in `src/eios/conversation/auditor_bridge.py`
 - [X] T023 [US1] Implement `judge(record, aliases)` in `src/eios/agent_gates/core/faithfulness.py` per research R-2: value, unit family and label match; `wrong_field`, `ambiguous`, `derived`; conservative on ambiguity; structured mode when bindings exist; document the algorithm in the module docstring (depends on T020, T021, T022)
-- [ ] T024 [US1] Calibrate against T014, T018 and T019 until all pass; record precision and recall on the mutation and paraphrase corpora in `specs/022-agent-quality-gates/research.md` under R-2 `[MEASURED]`
-- [ ] T025 [P] [US1] Build the recorded corpus in `evals/recorded/faithfulness/`: the 13 pinned plus at least 187 further records (good and known-bad, across the five workstations) so the 200-turn speed test is real
-- [ ] T026 [US1] Implement the suite in `evals/agent/faithfulness_suite.py` (`--records`, `--twice`, report to `evals/reports/agent_faithfulness.json`), failing the run on any unsupported figure
-- [ ] T027 [US1] Register `agent-faithfulness` (tier `eval_smoke`) in `evals/registry.yaml`
-- [ ] T028 [US1] Add `tests/agent_gates/test_rejudge_speed_and_determinism.py`: 200 recorded turns judged twice, verdicts identical, no network, under 2 minutes `[ASSUMPTION]` (SC-002, SC-003)
+- [X] T024 [US1] Calibrate against T014, T018 and T019 until all pass; record precision and recall on the mutation and paraphrase corpora in `specs/022-agent-quality-gates/research.md` under R-2 `[MEASURED]`
+- [X] T025 [P] [US1] Build the recorded corpus in `evals/recorded/faithfulness/`: the 13 pinned plus at least 187 further records (good and known-bad, across the five workstations) so the 200-turn speed test is real
+- [X] T026 [US1] Implement the suite in `evals/agent/faithfulness_suite.py` (`--records`, `--twice`, report to `evals/reports/agent_faithfulness.json`), failing the run on any unsupported figure
+- [X] T027 [US1] Register `agent-faithfulness` (tier `eval_smoke`) in `evals/registry.yaml`
+- [X] T028 [US1] Add `tests/agent_gates/test_rejudge_speed_and_determinism.py`: 200 recorded turns judged twice, verdicts identical, no network, under 2 minutes `[ASSUMPTION]` (SC-002, SC-003)
 
 **Checkpoint**: US1 is a working release gate with no other story built. **This is the MVP.**
 

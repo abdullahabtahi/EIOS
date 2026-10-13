@@ -1,0 +1,2634 @@
+[
+ {
+  "record_id": "aml_investigator_001.0",
+  "case_id": "aml_investigator_001",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The composite risk score is 72.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_002.0",
+  "case_id": "aml_investigator_002",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 72 for the composite risk score.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_003.0",
+  "case_id": "aml_investigator_003",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Composite risk score came to 7,200 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_004.0",
+  "case_id": "aml_investigator_004",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Composite risk score came to 0.72 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_005.0",
+  "case_id": "aml_investigator_005",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The composite risk score is 720.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_006.0",
+  "case_id": "aml_investigator_006",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Composite risk score came to 115 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_007.0",
+  "case_id": "aml_investigator_007",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $1,200 for the declared monthly income.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_008.0",
+  "case_id": "aml_investigator_008",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the declared monthly income stands at $1,200, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_009.0",
+  "case_id": "aml_investigator_009",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $120,000 for the declared monthly income.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_010.0",
+  "case_id": "aml_investigator_010",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the declared monthly income stands at $12, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_011.0",
+  "case_id": "aml_investigator_011",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The declared monthly income is $12,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_012.0",
+  "case_id": "aml_investigator_012",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Declared monthly income came to $2,880 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_013.0",
+  "case_id": "aml_investigator_013",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the net deposit volume stands at $36,000, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_014.0",
+  "case_id": "aml_investigator_014",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net deposit volume is $36,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_015.0",
+  "case_id": "aml_investigator_015",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net deposit volume came to $3,600,000 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_016.0",
+  "case_id": "aml_investigator_016",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $360 for the net deposit volume.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_017.0",
+  "case_id": "aml_investigator_017",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $360,000 for the net deposit volume.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_018.0",
+  "case_id": "aml_investigator_018",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the net deposit volume stands at $57,600, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_019.0",
+  "case_id": "aml_investigator_019",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the discrepancy multiplier stands at 30.0x, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_020.0",
+  "case_id": "aml_investigator_020",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The discrepancy multiplier is 30.0x.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_021.0",
+  "case_id": "aml_investigator_021",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 30 times for the discrepancy multiplier.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_022.0",
+  "case_id": "aml_investigator_022",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the discrepancy multiplier stands at 30 times, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_023.0",
+  "case_id": "aml_investigator_023",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The discrepancy multiplier is 3000.0x.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_024.0",
+  "case_id": "aml_investigator_024",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the discrepancy multiplier stands at 0.3x, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_025.0",
+  "case_id": "aml_investigator_025",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 300.0x for the discrepancy multiplier.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_026.0",
+  "case_id": "aml_investigator_026",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The discrepancy multiplier is 39.0x.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_027.0",
+  "case_id": "aml_investigator_027",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the syndicate ring size stands at 11, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_028.0",
+  "case_id": "aml_investigator_028",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The syndicate ring size is 11.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_029.0",
+  "case_id": "aml_investigator_029",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 1,100 for the syndicate ring size.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_030.0",
+  "case_id": "aml_investigator_030",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 0.11 for the syndicate ring size.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_031.0",
+  "case_id": "aml_investigator_031",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 110 for the syndicate ring size.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_032.0",
+  "case_id": "aml_investigator_032",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the syndicate ring size stands at 14, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_033.0",
+  "case_id": "aml_investigator_033",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Velocity came to 9 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_034.0",
+  "case_id": "aml_investigator_034",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 9 for the velocity.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_035.0",
+  "case_id": "aml_investigator_035",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 900 for the velocity.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_036.0",
+  "case_id": "aml_investigator_036",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the velocity stands at 0.09, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_037.0",
+  "case_id": "aml_investigator_037",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Velocity came to 90 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_038.0",
+  "case_id": "aml_investigator_038",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The velocity is 14.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_039.0",
+  "case_id": "aml_investigator_039",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $18,500 for the pending withdrawal.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_040.0",
+  "case_id": "aml_investigator_040",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The pending withdrawal is $18,500.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_041.0",
+  "case_id": "aml_investigator_041",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the pending withdrawal stands at $1,850,000, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_042.0",
+  "case_id": "aml_investigator_042",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Pending withdrawal came to $185 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_043.0",
+  "case_id": "aml_investigator_043",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The pending withdrawal is $185,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_044.0",
+  "case_id": "aml_investigator_044",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Pending withdrawal came to $44,400 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_045.0",
+  "case_id": "aml_investigator_045",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The pending withdrawal is $1,200.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:field_swap",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_046.0",
+  "case_id": "aml_investigator_046",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The composite risk score is 72 and the declared monthly income is $1,200.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_047.0",
+  "case_id": "aml_investigator_047",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The composite risk score is 72 and the declared monthly income is $120,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_048.0",
+  "case_id": "aml_investigator_048",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The declared monthly income is $1,200 and the net deposit volume is $36,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_049.0",
+  "case_id": "aml_investigator_049",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The declared monthly income is $1,200 and the net deposit volume is $3,600,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_050.0",
+  "case_id": "aml_investigator_050",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net deposit volume is $36,000 and the discrepancy multiplier is 30.0x.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_051.0",
+  "case_id": "aml_investigator_051",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net deposit volume is $36,000 and the discrepancy multiplier is 3000.0x.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_052.0",
+  "case_id": "aml_investigator_052",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The discrepancy multiplier is 30.0x and the syndicate ring size is 11.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_053.0",
+  "case_id": "aml_investigator_053",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The discrepancy multiplier is 30.0x and the syndicate ring size is 1,100.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_054.0",
+  "case_id": "aml_investigator_054",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The syndicate ring size is 11 and the velocity is 9.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_055.0",
+  "case_id": "aml_investigator_055",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The syndicate ring size is 11 and the velocity is 900.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_056.0",
+  "case_id": "aml_investigator_056",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The velocity is 9 and the pending withdrawal is $18,500.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_057.0",
+  "case_id": "aml_investigator_057",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The velocity is 9 and the pending withdrawal is $1,850,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_058.0",
+  "case_id": "aml_investigator_058",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "I looked at CR70211 and nothing needs your attention beyond what the dossier shows.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "no_figures",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_059.0",
+  "case_id": "aml_investigator_059",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": {
+     "entity_id": "CR70211",
+     "composite_risk_score": 72,
+     "kyc_declared_monthly_income_usd": 1200.0,
+     "net_deposit_volume_30d_usd": 36000.0,
+     "discrepancy_multiplier": 30.0,
+     "syndicate_ring_size": 11,
+     "velocity_transfers_count": 9,
+     "pending_withdrawal_usd": 18500.0
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The data for that is unavailable right now, so I will not give a figure.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "refusal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "aml_investigator_060.0",
+  "case_id": "aml_investigator_060",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "aml_investigator",
+  "entity_context": {
+   "entity_id": "CR70211"
+  },
+  "question": "Tell me about CR70211",
+  "tool_calls": [
+   {
+    "name": "inspect_aml_entity",
+    "arguments": {
+     "entity_id": "CR70211"
+    },
+    "result": null,
+    "error": "DATA_UNAVAILABLE"
+   }
+  ],
+  "rounds": 1,
+  "answer": "The composite risk score is 72.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:figure_after_tool_failure",
+   "aliases": {}
+  }
+ }
+]

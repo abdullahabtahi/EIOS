@@ -13,7 +13,7 @@ Run from `EIOS/`. Each scenario states what proves the feature works. Details: [
 uv run pytest tests/agent_gates/test_faithfulness_pinned.py -q
 ```
 
-Expect 13 passed: the 5 wrong figures blocked, the 8 faithful ones accepted. Then the mutation corpus:
+Expect 13 passed: 8 answers blocked (5 known-wrong figures plus 3 invented ones) and 5 accepted. Then the mutation corpus:
 
 ```bash
 uv run pytest tests/agent_gates/test_faithfulness_mutation.py -q

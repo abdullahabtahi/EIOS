@@ -78,3 +78,9 @@
   command: python -m evals.suites.splits.runner --tier sealed
   owner_feature: F04
   report: evals/reports/splits_sealed.json
+
+- id: agent-faithfulness
+  tier: eval_smoke
+  command: python -m evals.agent.faithfulness_suite --records evals/recorded --twice
+  owner_feature: F22
+  report: evals/reports/agent_faithfulness.json

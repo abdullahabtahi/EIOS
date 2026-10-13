@@ -1,0 +1,1022 @@
+[
+ {
+  "record_id": "compliance_auditor_001.0",
+  "case_id": "compliance_auditor_001",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The ledger entries is 1,842.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_002.0",
+  "case_id": "compliance_auditor_002",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Ledger entries came to 1,842 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_003.0",
+  "case_id": "compliance_auditor_003",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 184,200 for the ledger entries.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_004.0",
+  "case_id": "compliance_auditor_004",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Ledger entries came to 18 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_005.0",
+  "case_id": "compliance_auditor_005",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 18,420 for the ledger entries.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_006.0",
+  "case_id": "compliance_auditor_006",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The ledger entries is 4,421.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_007.0",
+  "case_id": "compliance_auditor_007",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 1,842 for the head sequence.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_008.0",
+  "case_id": "compliance_auditor_008",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Head sequence came to 1,842 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_009.0",
+  "case_id": "compliance_auditor_009",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 184,200 for the head sequence.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_010.0",
+  "case_id": "compliance_auditor_010",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the head sequence stands at 18, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_011.0",
+  "case_id": "compliance_auditor_011",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The head sequence is 18,420.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_012.0",
+  "case_id": "compliance_auditor_012",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the head sequence stands at 4,421, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_013.0",
+  "case_id": "compliance_auditor_013",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Checkpoint age came to 7 minutes in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_014.0",
+  "case_id": "compliance_auditor_014",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 7 minutes for the checkpoint age.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_015.0",
+  "case_id": "compliance_auditor_015",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 700 minutes for the checkpoint age.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_016.0",
+  "case_id": "compliance_auditor_016",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 0 minutes for the checkpoint age.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_017.0",
+  "case_id": "compliance_auditor_017",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 70 minutes for the checkpoint age.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_018.0",
+  "case_id": "compliance_auditor_018",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the checkpoint age stands at 17 minutes, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_019.0",
+  "case_id": "compliance_auditor_019",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The ledger entries is 1,842 and the head sequence is 1,842.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_020.0",
+  "case_id": "compliance_auditor_020",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The ledger entries is 1,842 and the head sequence is 184,200.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_021.0",
+  "case_id": "compliance_auditor_021",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The head sequence is 1,842 and the checkpoint age is 7 minutes.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_022.0",
+  "case_id": "compliance_auditor_022",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The head sequence is 1,842 and the checkpoint age is 700 minutes.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_023.0",
+  "case_id": "compliance_auditor_023",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "I looked at ledger and nothing needs your attention beyond what the dossier shows.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "no_figures",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_024.0",
+  "case_id": "compliance_auditor_024",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": {
+     "entries_count": 1842,
+     "head_sequence": 1842,
+     "chain_length": 1842,
+     "verified": true,
+     "last_checkpoint_age_minutes": 7
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The data for that is unavailable right now, so I will not give a figure.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "refusal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "compliance_auditor_025.0",
+  "case_id": "compliance_auditor_025",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "compliance_auditor",
+  "entity_context": {
+   "entity_id": "ledger"
+  },
+  "question": "Tell me about ledger",
+  "tool_calls": [
+   {
+    "name": "get_ledger_audit_status",
+    "arguments": {
+     "entity_id": "ledger"
+    },
+    "result": null,
+    "error": "DATA_UNAVAILABLE"
+   }
+  ],
+  "rounds": 1,
+  "answer": "The ledger entries is 1,842.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:figure_after_tool_failure",
+   "aliases": {}
+  }
+ }
+]

@@ -1,0 +1,3174 @@
+[
+ {
+  "record_id": "partner_manager_001.0",
+  "case_id": "partner_manager_001",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Churn hazard came to 78% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_002.0",
+  "case_id": "partner_manager_002",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 78% for the churn hazard.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_003.0",
+  "case_id": "partner_manager_003",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Churn hazard came to 0.78 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_004.0",
+  "case_id": "partner_manager_004",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The churn hazard is 0.78.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_005.0",
+  "case_id": "partner_manager_005",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The churn hazard is 7800%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_006.0",
+  "case_id": "partner_manager_006",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Churn hazard came to 1% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_007.0",
+  "case_id": "partner_manager_007",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Churn hazard came to 780% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_008.0",
+  "case_id": "partner_manager_008",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 187% for the churn hazard.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_009.0",
+  "case_id": "partner_manager_009",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Realized volume came to $1,240,000 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_010.0",
+  "case_id": "partner_manager_010",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The realized volume is $1,240,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_011.0",
+  "case_id": "partner_manager_011",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $1.24 million for the realized volume.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_012.0",
+  "case_id": "partner_manager_012",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the realized volume stands at $1.24 million, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_013.0",
+  "case_id": "partner_manager_013",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the realized volume stands at about $1.2M, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_014.0",
+  "case_id": "partner_manager_014",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Realized volume came to about $1.2M in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_015.0",
+  "case_id": "partner_manager_015",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Realized volume came to $124,000,000 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_016.0",
+  "case_id": "partner_manager_016",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $12,400 for the realized volume.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_017.0",
+  "case_id": "partner_manager_017",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Realized volume came to $12,400,000 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_018.0",
+  "case_id": "partner_manager_018",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $1,984,000 for the realized volume.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_019.0",
+  "case_id": "partner_manager_019",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Login activity came to -68% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_020.0",
+  "case_id": "partner_manager_020",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see -68% for the login activity.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_021.0",
+  "case_id": "partner_manager_021",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 68% lower for the login activity.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_022.0",
+  "case_id": "partner_manager_022",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Login activity came to 68% lower in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_023.0",
+  "case_id": "partner_manager_023",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Login activity came to 6800% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_024.0",
+  "case_id": "partner_manager_024",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the login activity stands at 1%, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_025.0",
+  "case_id": "partner_manager_025",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Login activity came to 680% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_026.0",
+  "case_id": "partner_manager_026",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The login activity is 109%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_027.0",
+  "case_id": "partner_manager_027",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The first deposits is -45%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_028.0",
+  "case_id": "partner_manager_028",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "First deposits came to -45% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_029.0",
+  "case_id": "partner_manager_029",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 45% lower for the first deposits.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_030.0",
+  "case_id": "partner_manager_030",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The first deposits is 45% lower.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_031.0",
+  "case_id": "partner_manager_031",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "First deposits came to 4500% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_032.0",
+  "case_id": "partner_manager_032",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the first deposits stands at 0%, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_033.0",
+  "case_id": "partner_manager_033",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "First deposits came to 450% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_034.0",
+  "case_id": "partner_manager_034",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The first deposits is 72%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_035.0",
+  "case_id": "partner_manager_035",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 14 for the days to the intervention deadline.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_036.0",
+  "case_id": "partner_manager_036",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the days to the intervention deadline stands at 14, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_037.0",
+  "case_id": "partner_manager_037",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The days to the intervention deadline is 1,400.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_038.0",
+  "case_id": "partner_manager_038",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the days to the intervention deadline stands at 0.14, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_039.0",
+  "case_id": "partner_manager_039",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Days to the intervention deadline came to 140 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_040.0",
+  "case_id": "partner_manager_040",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The days to the intervention deadline is 22.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_041.0",
+  "case_id": "partner_manager_041",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Sub affiliate count came to 14 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_042.0",
+  "case_id": "partner_manager_042",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 14 for the sub affiliate count.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_043.0",
+  "case_id": "partner_manager_043",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 1,400 for the sub affiliate count.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_044.0",
+  "case_id": "partner_manager_044",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the sub affiliate count stands at 0.14, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_045.0",
+  "case_id": "partner_manager_045",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the sub affiliate count stands at 140, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_046.0",
+  "case_id": "partner_manager_046",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The sub affiliate count is 22.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_047.0",
+  "case_id": "partner_manager_047",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The churn hazard is 78% and the realized volume is $1,240,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_048.0",
+  "case_id": "partner_manager_048",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The churn hazard is 78% and the realized volume is $124,000,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_049.0",
+  "case_id": "partner_manager_049",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The realized volume is $1,240,000 and the login activity is -68%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_050.0",
+  "case_id": "partner_manager_050",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The realized volume is $1,240,000 and the login activity is 6800%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_051.0",
+  "case_id": "partner_manager_051",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The login activity is -68% and the first deposits is -45%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_052.0",
+  "case_id": "partner_manager_052",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The login activity is -68% and the first deposits is 4500%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_053.0",
+  "case_id": "partner_manager_053",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The first deposits is -45% and the days to the intervention deadline is 14.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_054.0",
+  "case_id": "partner_manager_054",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The first deposits is -45% and the days to the intervention deadline is 1,400.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_055.0",
+  "case_id": "partner_manager_055",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The days to the intervention deadline is 14 and the sub affiliate count is 14.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_056.0",
+  "case_id": "partner_manager_056",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The days to the intervention deadline is 14 and the sub affiliate count is 1,400.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_057.0",
+  "case_id": "partner_manager_057",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "I looked at PTR-882 and nothing needs your attention beyond what the dossier shows.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "no_figures",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_058.0",
+  "case_id": "partner_manager_058",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": {
+     "partner_id": "PTR-882",
+     "churn_hazard_probability": 0.78,
+     "realized_volume_30d_usd": 1240000.0,
+     "login_decay_pct": -68.0,
+     "ftd_decay_pct": -45.0,
+     "days_to_intervention_deadline": 14,
+     "sub_affiliate_count": 14,
+     "historical_drift": {
+      "tMinus30d": {
+       "pChurn": 0.22,
+       "valueAtRiskUsd": 272800.0
+      },
+      "driftVelocityPct": 254.5
+     }
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The data for that is unavailable right now, so I will not give a figure.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "refusal",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ },
+ {
+  "record_id": "partner_manager_059.0",
+  "case_id": "partner_manager_059",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "partner_manager",
+  "entity_context": {
+   "entity_id": "PTR-882"
+  },
+  "question": "Tell me about PTR-882",
+  "tool_calls": [
+   {
+    "name": "get_partner_signals",
+    "arguments": {
+     "entity_id": "PTR-882"
+    },
+    "result": null,
+    "error": "DATA_UNAVAILABLE"
+   }
+  ],
+  "rounds": 1,
+  "answer": "The churn hazard is 78%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:figure_after_tool_failure",
+   "aliases": {
+    "ftd_decay_pct": [
+     "first deposits"
+    ]
+   }
+  }
+ }
+]
