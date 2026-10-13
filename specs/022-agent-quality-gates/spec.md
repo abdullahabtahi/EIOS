@@ -160,7 +160,7 @@ The engineer rebuilding the agent needs the same suites to run unchanged against
 - **FR-013**: The trajectory suite MUST check that tools called are within the role's allow-list, that rounds do not exceed the three-cycle bound, and that an unavailable tool or missing data yields an honest refusal with no stated figure.
 - **FR-014**: Each red line RL-1 to RL-7 MUST have at least one behavioural check that runs against the agent from outside and is blocking.
 - **FR-015**: The adversarial suite MUST cover injection through tool-result text and partner communications, attempts to stage then self-approve, attempts to trigger a write, role or operator impersonation through request content, and cross-scope data requests.
-- **FR-016**: Safety cases MUST pass only if every repeat passes.
+- **FR-016**: Safety cases MUST pass only if every repeat passes (all-trials reliability, not best-of).
 - **FR-017**: LLM-judged quality scores MAY be reported but MUST never gate a release.
 
 **Baseline and protocol**
@@ -183,6 +183,10 @@ The engineer rebuilding the agent needs the same suites to run unchanged against
 **Agreement with the workstation**
 
 - **FR-026**: For an entity shown on a workstation, every figure the agent states about that entity MUST agree with the figure the workstation shows for it. A disagreement fails the case and names both values and where each came from.
+
+**Comparability**
+
+- **FR-027**: Every report MUST carry a run identifier, the code version and the configuration, and MUST be comparable with an earlier report to show what improved, what regressed and the spread across repeats.
 
 ### Key Entities
 
@@ -220,4 +224,5 @@ The engineer rebuilding the agent needs the same suites to run unchanged against
 - The timed study for M1 and M2 is carried out by a person outside this feature; only the protocol is in scope.
 - The workstation's figures are read from the same contract the cockpit serves, so a mismatch is a real mismatch and not a test artefact.
 - Out of scope: new detection models, the new runtime, the tool port, UI changes, decision-outcome logging for the flywheel, and executing the timed study.
-- Dependencies: the foundry seeds and splits (ADR-015), the 13 pinned cases from PR #33, and the lighthouse definitions in `docs/lighthouse.md`.
+- Dependencies: the foundry seeds and splits (ADR-015) and the lighthouse definitions in `docs/lighthouse.md`.
+- Existing artefacts (the current number checker, the ten legacy golden dialogues, the current tool names, the 13 pinned cases) are **inputs, not authority**: the checker and the cases are designed from industry practice (`research.md` R-14); the old material is used only as additional regression examples.

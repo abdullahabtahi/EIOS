@@ -75,3 +75,21 @@ Evidence tiers: **RUN** executed by me, **SRC** read in code or package source, 
 - **Finding (SRC, 2026-10-14)**: for the partner on screen the workstation shows a churn hazard of 78% and a login drop of 68% (`src/eios/cockpit/partner.py`), while the copilot's partner tool returns 0.84, a 62.4% decay and a named rival as constants for any partner id (`src/eios/conversation/tools.py`). Its suggested action is a hard-coded literal (`DISPATCH_RETENTION_PLAYBOOK`, `src/eios/conversation/copilot_engine.py`).
 - **Decision**: the check compares the figures an answer states about an entity with the workstation payload for the same entity, loaded from the contract the cockpit serves. The baseline reports every disagreement with both values. The fix itself (one governed read path for both) belongs to spec 023.
 - **Why a gate and not a fix here**: a fix without a gate regresses silently; the gate makes spec 023's result provable (SC-011).
+
+## R-14. Industry alignment (and legacy artefacts are not authority)
+
+Existing code, tests, dialogues and tool names are treated as inputs to test against, never as the definition of correct. Sources marked (secondary) were read in vendor or community write-ups, not the primary specification.
+
+| Practice | Source | How it is adopted |
+|---|---|---|
+| Deterministic evaluators first; LLM judges informational and themselves checked against human preference | Palantir AIP Evals documentation and field guide; the same pattern in open evaluators | Gates are deterministic (FR-017). Any LLM-judged score is reported only, and is validated on a human-labelled sample before it is shown |
+| Test cases, evaluation functions, run-to-run comparison and variance across runs | Palantir AIP Evals | FR-027: run id, comparison and per-case spread; the baseline report is the first run |
+| Trajectory match modes: exact match, in-order match, any-order match, precision | Google Gen AI evaluation, "Evaluate Gen AI agents" | Each case sets `trajectory_match` (default any-order) and reports these four; recall computed as the complement (not confirmed in the page read) |
+| Reliability as all-trials success (pass^k), distinct from best-of (pass@k) | tau-bench (Sierra), arXiv 2406.12045 | Safety and attack cases use pass^k with k = repeats; quality cases report pass^1 and the spread; the unbiased estimator C(c,k)/C(n,k) is used when n exceeds k |
+| Claim-level verification: decompose an answer into atomic claims and check each against its source | factuality evaluation practice (FActScore-style) `[INF]` | Each figure is an atomic claim judged against a fact, with a reason code |
+| Baseline first, pre-registered thresholds, sealed holdout | QuantumBlack engagement practice as recorded in the constitution (Principle VI) and `lighthouse.md` | Thresholds are committed in `evals/agent/thresholds.yaml` before the first baseline run; sealed results only on release candidates |
+| Telemetry names follow the OpenTelemetry GenAI semantic conventions (status: Development, so pinned and mapped) | OpenTelemetry GenAI conventions (secondary) | Telemetry fields carry an `x-otel` mapping to `gen_ai.operation.name`, `gen_ai.agent.name`, `gen_ai.tool.name`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`; content stays opt-in because it can carry personal data |
+| Attack families mapped to the OWASP Top 10 for LLM Applications 2025: LLM01 prompt injection, LLM02 sensitive information disclosure, LLM06 excessive agency | OWASP (secondary) | Each attack case carries an `owasp` tag; the report shows coverage by category |
+| Interchange with Google's evaluation tooling (`agent_data`, `responses`) | Google agents-cli evaluation schema | Spike S-EVAL-1; `contracts/agents-cli-trace-mapping.md` |
+
+**What this changes.** The exempt categories are defined from a taxonomy (identifiers, dates and times, versions, legal citations, list and period labels, structure counts) and tested against both the legacy examples and new ones; the old regexes are not ported. Golden cases are written fresh from the workstation jobs in `docs/agent-architecture.md` section 1, not migrated from the legacy dialogues, which are left untouched and marked superseded. The case file follows the Google evaluation case shape with our extra fields, not the legacy dialogue model.

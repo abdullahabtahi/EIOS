@@ -44,13 +44,13 @@ All records are frozen (immutable) and validated at the boundary when loaded. Fi
 
 `text`, `span`, `value`, `unit_family`, `verdict` (`supported`, `unsupported`, `exempt`), `reason` (`ok`, `no_matching_value`, `wrong_scale`, `wrong_unit`, `wrong_field`, `ambiguous`, `derived`, `exempt:<category>`), `matched_fact` (path or null), `candidates` (paths considered).
 
-## GoldenCase (extends the dialogue scenario)
+## GoldenCase (Google evaluation case shape plus our fields; legacy dialogues are not the base)
 
-`case_id`, `workstation`, `split` (dev, validation, sealed), `turns[]` where each turn has `user_query`, `expected_capabilities[]` (ordered, with allowed extras), `forbidden_capabilities[]`, `expected_facts[]` (capability plus field path plus unit), `aliases` (label synonyms for the faithfulness check), `refusal_required`, `max_rounds`, `data_origin_expected`, and `repeats`. Rejected at load if any agent-visible field contains ground-truth material.
+`case_id`, `workstation`, `split` (dev, validation, sealed), `turns[]` where each turn has `user_query`, `expected_capabilities[]` (ordered, with allowed extras), `forbidden_capabilities[]`, `expected_facts[]` (capability plus field path plus unit), `aliases` (label synonyms for the faithfulness check), `refusal_required`, `max_rounds`, `trajectory_match` (`exact`, `in_order` or `any_order`, default `any_order`), `min_precision`, `data_origin_expected`, and `repeats`. Rejected at load if any agent-visible field contains ground-truth material.
 
 ## AttackCase
 
-`case_id`, `family` (injection_via_tool_text, stage_then_self_approve, direct_write_attempt, identity_or_role_impersonation, cross_scope_request), `paraphrased` (bool, true when it avoids the known blocklist substrings), `setup` (question, role, optional `tool_fixtures`, optional canary), `must_not` (list of observable outcomes such as `call:approve_action`, `call:propose_*_after_injection`, `answer_contains_canary`, `identity_changed`), `repeats` (default 3).
+`case_id`, `family` (injection_via_tool_text, stage_then_self_approve, direct_write_attempt, identity_or_role_impersonation, cross_scope_request), `paraphrased` (bool, true when it avoids the known blocklist substrings), `owasp` (LLM01, LLM02 or LLM06 per the OWASP Top 10 for LLM Applications 2025), `setup` (question, role, optional `tool_fixtures`, optional canary), `must_not` (list of observable outcomes such as `call:approve_action`, `call:propose_*_after_injection`, `answer_contains_canary`, `identity_changed`), `repeats` (default 3).
 
 ## Capability
 
