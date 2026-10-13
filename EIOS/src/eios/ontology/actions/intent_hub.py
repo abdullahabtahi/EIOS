@@ -42,6 +42,10 @@ class FourEyesApprovalRequiredError(Exception):
     pass
 
 
+class FourEyesViolationError(Exception):
+    """The proposer of an intent tried to approve it (Principle II)."""
+
+
 class ActionExecutionError(Exception):
     pass
 
@@ -85,6 +89,23 @@ CANONICAL_ACTION_SPECS = {
     },
     "LaunchRetentionCampaign": {
         "required_params": ["partner_id", "tier"],
+        "severity": ActionSeverity.MEDIUM,
+    },
+    # Partner-retention and AML actions the cockpit stages (added with the cockpit contract enum).
+    "DeployRetentionConcession": {
+        "required_params": ["partner_id"],
+        "severity": ActionSeverity.MEDIUM,
+    },
+    "WhitelistDirectCashierRail": {
+        "required_params": ["partner_id"],
+        "severity": ActionSeverity.MEDIUM,
+    },
+    "AllocateCoMarketingBudget": {
+        "required_params": ["partner_id"],
+        "severity": ActionSeverity.MEDIUM,
+    },
+    "SuppressCGNATProxyCluster": {
+        "required_params": ["entity_id"],
         "severity": ActionSeverity.MEDIUM,
     },
 }
@@ -212,6 +233,8 @@ class ActionIntentHub:
         requester_agent_id: str = "DomainAgent",
         propensity_score: float | None = 1.0,
         causal_context: dict[str, Any] | None = None,
+        policy_tags: list[str] | None = None,
+        require_dual_approval: bool = False,
     ) -> ActionIntentToken:
         """Propose an operational action intent. Emits signed ActionIntentToken."""
         if action_type not in CANONICAL_ACTION_SPECS:
@@ -240,6 +263,9 @@ class ActionIntentHub:
             requires_dual = financial_impact > self.FAST_PATH_BUDGET_THRESHOLD
         else:
             requires_dual = False
+
+        # A caller may raise the approval bar above policy, never lower it.
+        requires_dual = requires_dual or require_dual_approval
 
         signing_payload = {
             "intent_id": intent_id,
@@ -275,9 +301,10 @@ class ActionIntentHub:
             propensity_score=propensity_score,
             causal_context=causal_context or {},
             requires_dual_approval=requires_dual,
-            policy_tags=["FAST_PATH_ELIGIBLE"]
-            if not requires_dual
-            else ["DUAL_APPROVAL_MANDATORY"],
+            policy_tags=[
+                "FAST_PATH_ELIGIBLE" if not requires_dual else "DUAL_APPROVAL_MANDATORY",
+                *(policy_tags or []),
+            ],
         )
 
         if self.sequencer:
@@ -348,6 +375,10 @@ class ActionIntentHub:
                 self._persist_token(token)
                 raise TokenExpiredError(f"Action intent '{intent_id}' has expired.")
             # Prevent duplicate approval by same person
+            if approver_id == token.requester_agent_id:
+                raise FourEyesViolationError(
+                    f"Four-Eyes Violation: '{approver_id}' proposed intent '{intent_id}' and cannot approve it."
+                )
             if any(a.approver_id == approver_id for a in token.approvals):
                 raise InvalidActionParameterError(
                     f"Approver '{approver_id}' has already approved this intent."
@@ -521,6 +552,42 @@ class ActionIntentHub:
 
             self._persist_token(token)
             return token
+
+    def find(self, intent_id: str) -> ActionIntentToken | None:
+        """Return the token, or None when the intent does not exist."""
+        return self._tokens[intent_id] if intent_id in self._tokens else None
+
+    def list_tokens(self) -> list[ActionIntentToken]:
+        """All tokens, oldest first."""
+        return sorted((t for _, t in self._tokens.items()), key=lambda t: t.issued_at)
+
+    def abort_action(self, intent_id: str, reason: str = "") -> ActionIntentToken:
+        """Abort an intent that has not executed, recording the abort in the ledger."""
+        for _ in range(APPROVAL_ATTEMPTS):
+            token = self.get_status(intent_id)
+            if token.status == ActionStatus.EXECUTED:
+                raise ActionExecutionError(
+                    f"Action '{intent_id}' already executed and cannot be aborted."
+                )
+            token.status = ActionStatus.ABORTED
+            try:
+                self._persist_token(token)
+            except ConcurrentModificationError:
+                continue
+            break
+        else:
+            raise ConcurrentModificationError(
+                f"Abort of '{intent_id}' kept conflicting; retry the request."
+            )
+        if self.sequencer:
+            entry = self.sequencer.record_event(
+                event_type=LedgerEventType.ACTION_ABORTED,
+                entity_id=token.intent_id,
+                payload={"intent_id": token.intent_id, "reason": reason},
+            )
+            self._tokens.attach_ledger_seq(token.intent_id, entry.ledger_seq)
+            token.ledger_seq = entry.ledger_seq
+        return token
 
     def get_status(self, intent_id: str) -> ActionIntentToken:
         """Retrieve current intent token state."""

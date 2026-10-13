@@ -35,7 +35,14 @@ from eios.cockpit.aml import AMLWorkstationService
 from eios.cockpit.partner import PartnerWorkstationService
 from eios.cockpit.compliance import ComplianceExplorerService
 from eios.cockpit.operations import DataPlatformOperationsService
-from eios.cockpit.governance_shelf import GovernedActionShelf, GovernedActionCard
+from eios.cockpit.governance_runtime import build_governance_runtime
+from eios.cockpit.governance_shelf import GovernedActionCard
+from eios.ontology.actions.intent_hub import (
+    CANONICAL_ACTION_SPECS,
+    ConcurrentModificationError,
+    FourEyesViolationError,
+    InvalidActionParameterError,
+)
 from eios.ontology.actions.models import (
     ActionIntentToken,
     ActionSeverity,
@@ -64,7 +71,8 @@ app.add_middleware(
 
 # Global Service Singletons
 session_mgr = SessionManager()
-action_shelf = GovernedActionShelf()
+governance = build_governance_runtime()
+action_shelf = governance.shelf
 presenter = CockpitShellPresenter(session_manager=session_mgr, action_shelf=action_shelf)
 executive_svc = ExecutiveCockpitService()
 aml_svc = AMLWorkstationService()
@@ -115,7 +123,9 @@ def _get_utc_now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _card_to_ui_contract_dict(card: GovernedActionCard, token: Optional[ActionIntentToken] = None) -> Dict[str, Any]:
+def _card_to_ui_contract_dict(
+    card: GovernedActionCard, token: Optional[ActionIntentToken] = None
+) -> Dict[str, Any]:
     lifecycle_state = "STAGED"
     if card.status == "PENDING_APPROVAL":
         if card.first_approver_id:
@@ -129,16 +139,8 @@ def _card_to_ui_contract_dict(card: GovernedActionCard, token: Optional[ActionIn
     elif card.status == "EXPIRED":
         lifecycle_state = "EXPIRED"
 
-    kms_key_id = (
-        token.kms_key_id
-        if token and token.kms_key_id
-        else "projects/eios/locations/global/keyRings/rings/cryptoKeys/governance"
-    )
-    sig_digest = (
-        token.signature
-        if token and token.signature
-        else hashlib.sha256(card.intent_id.encode("utf-8")).hexdigest()
-    )
+    kms_key_id = token.kms_key_id if token else ""
+    sig_digest = token.signature if token else ""
 
     sev = card.severity.upper() if card.severity else "HIGH"
     if sev not in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]:
@@ -163,46 +165,7 @@ def _card_to_ui_contract_dict(card: GovernedActionCard, token: Optional[ActionIn
 
 
 def _ensure_default_staged_cards() -> None:
-    if len(action_shelf._staged_tokens) == 0:
-        now = datetime.now(timezone.utc)
-        tok1 = ActionIntentToken(
-            intent_id="act_stage_retention_882",
-            action_type="DeployRetentionVIPDeal",
-            parameters={"partner_id": "AP-1029", "rebate_bps": 35, "duration_days": 90},
-            evidence_refs=["ev_churn_decay_882"],
-            severity=ActionSeverity.HIGH,
-            status=ActionStatus.PENDING,
-            nonce="nonce_seed_882",
-            issued_at=now,
-            expires_at=now + timedelta(seconds=900),
-            requester_agent_id="PartnerSupervisoryAgent",
-            kms_key_id="projects/eios/locations/global/keyRings/rings/cryptoKeys/governance",
-            signature="MEQCID2yJ05qGkCqJ3K2g09xLa71v9b2Qc901zB",
-            propensity_score=0.84,
-            causal_context={"partner_churn_hazard": 0.84},
-            requires_dual_approval=True,
-            policy_tags=["FOUR_EYES_MANDATORY"],
-        )
-        tok2 = ActionIntentToken(
-            intent_id="act_stage_cgnat_suppression",
-            action_type="SuppressCGNATProxyCluster",
-            parameters={"entity_id": "CR84920", "hub_degree": 42},
-            evidence_refs=["ev_proxy_hub_42"],
-            severity=ActionSeverity.MEDIUM,
-            status=ActionStatus.PENDING,
-            nonce="nonce_seed_cgnat",
-            issued_at=now,
-            expires_at=now + timedelta(seconds=900),
-            requester_agent_id="AMLWorkerAgent",
-            kms_key_id="projects/eios/locations/global/keyRings/rings/cryptoKeys/governance",
-            signature="MEQCID7xZ91qGkCqJ3K9p01aYb82m3n5Rx012wC",
-            propensity_score=0.62,
-            causal_context={"cgnat_hub_detected": True},
-            requires_dual_approval=False,
-            policy_tags=["CGNAT_FALSE_POSITIVE_MITIGATION"],
-        )
-        action_shelf.stage_token(tok1)
-        action_shelf.stage_token(tok2)
+    governance.seed_demo_intents()
 
 
 def _build_contract_state(role_str: str) -> Dict[str, Any]:
@@ -273,7 +236,9 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
                     "metrics": [
                         {
                             "metric_id": h.primary_metric_id,
-                            "formatted_value": f"${h.observed_value:,.0f}" if "usd" in h.primary_metric_id else f"{h.observed_value:,.1f}%",
+                            "formatted_value": f"${h.observed_value:,.0f}"
+                            if "usd" in h.primary_metric_id
+                            else f"{h.observed_value:,.1f}%",
                             "raw_value": h.observed_value,
                             "semantic_definition_version": h.provenance.definition_version,
                             "as_of_timestamp": h.provenance.as_of_timestamp.isoformat(),
@@ -322,7 +287,9 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
                 "subtitle": q["discrepancy_summary"],
                 "entity_id": q["entity_id"],
                 "priority_score": round(q["risk_score"] / 100.0, 2),
-                "severity": "CRITICAL" if q["risk_score"] >= 80 else ("HIGH" if q["risk_score"] >= 65 else "MEDIUM"),
+                "severity": "CRITICAL"
+                if q["risk_score"] >= 80
+                else ("HIGH" if q["risk_score"] >= 65 else "MEDIUM"),
                 "status": "OPEN" if q["status"] == "UNREVIEWED" else "INVESTIGATING",
                 "timestamp": now_iso,
             }
@@ -405,7 +372,9 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
                 "subtitle": p.primary_root_cause,
                 "entity_id": p.partner_id,
                 "priority_score": p.churn_hazard_probability,
-                "severity": "CRITICAL" if p.churn_hazard_probability >= 0.8 else ("HIGH" if p.churn_hazard_probability >= 0.5 else "MEDIUM"),
+                "severity": "CRITICAL"
+                if p.churn_hazard_probability >= 0.8
+                else ("HIGH" if p.churn_hazard_probability >= 0.5 else "MEDIUM"),
                 "status": "OPEN",
                 "timestamp": now_iso,
             }
@@ -455,9 +424,27 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
                 "affiliate_tree": {
                     "master_partner_id": "AP-1029",
                     "sub_affiliates": [
-                        {"id": "SUB-101", "name": "Bogota Trading Desk", "volume_usd": 420000.0, "co_occurrence_pct": 92.4, "flagged_mirror_trading": True},
-                        {"id": "SUB-102", "name": "Medellin Retail Hub", "volume_usd": 380000.0, "co_occurrence_pct": 34.0, "flagged_mirror_trading": False},
-                        {"id": "SUB-103", "name": "Lima FX Group", "volume_usd": 440000.0, "co_occurrence_pct": 88.1, "flagged_mirror_trading": True},
+                        {
+                            "id": "SUB-101",
+                            "name": "Bogota Trading Desk",
+                            "volume_usd": 420000.0,
+                            "co_occurrence_pct": 92.4,
+                            "flagged_mirror_trading": True,
+                        },
+                        {
+                            "id": "SUB-102",
+                            "name": "Medellin Retail Hub",
+                            "volume_usd": 380000.0,
+                            "co_occurrence_pct": 34.0,
+                            "flagged_mirror_trading": False,
+                        },
+                        {
+                            "id": "SUB-103",
+                            "name": "Lima FX Group",
+                            "volume_usd": 440000.0,
+                            "co_occurrence_pct": 88.1,
+                            "flagged_mirror_trading": True,
+                        },
                     ],
                 },
             },
@@ -467,11 +454,15 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
         role_enum = "compliance_auditor"
         timeline = compliance_svc.get_ledger_timeline(start_seq=1, limit=10)
         worm_proofs = compliance_svc.get_worm_compliance_proofs()
-        primary_worm = worm_proofs[0] if worm_proofs else {
-            "checkpoint_id": "WORM-CKPT-20261009-001",
-            "retention_expiration": "2033-10-09T00:00:00+00:00",
-            "compliance_lock_mode": "COMPLIANCE",
-        }
+        primary_worm = (
+            worm_proofs[0]
+            if worm_proofs
+            else {
+                "checkpoint_id": "WORM-CKPT-20261009-001",
+                "retention_expiration": "2033-10-09T00:00:00+00:00",
+                "compliance_lock_mode": "COMPLIANCE",
+            }
+        )
 
         triage_items = [
             {
@@ -530,32 +521,117 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
         products = operations_svc.get_data_products()
         sla_statuses = [p.to_contract_dict() for p in products]
         err_budgets = [
-            {"slo_id": "SLO-1", "name": "Streaming Ingestion Lag (<30s)", "consumed_pct": 24.2, "status": "HEALTHY"},
-            {"slo_id": "SLO-2", "name": "Metric Calculation Determinism", "consumed_pct": 0.0, "status": "HEALTHY"},
-            {"slo_id": "SLO-3", "name": "DoWhy Refuter Confidence", "consumed_pct": 12.5, "status": "HEALTHY"},
-            {"slo_id": "SLO-4", "name": "CGNAT False Positive Suppression", "consumed_pct": 8.0, "status": "HEALTHY"},
-            {"slo_id": "SLO-5", "name": "WORM Immutability Verification", "consumed_pct": 0.0, "status": "HEALTHY"},
-            {"slo_id": "SLO-6", "name": "Sub-200ms Parametric Propagation", "consumed_pct": 18.0, "status": "HEALTHY"},
-            {"slo_id": "SLO-7", "name": "Sub-50ms Metric Popover Egress", "consumed_pct": 14.0, "status": "HEALTHY"},
-            {"slo_id": "SLO-8", "name": "DLQ Quarantine Depth (<10 msgs)", "consumed_pct": 0.0, "status": "HEALTHY"},
-            {"slo_id": "SLO-9", "name": "KMS Key Rotation Proof Validity", "consumed_pct": 0.0, "status": "HEALTHY"},
-            {"slo_id": "SLO-10", "name": "Four-Eyes Dual Approval Audit", "consumed_pct": 0.0, "status": "HEALTHY"},
+            {
+                "slo_id": "SLO-1",
+                "name": "Streaming Ingestion Lag (<30s)",
+                "consumed_pct": 24.2,
+                "status": "HEALTHY",
+            },
+            {
+                "slo_id": "SLO-2",
+                "name": "Metric Calculation Determinism",
+                "consumed_pct": 0.0,
+                "status": "HEALTHY",
+            },
+            {
+                "slo_id": "SLO-3",
+                "name": "DoWhy Refuter Confidence",
+                "consumed_pct": 12.5,
+                "status": "HEALTHY",
+            },
+            {
+                "slo_id": "SLO-4",
+                "name": "CGNAT False Positive Suppression",
+                "consumed_pct": 8.0,
+                "status": "HEALTHY",
+            },
+            {
+                "slo_id": "SLO-5",
+                "name": "WORM Immutability Verification",
+                "consumed_pct": 0.0,
+                "status": "HEALTHY",
+            },
+            {
+                "slo_id": "SLO-6",
+                "name": "Sub-200ms Parametric Propagation",
+                "consumed_pct": 18.0,
+                "status": "HEALTHY",
+            },
+            {
+                "slo_id": "SLO-7",
+                "name": "Sub-50ms Metric Popover Egress",
+                "consumed_pct": 14.0,
+                "status": "HEALTHY",
+            },
+            {
+                "slo_id": "SLO-8",
+                "name": "DLQ Quarantine Depth (<10 msgs)",
+                "consumed_pct": 0.0,
+                "status": "HEALTHY",
+            },
+            {
+                "slo_id": "SLO-9",
+                "name": "KMS Key Rotation Proof Validity",
+                "consumed_pct": 0.0,
+                "status": "HEALTHY",
+            },
+            {
+                "slo_id": "SLO-10",
+                "name": "Four-Eyes Dual Approval Audit",
+                "consumed_pct": 0.0,
+                "status": "HEALTHY",
+            },
         ]
         red_lines = [
-            {"gate_id": "RL-1", "name": "Metric Calculation Determinism", "status": "PASS", "margin_delta": 0.0},
-            {"gate_id": "RL-2", "name": "Four-Eyes Enforcement Integrity", "status": "PASS", "margin_delta": 0.0},
-            {"gate_id": "RL-3", "name": "DoWhy Refuter Confidence Threshold", "status": "PASS", "margin_delta": 0.12},
-            {"gate_id": "RL-4", "name": "CGNAT Hub False-Positive Suppression", "status": "PASS", "margin_delta": 0.05},
-            {"gate_id": "RL-5", "name": "WORM Retention Lock Immutable Anchoring", "status": "PASS", "margin_delta": 0.0},
-            {"gate_id": "RL-6", "name": "Sub-200ms Parametric Propagation", "status": "PASS", "margin_delta": -145.2},
-            {"gate_id": "RL-7", "name": "Sub-50ms Metric Popover Egress", "status": "PASS", "margin_delta": -32.8},
+            {
+                "gate_id": "RL-1",
+                "name": "Metric Calculation Determinism",
+                "status": "PASS",
+                "margin_delta": 0.0,
+            },
+            {
+                "gate_id": "RL-2",
+                "name": "Four-Eyes Enforcement Integrity",
+                "status": "PASS",
+                "margin_delta": 0.0,
+            },
+            {
+                "gate_id": "RL-3",
+                "name": "DoWhy Refuter Confidence Threshold",
+                "status": "PASS",
+                "margin_delta": 0.12,
+            },
+            {
+                "gate_id": "RL-4",
+                "name": "CGNAT Hub False-Positive Suppression",
+                "status": "PASS",
+                "margin_delta": 0.05,
+            },
+            {
+                "gate_id": "RL-5",
+                "name": "WORM Retention Lock Immutable Anchoring",
+                "status": "PASS",
+                "margin_delta": 0.0,
+            },
+            {
+                "gate_id": "RL-6",
+                "name": "Sub-200ms Parametric Propagation",
+                "status": "PASS",
+                "margin_delta": -145.2,
+            },
+            {
+                "gate_id": "RL-7",
+                "name": "Sub-50ms Metric Popover Egress",
+                "status": "PASS",
+                "margin_delta": -32.8,
+            },
         ]
 
         triage_items = [
             {
                 "id": f"item_dp_{p.product_name}",
                 "title": f"Data Product {p.product_name}",
-                "subtitle": f"SLA: {p.freshness_sla_seconds}s | Quality: {p.null_check_pass_rate*100:.2f}% | Status: {p.status.value}",
+                "subtitle": f"SLA: {p.freshness_sla_seconds}s | Quality: {p.null_check_pass_rate * 100:.2f}% | Status: {p.status.value}",
                 "entity_id": p.product_name,
                 "priority_score": 0.85 if p.is_degraded else 0.2,
                 "severity": "CRITICAL" if p.is_degraded else "LOW",
@@ -570,9 +646,7 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
         degraded_products = [p for p in products if p.status.value == "DEGRADED"]
         if breached_products:
             names = ", ".join(p.product_name for p in breached_products)
-            health_summary = (
-                f"{len(breached_products)} of {total_products} data products breached freshness SLA ({names})."
-            )
+            health_summary = f"{len(breached_products)} of {total_products} data products breached freshness SLA ({names})."
         elif degraded_products:
             health_summary = f"{len(degraded_products)} of {total_products} data products degraded."
         else:
@@ -674,7 +748,9 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
                 "runbook_name": "Cloud KMS Keyring Automated Rotation",
                 "verification_status": "PASS",
                 "kms_keyring_rotation_status": "ACTIVE_ROTATED",
-                "backup_checkpoint_hash": hashlib.sha256(b"DR_KMS_BACKUP_CHECKPOINT_2026").hexdigest(),
+                "backup_checkpoint_hash": hashlib.sha256(
+                    b"DR_KMS_BACKUP_CHECKPOINT_2026"
+                ).hexdigest(),
             },
             {
                 "runbook_id": "DR-WARM-CACHE-002",
@@ -685,13 +761,48 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
             },
         ],
         "red_line_gates": [
-            {"gate_id": "RL-1", "name": "Metric Calculation Determinism", "status": "PASS", "margin_delta": 0.0},
-            {"gate_id": "RL-2", "name": "Four-Eyes Enforcement Integrity", "status": "PASS", "margin_delta": 0.0},
-            {"gate_id": "RL-3", "name": "DoWhy Refuter Confidence Threshold", "status": "PASS", "margin_delta": 0.12},
-            {"gate_id": "RL-4", "name": "CGNAT Hub False-Positive Suppression", "status": "PASS", "margin_delta": 0.05},
-            {"gate_id": "RL-5", "name": "WORM Retention Lock Immutable Anchoring", "status": "PASS", "margin_delta": 0.0},
-            {"gate_id": "RL-6", "name": "Sub-200ms Parametric Propagation", "status": "PASS", "margin_delta": -145.2},
-            {"gate_id": "RL-7", "name": "Sub-50ms Metric Popover Egress", "status": "PASS", "margin_delta": -32.8},
+            {
+                "gate_id": "RL-1",
+                "name": "Metric Calculation Determinism",
+                "status": "PASS",
+                "margin_delta": 0.0,
+            },
+            {
+                "gate_id": "RL-2",
+                "name": "Four-Eyes Enforcement Integrity",
+                "status": "PASS",
+                "margin_delta": 0.0,
+            },
+            {
+                "gate_id": "RL-3",
+                "name": "DoWhy Refuter Confidence Threshold",
+                "status": "PASS",
+                "margin_delta": 0.12,
+            },
+            {
+                "gate_id": "RL-4",
+                "name": "CGNAT Hub False-Positive Suppression",
+                "status": "PASS",
+                "margin_delta": 0.05,
+            },
+            {
+                "gate_id": "RL-5",
+                "name": "WORM Retention Lock Immutable Anchoring",
+                "status": "PASS",
+                "margin_delta": 0.0,
+            },
+            {
+                "gate_id": "RL-6",
+                "name": "Sub-200ms Parametric Propagation",
+                "status": "PASS",
+                "margin_delta": -145.2,
+            },
+            {
+                "gate_id": "RL-7",
+                "name": "Sub-50ms Metric Popover Egress",
+                "status": "PASS",
+                "margin_delta": -32.8,
+            },
         ],
     }
 
@@ -709,6 +820,7 @@ FLYWHEEL_FEEDBACK_PATH = "/api/cockpit/flywheel/feedback"
 AUDIT_VERIFY_PATH = "/api/cockpit/audit/verify"
 
 router = APIRouter(tags=["Cockpit Presentation"])
+
 
 # Endpoints
 @router.get(HEALTH_PATH)
@@ -747,69 +859,84 @@ def simulate_what_if_shock(req: SimulateRequest) -> Dict[str, Any]:
     return result
 
 
+# The cockpit and the cards contract use some names the ontology spells differently.
+_ACTION_ALIASES = {
+    "DeployRetentionVIPDeal": "DeployRetentionConcession",
+    "DEPLOY_RETENTION_PLAYBOOK": "DeployRetentionConcession",
+}
+
+
+def _resolve_parameters(
+    action_type: str, target_entity_id: str, metadata: Dict[str, Any]
+) -> Dict[str, Any]:
+    """Fill the action's first missing required *_id parameter from the target entity."""
+    params = dict(metadata)
+    spec = CANONICAL_ACTION_SPECS.get(action_type)
+    if spec:
+        for required in spec["required_params"]:
+            if required.endswith("_id") and required not in params:
+                params[required] = target_entity_id
+                break
+    return params
+
+
 @router.post(STAGE_ACTION_PATH)
 def stage_governed_action(req: StageActionRequest) -> Dict[str, Any]:
-    """Stages a two-phase commit action card onto the Governed Action Shelf."""
-    intent_id = f"act_{int(time.time() * 1000)}"
-    now = datetime.now(timezone.utc)
-    sev_map = {
-        "CRITICAL": ActionSeverity.HIGH,
-        "HIGH": ActionSeverity.HIGH,
-        "MEDIUM": ActionSeverity.MEDIUM,
-        "LOW": ActionSeverity.LOW,
-        "INFO": ActionSeverity.LOW,
-    }
-    token = ActionIntentToken(
-        intent_id=intent_id,
-        action_type=req.action_type,
-        parameters={"target_entity_id": req.target_entity_id, **req.metadata},
-        evidence_refs=["ev_user_staged"],
-        severity=sev_map.get(req.severity.upper(), ActionSeverity.HIGH),
-        status=ActionStatus.PENDING,
-        nonce=f"nonce_{int(time.time())}",
-        issued_at=now,
-        expires_at=now + timedelta(seconds=900),
-        requester_agent_id=req.initiator_officer_id,
-        kms_key_id="projects/eios/locations/global/keyRings/rings/cryptoKeys/governance",
-        signature=hashlib.sha256(intent_id.encode("utf-8")).hexdigest(),
-        propensity_score=0.9,
-        causal_context={},
-        requires_dual_approval=req.requires_four_eyes,
-        policy_tags=["STAGED_VIA_COCKPIT"],
-    )
-    card = action_shelf.stage_token(token)
+    """Propose an action through the intent hub: validated, KMS-signed, nonce-registered and ledgered."""
+    action_type = _ACTION_ALIASES.get(req.action_type, req.action_type)
+    try:
+        token = governance.hub.propose_action(
+            action_type=action_type,
+            parameters=_resolve_parameters(action_type, req.target_entity_id, req.metadata),
+            evidence_refs=["ev_user_staged"],
+            requester_agent_id=req.initiator_officer_id,
+            policy_tags=["STAGED_VIA_COCKPIT"],
+            require_dual_approval=req.requires_four_eyes,
+        )
+    except InvalidActionParameterError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
+    card = action_shelf.present_card(token)
     return {
         "status": "STAGED",
         "card": _card_to_ui_contract_dict(card, token),
-        "total_staged": len(action_shelf._staged_tokens),
+        "total_staged": len(action_shelf.list_cards()),
     }
 
 
 @router.post(AUTHORIZE_ACTION_PATH)
 def authorize_governed_action(req: AuthorizeActionRequest) -> Dict[str, Any]:
-    """Executes Four-Eyes dual approval on a staged action card."""
-    token = action_shelf.get_token(req.intent_id)
-    if not token:
-        raise HTTPException(status_code=404, detail=f"Staged action {req.intent_id} not found")
-
-    if token.requester_agent_id == req.authorizer_id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Four-Eyes Violation: Authorizing officer cannot be the initiating officer (Principle II)",
+    """Record a Four-Eyes approval; commit the action once every required approval is in."""
+    try:
+        card = action_shelf.submit_approval(
+            intent_id=req.intent_id,
+            approver_id=req.authorizer_id,
+            approver_role="COMPLIANCE_OFFICER",
+            comment="Authorized via Cockpit Governed Action Shelf",
         )
+        if card.status == "APPROVED":
+            action_shelf.execute_action(req.intent_id)
+    except KeyError as exc:
+        raise HTTPException(
+            status_code=404, detail=f"Staged action {req.intent_id} not found"
+        ) from exc
+    except (FourEyesViolationError, InvalidActionParameterError) as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    except ConcurrentModificationError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
 
-    card = action_shelf.submit_approval(
-        intent_id=req.intent_id,
-        approver_id=req.authorizer_id,
-        approver_role="COMPLIANCE_OFFICER",
-        comment="Authorized via Cockpit Governed Action Shelf",
-    )
-    if token.status == ActionStatus.APPROVED:
-        action_shelf.execute_action(req.intent_id, caller_role="COMPLIANCE_HEAD")
-
+    token = action_shelf.get_token(req.intent_id)
+    final_card = action_shelf.present_card(token) if token else card
+    if final_card.status == "EXECUTED":
+        outcome = "COMMITTED"
+    elif final_card.status == "APPROVED":
+        outcome = "APPROVED"
+    else:
+        outcome = "PENDING_SECOND_EYE"
     return {
-        "status": "COMMITTED" if token.status == ActionStatus.EXECUTED else "APPROVED",
-        "card": _card_to_ui_contract_dict(card, token),
+        "status": outcome,
+        "card": _card_to_ui_contract_dict(final_card, token),
         "committed_timestamp": _get_utc_now(),
     }
 
@@ -889,7 +1016,9 @@ def verify_ledger_continuity() -> Dict[str, Any]:
     report = compliance_svc.verify_hash_chain_interactive()
     return {
         "status": report.get("status", "VALID"),
-        "total_records": report.get("total_entries_verified", len(outcomes_ledger._records) or 10000),
+        "total_records": report.get(
+            "total_entries_verified", len(outcomes_ledger._records) or 10000
+        ),
         "last_hash": report.get("chain_head_hash", outcomes_ledger._last_hash),
         "worm_mode": "LOCKED",
         "verified_at": _get_utc_now(),

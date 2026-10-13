@@ -67,3 +67,34 @@ def test_stale_write_is_rejected_not_silently_applied(shared) -> None:
     stale.policy_tags.append("second-writer")
     with pytest.raises(ConcurrentModificationError):
         hub._persist_token(stale)
+
+
+def test_caller_can_raise_but_not_lower_the_approval_bar(shared) -> None:
+    hub = _hub(*shared)
+    low = hub.propose_action(
+        "ReviewSpreadPricing", {"symbol": "EURUSD", "target_spread_pips": 1.2}, ["ev"]
+    )
+    assert low.requires_dual_approval is False
+    raised = hub.propose_action(
+        "ReviewSpreadPricing",
+        {"symbol": "EURUSD", "target_spread_pips": 1.2},
+        ["ev"],
+        require_dual_approval=True,
+    )
+    assert raised.requires_dual_approval is True
+    high = hub.propose_action("FreezeAccount", PARAMS, ["ev"], require_dual_approval=False)
+    assert high.requires_dual_approval is True
+
+
+def test_a_proposer_never_approves_their_own_intent(shared) -> None:
+    from eios.ontology.actions.intent_hub import FourEyesViolationError
+
+    hub = _hub(*shared)
+    token = hub.propose_action(
+        "ReviewSpreadPricing",
+        {"symbol": "EURUSD", "target_spread_pips": 1.2},
+        ["ev"],
+        requester_agent_id="alice",
+    )
+    with pytest.raises(FourEyesViolationError):
+        hub.approve_action(token.intent_id, "alice", "ANALYST")

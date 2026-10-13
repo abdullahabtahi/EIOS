@@ -16,7 +16,13 @@ def client():
 
 @pytest.fixture
 def ui_contract_schema():
-    schema_path = Path(__file__).resolve().parents[3] / "specs" / "016-cockpit-frontend" / "contracts" / "cockpit-ui-contract.schema.json"
+    schema_path = (
+        Path(__file__).resolve().parents[3]
+        / "specs"
+        / "016-cockpit-frontend"
+        / "contracts"
+        / "cockpit-ui-contract.schema.json"
+    )
     with open(schema_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -29,7 +35,10 @@ def test_health_endpoint(client):
     assert "EIOS" in data["engine"]
 
 
-@pytest.mark.parametrize("role", ["executive", "aml_investigator", "partner_manager", "compliance_auditor", "data_operations"])
+@pytest.mark.parametrize(
+    "role",
+    ["executive", "aml_investigator", "partner_manager", "compliance_auditor", "data_operations"],
+)
 def test_workstation_state_contract_conformance(client, ui_contract_schema, role):
     response = client.get(f"/api/cockpit/workstations/{role}")
     assert response.status_code == 200
@@ -39,7 +48,10 @@ def test_workstation_state_contract_conformance(client, ui_contract_schema, role
 
 
 def test_what_if_simulation(client):
-    response = client.post("/api/cockpit/simulate", json={"shock_param": "competitor_commission_bps", "magnitude_pct": 50.0})
+    response = client.post(
+        "/api/cockpit/simulate",
+        json={"shock_param": "competitor_commission_bps", "magnitude_pct": 50.0},
+    )
     assert response.status_code == 200
     data = response.json()
     assert "attribution_waterfall" in data
@@ -47,38 +59,75 @@ def test_what_if_simulation(client):
     assert 99.99 <= data["attribution_sum_pct"] <= 100.01
 
 
-def test_stage_and_authorize_action(client):
-    stage_resp = client.post(
-        "/api/cockpit/actions/stage",
-        json={
-            "action_type": "DeployRetentionVIPDeal",
-            "target_entity_id": "AP-1029",
-            "severity": "HIGH",
-            "initiator_officer_id": "OFFICER_CHENG",
-            "requires_four_eyes": True,
-            "metadata": {"deal_discount_bps": 20},
-        },
+def _stage(client, **overrides):
+    body = {
+        "action_type": "DeployRetentionVIPDeal",
+        "target_entity_id": "AP-1029",
+        "severity": "HIGH",
+        "initiator_officer_id": "OFFICER_CHENG",
+        "requires_four_eyes": True,
+        "metadata": {"deal_discount_bps": 20},
+    }
+    return client.post("/api/cockpit/actions/stage", json={**body, **overrides})
+
+
+def _authorize(client, intent_id, who):
+    return client.post(
+        "/api/cockpit/actions/authorize", json={"intent_id": intent_id, "authorizer_id": who}
     )
+
+
+def test_stage_and_authorize_action(client):
+    stage_resp = _stage(client)
     assert stage_resp.status_code == 200
     staged = stage_resp.json()
     assert staged["status"] == "STAGED"
     intent_id = staged["card"]["intent_id"]
 
-    # Reject self-approval (Four-Eyes Violation)
-    fail_resp = client.post(
-        "/api/cockpit/actions/authorize",
-        json={"intent_id": intent_id, "authorizer_id": "OFFICER_CHENG"},
-    )
+    # The proposer cannot approve their own intent (Four-Eyes Violation)
+    fail_resp = _authorize(client, intent_id, "OFFICER_CHENG")
     assert fail_resp.status_code == 400
     assert "Four-Eyes" in fail_resp.json()["detail"]
 
-    # Valid second-eye approval
-    auth_resp = client.post(
-        "/api/cockpit/actions/authorize",
-        json={"intent_id": intent_id, "authorizer_id": "OFFICER_DUAL_VALIDATOR"},
-    )
-    assert auth_resp.status_code == 200
-    assert auth_resp.json()["status"] in ["APPROVED", "COMMITTED"]
+    # Dual approval needs two distinct approvers; one is not enough
+    first = _authorize(client, intent_id, "OFFICER_DUAL_VALIDATOR")
+    assert first.status_code == 200
+    assert first.json()["status"] == "PENDING_SECOND_EYE"
+
+    second = _authorize(client, intent_id, "OFFICER_SECOND_EYE")
+    assert second.status_code == 200
+    assert second.json()["status"] == "COMMITTED"
+
+
+def test_staged_card_carries_a_real_verified_signature(client):
+    card = _stage(client).json()["card"]
+    signature = card["kms_signature"]
+    assert signature["verified"] is True
+    assert signature["key_id"]
+    assert len(signature["signature_digest"]) > 40  # a DER ECDSA signature, not a sha256 hex digest
+
+
+def test_unknown_action_type_is_rejected(client):
+    resp = _stage(client, action_type="DropAllTables")
+    assert resp.status_code == 422
+    assert "Unknown Action Type" in resp.json()["detail"]
+
+
+def test_authorizing_a_missing_intent_is_404(client):
+    assert _authorize(client, "nope", "OFFICER_X").status_code == 404
+
+
+def test_every_transition_is_in_the_hash_chained_ledger(client):
+    from eios.cockpit import server
+
+    before = server.governance.sequencer.current_seq
+    intent_id = _stage(client).json()["card"]["intent_id"]
+    _authorize(client, intent_id, "OFFICER_A")
+    _authorize(client, intent_id, "OFFICER_B")
+    events = [e.event_type.value for e in server.governance.sequencer.entries[before:]]
+    assert events.count("PROPOSAL_CREATED") == 1
+    assert events.count("APPROVAL_RECORDED") == 2
+    assert "ACTION_EXECUTED" in events
 
 
 def test_copilot_grounded_and_blocked_queries(client):

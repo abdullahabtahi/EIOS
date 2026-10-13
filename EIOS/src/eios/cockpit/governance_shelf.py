@@ -5,18 +5,24 @@ Strict institutional light mode COP invariants and Principle II / IV governed 2P
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 from eios.cockpit.schemas import validate_contract
+from eios.ontology.actions.intent_hub import TokenExpiredError
+from eios.ontology.actions.record_store import ModelStore, RecordStore, default_record_store
+from eios.ontology.actions.signer import ActionSigner
 from eios.ontology.actions.models import (
     ActionIntentToken,
     ActionSeverity,
     ActionStatus,
     ApprovalRecord,
 )
+
+_LOG = logging.getLogger("eios.cockpit.governance_shelf")
 
 # Canonical mapping for contract schema alignment
 _ACTION_TYPE_CONTRACT_MAP = {
@@ -55,22 +61,76 @@ class GovernedActionCard(BaseModel):
 
 
 class GovernedActionShelf:
-    """Manages staged 2PC action cards rendered in the bottom action shelf with Four-Eyes dual approval."""
+    """Presents staged 2PC action cards with Four-Eyes dual approval.
+
+    With an ``intent_hub`` the shelf is a view over the hub's durable, ledgered state: approvals,
+    execution and aborts go through the hub and its errors propagate. Without one (unit tests,
+    isolated demos) it keeps its own token store. In both modes a card's ``kms_signature_verified``
+    is the result of verifying the token's signature with ``signer``; with no signer it is False.
+    """
 
     FAST_PATH_BUDGET_THRESHOLD: float = 2500.0
 
-    def __init__(self, intent_hub: Any | None = None) -> None:
+    def __init__(
+        self,
+        intent_hub: Any | None = None,
+        signer: ActionSigner | None = None,
+        token_records: RecordStore | None = None,
+    ) -> None:
         self.intent_hub = intent_hub
-        self._staged_tokens: Dict[str, ActionIntentToken] = {}
+        self.signer = signer or getattr(intent_hub, "signer", None)
+        self._tokens: ModelStore[ActionIntentToken] | None = (
+            None
+            if intent_hub is not None
+            else ModelStore(
+                token_records or default_record_store("shelf_tokens"), ActionIntentToken
+            )
+        )
 
+    @property
+    def _local_tokens(self) -> ModelStore[ActionIntentToken]:
+        if self._tokens is None:
+            raise RuntimeError("the shelf delegates to the intent hub")
+        return self._tokens
+
+    # ---- state access -------------------------------------------------------------------------
     def stage_token(self, token: ActionIntentToken) -> GovernedActionCard:
-        """Stages an ActionIntentToken in the shelf and returns the card view."""
-        self._staged_tokens[token.intent_id] = token
+        """Stage an externally built token (standalone mode only; hub mode proposes through the hub)."""
+        if self._tokens is None:
+            raise ValueError("In hub mode tokens must be proposed through the intent hub")
+        self._local_tokens.put(token.intent_id, token)
         return self.present_card(token)
 
     def get_token(self, intent_id: str) -> Optional[ActionIntentToken]:
-        return self._staged_tokens.get(intent_id)
+        if self.intent_hub is not None:
+            found: Optional[ActionIntentToken] = self.intent_hub.find(intent_id)
+            return found
+        return self._local_tokens.get(intent_id)
 
+    def _require(self, intent_id: str) -> ActionIntentToken:
+        token = self.get_token(intent_id)
+        if token is None:
+            raise KeyError(f"Action intent {intent_id} not found in shelf")
+        return token
+
+    def _all_tokens(self) -> List[ActionIntentToken]:
+        if self.intent_hub is not None:
+            tokens: List[ActionIntentToken] = self.intent_hub.list_tokens()
+            return tokens
+        return sorted(self._local_tokens.list(), key=lambda t: t.issued_at)
+
+    def _signature_verified(self, token: ActionIntentToken) -> bool:
+        if self.signer is None or not token.signature:
+            return False
+        try:
+            return bool(self.signer.verify_token(token))
+        except Exception:
+            _LOG.warning(
+                "signature verification raised for intent %s", token.intent_id, exc_info=True
+            )
+            return False
+
+    # ---- presentation -------------------------------------------------------------------------
     def present_card(self, token: ActionIntentToken) -> GovernedActionCard:
         """Converts an ActionIntentToken to a validated GovernedActionCard."""
         now = datetime.now(UTC)
@@ -109,7 +169,7 @@ class GovernedActionShelf:
             requires_four_eyes=token.requires_dual_approval,
             first_approver_id=first_approver,
             second_approver_id=second_approver,
-            kms_signature_verified=bool(token.signature),
+            kms_signature_verified=self._signature_verified(token),
             status=card_status,
             seconds_remaining=remaining,
         )
@@ -121,9 +181,7 @@ class GovernedActionShelf:
         officer_role: str,
     ) -> Dict[str, Any]:
         """Provides full contextual state and eligibility checks for the Four-Eyes approval modal."""
-        token = self._staged_tokens.get(intent_id)
-        if not token:
-            raise KeyError(f"Action intent {intent_id} not found in shelf")
+        token = self._require(intent_id)
 
         card = self.present_card(token)
         now = datetime.now(UTC)
@@ -131,7 +189,9 @@ class GovernedActionShelf:
 
         # Check eligibility: officer cannot sign twice
         has_already_signed = any(a.approver_id == officer_id for a in token.approvals)
-        can_approve = not is_expired and not has_already_signed and card.status in ["PENDING_APPROVAL"]
+        can_approve = (
+            not is_expired and not has_already_signed and card.status in ["PENDING_APPROVAL"]
+        )
 
         rejection_reason = None
         if is_expired:
@@ -174,82 +234,69 @@ class GovernedActionShelf:
         approver_role: str,
         comment: str = "",
     ) -> GovernedActionCard:
-        """Records an authenticated human sign-off on an action intent."""
-        token = self._staged_tokens.get(intent_id)
-        if not token:
-            raise KeyError(f"Action intent {intent_id} not found in shelf")
-
-        now = datetime.now(UTC)
-        if token.expires_at <= now:
-            token.status = ActionStatus.EXPIRED
-            return self.present_card(token)
-
-        # Disallow duplicate approval by same officer (Four-Eyes dual approval enforcement)
-        for existing in token.approvals:
-            if existing.approver_id == approver_id:
-                raise ValueError(f"Approver {approver_id} has already approved this intent")
-
-        approval = ApprovalRecord(
-            approver_id=approver_id,
-            approver_role=approver_role,
-            approved_at=now,
-            comment=comment,
-        )
-        token.approvals.append(approval)
-
-        # State transition: check if dual approval requirement is met
-        if token.requires_dual_approval:
-            if len(token.approvals) >= 2:
-                token.status = ActionStatus.APPROVED
-            else:
-                token.status = ActionStatus.PENDING
-        else:
-            # Single-approver fast-path
-            token.status = ActionStatus.APPROVED
-
-        # If hooked to ActionIntentHub, record in hub as well
-        if self.intent_hub and hasattr(self.intent_hub, "approve_action"):
+        """Record a human sign-off. In hub mode the hub enforces four-eyes and ledgers the approval."""
+        if self.intent_hub is not None:
             try:
-                self.intent_hub.approve_action(
+                token = self.intent_hub.approve_action(
                     intent_id=intent_id,
                     approver_id=approver_id,
-                    approver_role=approver_role,
+                    role=approver_role,
                     comment=comment,
                 )
-            except Exception:
-                pass
+            except TokenExpiredError:
+                return self.present_card(self._require(intent_id))
+            return self.present_card(token)
+        now = datetime.now(UTC)
 
-        return self.present_card(token)
+        def approve(token: ActionIntentToken) -> ActionIntentToken:
+            if token.expires_at <= now:
+                return token.model_copy(update={"status": ActionStatus.EXPIRED})
+            if any(existing.approver_id == approver_id for existing in token.approvals):
+                raise ValueError(f"Approver {approver_id} has already approved this intent")
+            approvals = [
+                *token.approvals,
+                ApprovalRecord(
+                    approver_id=approver_id,
+                    approver_role=approver_role,
+                    approved_at=now,
+                    comment=comment,
+                ),
+            ]
+            fully_approved = not token.requires_dual_approval or len(approvals) >= 2
+            status = ActionStatus.APPROVED if fully_approved else ActionStatus.PENDING
+            return token.model_copy(update={"approvals": approvals, "status": status})
+
+        self._require(intent_id)
+        return self.present_card(self._local_tokens.update(intent_id, approve))
 
     def execute_action(
         self,
         intent_id: str,
         caller_role: str = "COMPLIANCE_HEAD",
     ) -> Dict[str, Any]:
-        """Commits an approved action intent to the write-back sink emitting an immutable receipt."""
-        token = self._staged_tokens.get(intent_id)
-        if not token:
-            raise KeyError(f"Action intent {intent_id} not found in shelf")
-
+        """Commit an approved intent to the write-back sink and return its receipt."""
+        token = self._require(intent_id)
         if token.status != ActionStatus.APPROVED:
             raise ValueError(f"Cannot execute intent in status '{token.status}'. Must be APPROVED.")
 
-        # If hooked to intent_hub, delegate execution
-        if self.intent_hub and hasattr(self.intent_hub, "execute_action"):
-            receipt = self.intent_hub.execute_action(intent_id=intent_id, caller_role=caller_role)
-            token.status = ActionStatus.EXECUTED
-            token.execution_receipt_id = getattr(receipt, "receipt_id", str(uuid.uuid4()))
+        if self.intent_hub is not None:
+            result = self.intent_hub.execute_action(intent_id=intent_id)
+            receipt_id = getattr(result, "receipt_id", None) or getattr(
+                result, "execution_receipt_id", None
+            )
             return {
-                "receipt_id": token.execution_receipt_id,
+                "receipt_id": receipt_id,
                 "status": "COMMITTED",
                 "intent_id": intent_id,
                 "committed_at": datetime.now(UTC).isoformat(),
             }
-
-        # Simulated 2PC sink commit
         receipt_id = f"rcpt_{uuid.uuid4().hex[:12]}"
-        token.status = ActionStatus.EXECUTED
-        token.execution_receipt_id = receipt_id
+        self._local_tokens.update(
+            intent_id,
+            lambda t: t.model_copy(
+                update={"status": ActionStatus.EXECUTED, "execution_receipt_id": receipt_id}
+            ),
+        )
         return {
             "receipt_id": receipt_id,
             "status": "COMMITTED",
@@ -258,14 +305,16 @@ class GovernedActionShelf:
         }
 
     def abort_action(self, intent_id: str, reason: str = "") -> GovernedActionCard:
-        """Transitions an action intent to ABORTED state."""
-        token = self._staged_tokens.get(intent_id)
-        if not token:
-            raise KeyError(f"Action intent {intent_id} not found in shelf")
-
-        token.status = ActionStatus.ABORTED
-        return self.present_card(token)
+        """Abort an intent."""
+        if self.intent_hub is not None:
+            return self.present_card(self.intent_hub.abort_action(intent_id, reason))
+        self._require(intent_id)
+        return self.present_card(
+            self._local_tokens.update(
+                intent_id, lambda t: t.model_copy(update={"status": ActionStatus.ABORTED})
+            )
+        )
 
     def list_cards(self) -> List[GovernedActionCard]:
-        """Lists all active action cards in the shelf."""
-        return [self.present_card(t) for t in self._staged_tokens.values()]
+        """Lists all action cards in the shelf, oldest first."""
+        return [self.present_card(t) for t in self._all_tokens()]
