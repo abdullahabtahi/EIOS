@@ -20,6 +20,12 @@ from tools.repo_checks.service_docs import check_service_docs
 TOOL_NAME = "repo_checks"
 SERVICE_DOCS_COMMAND = "service-docs"  # `python -m tools.repo_checks service-docs`
 SERVICE_DOCS_TOOL = "service_docs"  # its report is evals/reports/service_docs.json
+FORBIDDEN_ARTIFACTS_COMMAND = (
+    "forbidden-artifacts"  # `python -m tools.repo_checks forbidden-artifacts`
+)
+FORBIDDEN_ARTIFACTS_TOOL = (
+    "forbidden_artifacts"  # its report is evals/reports/forbidden_artifacts.json
+)
 CONFIG_PATH = "config/repo_checks.yaml"
 CHECK_NAMES = (
     "file_size",
@@ -102,8 +108,14 @@ def _service_docs_tool(args: argparse.Namespace) -> Sequence[Finding]:
     return check_service_docs(args.repo_root)
 
 
+def _forbidden_artifacts_tool(args: argparse.Namespace) -> Sequence[Finding]:
+    return check_forbidden_artifacts(args.repo_root)
+
+
 def main(argv: Sequence[str]) -> int:
     """Run the aggregate, or one standalone check named by a leading subcommand."""
     if argv and argv[0] == SERVICE_DOCS_COMMAND:
         return run_tool(SERVICE_DOCS_TOOL, _service_docs_tool, argv[1:])
+    if argv and argv[0] == FORBIDDEN_ARTIFACTS_COMMAND:
+        return run_tool(FORBIDDEN_ARTIFACTS_TOOL, _forbidden_artifacts_tool, argv[1:])
     return run_tool(TOOL_NAME, _tool, argv)
