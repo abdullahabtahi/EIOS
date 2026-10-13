@@ -28,10 +28,10 @@ Web (run from `EIOS/web-prototype/`): `npm run dev` / `build` (both `--webpack`)
 Layered, each layer consuming the one below only through contracts:
 - **L0 `foundry/`**: seeded synthetic generators (hard negatives, sealed holdout, placebo edges). All current data is synthetic.
 - **L1 `ingestion/`, `contracts/`**: Pub/Sub, then Pydantic contract validation (breach goes to DLQ, never silent drop), then DuckDB hot state with Parquet warm start.
-- **L2 `ontology/`**: objects/links/actions/security markings. `metrics/` is the DuckDB semantic registry (ADR-003), `graph/` is NetworkX with CGNAT hub suppression (ADR-004), `omcp/` is the tool server agents must use, and `actions/` holds Action Intents (KMS `signer.py`, `sequencer.py`, `worm.py` ledger, `sink.py` simulated write-back). `auditor/` is the Metric Auditor Gate.
-- **L3 `conversation/`**: LangGraph supervisor and specialists (ADR-016 blackboard, at most 3 reflection cycles). Specialists reach data only through OMCP tools, and the egress node scans every response with the Auditor Gate. Models are called only via `llm_gateway/` (prompt-locked, replay cache, per-env config in `config/llm_gateway.*.yaml`).
+- **L2 `ontology/`**: objects/links/actions/security markings. `metrics/` is the DuckDB semantic registry (ADR-003), `graph/` is NetworkX with CGNAT hub suppression (ADR-004), `omcp/` is the tool server agents must use, and `actions/` holds Action Intents: `intent_hub.py` (validates, signs, nonce-registers, ledgers; tokens carry an optimistic `revision`), `signer.py` (`CloudKMSActionSigner` in deployed envs, `LocalDevActionSigner` only in dev/test), `ledger_store.py` + `record_store.py` (in-memory or Firestore, atomic append/update/create), `sequencer.py` (hash chain), `worm.py` (signed checkpoints), `sink.py` (simulated write-back). `auditor/` is the Metric Auditor Gate.
+- **L3 `conversation/`**: two paths. `copilot_engine.py` is what the cockpit uses (live Gemini via `google-genai`, SDK automatic function calling disabled, bounded allow-listed OMCP tool loop, bounded self-correction fed by the Metric Auditor, deterministic replay only on failure and always labelled `is_replay_fallback` + `fallback_reason`). `graph.py`/`supervisor.py` is the LangGraph blackboard mesh (ADR-016) with keyword routing and thin specialists; it is slated for migration to Google ADK. `llm_gateway/` (prompt lock, replay cache, `providers/vertex.py`) is the provider-neutral gateway; the copilot does not go through it yet.
 - **Domain modules** (`aml/`, `churn/`, `fraud/`, `synthesis/` with SCM, forecast and AIPW) produce the deterministic numbers that L3 narrates.
-- **L4 `cockpit/`**: `server.py` is the FastAPI gateway for the Next.js cockpit (workstation state, simulate, stage/authorize action, copilot query, flywheel feedback, audit verify). `eios.api.app` is a separate FastAPI app for domain routes. The web `api-bridge.ts` serves deterministic fixtures when the backend is unreachable, so a working UI does not prove the backend wiring.
+- **L4 `cockpit/`**: `server.py` is the FastAPI gateway (workstations, simulate, stage/authorize, copilot, flywheel, audit verify). `governance_runtime.py` assembles signer + ledger + hub + shelf + WORM from env; `governance_shelf.py` is a view over the hub (real signature verification, errors propagate); `auth.py` verifies Firebase ID tokens, roles analyst/approver/compliance_head, and refuses to start unauthenticated outside dev. `eios.api.app` mounts the same cockpit routers plus the domain routers and is what the container runs. Workstation payloads are still largely fixtures; the web `api-bridge.ts` falls back to labelled fixtures when the backend is unreachable, so a working UI does not prove backend wiring. The browser's stage/authorize shelf actions are still client-side reducers that do not call the backend.
 
 Process gates: new gates are rows in `config/gates.yaml` (never runner edits). Quarantined gates in `config/quarantine.yaml` fail the run after their `expires` date. The lint gate also runs `tools.repo_checks` (file size, forbidden literals, frozen models, pinned dependencies). `adr_check` requires ADRs in `docs/evidence/adrs/` to agree with the index in `docs/spikes_and_adrs.md`.
 
@@ -77,3 +77,45 @@ Constitution → Specify → Clarify → Plan → Tasks → Analyze → Implemen
 ```
 - Available skills: `speckit-specify`, `speckit-clarify`, `speckit-plan`, `speckit-tasks`, `speckit-analyze`, `speckit-implement`, `speckit-converge`.
 - Always inspect existing `spec.md`, `plan.md`, and `tasks.md` in `specs/<feature-dir>/` before introducing new domain models or endpoints.
+
+---
+
+## 7. Environments and Deployment (Google Cloud)
+
+Projects, all billed to one account: `eios-hackathon` (dev sandbox and control project: Terraform state bucket `eios-tfstate-eios-hackathon`, GitHub OIDC pool `eios-ci`), `eios-hackathon-stage` (created, unused), `eios-hackathon-prod` (the prod-like environment that hosts the public demo). `spatial-cat-489006-a4` is a shared legacy project; nothing here depends on it.
+
+- Public demo: `https://eios-web-562008989053.us-central1.run.app` (Cloud Run `eios-web`, public, the only public surface). `eios-api` is private; the web service reaches it with its own ID token in `X-Serverless-Authorization` so the operator's Firebase token in `Authorization` passes through. Browser calls stay same-origin (`/api/v1/*` and `/api/cockpit/*` are proxies in `web-prototype/src/app/api`).
+- Infra: `EIOS/infra/envs/prod-like` (Terraform). `terraform.tfvars` is git-ignored and local; its contents are in the runbook. Init with `terraform init -backend-config=bucket=eios-tfstate-eios-hackathon`. Release flow (images by digest): `docs/runbooks/cockpit-deploy.md` and `EIOS/services/cloudbuild.cockpit.yaml`. Build runs as the least-privilege `pipeline@` identity.
+- Operators: provision with `uv run python -m tools.seed_demo_operators --project <id> --credentials-file <new file>` (writes a 0600 file; never prints passwords). Sign-up is disabled in Identity Platform.
+- Runtime env vars the guards read: `EIOS_ENVIRONMENT` (dev/test allow local fallbacks; anything else refuses to start without the real thing), `EIOS_AUTH_MODE=firebase` + `EIOS_FIREBASE_PROJECT_ID`, `EIOS_PERSISTENCE=firestore` + `EIOS_FIRESTORE_DATABASE` (named db `eios-state`), `EIOS_KMS_KEY_VERSION` (full cryptoKeyVersions path), `EIOS_CORS_ORIGINS` (explicit, never `*`), `EIOS_CASHIER_WEBHOOK_SECRET` (Secret Manager), `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION=global`, `EIOS_GEMINI_MODEL` (the model id lives in config/tfvars, never in source or tests).
+- Live smoke tests (skipped by default): `GOOGLE_CLOUD_QUOTA_PROJECT=<project> GOOGLE_CLOUD_PROJECT=<project> EIOS_TEST_CLOUD=1 EIOS_GEMINI_MODEL=<model> EIOS_KMS_KEY_VERSION=<path> uv run pytest tests/integration tests/ontology -k "live or firestore"`. Local ADC bills API calls to its quota project, so set `GOOGLE_CLOUD_QUOTA_PROJECT` or you get SERVICE_DISABLED on the wrong project.
+- Recorded exceptions (see `EIOS/docs/environments.md`): org-policy guardrails off in prod (no `orgpolicy.policyAdmin`), public invoker on the web service only, evidence-bucket retention lock off.
+
+---
+
+## 8. Hard-Won Rules and Gotchas
+
+- **Honesty at every layer.** Never fabricate a backend answer. Proxies relay real status codes; outage is 503 `offline`, workstations may serve a *labelled* replay snapshot but never mask 401/403. Replay answers must set `is_replay_fallback`. A card's `kms_signature_verified` must come from verifying the signature, never from the field being non-empty.
+- **ADR-002 is open**: vendor LLM SDK imports and model ids are allowed only in `src/eios/llm_gateway/providers/` and `config/`. This includes tests (use a neutral model name; re-export SDK error types from the provider module). `open_decision_check` fails otherwise.
+- **`label_check`** scans docs: every number needs a provenance tag, and `[SPIKE]` must carry an `S-NN` id (use `[ASSUMPTION]` otherwise).
+- **`infra_policy`**: a Cloud Run service must run as an identity of the same name; service-account ids need 6+ characters; `run_service` rejects `allUsers` except via the explicit `allow_public_invocation`; identities must be listed in `infra/identities.yaml`.
+- **Gemini 3.x** is served from the `global` endpoint only (regional returns 404). Thinking tokens count against `max_output_tokens`. google-genai automatic function calling fails on Python 3.14 here: keep it disabled and run tools yourself.
+- **Metric Auditor**: dates, timestamps, `v`-prefixed versions, statutory citations, identifier codes and list numbering are exempt; unit suffixes need a word boundary (`1.2 bps` is not billions). Anything else numeric must trace to a tool result.
+- **KMS**: `roles/cloudkms.signer` can sign but cannot read the public key; verification needs `roles/cloudkms.publicKeyViewer` (the module's verifier role). The same service signing and verifying needs both.
+- **Cloud Run**: ID-token audience must be the service URL as Cloud Run reports it (`status.url`), not a hand-built URL. New service accounts and invoker bindings take a minute or two to propagate; retry before debugging.
+- **Firestore**: appends and updates are transactional with jittered retry; every instance must use the same named database. In-memory stores exist for dev/test only and are refused when deployed.
+- **Next.js**: `next.config.ts` has `typescript.ignoreBuildErrors`, so run `npx tsc --noEmit` yourself. Stale `.next` output can produce bogus `tsc` errors; delete it.
+- **Git/CI**: trunk-based, one small branch and PR per change, squash-merge, conventional commits, no Co-Authored-By trailers on commits. CI runs 15+ gates plus CodeQL (clear-text logging of secrets is a real finding). Dependabot lockfile conflicts: take `main`'s `package.json`/lock, re-run `npm install <pkg>`. Use `git worktree` when the main checkout has uncommitted work. `tests/fixtures/faulty_changes/coverage` and `tests/evals/*` collection errors on fresh checkouts are pre-existing; `tests/unit/tools/gates/test_quarantine.py` and a few timing benchmarks (`test_benchmark`, `test_metric_engine`, `test_dq_monitor`) fail or flake locally and are unrelated to feature work.
+- zsh: quote `--include='*.py'` globs.
+
+---
+
+## 9. State of the Work and Next Steps
+
+Done (merged): real KMS signing, durable Firestore ledger/approvals, signed hub-routed staging, Firebase auth with RBAC and identity-bound four-eyes, honest proxies, Cloud Run deployment with Terraform, live copilot grounding (4 of 4 sample questions answered live).
+
+Next, in priority order:
+1. **Migrate the conversational agent from LangGraph to Google ADK** (user priority; the GenAI path has many bugs). Needs an ADR superseding 016 and spec 021. Keep the auditor egress, compliance-hold arbitration, KMS-signed human-in-the-loop interception, the allow-listed OMCP tool set (also expose OMCP as an MCP server) and the 3-cycle bound. Reduce correction-round latency (turns reached 50 to 65 seconds). Surface `is_replay_fallback` through the web proxy normalizer so the UI can badge replays.
+2. Wire the browser's governed action shelf to the real stage/authorize endpoints (it is currently client-side only) and remove client-side fabricated copilot fallbacks.
+3. Geospatial and real-data initiative: `GEOSPATIAL_OPENBB_ADK_PLAN.md` (v2, a draft; spike findings tagged). Plan: ICIJ Offshore Leaks (entity and jurisdiction level only, no natural persons), GLEIF, sanctions, Overture, OpenBB/FRED; deck.gl on Google Maps; typed `SpatialIntent` compiled deterministically; light map style (cockpit design rule). Verify GLEIF and Elliptic licences first; OpenBB and Dekart are AGPL (reference only for Dekart).
+4. GitHub Actions deploy via workload identity (pool `eios-ci` exists), apply Terraform to stage and dev, close ADR-002, branch protection on `main`, grant Org Policy Admin and re-enable guardrails.
