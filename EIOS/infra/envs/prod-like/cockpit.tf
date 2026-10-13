@@ -122,7 +122,7 @@ module "service_cockpit_web" {
 
 # Public client configuration for the browser (an API key restricted to the Identity Platform APIs).
 resource "google_apikeys_key" "web_auth" {
-  project      = var.project_id
+  project = var.project_id
   # Key ids stay reserved after deletion, so rotating means a new id (r2, r3, ...). Rotated 2026-10-13 after
   # the previous key appeared in a committed plan file.
   name         = "eios-web-auth-r2"
