@@ -9,7 +9,14 @@ import { getMockWorkstationState } from '@/components/cockpit/state/fixtures';
 function mockLive() {
   global.fetch = vi.fn().mockResolvedValue({
     ok: true,
-    json: () => Promise.resolve(getMockWorkstationState('executive')),
+    json: () => Promise.resolve({ ...getMockWorkstationState('executive'), dataOrigin: 'live' }),
+  }) as unknown as typeof fetch;
+}
+
+function mockFixture() {
+  global.fetch = vi.fn().mockResolvedValue({
+    ok: true,
+    json: () => Promise.resolve({ ...getMockWorkstationState('executive'), dataOrigin: 'fixture' }),
   }) as unknown as typeof fetch;
 }
 
@@ -43,6 +50,17 @@ describe('System status dialog (replaces the canvas "Diagnostics" tab)', () => {
     await waitFor(() => expect(within(dialog).getByTestId('status-pipeline')).toHaveTextContent(/Live/));
     expect(within(dialog).getByText(/\[ILLUSTRATIVE\]/)).toBeInTheDocument();
     expect(within(dialog).getAllByText(/RL-\d/).length).toBeGreaterThan(0);
+  });
+
+  it('says Fixture, never Live, when the connection is up but the data is a fixture', async () => {
+    mockFixture();
+    render(
+      <CockpitProvider>
+        <HeaderNav />
+      </CockpitProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId('header-pipeline-status')).toHaveTextContent(/Fixture/));
+    expect(screen.getByTestId('header-pipeline-status')).not.toHaveTextContent(/Live/);
   });
 
   it('offers outage simulation and the shell then shows the replay banner', async () => {

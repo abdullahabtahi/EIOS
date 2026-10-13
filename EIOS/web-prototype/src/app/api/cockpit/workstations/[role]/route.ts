@@ -100,6 +100,8 @@ function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationAp
     workstation: role,
     isLiveConnected: true,
     isCachedFallback: false,
+    // The backend labels its own data; anything but an explicit [LIVE] badge is treated as fixture.
+    dataOrigin: raw.fallback_state?.badge_label === '[LIVE]' ? 'live' : 'fixture',
     asOfTimestamp: raw.as_of_timestamp || raw.asOfTimestamp || new Date().toISOString(),
     session: {
       ...mock.session,

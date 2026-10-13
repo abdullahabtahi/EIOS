@@ -74,6 +74,7 @@ export interface CockpitState {
   // Infrastructure Telemetry & Outage State
   isLiveConnected: boolean;
   isCachedFallback: boolean;
+  dataOrigin: 'live' | 'fixture';
   isSimulatedOutage: boolean;
   asOfTimestamp: string;
   systemLatencyMs: number;
@@ -133,6 +134,7 @@ const initialState: CockpitState = {
   copilotCommandOpen: false,
   isLiveConnected: true,
   isCachedFallback: false,
+  dataOrigin: initialData.dataOrigin ?? 'fixture',
   isSimulatedOutage: false,
   asOfTimestamp: initialData.asOfTimestamp,
   systemLatencyMs: 14,
@@ -303,6 +305,7 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
         isLoading: false,
         isLiveConnected: resp?.isLiveConnected ?? state.isLiveConnected,
         isCachedFallback: resp?.isCachedFallback ?? false,
+        dataOrigin: resp?.dataOrigin ?? 'fixture',
         asOfTimestamp: resp?.asOfTimestamp ?? state.asOfTimestamp,
         triageItems: resp?.triageItems ?? state.triageItems,
         activeTriageItemId: initialActiveId ?? state.activeTriageItemId,
@@ -456,6 +459,7 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
           isSimulatedOutage: false,
           isLiveConnected: true,
           isCachedFallback: false,
+          dataOrigin: 'fixture' as const,
           asOfTimestamp: liveFallback.asOfTimestamp,
           systemLatencyMs: 14,
           triageItems: liveFallback.triageItems,

@@ -425,6 +425,8 @@ export interface WorkstationApiResponse {
   workstation: PersonaRole;
   isLiveConnected: boolean;
   isCachedFallback: boolean;
+  /** Absent means fixture: a state is only 'live' when the backend says it came from governed data. */
+  dataOrigin?: 'live' | 'fixture';
   fallbackReason?: string;
   asOfTimestamp: string;
   session: CockpitSession;

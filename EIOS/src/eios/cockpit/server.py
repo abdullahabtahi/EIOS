@@ -128,6 +128,11 @@ class FlywheelFeedbackRequest(BaseModel):
     false_positive: bool = False
 
 
+# Workstation payloads are assembled from in-process fixtures, not from the ingestion pipeline, so the
+# contract says so. "[LIVE]" must wait until a state actually arrives from governed data products.
+FIXTURE_DATA_BADGE = "[ILLUSTRATIVE]"
+
+
 def _get_utc_now() -> str:
     return datetime.now(UTC).isoformat()
 
@@ -737,7 +742,7 @@ def _build_contract_state(role_str: str, operator_id: str | None = None) -> dict
         },
         "fallback_state": {
             "is_active": False,
-            "badge_label": "[LIVE]",
+            "badge_label": FIXTURE_DATA_BADGE,
             "cached_timestamp": None,
             "outage_reason": None,
         },
