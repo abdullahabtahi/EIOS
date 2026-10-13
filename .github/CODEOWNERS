@@ -1,0 +1,9 @@
+# Code owners. The pipeline, the identities it federates to, and the gate definitions decide what
+# reaches an environment, so a change to any of them is reviewed by a named owner. Add a second
+# owner here and raise required_approving_review_count in rulesets/main.json to 1 once a second
+# maintainer exists (a sole maintainer cannot approve their own pull request).
+*                    @abdullahabtahi
+/.github/            @abdullahabtahi
+/EIOS/infra/         @abdullahabtahi
+/EIOS/config/        @abdullahabtahi
+/EIOS/tools/gates/   @abdullahabtahi

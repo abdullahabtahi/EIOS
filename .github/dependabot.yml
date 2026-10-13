@@ -1,0 +1,61 @@
+# Dependency and action updates (CI hardening). Every action is pinned to a full commit SHA with its
+# version in a trailing comment; Dependabot reads that comment and proposes SHA + comment bumps.
+# One grouped pull request per ecosystem per week keeps review load predictable; every one runs the
+# full pull-request gate set before it can merge.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+    groups:
+      actions:
+        patterns: ["*"]
+
+  - package-ecosystem: uv
+    directory: /EIOS
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+    groups:
+      python:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /EIOS/web-prototype
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+    groups:
+      web:
+        patterns: ["*"]
+
+  - package-ecosystem: terraform
+    directories:
+      - /EIOS/infra/bootstrap
+      - /EIOS/infra/envs/dev
+      - /EIOS/infra/envs/stage
+      - /EIOS/infra/envs/prod-like
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+    groups:
+      terraform:
+        patterns: ["*"]
+
+  - package-ecosystem: docker
+    directories:
+      - /EIOS/services/skeleton_core
+      - /EIOS/services/skeleton_edge
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: chore
+    groups:
+      images:
+        patterns: ["*"]
