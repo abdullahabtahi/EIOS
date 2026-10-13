@@ -5,7 +5,13 @@ from fastapi.testclient import TestClient
 
 from eios.cockpit.server import FIXTURE_DATA_BADGE, app
 
-ROLES = ["executive", "aml_investigator", "partner_manager", "compliance_auditor", "data_operations"]
+ROLES = [
+    "executive",
+    "aml_investigator",
+    "partner_manager",
+    "compliance_auditor",
+    "data_operations",
+]
 
 
 @pytest.fixture
@@ -27,4 +33,7 @@ def test_fixture_badge_is_not_a_live_claim() -> None:
 @pytest.mark.parametrize("role", ROLES)
 def test_a_fixture_state_is_not_a_cached_fallback(client: TestClient, role: str) -> None:
     """is_active means a replay is being served; fixture data is a different, always-on fact."""
-    assert client.get(f"/api/cockpit/workstations/{role}").json()["fallback_state"]["is_active"] is False
+    assert (
+        client.get(f"/api/cockpit/workstations/{role}").json()["fallback_state"]["is_active"]
+        is False
+    )
