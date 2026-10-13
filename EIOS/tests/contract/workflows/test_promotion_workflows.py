@@ -319,3 +319,24 @@ def test_the_frontend_check_type_checks_and_resolves_peers_strictly() -> None:
     assert "npm ci" in commands, "peer-dependency conflicts must fail the install"
     assert any("tsc --noEmit" in c for c in commands)
     assert not any("legacy-peer-deps" in c for c in commands)
+
+
+@pytest.mark.parametrize("path", _all_workflow_files(), ids=lambda p: p.stem)
+def test_steps_before_checkout_do_not_rely_on_uncreated_job_working_directory(path: Path) -> None:
+    document = yaml.safe_load(path.read_text(encoding="utf-8"))
+    assert isinstance(document, dict)
+    for job in document.get("jobs", {}).values():
+        job_dir = job.get("defaults", {}).get("run", {}).get("working-directory")
+        if not job_dir or job_dir == ".":
+            continue
+        checkout_seen = False
+        for step in job.get("steps", []):
+            if "uses" in step and "checkout@" in str(step["uses"]):
+                checkout_seen = True
+                continue
+            if not checkout_seen and "run" in step:
+                step_dir = step.get("working-directory")
+                assert step_dir == ".", (
+                    f"{path.name}: step '{step.get('name')}' runs before checkout with job "
+                    f"working-directory '{job_dir}', so it must explicitly set 'working-directory: .'"
+                )

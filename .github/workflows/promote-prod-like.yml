@@ -41,12 +41,14 @@ jobs:
       EIOS_EDGE_IMAGE_DIGEST: ${{ vars.EIOS_PROD_LIKE_EDGE_IMAGE_DIGEST }}
     steps:
       - name: require the main line
+        working-directory: .
         run: |
           if [ "$GITHUB_REF" != "refs/heads/main" ]; then
             echo "prod-like is promoted only from refs/heads/main, not $GITHUB_REF" >&2
             exit 1
           fi
       - name: preflight
+        working-directory: .
         env:
           WORKLOAD_IDENTITY_PROVIDER: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
           SERVICE_ACCOUNT: ${{ vars.EIOS_PROD_LIKE_SERVICE_ACCOUNT }}
