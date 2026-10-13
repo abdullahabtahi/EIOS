@@ -13,7 +13,6 @@ dependencies = [
     "httpx>=0.28.1",
     "jsonschema>=4.26.0",
     "langchain-core>=0.3.0",
-    "langchain-google-vertexai>=2.0.0",
     "langgraph>=0.2.0",
     "networkx>=3.2.0",
     "numpy>=1.26.0",
@@ -90,6 +89,8 @@ ignore = ["E501"]
 "evals/**" = ["S101", "S105", "S106"]
 # The one place telemetry SDK classes may be imported (T194); everything else uses the API.
 "src/eios/common/otel.py" = ["TID251"]
+# Vendor LLM SDKs live only in the gateway providers package (ADR-002).
+"src/eios/llm_gateway/providers/*.py" = ["TID251"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10

@@ -10,8 +10,8 @@ from google.genai import types
 
 _LOG = logging.getLogger("eios.llm_gateway.providers.gemini_client")
 
-DEFAULT_PROJECT = "spatial-cat-489006-a4"
-DEFAULT_LOCATION = "us-central1"
+# Gemini 3.x models are served from the `global` Vertex AI endpoint; regional endpoints return 404.
+DEFAULT_LOCATION = "global"
 DEFAULT_MODEL = "gemini-3.8-flash"
 FALLBACK_MODEL = "gemini-3.7-flash"
 
@@ -26,11 +26,12 @@ class GeminiClientManager:
         model_id: Optional[str] = None,
         offline_mode: bool = False,
     ) -> None:
-        self.project = project or os.getenv("GOOGLE_CLOUD_PROJECT", DEFAULT_PROJECT)
+        self.project = project or os.getenv("GOOGLE_CLOUD_PROJECT")
         self.location = location or os.getenv("GOOGLE_CLOUD_LOCATION", DEFAULT_LOCATION)
         self.model_id = model_id or os.getenv("EIOS_GEMINI_MODEL", DEFAULT_MODEL)
         self.fallback_model_id = FALLBACK_MODEL
         self.offline_mode = offline_mode or (os.getenv("EIOS_OFFLINE_REPLAY", "0") == "1")
+        self.offline_reason: Optional[str] = "offline replay mode requested" if self.offline_mode else None
         self._client: Optional[genai.Client] = None
         self._active_cache_name: Optional[str] = None
 
@@ -40,6 +41,11 @@ class GeminiClientManager:
             return None
 
         if self._client is None:
+            if not self.project:
+                self.offline_reason = "GOOGLE_CLOUD_PROJECT is not set; live Gemini is unavailable"
+                _LOG.warning(self.offline_reason)
+                self.offline_mode = True
+                return None
             try:
                 self._client = genai.Client(
                     vertexai=True,
@@ -49,6 +55,7 @@ class GeminiClientManager:
                 _LOG.info("Initialized client for project=%s in location=%s", self.project, self.location)
             except Exception as e:
                 _LOG.warning("Failed to initialize client, falling back to offline replay: %s", e)
+                self.offline_reason = f"Gemini client initialisation failed: {e}"
                 self.offline_mode = True
                 return None
 
