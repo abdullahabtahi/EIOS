@@ -134,3 +134,12 @@ gates:
     proof_fixture: tests/fixtures/faulty_changes/sealed_eval
     command:
       - python -m evals.cli run --tier sealed --workflow release-candidate --generate-sbom
+
+  # The tracked plan/state/key guard (added after a Terraform plan was committed). Its own gate, so
+  # quarantining `repo_checks` for its other findings can never switch it off.
+  - id: forbidden_artifacts
+    blocking: true
+    stage: pr
+    proof_fixture: tests/fixtures/faulty_changes/forbidden_artifacts
+    command:
+      - python -m tools.repo_checks forbidden-artifacts

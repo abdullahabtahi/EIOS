@@ -79,6 +79,9 @@
             "context": "repo_checks"
           },
           {
+            "context": "forbidden_artifacts"
+          },
+          {
             "context": "frontend-check"
           }
         ]
