@@ -4,7 +4,12 @@ import json
 
 import pytest
 
-from tools.seed_demo_operators import DEMO_OPERATORS, ensure_operator, role_claims
+from tools.seed_demo_operators import (
+    DEMO_OPERATORS,
+    ensure_operator,
+    role_claims,
+    write_credentials,
+)
 
 
 class FakeSession:
@@ -74,3 +79,14 @@ def test_an_existing_operator_is_updated_not_recreated() -> None:
 def test_unknown_roles_are_refused() -> None:
     with pytest.raises(ValueError, match="role"):
         ensure_operator(FakeSession(), "p", "a@example.org", "pw", "superuser")
+
+
+def test_credentials_file_is_owner_only_and_never_overwritten(tmp_path) -> None:
+    import os
+    import stat
+
+    path = str(tmp_path / "creds.txt")
+    write_credentials(path, ["a@example.org\tpw"])
+    assert stat.S_IMODE(os.stat(path).st_mode) == 0o600
+    with pytest.raises(FileExistsError):
+        write_credentials(path, ["other"])
