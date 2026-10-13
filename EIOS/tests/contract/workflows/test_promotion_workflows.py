@@ -321,6 +321,11 @@ def test_the_frontend_check_type_checks_and_resolves_peers_strictly() -> None:
     assert not any("legacy-peer-deps" in c for c in commands)
 
 
+def test_the_frontend_check_audits_production_dependencies_for_high_advisories() -> None:
+    commands = [str(s.get("run", "")) for s in _steps(_jobs("pr")["frontend"])]
+    assert "npm audit --omit=dev --audit-level=high" in commands
+
+
 @pytest.mark.parametrize("path", _all_workflow_files(), ids=lambda p: p.stem)
 def test_steps_before_checkout_do_not_rely_on_uncreated_job_working_directory(path: Path) -> None:
     document = yaml.safe_load(path.read_text(encoding="utf-8"))
