@@ -91,7 +91,8 @@ src/eios/agent_gates/
 ├── telemetry.py             # TurnRecord -> TelemetryEvent, redaction, scanner, JSONL sink
 └── report.py                # baseline and release report (JSON, Markdown, one page)
 
-src/eios/cockpit/server.py   # one added call in `query_copilot` that emits a telemetry event (FR-020)
+# FR-020 (a telemetry event per live turn) is delivered by the ADK analytics plugin in spec 021; this feature ships the
+# schema, redaction, scanner and the plugin configuration contract only
 
 evals/
 ├── agent/

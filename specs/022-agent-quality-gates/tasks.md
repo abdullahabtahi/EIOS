@@ -166,7 +166,7 @@
 ### Implementation for User Story 5
 
 - [ ] T062 [US5] Implement `src/eios/agent_gates/telemetry.py`: `TurnRecord` to `TelemetryEvent`, redaction, scanner, JSONL sink
-- [ ] T063 [US5] Emit one event per live turn from `query_copilot` in `src/eios/cockpit/server.py` (the one production-code change in this feature) using the fields the route has (role, latency, replay flag and reason, audit status, citation count, tool trace count, session id); keep the change minimal and covered by a test in `tests/cockpit/test_copilot_telemetry.py`
+- [ ] T063 [US5] Write `specs/022-agent-quality-gates/contracts/telemetry-adk-plugin.md`: which `TelemetryEvent` fields the ADK BigQuery analytics plugin must emit (event allow-list, content formatter, redaction rules, `x-otel` names, the disabled full-content tier), so spec 021 configures the first-party plugin instead of adding code; the legacy `query_copilot` route is not instrumented because spec 021 deletes it
 - [ ] T064 [P] [US5] Add an M3 and M5 computation from events to `src/eios/agent_gates/report.py` and a test that both derive from events alone
 
 **Checkpoint**: US5 provides the production-side data for the lighthouse metrics.
