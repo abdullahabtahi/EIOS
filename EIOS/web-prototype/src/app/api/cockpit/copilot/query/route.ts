@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ActionIntentCard, CopilotQueryResponse, MetricProvenance } from '@/components/cockpit/state/cockpit-types';
 
-const BACKEND_URL = process.env.EIOS_BACKEND_URL || 'http://127.0.0.1:8000';
+import { backendUnavailable, callBackend, relayError } from '@/lib/server/backend';
 
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown> = {};
@@ -15,11 +15,13 @@ export async function POST(req: NextRequest) {
   const role = (body.role as string) || 'executive';
 
   try {
-    const res = await fetch(`${BACKEND_URL}/api/cockpit/copilot/query`, {
+    const res = await callBackend(req, '/api/cockpit/copilot/query', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    if (!res) return backendUnavailable();
+    if (!res.ok) return relayError(res);
     if (res.ok) {
       const data = await res.json();
       const auditPassed = data.auditor_status === 'PASS' || data.audit_record?.passed === true || Boolean(data.auditorResult?.auditPassed);
@@ -96,56 +98,5 @@ export async function POST(req: NextRequest) {
     // Offline deterministic synthesis
   }
 
-  return NextResponse.json({
-    queryId: `qry_${Date.now()}`,
-    naturalLanguageQuery: query,
-    responseMarkdown: `Deterministic synthesis for **${role}**: Market spread widened by 18 bps across top tier brokers. All cited metrics verified by the Metric Auditor Gate against the semantic layer.`,
-    citedMetrics: [
-      {
-        metricId: 'M-LATAM-01',
-        name: 'Spread Shock LatAm',
-        rawValue: 18.2,
-        formattedValue: '+18.2 bps',
-        unit: 'bps',
-        semanticDefinitionVersion: 'v2.4.1 [d8a9f2]',
-        asOfTimestamp: new Date().toISOString(),
-        originEngine: 'duckdb:semantic_layer',
-        stewardRole: 'VP Market Strategy',
-        citation: '[BRIEF]',
-        isCached: false,
-      },
-    ],
-    auditorResult: {
-      auditPassed: true,
-      extractedNumbers: ['18', '18.2'],
-      anchoredNumbers: ['18', '18.2'],
-      untraceableNumbers: [],
-      toolTracesCount: 2,
-    },
-    suggestedAction: {
-      intentId: `act_sug_${Date.now()}`,
-      actionType: 'TUNE_MONITORING_THRESHOLD',
-      targetEntityId: 'COMP-LATAM-01',
-      targetEntityType: 'BROKER_FEED',
-      severity: 'MEDIUM',
-      lifecycleState: 'STAGED',
-      stagedTimestamp: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      parameters: { thresholdDelta: 5.0 },
-      estimatedImpact: 'Re-aligns broker alert sensitivity band with market spread volatility',
-      requiresFourEyes: false,
-      kmsSignatureBadge: {
-        keyId: 'projects/feios-prod/locations/global/keyRings/eios-cockpit/cryptoKeys/action-signer-p256',
-        algorithm: 'ECDSA_P256_SHA256',
-        signatureDigest: `DIGEST_SIM_${Date.now().toString(16)}`,
-        verified: true,
-      },
-      fourEyesRecord: {
-        initiatorOfficerId: 'OPERATOR_PRIMARY',
-        initiatorTimestamp: new Date().toISOString(),
-        idpClaimValidation: true,
-      },
-    },
-    timestamp: new Date().toISOString(),
-  });
+  return backendUnavailable();
 }

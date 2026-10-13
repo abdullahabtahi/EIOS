@@ -14,6 +14,7 @@ import { WORKSTATION_ROLES } from './workstation-roles';
 import { FallbackReplayBanner } from '../common/fallback-replay-badge';
 import { SystemStatusDialog } from '../common/system-status-dialog';
 import { getPipelineStatus, type PipelineTone } from '../state/pipeline-status';
+import { useAuth } from '@/lib/auth/auth-context';
 
 const ENV_LABEL = process.env.NEXT_PUBLIC_EIOS_ENV ?? 'DEMO';
 
@@ -37,6 +38,7 @@ export function HeaderNav({
 }: {
   onOpenShortcuts?: () => void;
 } = {}) {
+  const { status: authStatus, operator: authOperator, signOutOperator } = useAuth();
   const { state, setRole, setCopilotCommandOpen } = useCockpit();
   const pipeline = getPipelineStatus(state);
   const [statusOpen, setStatusOpen] = React.useState(false);
@@ -122,16 +124,25 @@ export function HeaderNav({
           {/* Current Operator Badge */}
           <div className="flex items-center gap-2 pl-2 border-l border-chrome-line">
             <div className="size-6 bg-white/10 border border-white/15 text-white flex items-center justify-center font-mono font-bold text-label">
-              {state.operator.officerId.slice(0, 2)}
+              {(authOperator?.email ?? state.operator.officerId).slice(0, 2).toUpperCase()}
             </div>
             <div className="hidden xl:block text-left">
               <div className="text-label font-bold text-white leading-tight">
-                {state.operator.name}
+                {authOperator?.email ?? state.operator.name}
               </div>
               <div className="text-label font-mono text-slate-400 leading-tight uppercase tracking-wider">
-                {state.operator.clearanceLevel.replace(/_/g, ' ')}
+                {authOperator?.role ?? state.operator.clearanceLevel.replace(/_/g, ' ')}
               </div>
             </div>
+            {authStatus === 'signedIn' && (
+              <button
+                type="button"
+                onClick={() => void signOutOperator()}
+                className="ml-1 px-2 py-1 border border-white/15 text-label font-mono uppercase tracking-wider text-slate-300 hover:bg-white/10"
+              >
+                Sign out
+              </button>
+            )}
           </div>
         </div>
       </div>

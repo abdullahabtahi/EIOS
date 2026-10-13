@@ -13,6 +13,7 @@ import { useCockpit } from '../state/cockpit-context';
 import { CopilotQueryResponse, ActionIntentCard } from '../state/cockpit-types';
 import { MetricProvenanceBadge } from '../common/metric-provenance';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { authFetch } from '@/lib/auth/token';
 
 interface CopilotCommandBarProps {
   forceOpen?: boolean;
@@ -91,7 +92,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch('/api/cockpit/copilot/query', {
+      const res = await authFetch('/api/cockpit/copilot/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

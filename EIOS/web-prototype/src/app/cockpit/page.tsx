@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { CockpitProvider } from '@/components/cockpit/state/cockpit-context';
 import { TripartiteShell } from '@/components/cockpit/shell/tripartite-shell';
+import { RequireAuth } from '@/components/auth/require-auth';
 
 export const metadata: Metadata = {
   title: 'EIOS | Institutional Operator Cockpit',
@@ -10,8 +11,10 @@ export const metadata: Metadata = {
 
 export default function CockpitPage() {
   return (
-    <CockpitProvider>
-      <TripartiteShell />
-    </CockpitProvider>
+    <RequireAuth>
+      <CockpitProvider>
+        <TripartiteShell />
+      </CockpitProvider>
+    </RequireAuth>
   );
 }

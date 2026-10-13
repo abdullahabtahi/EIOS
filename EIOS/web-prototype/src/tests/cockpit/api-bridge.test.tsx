@@ -1,113 +1,108 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GET as getWorkstation } from '@/app/api/cockpit/workstations/[role]/route';
 import { POST as postSimulate } from '@/app/api/cockpit/simulate/route';
+import { POST as postStage } from '@/app/api/cockpit/actions/stage/route';
 import { POST as postAuthorize } from '@/app/api/cockpit/actions/authorize/route';
 import { POST as postCopilotQuery } from '@/app/api/cockpit/copilot/query/route';
 import { POST as postFeedback } from '@/app/api/cockpit/flywheel/feedback/route';
 import { GET as getAuditVerify } from '@/app/api/cockpit/audit/verify/route';
 
-describe('Next.js API Route Handlers Integration & Zero-Drift Bridge (User Story 6)', () => {
-  it('GET /api/cockpit/workstations/[role] returns valid schema with deterministic fallback', async () => {
-    const req = new Request('http://localhost:3000/api/cockpit/workstations/executive');
-    const res = await getWorkstation(req as any, { params: Promise.resolve({ role: 'executive' }) });
-    expect(res.status).toBe(200);
+const json = (status: number, body: unknown) =>
+  new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 
-    const data = await res.json();
-    expect(data.workstation).toBe('executive');
-    expect(data.session).toBeDefined();
-    expect(data.triageItems.length).toBeGreaterThan(0);
-    expect(data.activeDossier).toBeDefined();
-    expect(data.activeDossier.headline).toBeDefined();
-    expect(data.canvasPayload).toBeDefined();
+const post = (path: string, body: unknown = {}, headers: Record<string, string> = {}) =>
+  new Request(`http://localhost:3000${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...headers },
+    body: JSON.stringify(body),
   });
 
-  it('POST /api/cockpit/simulate verifies 100.0% (+/- 0.01%) waterfall attribution sum', async () => {
-    const req = new Request('http://localhost:3000/api/cockpit/simulate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ feeShockBps: 15 }),
+const writeRoutes: Array<[string, string, (req: any) => Promise<Response>]> = [
+  ['stage', '/api/cockpit/actions/stage', postStage],
+  ['authorize', '/api/cockpit/actions/authorize', postAuthorize],
+  ['simulate', '/api/cockpit/simulate', postSimulate],
+  ['copilot query', '/api/cockpit/copilot/query', postCopilotQuery],
+  ['flywheel feedback', '/api/cockpit/flywheel/feedback', postFeedback],
+];
+
+describe('Cockpit API proxy routes never fabricate a backend answer', () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  describe.each(writeRoutes)('%s', (_name, path, handler) => {
+    it('reports an unreachable backend as 503 offline, not as a success', async () => {
+      fetchMock.mockRejectedValue(new Error('connect ECONNREFUSED'));
+      const res = await handler(post(path));
+      expect(res.status).toBe(503);
+      expect((await res.json()).offline).toBe(true);
     });
 
-    const res = await postSimulate(req as any);
-    expect(res.status).toBe(200);
-
-    const data = await res.json();
-    expect(data.propagationLatencyMs).toBeLessThan(200);
-    const sum = data.attributionWaterfall.reduce(
-      (acc: number, curr: any) => acc + curr.percentageShare,
-      0
-    );
-    expect(Math.abs(sum - 100.0)).toBeLessThanOrEqual(0.01);
-  });
-
-  it('POST /api/cockpit/actions/authorize validates Cloud KMS signature and Four-Eyes record', async () => {
-    const req = new Request('http://localhost:3000/api/cockpit/actions/authorize', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        actionId: 'act_test_1',
-        primaryOfficerId: 'OP_PRIMARY',
-        secondaryOfficerId: 'OP_SECONDARY',
-        rationale: 'Regulatory compliance verified',
-      }),
+    it('passes the backend rejection through with its own status and detail', async () => {
+      fetchMock.mockResolvedValue(json(400, { detail: 'Four-Eyes Violation: cannot approve own intent' }));
+      const res = await handler(post(path));
+      expect(res.status).toBe(400);
+      expect((await res.json()).detail).toContain('Four-Eyes');
     });
 
-    const res = await postAuthorize(req as any);
-    expect(res.status).toBe(200);
-
-    const data = await res.json();
-    expect(data.authorized).toBe(true);
-    expect(data.signedReceipt).toBeDefined();
-    expect(data.kmsKeyId).toContain('cryptoKeys');
-  });
-
-  it('POST /api/cockpit/copilot/query evaluates Metric Auditor Gate', async () => {
-    const req = new Request('http://localhost:3000/api/cockpit/copilot/query', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: 'What is the LatAm spread impact?',
-        role: 'executive',
-      }),
+    it('relays 401 so the operator is sent to sign in', async () => {
+      fetchMock.mockResolvedValue(json(401, { detail: 'Authentication required' }));
+      expect((await handler(post(path))).status).toBe(401);
     });
 
-    const res = await postCopilotQuery(req as any);
-    expect(res.status).toBe(200);
-
-    const data = await res.json();
-    expect(data.auditorResult).toBeDefined();
-    expect(data.auditorResult.auditPassed).toBe(true);
-    expect(data.citedMetrics.length).toBeGreaterThan(0);
+    it('forwards the operator token to the backend', async () => {
+      fetchMock.mockResolvedValue(json(200, { ok: true }));
+      await handler(post(path, {}, { Authorization: 'Bearer abc.def.ghi' }));
+      const sent = fetchMock.mock.calls[0][1].headers as Headers;
+      expect(sent.get('Authorization')).toBe('Bearer abc.def.ghi');
+    });
   });
 
-  it('POST /api/cockpit/flywheel/feedback records discrepancy to ledger', async () => {
-    const req = new Request('http://localhost:3000/api/cockpit/flywheel/feedback', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        feedbackType: 'SAR_NARRATIVE_EDIT',
-        entityId: 'ACC-88219',
-        operatorId: 'OP_PRIMARY',
-        operatorRationale: 'Adjusted statutory citations for FinCEN SAR filing',
-        correctionText: 'Verified transaction flow loop of $1.42M',
-      }),
+  it('stage and authorize relay the backend body untouched on success', async () => {
+    fetchMock.mockResolvedValue(json(200, { status: 'COMMITTED', card: { intent_id: 'i-1' } }));
+    const res = await postAuthorize(post('/api/cockpit/actions/authorize', { intent_id: 'i-1' }) as any);
+    expect(await res.json()).toEqual({ status: 'COMMITTED', card: { intent_id: 'i-1' } });
+  });
+
+  it('audit verify never reports VALID without asking the backend', async () => {
+    fetchMock.mockRejectedValue(new Error('down'));
+    const res = await getAuditVerify(new Request('http://localhost:3000/api/cockpit/audit/verify') as any);
+    expect(res.status).toBe(503);
+    expect(await res.json()).not.toHaveProperty('chainVerificationStatus');
+  });
+
+  describe('workstations', () => {
+    const call = (role = 'executive') =>
+      getWorkstation(new Request(`http://localhost:3000/api/cockpit/workstations/${role}`) as any, {
+        params: Promise.resolve({ role }),
+      });
+
+    it('serves a labelled replay snapshot when the backend is unreachable', async () => {
+      fetchMock.mockRejectedValue(new Error('down'));
+      const res = await call();
+      expect(res.status).toBe(200);
+      const data = await res.json();
+      expect(data.isCachedFallback).toBe(true);
+      expect(data.isLiveConnected).toBe(false);
+      expect(data.fallbackReason).toBeTruthy();
+      expect(data.triageItems.length).toBeGreaterThan(0);
     });
 
-    const res = await postFeedback(req as any);
-    expect(res.status).toBe(200);
+    it('does not mask an authentication failure with a snapshot', async () => {
+      fetchMock.mockResolvedValue(json(401, { detail: 'Authentication required' }));
+      expect((await call()).status).toBe(401);
+    });
 
-    const data = await res.json();
-    expect(data.logged).toBe(true);
-    expect(data.feedbackId).toBeDefined();
-  });
-
-  it('GET /api/cockpit/audit/verify returns valid immutable WORM chain status', async () => {
-    const res = await getAuditVerify();
-    expect(res.status).toBe(200);
-
-    const data = await res.json();
-    expect(data.chainVerificationStatus).toBe('VALID');
-    expect(data.recordsVerifiedCount).toBeGreaterThan(0);
+    it('does not mask a forbidden role with a snapshot', async () => {
+      fetchMock.mockResolvedValue(json(403, { detail: 'Operator has no recognised role' }));
+      expect((await call()).status).toBe(403);
+    });
   });
 });

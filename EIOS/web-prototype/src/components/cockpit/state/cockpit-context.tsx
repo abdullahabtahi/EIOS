@@ -16,6 +16,7 @@ import React, {
   useRef,
   useMemo,
 } from 'react';
+import { authFetch } from '@/lib/auth/token';
 import {
   PersonaRole,
   WorkstationApiResponse,
@@ -519,7 +520,7 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
     inFlight.current = controller;
     dispatch({ type: 'LOAD_WORKSTATION_START' });
     try {
-      const res = await fetch(`/api/cockpit/workstations/${role}`, {
+      const res = await authFetch(`/api/cockpit/workstations/${role}`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
         signal: controller.signal,
