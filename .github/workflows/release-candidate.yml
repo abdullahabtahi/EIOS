@@ -37,6 +37,7 @@ jobs:
       id-token: write
     steps:
       - name: preflight
+        working-directory: .
         env:
           EIOS_CD_ENABLED: ${{ vars.EIOS_CD_ENABLED }}
           WORKLOAD_IDENTITY_PROVIDER: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}

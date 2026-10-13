@@ -41,6 +41,7 @@ jobs:
       EIOS_EDGE_IMAGE_DIGEST: ${{ vars.EIOS_STAGE_EDGE_IMAGE_DIGEST }}
     steps:
       - name: preflight
+        working-directory: .
         env:
           EIOS_CD_ENABLED: ${{ vars.EIOS_CD_ENABLED }}
           WORKLOAD_IDENTITY_PROVIDER: ${{ vars.EIOS_WORKLOAD_IDENTITY_PROVIDER }}
