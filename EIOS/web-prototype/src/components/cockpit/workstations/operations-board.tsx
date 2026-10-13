@@ -11,32 +11,43 @@
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
 import { DrProofCard } from '../common/dr-proof-card';
-import { SloHealthItem } from '../state/cockpit-types';
+import { buildOperationsView, type OpsStatus, type OpsTone } from '../state/operations-view-model';
+import { Chip, type ChipTone } from '../ui/chip';
+import { PanelHeader } from '../ui/panel-header';
 
-const DATA_PRODUCTS: SloHealthItem[] = [
-  { sloId: 'DP-01', name: 'Raw Ingestion Pipeline', targetValue: '< 30s', currentValue: '18.4s', status: 'HEALTHY', errorBudgetRemainingPct: 82.5, freshnessLatencySec: 18.4, dlqQuarantineDepth: 0 },
-  { sloId: 'DP-02', name: 'DuckDB Semantic Metrics Engine', targetValue: '100.0%', currentValue: '100.0%', status: 'HEALTHY', errorBudgetRemainingPct: 100.0, freshnessLatencySec: 12.0, dlqQuarantineDepth: 0 },
-  { sloId: 'DP-03', name: 'DoWhy Refuter Causal Matrix', targetValue: '>= 0.80', currentValue: '0.88', status: 'HEALTHY', errorBudgetRemainingPct: 91.0, freshnessLatencySec: 24.0, dlqQuarantineDepth: 0 },
-  { sloId: 'DP-04', name: 'CGNAT Proxy Suppression Filter', targetValue: '< 1.0%', currentValue: '0.05%', status: 'HEALTHY', errorBudgetRemainingPct: 95.0, freshnessLatencySec: 14.5, dlqQuarantineDepth: 0 },
-  { sloId: 'DP-05', name: 'WORM Immutable Decision Ledger', targetValue: '100.0%', currentValue: '100.0%', status: 'HEALTHY', errorBudgetRemainingPct: 100.0, freshnessLatencySec: 8.2, dlqQuarantineDepth: 0 },
-  { sloId: 'DP-06', name: 'What-If Sub-200ms Propagation', targetValue: '< 200ms', currentValue: '48.2ms', status: 'HEALTHY', errorBudgetRemainingPct: 88.0, freshnessLatencySec: 48.2, dlqQuarantineDepth: 0 },
-];
-
-const RED_LINE_GATES = [
-  { id: 'RL-1', name: 'Zero LLM Metric Calculation (Principle I)', status: 'PASS' },
-  { id: 'RL-2', name: 'No Autonomous Write-Back Four-Eyes Gate (Principle II)', status: 'PASS' },
-  { id: 'RL-3', name: 'Causal Refuter Placebo Threshold p > 0.05 (Principle III)', status: 'PASS' },
-  { id: 'RL-4', name: 'CGNAT Proxy Hub Suppression k > 100 (Feature 010)', status: 'PASS' },
-  { id: 'RL-5', name: 'WORM Cryptographic SHA-256 Hash Chaining', status: 'PASS' },
-  { id: 'RL-6', name: 'Sub-200ms Parametric Propagation & 100% Attribution', status: 'PASS' },
-  { id: 'RL-7', name: 'Deterministic Offline Replay Fallback (Principle VIII)', status: 'PASS' },
-];
+const STATUS_TONE: Record<OpsStatus, ChipTone> = { HEALTHY: 'ok', DEGRADED: 'warn', BREACHED: 'bad' };
+const STATUS_BAR: Record<OpsStatus, string> = {
+  HEALTHY: 'bg-cx-ok-solid',
+  DEGRADED: 'bg-cx-warn-solid',
+  BREACHED: 'bg-cx-bad-solid',
+};
+const SUMMARY_TONE: Record<OpsTone, ChipTone> = { ok: 'ok', warn: 'warn', bad: 'bad' };
 
 export function OperationsBoardView() {
   const { state, toggleSimulatedOutage } = useCockpit();
+  const view = React.useMemo(() => buildOperationsView(state.canvasPayload), [state.canvasPayload]);
+  const [redrive, setRedrive] = React.useState<Record<string, { ok: boolean; message: string }>>({});
+
+  const redriveRecord = async (id: string) => {
+    try {
+      const res = await fetch('/api/v1/ops/dlq/redrive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dlq_id: id }),
+      });
+      setRedrive((prev) => ({
+        ...prev,
+        [id]: res.ok
+          ? { ok: true, message: `Redrive dispatched for ${id}` }
+          : { ok: false, message: `Redrive failed for ${id}: DLQ service responded ${res.status}` },
+      }));
+    } catch {
+      setRedrive((prev) => ({ ...prev, [id]: { ok: false, message: `Redrive failed for ${id}: DLQ service unreachable` } }));
+    }
+  };
 
   return (
-    <div className="space-y-6 select-none text-slate-900 font-mono text-xs pb-10">
+    <div className="space-y-6 text-slate-900 font-mono text-xs pb-10">
       {/* Surface 1: SLA Freshness Monitors & Telemetry (Anchor: panel-slos) */}
       <div
         role="tabpanel"
@@ -45,45 +56,56 @@ export function OperationsBoardView() {
         className="block"
       >
         <section aria-label="SLA Freshness Monitors" className="bg-white border border-slate-200 p-4 shadow-sm space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-sharp text-base text-[#106BA3]">speed</span>
-              <h3 className="font-bold uppercase tracking-wide text-[#182026]">
-                Data Product SLA Freshness &amp; Error Budget Burndowns
-              </h3>
-            </div>
-            <span className="px-2 py-0.5 bg-[#EDF7ED] text-[#0D8050] border border-[#C3E6D0] text-[10px] font-bold font-mono">
-              ALL 6 DATA PRODUCTS HEALTHY
-            </span>
-          </div>
+          <PanelHeader
+            icon="speed"
+            title="Data Product SLA Freshness & Error Budget Burndowns"
+            actions={
+              <>
+                {view.source === 'baseline' && <Chip>[ILLUSTRATIVE] baseline</Chip>}
+                <Chip tone={SUMMARY_TONE[view.summary.tone]}>{view.summary.label}</Chip>
+              </>
+            }
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {DATA_PRODUCTS.map((dp) => (
-              <div key={dp.sloId} className="p-3 bg-[#F5F8FA] border border-[#D8E1E8] space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-[#182026] text-[11px] truncate">{dp.name}</span>
-                  <span className="text-[10px] bg-[#EDF7ED] text-[#0D8050] border border-[#C3E6D0] px-1 font-bold font-mono">
-                    {dp.status}
-                  </span>
+            {view.cards.map((card) => (
+              <div key={card.id} className="p-3 bg-cx-sub border border-cx-line space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-bold text-cx-ink text-label truncate" title={card.name}>{card.name}</span>
+                  <Chip tone={STATUS_TONE[card.status]}>{card.status}</Chip>
                 </div>
 
                 <div className="flex items-baseline justify-between pt-1">
-                  <span className="text-[#5C7080] text-[10px]">Current Value:</span>
-                  <span className="font-bold text-[#182026] text-sm tabular-nums">{dp.currentValue}</span>
+                  <span className="text-cx-muted text-label shrink-0">{card.primaryLabel}:</span>
+                  <span className="font-bold text-cx-ink text-sm tabular-nums">{card.primary}</span>
                 </div>
 
-                <div className="space-y-1 pt-1 border-t border-[#E1E8ED] text-[10px]">
-                  <div className="flex justify-between text-[#5C7080]">
-                    <span>Error Budget Remaining:</span>
-                    <span className="text-[#182026] font-semibold tabular-nums">{dp.errorBudgetRemainingPct}%</span>
+                {(card.details.length > 0 || card.budgetRemainingPct !== null) && (
+                  <div className="space-y-1 pt-1 border-t border-cx-line-soft text-label">
+                    {card.details.map((d) => (
+                      <div key={d.label} className="flex justify-between gap-2 text-cx-muted">
+                        <span className="shrink-0">{d.label}:</span>
+                        <span className="text-cx-ink font-semibold tabular-nums whitespace-nowrap">{d.value}</span>
+                      </div>
+                    ))}
+                    {card.budgetRemainingPct !== null && (
+                      <>
+                        {card.primaryLabel !== 'Error budget left' && (
+                          <div className="flex justify-between text-cx-muted">
+                            <span>Error Budget Remaining:</span>
+                            <span className="text-cx-ink font-semibold tabular-nums">{card.budgetRemainingPct}%</span>
+                          </div>
+                        )}
+                        <div className="w-full h-1.5 bg-cx-line-soft">
+                          <div
+                            className={`h-full ${STATUS_BAR[card.status]}`}
+                            style={{ width: `${card.budgetRemainingPct}%` }}
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
-                  <div className="w-full h-1.5 bg-[#E1E8ED]">
-                    <div
-                      className="h-full bg-[#0F9960]"
-                      style={{ width: `${dp.errorBudgetRemainingPct}%` }}
-                    />
-                  </div>
-                </div>
+                )}
               </div>
             ))}
           </div>
@@ -97,29 +119,21 @@ export function OperationsBoardView() {
         aria-label="Red-Line Test Gates"
         className="block"
       >
-        <section aria-label="Red-Line Test Gates" className="bg-white border border-[#D8E1E8] p-4 shadow-xs space-y-3">
-          <div className="flex items-center justify-between border-b border-[#E1E8ED] pb-2">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-sharp text-base text-[#106BA3]">verified</span>
-              <h3 className="font-bold uppercase tracking-tight text-[#182026]">
-                Continuous Governance Red-Line Gates (RL-1 to RL-7)
-              </h3>
-            </div>
-            <span className="text-[10px] bg-[#EDF7ED] text-[#0D8050] border border-[#C3E6D0] px-1.5 py-0.2 font-bold font-mono">
-              7/7 PASSING
-            </span>
-          </div>
+        <section aria-label="Red-Line Test Gates" className="bg-white border border-cx-line p-4 shadow-xs space-y-3">
+          <PanelHeader
+            icon="verified"
+            title="Continuous Governance Red-Line Gates (RL-1 to RL-7)"
+            actions={<Chip tone={SUMMARY_TONE[view.gateSummary.tone]}>{view.gateSummary.label}</Chip>}
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
-            {RED_LINE_GATES.map((gate) => (
-              <div key={gate.id} className="p-2.5 bg-[#F5F8FA] border border-[#D8E1E8] flex items-center justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-label">
+            {view.gates.map((gate) => (
+              <div key={gate.id} className="p-2.5 bg-cx-sub border border-cx-line flex items-center justify-between">
                 <div>
-                  <span className="font-bold text-[#106BA3] mr-2">{gate.id}:</span>
-                  <span className="font-sans text-[#182026] font-medium">{gate.name}</span>
+                  <span className="font-bold text-cx-accent mr-2">{gate.id}:</span>
+                  <span className="font-sans text-cx-ink font-medium">{gate.name}</span>
                 </div>
-                <span className="px-1.5 py-0.2 bg-[#EDF7ED] text-[#0D8050] border border-[#C3E6D0] font-bold text-[10px] font-mono">
-                  {gate.status}
-                </span>
+                <Chip tone={gate.status === 'PASS' ? 'ok' : 'bad'}>{gate.status}</Chip>
               </div>
             ))}
           </div>
@@ -137,12 +151,12 @@ export function OperationsBoardView() {
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
             <div className="flex items-center gap-2">
               <span className="material-symbols-sharp text-base text-amber-600">report_problem</span>
-              <h3 className="font-bold uppercase tracking-wide text-slate-900">
+              <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
                 Quarantined Dead Letter Queue (DLQ) &amp; Live Redrive Controls
               </h3>
             </div>
-            <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold font-mono">
-              QUARANTINE DEPTH: 2 RECORDS
+            <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 text-label font-bold font-mono">
+              QUARANTINE DEPTH: 2 RECORDS [ILLUSTRATIVE]
             </span>
           </div>
 
@@ -167,33 +181,27 @@ export function OperationsBoardView() {
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-900">{item.id}</span>
-                    <span className="px-1.5 py-0.2 bg-slate-200 text-slate-700 text-[10px] font-mono">
+                    <span className="px-1.5 py-0.2 bg-slate-200 text-slate-700 text-label font-mono">
                       Stream: {item.stream}
                     </span>
-                    <span className="px-1.5 py-0.2 bg-amber-100 text-amber-800 text-[10px] font-mono font-bold">
+                    <span className="px-1.5 py-0.2 bg-amber-100 text-amber-800 text-label font-mono font-bold">
                       {item.status}
                     </span>
                   </div>
-                  <p className="text-[11px] text-red-600 font-sans">Reason: {item.error}</p>
-                  <code className="text-[10px] text-slate-500 block truncate max-w-lg bg-white p-1 border border-slate-200">
+                  <p className="text-label text-red-600 font-sans">Reason: {item.error}</p>
+                  <code className="text-label text-slate-500 block truncate max-w-lg bg-white p-1 border border-slate-200">
                     {item.payload}
                   </code>
+                  {redrive[item.id] && (
+                    <p role="status" className={`text-label font-mono font-semibold ${redrive[item.id].ok ? 'text-cx-ok' : 'text-cx-bad'}`}>
+                      {redrive[item.id].message}
+                    </p>
+                  )}
                 </div>
 
                 <button
                   type="button"
-                  onClick={async () => {
-                    try {
-                      await fetch('/api/v1/ops/dlq/redrive', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ dlq_id: item.id }),
-                      });
-                      alert(`Redrive dispatched for ${item.id}`);
-                    } catch {
-                      alert(`Simulated redrive replay completed for ${item.id}`);
-                    }
-                  }}
+                  onClick={() => redriveRecord(item.id)}
                   className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
                 >
                   <span className="material-symbols-sharp text-sm">replay</span>
@@ -219,14 +227,14 @@ export function OperationsBoardView() {
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-2">
                 <span className="material-symbols-sharp text-base text-amber-600">electrical_services</span>
-                <h3 className="font-bold uppercase tracking-wide text-[#182026] text-xs font-mono">
+                <h3 className="text-title font-sans font-semibold tracking-normal text-cx-ink">
                   Resilience Gate (Principle VIII) • Deterministic Fallback &amp; Partition Verification
                 </h3>
               </div>
-              <span className={`px-2 py-0.5 text-[10px] font-bold font-mono border ${
+              <span className={`px-2 py-0.5 text-label font-bold font-mono border ${
                 state.isSimulatedOutage
                   ? 'bg-amber-100 text-amber-900 border-amber-300'
-                  : 'bg-[#EDF7ED] text-[#0D8050] border-[#C3E6D0]'
+                  : 'bg-cx-ok-bg text-cx-ok border-cx-ok-line'
               }`}>
                 {state.isSimulatedOutage ? 'PARTITION ACTIVE (OFFLINE REPLAY)' : 'LIVE STREAM NOMINAL'}
               </span>
@@ -240,7 +248,7 @@ export function OperationsBoardView() {
               className={`px-3 py-1.5 text-xs font-mono font-medium border transition-colors flex items-center gap-1.5 cursor-pointer ${
                 state.isSimulatedOutage
                   ? 'bg-amber-500 border-amber-600 text-slate-950 font-bold'
-                  : 'bg-[#F5F8FA] hover:bg-[#EBF1F5] border-[#D8E1E8] text-[#182026]'
+                  : 'bg-cx-sub hover:bg-cx-sub-2 border-cx-line text-cx-ink'
               }`}
             >
               <span className="material-symbols-sharp text-xs">

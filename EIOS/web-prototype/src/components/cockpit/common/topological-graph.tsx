@@ -1146,7 +1146,7 @@ export function TopologicalGraphCanvas() {
     <div
       className={
         isFullscreen
-          ? 'fixed inset-0 z-50 bg-[#080C14] flex flex-col p-4 overflow-hidden text-slate-100 select-none'
+          ? 'fixed inset-0 z-50 bg-cx-studio flex flex-col p-4 overflow-hidden text-slate-100 select-none'
           : 'bg-white border border-slate-200 shadow-xs flex flex-col relative text-slate-900 select-none overflow-hidden'
       }
     >
@@ -1166,18 +1166,18 @@ export function TopologicalGraphCanvas() {
 
       {/* Level 1: Authoritative Header & Global Utility Actions */}
       <div
-        className={`flex items-center justify-between px-3 py-2 border-b text-xs font-mono select-none ${
+        className={`flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 px-3 py-2 border-b text-xs font-mono select-none ${
           isFullscreen
-            ? 'border-slate-800 bg-[#080C14] text-slate-100'
+            ? 'border-slate-800 bg-cx-studio text-slate-100'
             : 'border-slate-200 bg-white text-slate-900'
         }`}
       >
         {/* Left: Identity & Telemetry Status Badges */}
-        <div className="flex items-center gap-2.5 min-w-0">
-          <div className="flex items-center gap-1.5 font-bold tracking-wider uppercase text-xs">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 min-w-0">
+          <div className="flex items-center gap-1.5 font-bold tracking-wider uppercase text-xs whitespace-nowrap">
             <span
               className={`material-symbols-sharp text-base ${
-                isFullscreen ? 'text-[#38BDF8]' : 'text-blue-600'
+                isFullscreen ? 'text-cx-studio-accent' : 'text-blue-600'
               }`}
             >
               hub
@@ -1189,10 +1189,10 @@ export function TopologicalGraphCanvas() {
             </span>
           </div>
 
-          <div className="hidden sm:flex items-center gap-1.5 text-[10px]">
+          <div className="hidden sm:flex flex-wrap items-center gap-1.5 text-label whitespace-nowrap">
             {isLiveApi ? (
               <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-semibold">
-                LIVE FASTAPI
+                LIVE
               </span>
             ) : (
               <span className="px-1.5 py-0.5 bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/30 font-semibold">
@@ -1218,13 +1218,13 @@ export function TopologicalGraphCanvas() {
         </div>
 
         {/* Right: Global Workstation Actions */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex flex-wrap items-center gap-1.5">
           {/* Export SAR Exhibit Button */}
           <button
             type="button"
             onClick={handleExportSarExhibit}
             title="Export Cryptographically Watermarked Forensic Evidence Exhibit"
-            className={`h-7 px-2.5 text-[11px] font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`h-7 px-2.5 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
               isFullscreen
                 ? 'bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800 hover:border-slate-600'
                 : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50 hover:border-slate-400'
@@ -1239,7 +1239,7 @@ export function TopologicalGraphCanvas() {
             type="button"
             onClick={() => setTransform({ x: 0, y: 0, scale: 1 })}
             title="Reset Pan and Zoom to Center View"
-            className={`h-7 px-2 text-[11px] font-mono border flex items-center gap-1 cursor-pointer transition-colors ${
+            className={`h-7 px-2 text-label font-mono border flex items-center gap-1 cursor-pointer transition-colors ${
               isFullscreen
                 ? 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white hover:bg-slate-800'
                 : 'bg-white border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-50'
@@ -1254,10 +1254,10 @@ export function TopologicalGraphCanvas() {
             type="button"
             onClick={() => setInspectorOpen(!inspectorOpen)}
             title="Toggle Forensic Entity 360 Inspector Drawer"
-            className={`h-7 px-2.5 text-[11px] font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`h-7 px-2.5 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
               inspectorOpen
                 ? isFullscreen
-                  ? 'bg-slate-800 border-[#38BDF8] text-[#38BDF8] font-bold'
+                  ? 'bg-slate-800 border-cx-studio-accent text-cx-studio-accent font-bold'
                   : 'bg-blue-50 border-blue-400 text-blue-700 font-bold shadow-xs'
                 : isFullscreen
                 ? 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
@@ -1273,7 +1273,7 @@ export function TopologicalGraphCanvas() {
             type="button"
             onClick={() => setIsFullscreen(!isFullscreen)}
             title={isFullscreen ? 'Exit Theater View (Esc)' : 'Expand to Fullscreen Theater (F)'}
-            className={`h-7 px-2.5 text-[11px] font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`h-7 px-2.5 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
               isFullscreen
                 ? 'bg-slate-800 hover:bg-slate-700 border-slate-600 text-white font-bold'
                 : 'bg-slate-900 hover:bg-slate-800 border-slate-900 text-white font-bold shadow-xs'
@@ -1281,7 +1281,7 @@ export function TopologicalGraphCanvas() {
           >
             <span
               className={`material-symbols-sharp text-sm ${
-                isFullscreen ? 'text-[#38BDF8]' : 'text-blue-400'
+                isFullscreen ? 'text-cx-studio-accent' : 'text-blue-400'
               }`}
             >
               {isFullscreen ? 'fullscreen_exit' : 'fullscreen'}
@@ -1295,7 +1295,7 @@ export function TopologicalGraphCanvas() {
       <div
         className={`flex items-center justify-between px-3 py-1.5 border-b text-xs font-mono select-none overflow-x-auto ${
           isFullscreen
-            ? 'border-slate-800/80 bg-[#0B1120] text-slate-300'
+            ? 'border-slate-800/80 bg-cx-studio-2 text-slate-300'
             : 'border-slate-200 bg-slate-50 text-slate-700'
         }`}
       >
@@ -1319,14 +1319,14 @@ export function TopologicalGraphCanvas() {
                   centerCameraOnNode(searchQuery.trim());
                 }
               }}
-              className={`w-36 h-7 pl-6 pr-6 text-[11px] font-mono rounded-none focus:outline-none transition-colors ${
+              className={`w-36 h-7 pl-6 pr-6 text-label font-mono rounded-none focus:outline-none transition-colors ${
                 isFullscreen
-                  ? 'bg-slate-900 border border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-[#38BDF8]'
+                  ? 'bg-slate-900 border border-slate-700 text-slate-100 placeholder:text-slate-500 focus:border-cx-studio-accent'
                   : 'bg-white border border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-blue-600'
               }`}
             />
             <span
-              className={`text-[9px] absolute right-1.5 pointer-events-none px-1 border font-mono ${
+              className={`text-label absolute right-1.5 pointer-events-none px-1 border font-mono ${
                 isFullscreen
                   ? 'bg-slate-800 border-slate-700 text-slate-500'
                   : 'bg-slate-100 border-slate-200 text-slate-400'
@@ -1353,10 +1353,10 @@ export function TopologicalGraphCanvas() {
                 key={l.id}
                 type="button"
                 onClick={() => setLayoutMode(l.id)}
-                className={`h-6 px-2 text-[11px] font-mono flex items-center gap-1 transition-colors cursor-pointer ${
+                className={`h-6 px-2 text-label font-mono flex items-center gap-1 transition-colors cursor-pointer ${
                   layoutMode === l.id
                     ? isFullscreen
-                      ? 'bg-slate-800 text-[#38BDF8] font-bold shadow-xs'
+                      ? 'bg-slate-800 text-cx-studio-accent font-bold shadow-xs'
                       : 'bg-slate-900 text-white font-bold shadow-xs'
                     : isFullscreen
                     ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
@@ -1387,10 +1387,10 @@ export function TopologicalGraphCanvas() {
                 key={mode}
                 type="button"
                 onClick={() => setHopFilter(mode)}
-                className={`h-6 px-2 text-[11px] font-mono transition-colors cursor-pointer ${
+                className={`h-6 px-2 text-label font-mono transition-colors cursor-pointer ${
                   hopFilter === mode
                     ? isFullscreen
-                      ? 'bg-slate-800 text-[#38BDF8] font-bold shadow-xs'
+                      ? 'bg-slate-800 text-cx-studio-accent font-bold shadow-xs'
                       : 'bg-blue-600 text-white font-bold shadow-xs'
                     : isFullscreen
                     ? 'text-slate-400 hover:text-slate-200'
@@ -1408,7 +1408,7 @@ export function TopologicalGraphCanvas() {
             aria-label={suppressCgnat ? 'CGNAT Suppressed' : 'Show Full Hairball'}
             onClick={() => setSuppressCgnat(!suppressCgnat)}
             title="Toggle Carrier-Grade NAT Proxy Aggregation (k > 100)"
-            className={`h-7 px-2 text-[11px] font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`h-7 px-2 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
               suppressCgnat
                 ? isFullscreen
                   ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
@@ -1442,7 +1442,7 @@ export function TopologicalGraphCanvas() {
             type="button"
             onClick={() => setHighlightCycles(!highlightCycles)}
             title="Detect Circular Flows and Layering Wash-Trade Loops"
-            className={`h-7 px-2 text-[11px] font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`h-7 px-2 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
               highlightCycles
                 ? isFullscreen
                   ? 'bg-rose-950/90 border-rose-500 text-rose-200 font-bold shadow-xs'
@@ -1477,7 +1477,7 @@ export function TopologicalGraphCanvas() {
               }
             }}
             title="Trace Shortest Money Laundering Path Between 2 Entities"
-            className={`h-7 px-2 text-[11px] font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
+            className={`h-7 px-2 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
               pathfindingMode
                 ? isFullscreen
                   ? 'bg-sky-950/80 border-sky-400 text-sky-200 font-bold shadow-xs'
@@ -1507,7 +1507,7 @@ export function TopologicalGraphCanvas() {
             type="button"
             onClick={() => setShowMiniMap(!showMiniMap)}
             title={showMiniMap ? 'Hide Radar Mini-Map' : 'Show Radar Mini-Map'}
-            className={`h-7 px-2 text-[11px] font-mono border flex items-center gap-1 cursor-pointer transition-colors ${
+            className={`h-7 px-2 text-label font-mono border flex items-center gap-1 cursor-pointer transition-colors ${
               showMiniMap
                 ? isFullscreen
                   ? 'bg-slate-800 border-slate-600 text-slate-200 font-semibold'
@@ -1526,7 +1526,7 @@ export function TopologicalGraphCanvas() {
             type="button"
             onClick={() => setShowLegend(!showLegend)}
             title={showLegend ? 'Hide Legend' : 'Show Legend'}
-            className={`h-7 px-2 text-[11px] font-mono border flex items-center gap-1 cursor-pointer transition-colors ${
+            className={`h-7 px-2 text-label font-mono border flex items-center gap-1 cursor-pointer transition-colors ${
               showLegend
                 ? isFullscreen
                   ? 'bg-slate-800 border-slate-600 text-slate-200 font-semibold'
@@ -1546,8 +1546,8 @@ export function TopologicalGraphCanvas() {
       <div
         className={`flex overflow-hidden relative border-t ${
           isFullscreen
-            ? 'flex-1 border-slate-800/90 bg-[#080C14]'
-            : 'h-[520px] border-slate-200 bg-[#F8FAFC]'
+            ? 'flex-1 border-slate-800/90 bg-cx-studio'
+            : 'h-[520px] border-slate-200 bg-cx-wash'
         }`}
       >
         {/* Left Column: Canvas Viewport + Docked Bottom Scrubber Strip */}
@@ -1555,7 +1555,7 @@ export function TopologicalGraphCanvas() {
           {/* Canvas Viewport */}
           <div
             className={`flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing ${
-              isFullscreen ? 'bg-[#080C14]' : 'bg-[#F8FAFC]'
+              isFullscreen ? 'bg-cx-studio' : 'bg-cx-wash'
             }`}
           >
             <canvas
@@ -1574,12 +1574,12 @@ export function TopologicalGraphCanvas() {
               <div
                 className={`absolute bottom-2.5 right-2.5 p-1.5 backdrop-blur-md shadow-md border ${
                   isFullscreen
-                    ? 'bg-[#0F172A]/90 border-slate-800 text-slate-300 shadow-xl'
+                    ? 'bg-cx-ink-deep/90 border-slate-800 text-slate-300 shadow-xl'
                     : 'bg-white/95 border-slate-200 text-slate-700 shadow-sm'
                 }`}
               >
                 <div
-                  className={`text-[9px] font-mono uppercase tracking-wider mb-1 flex items-center justify-between ${
+                  className={`text-label font-mono uppercase tracking-wider mb-1 flex items-center justify-between ${
                     isFullscreen ? 'text-slate-400' : 'text-slate-500'
                   }`}
                 >
@@ -1587,8 +1587,9 @@ export function TopologicalGraphCanvas() {
                   <button
                     type="button"
                     onClick={() => setShowMiniMap(false)}
-                    className="hover:opacity-100 opacity-60 cursor-pointer ml-2 text-[10px]"
+                    className="hover:opacity-100 opacity-60 cursor-pointer ml-2 text-label min-w-6"
                     title="Minimize Radar"
+                    aria-label="Minimize radar mini-map"
                   >
                     ✕
                   </button>
@@ -1599,8 +1600,8 @@ export function TopologicalGraphCanvas() {
                   height={75}
                   className={`block border ${
                     isFullscreen
-                      ? 'border-slate-800/80 bg-[#080C14]'
-                      : 'border-slate-200 bg-[#F8FAFC]'
+                      ? 'border-slate-800/80 bg-cx-studio'
+                      : 'border-slate-200 bg-cx-wash'
                   }`}
                 />
               </div>
@@ -1609,33 +1610,34 @@ export function TopologicalGraphCanvas() {
             {/* Legend Overlay */}
             {showLegend && (
               <div
-                className={`absolute bottom-2.5 left-2.5 p-2 text-[10px] font-mono space-y-1 backdrop-blur-md shadow-sm border ${
+                className={`absolute bottom-2.5 left-2.5 p-2 text-label font-mono space-y-1 backdrop-blur-md shadow-sm border ${
                   isFullscreen
-                    ? 'bg-[#0F172A]/90 border-slate-800 text-slate-300 shadow-xl'
+                    ? 'bg-cx-ink-deep/90 border-slate-800 text-slate-300 shadow-xl'
                     : 'bg-white/95 border-slate-200 text-slate-700 shadow-sm'
                 }`}
               >
-                <div className="flex items-center justify-between gap-3 pb-0.5 border-b border-slate-200 dark:border-slate-800 text-[9px] uppercase tracking-wider text-slate-400">
+                <div className="flex items-center justify-between gap-3 pb-0.5 border-b border-slate-200 dark:border-slate-800 text-label uppercase tracking-wider text-slate-400">
                   <span>Topology Key</span>
                   <button
                     type="button"
                     onClick={() => setShowLegend(false)}
-                    className="hover:opacity-100 opacity-60 cursor-pointer text-[10px]"
+                    className="hover:opacity-100 opacity-60 cursor-pointer text-label min-w-6"
                     title="Hide Legend"
+                    aria-label="Hide legend"
                   >
                     ✕
                   </button>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-[#E11D48] inline-block border border-rose-300/40" />
+                  <span className="w-2 h-2 bg-cx-bad-solid-2 inline-block border border-rose-300/40" />
                   <span>Critical Syndicate (&ge; 0.85)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-[#D97706] inline-block border border-amber-300/40" />
+                  <span className="w-2 h-2 bg-cx-warn-solid-2 inline-block border border-amber-300/40" />
                   <span>High Risk (&ge; 0.65)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-[#2563EB] inline-block border border-blue-300/40" />
+                  <span className="w-2 h-2 bg-cx-info-solid inline-block border border-blue-300/40" />
                   <span>Monitored Counterparty</span>
                 </div>
               </div>
@@ -1646,7 +1648,7 @@ export function TopologicalGraphCanvas() {
           <div
             className={`h-9 px-3 flex items-center gap-3 border-t text-xs font-mono shrink-0 select-none ${
               isFullscreen
-                ? 'bg-[#0F172A] border-slate-800 text-slate-200'
+                ? 'bg-cx-ink-deep border-slate-800 text-slate-200'
                 : 'bg-slate-50 border-slate-200 text-slate-800'
             }`}
           >
@@ -1666,7 +1668,7 @@ export function TopologicalGraphCanvas() {
             </button>
 
             <span
-              className={`text-[11px] whitespace-nowrap ${
+              className={`text-label whitespace-nowrap ${
                 isFullscreen ? 'text-slate-400' : 'text-slate-600'
               }`}
             >
@@ -1675,12 +1677,13 @@ export function TopologicalGraphCanvas() {
 
             <input
               type="range"
+              aria-label="Timeline day"
               min={1}
               max={30}
               value={timelineDay}
               onChange={(e) => setTimelineDay(parseInt(e.target.value, 10))}
               className={`flex-1 h-1.5 rounded-none cursor-pointer ${
-                isFullscreen ? 'accent-[#38BDF8] bg-slate-800' : 'accent-blue-600 bg-slate-200'
+                isFullscreen ? 'accent-cx-studio-accent bg-slate-800' : 'accent-blue-600 bg-slate-200'
               }`}
             />
 
@@ -1690,13 +1693,13 @@ export function TopologicalGraphCanvas() {
                 isFullscreen ? 'border-slate-800' : 'border-slate-200'
               }`}
             >
-              <span className={`text-[10px] ${isFullscreen ? 'text-slate-400' : 'text-slate-500'}`}>
+              <span className={`text-label ${isFullscreen ? 'text-slate-400' : 'text-slate-500'}`}>
                 Min Vol:
               </span>
               <select
                 value={minVolumeThreshold}
                 onChange={(e) => setMinVolumeThreshold(parseInt(e.target.value, 10))}
-                className={`text-[10px] px-1.5 py-0.5 rounded-none focus:outline-none border cursor-pointer ${
+                className={`text-label px-1.5 py-0.5 rounded-none focus:outline-none border cursor-pointer ${
                   isFullscreen
                     ? 'bg-slate-900 border-slate-700 text-slate-200'
                     : 'bg-white border-slate-300 text-slate-800'
@@ -1716,7 +1719,7 @@ export function TopologicalGraphCanvas() {
           <aside
             className={`w-80 lg:w-96 flex flex-col shrink-0 text-xs font-mono z-20 shadow-xl overflow-y-auto border-l ${
               isFullscreen
-                ? 'bg-[#0B1120] border-slate-800 text-slate-100 shadow-2xl'
+                ? 'bg-cx-studio-2 border-slate-800 text-slate-100 shadow-2xl'
                 : 'bg-white border-slate-200 text-slate-900'
             }`}
           >
@@ -1724,14 +1727,14 @@ export function TopologicalGraphCanvas() {
             <div
               className={`p-3 border-b flex items-center justify-between ${
                 isFullscreen
-                  ? 'bg-[#0F172A] border-slate-800'
+                  ? 'bg-cx-ink-deep border-slate-800'
                   : 'bg-slate-50 border-slate-200 text-slate-900'
               }`}
             >
               <div className="flex items-center gap-2">
                 <span
                   className={`material-symbols-sharp text-sm ${
-                    isFullscreen ? 'text-[#38BDF8]' : 'text-blue-600'
+                    isFullscreen ? 'text-cx-studio-accent' : 'text-blue-600'
                   }`}
                 >
                   fingerprint
@@ -1747,6 +1750,7 @@ export function TopologicalGraphCanvas() {
               <button
                 type="button"
                 onClick={() => setInspectorOpen(false)}
+                aria-label="Close entity inspector"
                 className={`cursor-pointer ${
                   isFullscreen ? 'text-slate-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'
                 }`}
@@ -1758,7 +1762,7 @@ export function TopologicalGraphCanvas() {
             {/* Primary Entity Card */}
             <div
               className={`p-3 border-b space-y-2 ${
-                isFullscreen ? 'border-slate-800/80 bg-[#080C14]' : 'border-slate-200 bg-white'
+                isFullscreen ? 'border-slate-800/80 bg-cx-studio' : 'border-slate-200 bg-white'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -1766,7 +1770,7 @@ export function TopologicalGraphCanvas() {
                   {selectedNode.label}
                 </span>
                 <span
-                  className={`px-1.5 py-0.2 text-[10px] font-bold border ${
+                  className={`px-1.5 py-0.2 text-label font-bold border ${
                     selectedNode.riskScore >= 0.85
                       ? isFullscreen
                         ? 'bg-rose-950/80 text-rose-300 border-rose-600/60'
@@ -1780,7 +1784,7 @@ export function TopologicalGraphCanvas() {
                 </span>
               </div>
               <div
-                className={`text-[11px] flex items-center gap-2 ${
+                className={`text-label flex items-center gap-2 ${
                   isFullscreen ? 'text-slate-400' : 'text-slate-600'
                 }`}
               >
@@ -1804,36 +1808,36 @@ export function TopologicalGraphCanvas() {
               }`}
             >
               <div
-                className={`text-[10px] uppercase tracking-wider font-bold flex items-center gap-1 ${
+                className={`text-label uppercase tracking-wider font-bold flex items-center gap-1 ${
                   isFullscreen ? 'text-slate-400' : 'text-slate-600'
                 }`}
               >
                 <span
                   className={`material-symbols-sharp text-xs ${
-                    isFullscreen ? 'text-[#38BDF8]' : 'text-blue-600'
+                    isFullscreen ? 'text-cx-studio-accent' : 'text-blue-600'
                   }`}
                 >
                   analytics
                 </span>
                 <span>Topological Centrality Metrics</span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="grid grid-cols-2 gap-2 text-label">
                 <div
                   className={`p-2 border ${
-                    isFullscreen ? 'bg-[#0F172A] border-slate-800' : 'bg-slate-50 border-slate-200'
+                    isFullscreen ? 'bg-cx-ink-deep border-slate-800' : 'bg-slate-50 border-slate-200'
                   }`}
                 >
-                  <div className="text-[9px] uppercase text-slate-500">Degree Centrality</div>
+                  <div className="text-label uppercase text-slate-500">Degree Centrality</div>
                   <div className={`text-sm font-bold ${isFullscreen ? 'text-white' : 'text-slate-900'}`}>
                     {selectedNode.degree} links
                   </div>
                 </div>
                 <div
                   className={`p-2 border ${
-                    isFullscreen ? 'bg-[#0F172A] border-slate-800' : 'bg-slate-50 border-slate-200'
+                    isFullscreen ? 'bg-cx-ink-deep border-slate-800' : 'bg-slate-50 border-slate-200'
                   }`}
                 >
-                  <div className="text-[9px] uppercase text-slate-500">Betweenness Score</div>
+                  <div className="text-label uppercase text-slate-500">Betweenness Score</div>
                   <div
                     className={`text-sm font-bold ${
                       isFullscreen ? 'text-amber-400' : 'text-amber-700'
@@ -1844,20 +1848,20 @@ export function TopologicalGraphCanvas() {
                 </div>
                 <div
                   className={`p-2 border ${
-                    isFullscreen ? 'bg-[#0F172A] border-slate-800' : 'bg-slate-50 border-slate-200'
+                    isFullscreen ? 'bg-cx-ink-deep border-slate-800' : 'bg-slate-50 border-slate-200'
                   }`}
                 >
-                  <div className="text-[9px] uppercase text-slate-500">30D Velocity ($)</div>
+                  <div className="text-label uppercase text-slate-500">30D Velocity ($)</div>
                   <div className={`text-sm font-bold ${isFullscreen ? 'text-white' : 'text-slate-900'}`}>
                     {selectedNode.details?.turnover || '$1,420,000'}
                   </div>
                 </div>
                 <div
                   className={`p-2 border ${
-                    isFullscreen ? 'bg-[#0F172A] border-slate-800' : 'bg-slate-50 border-slate-200'
+                    isFullscreen ? 'bg-cx-ink-deep border-slate-800' : 'bg-slate-50 border-slate-200'
                   }`}
                 >
-                  <div className="text-[9px] uppercase text-slate-500">Clustering Index</div>
+                  <div className="text-label uppercase text-slate-500">Clustering Index</div>
                   <div
                     className={`text-sm font-bold ${
                       isFullscreen ? 'text-emerald-400' : 'text-emerald-700'
@@ -1876,12 +1880,12 @@ export function TopologicalGraphCanvas() {
               }`}
             >
               <div
-                className={`text-[10px] uppercase tracking-wider font-bold flex items-center justify-between ${
+                className={`text-label uppercase tracking-wider font-bold flex items-center justify-between ${
                   isFullscreen ? 'text-slate-400' : 'text-slate-600'
                 }`}
               >
                 <span>Immediate Counterparties ({selectedConnectedEdges.length})</span>
-                <span className={`text-[9px] ${isFullscreen ? 'text-slate-500' : 'text-slate-400'}`}>
+                <span className={`text-label ${isFullscreen ? 'text-slate-500' : 'text-slate-400'}`}>
                   Sorted by Volume
                 </span>
               </div>
@@ -1899,7 +1903,7 @@ export function TopologicalGraphCanvas() {
                       }}
                       className={`p-2 border flex items-center justify-between cursor-pointer transition-colors ${
                         isFullscreen
-                          ? 'bg-[#0F172A] hover:bg-[#1E293B] border-slate-800'
+                          ? 'bg-cx-ink-deep hover:bg-cx-ink-line border-slate-800'
                           : 'bg-slate-50 hover:bg-slate-100 border-slate-200'
                       }`}
                     >
@@ -1924,7 +1928,7 @@ export function TopologicalGraphCanvas() {
                           </span>
                           <span>{counterparty.id}</span>
                         </div>
-                        <div className="text-[10px] text-slate-500">{e.type.replace(/_/g, ' ')}</div>
+                        <div className="text-label text-slate-500">{e.type.replace(/_/g, ' ')}</div>
                       </div>
                       <div className="text-right">
                         <div
@@ -1935,7 +1939,7 @@ export function TopologicalGraphCanvas() {
                           ${(e.amountUsd || 145000).toLocaleString()}
                         </div>
                         <div
-                          className={`text-[9px] ${
+                          className={`text-label ${
                             isFullscreen ? 'text-slate-400' : 'text-slate-500'
                           }`}
                         >
@@ -1951,7 +1955,7 @@ export function TopologicalGraphCanvas() {
             {/* Drawer Footer Actions */}
             <div
               className={`p-3 border-t space-y-2 select-none ${
-                isFullscreen ? 'bg-[#0F172A] border-slate-800' : 'bg-slate-50 border-slate-200'
+                isFullscreen ? 'bg-cx-ink-deep border-slate-800' : 'bg-slate-50 border-slate-200'
               }`}
             >
               <button
@@ -1965,7 +1969,7 @@ export function TopologicalGraphCanvas() {
               >
                 <span className="material-symbols-sharp text-sm">lock</span>
                 <span>Stage Pre-Settlement Hold</span>
-                <span className="text-[10px] opacity-80 font-normal">[KMS P-256]</span>
+                <span className="text-label opacity-80 font-normal">[KMS P-256]</span>
               </button>
 
               <button
@@ -1990,7 +1994,7 @@ export function TopologicalGraphCanvas() {
         <div
           className={`p-2.5 border flex flex-wrap items-center justify-between gap-3 text-xs font-mono ${
             isFullscreen
-              ? 'bg-[#0F172A] border-slate-800 text-slate-100'
+              ? 'bg-cx-ink-deep border-slate-800 text-slate-100'
               : 'bg-slate-50 border-slate-200 text-slate-900'
           }`}
         >
@@ -1999,14 +2003,14 @@ export function TopologicalGraphCanvas() {
               {selectedNode.label}
             </span>
             <span
-              className={`px-1.5 py-0.2 text-[10px] ${
+              className={`px-1.5 py-0.2 text-label ${
                 isFullscreen ? 'bg-slate-800 text-slate-300' : 'bg-slate-200 text-slate-700'
               }`}
             >
               Type: {selectedNode.type}
             </span>
             <span
-              className={`px-1.5 py-0.2 text-[10px] font-bold border ${
+              className={`px-1.5 py-0.2 text-label font-bold border ${
                 selectedNode.riskScore >= 0.85
                   ? isFullscreen
                     ? 'bg-rose-950/80 text-rose-300 border-rose-700/60'
@@ -2019,7 +2023,7 @@ export function TopologicalGraphCanvas() {
               Risk: {Math.round((selectedNode.riskScore || 0.5) * 100)}%
             </span>
             <span
-              className={`text-[11px] hidden md:inline ${
+              className={`text-label hidden md:inline ${
                 isFullscreen ? 'text-slate-400' : 'text-slate-500'
               }`}
             >
@@ -2033,7 +2037,7 @@ export function TopologicalGraphCanvas() {
               onClick={() => setInspectorOpen(true)}
               className={`px-2.5 py-1 border flex items-center gap-1 cursor-pointer ${
                 isFullscreen
-                  ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-[#38BDF8]'
+                  ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-cx-studio-accent'
                   : 'bg-white hover:bg-slate-100 border-slate-300 text-blue-700 font-bold'
               }`}
             >

@@ -145,7 +145,7 @@ export function PartnerTriageGrid({
           )}
         </div>
 
-        <div className="flex items-center gap-3 text-[11px] font-mono text-slate-500">
+        <div className="flex items-center gap-3 text-label font-mono text-slate-500">
           <span>
             SHOWING <strong className="text-slate-800">{processedPartners.length}</strong> / {partners.length}
           </span>
@@ -159,7 +159,7 @@ export function PartnerTriageGrid({
       {/* Table Body with Fixed Header */}
       <div className="flex-1 overflow-auto max-h-[520px]">
         <table className="w-full text-left border-collapse text-xs">
-          <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 text-[10px] font-mono uppercase tracking-wider border-b border-slate-200 select-none">
+          <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 text-label font-mono uppercase tracking-wider border-b border-slate-200 select-none">
             <tr>
               <th
                 onClick={() => handleSort('partnerId')}
@@ -254,7 +254,7 @@ export function PartnerTriageGrid({
                           {partner.partnerId}
                         </span>
                         <span
-                          className={`text-[9px] font-mono px-1 py-0.2 rounded-2xs border ${tierBadgeColor}`}
+                          className={`text-label font-mono px-1 py-0.2 rounded-2xs border ${tierBadgeColor}`}
                         >
                           {partner.tier === 'TIER_1_SUPER'
                             ? 'T1'
@@ -263,17 +263,17 @@ export function PartnerTriageGrid({
                             : 'T3'}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-500 truncate max-w-[170px]" title={partner.name}>
+                      <div className="text-label text-slate-500 truncate max-w-[170px]" title={partner.name}>
                         {partner.name}
                       </div>
                     </td>
 
                     {/* Region / Cohort */}
                     <td className="py-2.5 px-3">
-                      <div className="text-[11px] text-slate-700 font-medium truncate max-w-[140px]">
+                      <div className="text-label text-slate-700 font-medium truncate max-w-[140px]">
                         {partner.region || 'Global'}
                       </div>
-                      <div className="text-[10px] text-slate-400 truncate max-w-[140px]">
+                      <div className="text-label text-slate-400 truncate max-w-[140px]">
                         {partner.cohort || 'General'}
                       </div>
                     </td>
@@ -286,14 +286,14 @@ export function PartnerTriageGrid({
                     {/* P(churn) */}
                     <td className="py-2.5 px-3 text-center">
                       <span
-                        className={`inline-block px-1.5 py-0.5 rounded-2xs text-[11px] font-mono font-bold border ${statusColor}`}
+                        className={`inline-block px-1.5 py-0.5 rounded-2xs text-label font-mono font-bold border ${statusColor}`}
                       >
                         {(partner.pChurn * 100).toFixed(0)}%
                       </span>
                     </td>
 
                     {/* Days to Churn Deadline */}
-                    <td className="py-2.5 px-3 text-center font-mono text-[11px] tabular-nums">
+                    <td className="py-2.5 px-3 text-center font-mono text-label tabular-nums">
                       <span
                         className={
                           partner.daysToChurn <= 14
@@ -308,7 +308,7 @@ export function PartnerTriageGrid({
                     </td>
 
                     {/* Drift Trend */}
-                    <td className="py-2.5 px-3 text-center font-mono text-[11px]">
+                    <td className="py-2.5 px-3 text-center font-mono text-label">
                       {partner.historicalDrift?.driftVelocityPct ? (
                         <span className="text-red-600 font-medium">
                           +{partner.historicalDrift.driftVelocityPct.toFixed(0)}%
@@ -319,7 +319,7 @@ export function PartnerTriageGrid({
                     </td>
 
                     {/* Primary Driver */}
-                    <td className="py-2.5 px-3 text-[11px] text-slate-600 truncate max-w-[180px]">
+                    <td className="py-2.5 px-3 text-label text-slate-600 truncate max-w-[180px]">
                       {partner.primaryDriver ? (
                         <span className="inline-flex items-center gap-1">
                           <span

@@ -318,21 +318,21 @@ export function ChurnRadarScatter() {
         <line x1={leftPad - 10} y1={midY} x2={rightPad + 10} y2={midY} stroke="#CBD5E1" strokeWidth="1.5" strokeDasharray="4,4" />
 
         {/* Quadrant Semantic Labels */}
-        <text x={midX + 10} y={topPad + 14} fill="#BE123C" fontSize="8" fontFamily="monospace" fontWeight="bold">
+        <text x={midX + 10} y={topPad + 14} fill="#BE123C" fontSize="10" fontFamily="monospace" fontWeight="bold">
           HIGH VALUE / CRITICAL CHURN HAZARD
         </text>
-        <text x={leftPad + 10} y={topPad + 14} fill="#047857" fontSize="8" fontFamily="monospace" fontWeight="bold">
+        <text x={leftPad + 10} y={topPad + 14} fill="#047857" fontSize="10" fontFamily="monospace" fontWeight="bold">
           HIGH VALUE / STABLE GIANTS
         </text>
-        <text x={midX + 10} y={bottomPad - 8} fill="#B45309" fontSize="8" fontFamily="monospace" fontWeight="bold">
+        <text x={midX + 10} y={bottomPad - 8} fill="#B45309" fontSize="10" fontFamily="monospace" fontWeight="bold">
           LOW VALUE / HIGH CHURN
         </text>
-        <text x={leftPad + 10} y={bottomPad - 8} fill="#64748B" fontSize="8" fontFamily="monospace" fontWeight="bold">
+        <text x={leftPad + 10} y={bottomPad - 8} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
           LOW VALUE / STABLE
         </text>
 
         {/* Coordinate Axis Reference Ticks */}
-        <g fontSize="7.5" fontFamily="monospace" fill="#94A3B8">
+        <g fontSize="10" fontFamily="monospace" fill="#94A3B8">
           <text x={midX} y={midY + 12} textAnchor="middle">
             {axisDimension === 'P_CHURN' ? '0.50' : axisDimension === 'VELOCITY' ? '-50%' : '90d'}
           </text>
@@ -373,7 +373,7 @@ export function ChurnRadarScatter() {
                 strokeDasharray="4,4"
               />
               <rect x={cx - 110} y={minY - 14} width="220" height="15" fill="#FFF1F2" stroke="#FDA4AF" strokeWidth="0.8" rx="1" />
-              <text x={cx} y={minY - 4} fill="#9F1239" fontSize="7.5" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+              <text x={cx} y={minY - 4} fill="#9F1239" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
                 LATAM COHORT: P2P CLEARING FRICTION ($1.99M VaR)
               </text>
             </g>
@@ -411,13 +411,13 @@ export function ChurnRadarScatter() {
 
               {/* T-30d Origin Breadcrumb */}
               <circle cx={coord30.cx} cy={coord30.cy} r="2.5" fill="#64748B" />
-              <text x={coord30.cx} y={coord30.cy - 5} fill="#64748B" fontSize="6.5" fontFamily="monospace" textAnchor="middle">
+              <text x={coord30.cx} y={coord30.cy - 5} fill="#64748B" fontSize="10" fontFamily="monospace" textAnchor="middle">
                 T-30d
               </text>
 
               {/* T-14d Mid-Point Breadcrumb */}
               <circle cx={coord14.cx} cy={coord14.cy} r="3" fill="#D97706" />
-              <text x={coord14.cx} y={coord14.cy - 5} fill="#D97706" fontSize="6.5" fontFamily="monospace" textAnchor="middle">
+              <text x={coord14.cx} y={coord14.cy - 5} fill="#D97706" fontSize="10" fontFamily="monospace" textAnchor="middle">
                 T-14d
               </text>
 
@@ -436,7 +436,7 @@ export function ChurnRadarScatter() {
               <line x1={leftPad - 10} y1={cy} x2={rightPad} y2={cy} stroke="#2563EB" strokeWidth="1" strokeDasharray="2,2" opacity="0.6" />
               {/* Coordinate indicator pills */}
               <rect x={cx - 32} y={bottomPad + 5} width="64" height="13" fill="#0F172A" rx="1" />
-              <text x={cx} y={bottomPad + 14} fill="#FFFFFF" fontSize="7.5" fontFamily="monospace" textAnchor="middle">
+              <text x={cx} y={bottomPad + 14} fill="#FFFFFF" fontSize="10" fontFamily="monospace" textAnchor="middle">
                 {axisDimension === 'P_CHURN'
                   ? `P = ${activeFocusPartner.pChurn.toFixed(2)}`
                   : axisDimension === 'VELOCITY'
@@ -444,7 +444,7 @@ export function ChurnRadarScatter() {
                   : `Urgency: ${activeFocusPartner.daysToChurn}d`}
               </text>
               <rect x={leftPad - 50} y={cy - 6} width="44" height="12" fill="#0F172A" rx="1" />
-              <text x={leftPad - 28} y={cy + 3} fill="#FFFFFF" fontSize="7.5" fontFamily="monospace" textAnchor="middle">
+              <text x={leftPad - 28} y={cy + 3} fill="#FFFFFF" fontSize="10" fontFamily="monospace" textAnchor="middle">
                 ${(activeFocusPartner.valueAtRiskUsd / 1000).toFixed(0)}K
               </text>
             </g>
@@ -469,7 +469,7 @@ export function ChurnRadarScatter() {
               <circle cx={sim.simCx} cy={base.cy} r={10} fill="rgba(5, 150, 105, 0.15)" stroke="#059669" strokeWidth="1.8" />
               <circle cx={sim.simCx} cy={base.cy} r={4} fill="#059669" />
               <rect x={sim.simCx - 36} y={base.cy - 20} width="72" height="13" fill="#047857" rx="1" />
-              <text x={sim.simCx} y={base.cy - 11} fill="#FFFFFF" fontSize="7" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+              <text x={sim.simCx} y={base.cy - 11} fill="#FFFFFF" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
                 P(sim) = {sim.simPChurn.toFixed(2)}
               </text>
             </g>
@@ -549,14 +549,14 @@ export function ChurnRadarScatter() {
         })}
 
         {/* Dynamic Axis Description */}
-        <text x={svgWidth / 2} y={svgHeight - 10} fill="#475569" fontSize="9" fontFamily="monospace" fontWeight="600" textAnchor="middle">
+        <text x={svgWidth / 2} y={svgHeight - 10} fill="#475569" fontSize="10" fontFamily="monospace" fontWeight="600" textAnchor="middle">
           {axisDimension === 'P_CHURN'
             ? 'P(churn) Hazard Rate → (0.00 to 1.00)'
             : axisDimension === 'VELOCITY'
             ? 'Engagement Decay Rate (60d baseline) → (-100% to 0%)'
             : 'Intervention Urgency (180d down to 0d) →'}
         </text>
-        <text x="14" y={svgHeight / 2} fill="#475569" fontSize="8.5" fontFamily="monospace" fontWeight="600" transform={`rotate(-90 14 ${svgHeight / 2})`} textAnchor="middle">
+        <text x="14" y={svgHeight / 2} fill="#475569" fontSize="10" fontFamily="monospace" fontWeight="600" transform={`rotate(-90 14 ${svgHeight / 2})`} textAnchor="middle">
           Value at Risk (VaR) →
         </text>
       </svg>
@@ -619,15 +619,15 @@ export function ChurnRadarScatter() {
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <span className="font-bold text-slate-900 text-sm">{selectedPartner.name}</span>
-              <span className="text-[10px] bg-slate-100 text-slate-800 px-1.5 py-0.5 font-bold border border-slate-200">
+              <span className="text-label bg-slate-100 text-slate-800 px-1.5 py-0.5 font-bold border border-slate-200">
                 {selectedPartner.partnerId}
               </span>
-              <span className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 border border-blue-200 font-bold">
+              <span className="text-label bg-blue-50 text-blue-700 px-1.5 py-0.5 border border-blue-200 font-bold">
                 {selectedPartner.tier.replace(/_/g, ' ')}
               </span>
             </div>
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 border ${
+              className={`text-label font-bold px-2 py-0.5 border ${
                 isCritical ? 'bg-rose-50 text-rose-800 border-rose-300' : 'bg-emerald-50 text-emerald-800 border-emerald-300'
               }`}
             >
@@ -635,19 +635,19 @@ export function ChurnRadarScatter() {
             </span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-[11px]">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-label">
             <div className="bg-slate-50 p-1.5 border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">30D VaR</span>
+              <span className="text-label text-slate-500 block">30D VaR</span>
               <span className="font-bold text-slate-900">
                 ${(selectedPartner.valueAtRiskUsd / 1000).toFixed(0)}K USD
               </span>
             </div>
             <div className="bg-slate-50 p-1.5 border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">Golden Window</span>
+              <span className="text-label text-slate-500 block">Golden Window</span>
               <span className="font-bold text-rose-700">{selectedPartner.daysToChurn} Days to Lock</span>
             </div>
             <div className="bg-slate-50 p-1.5 border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">Decay Acceleration</span>
+              <span className="text-label text-slate-500 block">Decay Acceleration</span>
               <span className="font-bold text-red-600">
                 {selectedPartner.historicalDrift?.driftVelocityPct
                   ? `+${selectedPartner.historicalDrift.driftVelocityPct.toFixed(0)}% WoW`
@@ -655,7 +655,7 @@ export function ChurnRadarScatter() {
               </span>
             </div>
             <div className="bg-slate-50 p-1.5 border border-slate-200">
-              <span className="text-[10px] text-slate-500 block">Ring Collusion</span>
+              <span className="text-label text-slate-500 block">Ring Collusion</span>
               <span className="font-bold text-amber-700">
                 {(selectedPartner.mirrorTradeCorrelation * 100).toFixed(0)}% Opposite
               </span>
@@ -666,10 +666,10 @@ export function ChurnRadarScatter() {
         {/* 30D Velocity Sparkline & Multi-Signal Root Cause Decomposition */}
         <div className="p-3 bg-white border border-slate-200 shadow-2xs space-y-2">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-[11px] text-slate-900 uppercase">
+            <span className="font-bold text-label text-slate-900 uppercase">
               30D Engagement Velocity & Signal Decomposition
             </span>
-            <span className="text-[10px] text-slate-500">PELT Change-Point Flagged</span>
+            <span className="text-label text-slate-500">PELT Change-Point Flagged</span>
           </div>
 
           {/* Simple Inline SVG Sparkline */}
@@ -686,15 +686,15 @@ export function ChurnRadarScatter() {
             </svg>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 text-[11px] pt-1">
+          <div className="grid grid-cols-2 gap-2 text-label pt-1">
             <div className="p-1.5 bg-rose-50/50 border border-rose-100">
-              <span className="text-[10px] text-slate-500 block">Operational Bottleneck</span>
+              <span className="text-label text-slate-500 block">Operational Bottleneck</span>
               <span className="text-slate-800 font-semibold">
                 Cashier Latency: {selectedPartner.cashierLatencyHours ?? 4.8}h (Bancolombia)
               </span>
             </div>
             <div className="p-1.5 bg-amber-50/50 border border-amber-100">
-              <span className="text-[10px] text-slate-500 block">Competitive Aggression</span>
+              <span className="text-label text-slate-500 block">Competitive Aggression</span>
               <span className="text-slate-800 font-semibold truncate block" title={selectedPartner.competitorPoaching}>
                 {selectedPartner.competitorPoaching ?? 'Exness Rival Promo'}
               </span>
@@ -707,17 +707,17 @@ export function ChurnRadarScatter() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-bold text-[11px] text-slate-900 uppercase">
+              <span className="font-bold text-label text-slate-900 uppercase">
                 Backend Causal SCM Simulator (DoWhy Inference)
               </span>
             </div>
             {isSimulatingCausal && (
-              <span className="text-[10px] text-blue-600 animate-pulse font-mono">Evaluating SCM...</span>
+              <span className="text-label text-blue-600 animate-pulse font-mono">Evaluating SCM...</span>
             )}
           </div>
 
           <div className="space-y-1">
-            <div className="flex items-center justify-between text-[11px]">
+            <div className="flex items-center justify-between text-label">
               <span className="text-slate-600">Retention Concession Intensity:</span>
               <span className="font-bold text-slate-900">{concessionSlider}% Intensity</span>
             </div>
@@ -734,7 +734,7 @@ export function ChurnRadarScatter() {
           </div>
 
           {whatIfResponse ? (
-            <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-1.5 text-[11px] animate-in fade-in">
+            <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-1.5 text-label animate-in fade-in">
               <div className="flex items-center justify-between">
                 <span className="font-bold">Projected Retention Lift:</span>
                 <span className="font-mono font-bold text-emerald-800">
@@ -753,12 +753,12 @@ export function ChurnRadarScatter() {
                   +${whatIfResponse.projected_net_margin_usd.toLocaleString()} USD
                 </span>
               </div>
-              <div className="text-[10px] text-slate-600 pt-1 border-t border-emerald-200 italic">
+              <div className="text-label text-slate-600 pt-1 border-t border-emerald-200 italic">
                 {whatIfResponse.governed_decision_rationale}
               </div>
             </div>
           ) : (
-            <div className="text-[10px] text-slate-500 italic p-2 bg-slate-50 border border-slate-200">
+            <div className="text-label text-slate-500 italic p-2 bg-slate-50 border border-slate-200">
               Drag slider to run real-time DoWhy causal graph counterfactual inference against Gemini 3.8 Flash.
             </div>
           )}
@@ -767,10 +767,10 @@ export function ChurnRadarScatter() {
         {/* DRIVER-ADAPTIVE GOVERNED ACTION HERO CARD (Task T010) */}
         <div className="p-3 bg-white border border-slate-200 shadow-2xs space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="font-bold text-[11px] text-slate-900 uppercase">
+            <span className="font-bold text-label text-slate-900 uppercase">
               Recommended Driver-Adaptive Playbook
             </span>
-            <span className="text-[10px] bg-blue-50 text-blue-700 px-1.5 py-0.5 font-bold border border-blue-200">
+            <span className="text-label bg-blue-50 text-blue-700 px-1.5 py-0.5 font-bold border border-blue-200">
               KMS P-256 Governed
             </span>
           </div>
@@ -778,10 +778,10 @@ export function ChurnRadarScatter() {
           <div className="p-2.5 bg-slate-50 border border-slate-200 space-y-2">
             <div>
               <div className="font-bold text-slate-900 text-[12px]">{adaptivePlaybook.title}</div>
-              <div className="text-[10px] text-slate-500">{adaptivePlaybook.angle}</div>
+              <div className="text-label text-slate-500">{adaptivePlaybook.angle}</div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+            <div className="grid grid-cols-2 gap-2 text-label font-mono">
               <div>
                 <span className="text-slate-500 block">P&L Deal Cost:</span>
                 <span className="font-bold text-slate-800">{adaptivePlaybook.cost}</span>
@@ -792,7 +792,7 @@ export function ChurnRadarScatter() {
               </div>
             </div>
 
-            <p className="text-[10px] text-slate-600">{adaptivePlaybook.recommendedCondition}</p>
+            <p className="text-label text-slate-600">{adaptivePlaybook.recommendedCondition}</p>
 
             <button
               type="button"
@@ -800,14 +800,14 @@ export function ChurnRadarScatter() {
               className="w-full py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-mono font-bold text-xs rounded-xs cursor-pointer transition-colors shadow-xs flex items-center justify-center gap-1.5"
             >
               <span>Stage Governed Action</span>
-              <span className="text-[10px] text-blue-200">({selectedPartner.partnerId})</span>
+              <span className="text-label text-blue-200">({selectedPartner.partnerId})</span>
             </button>
           </div>
         </div>
 
         {/* CLOSED-LOOP EXPERIENCE LIBRARY & MODEL CALIBRATION (Task T012) */}
-        <div className="p-3 bg-white border border-slate-200 shadow-2xs space-y-2 text-[11px]">
-          <span className="font-bold text-[11px] text-slate-900 uppercase block">
+        <div className="p-3 bg-white border border-slate-200 shadow-2xs space-y-2 text-label">
+          <span className="font-bold text-label text-slate-900 uppercase block">
             Experience Library & Active Learning Telemetry
           </span>
           <div className="flex items-center justify-between">
@@ -832,7 +832,7 @@ export function ChurnRadarScatter() {
     return (
       <div
         id="churn-radar-fullscreen-theater"
-        className="fixed inset-0 z-50 bg-[#F8FAFC] flex flex-col overflow-hidden animate-in fade-in duration-200 select-none text-slate-900"
+        className="fixed inset-0 z-50 bg-cx-wash flex flex-col overflow-hidden animate-in fade-in duration-200 select-none text-slate-900"
       >
         {/* Studio Top Control Ribbon */}
         <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-xs shrink-0">
@@ -843,14 +843,14 @@ export function ChurnRadarScatter() {
                 <h2 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900">
                   Partner Churn Hazard Radar Studio
                 </h2>
-                <span className="px-1.5 py-0.2 bg-slate-100 border border-slate-300 text-slate-700 text-[9px] font-mono font-bold">
+                <span className="px-1.5 py-0.2 bg-slate-100 border border-slate-300 text-slate-700 text-label font-mono font-bold">
                   INSTITUTIONAL STUDIO GRADE
                 </span>
-                <span className="px-1.5 py-0.2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-[9px] font-mono font-bold">
+                <span className="px-1.5 py-0.2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-label font-mono font-bold">
                   TLP:AMBER • KMS P-256
                 </span>
               </div>
-              <span className="text-[10px] font-mono text-slate-500">
+              <span className="text-label font-mono text-slate-500">
                 Synchronized 2D Cartesian Risk Space ({partners.length} Monitored Partners · ${(partners.reduce((acc, p) => acc + p.valueAtRiskUsd, 0) / 1000000).toFixed(2)}M Portfolio VaR)
               </span>
             </div>
@@ -858,7 +858,7 @@ export function ChurnRadarScatter() {
 
           <div className="flex flex-wrap items-center gap-2.5">
             {/* View Mode Toggle */}
-            <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-[10px] font-mono">
+            <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-label font-mono">
               <button
                 type="button"
                 onClick={() => setViewMode('INDIVIDUAL')}
@@ -880,7 +880,7 @@ export function ChurnRadarScatter() {
             </div>
 
             {/* Filter Mode */}
-            <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-[10px] font-mono">
+            <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-label font-mono">
               <button
                 type="button"
                 onClick={() => setFilterMode('ALL')}
@@ -950,11 +950,11 @@ export function ChurnRadarScatter() {
         {/* Studio Body: Expansive Canvas + Contextual Slide-Over Drawer */}
         <div className="flex-1 flex overflow-hidden relative">
           {/* 100% Canvas Area */}
-          <div className="flex-1 h-full p-4 flex flex-col justify-between overflow-hidden bg-[#F8FAFC]">
+          <div className="flex-1 h-full p-4 flex flex-col justify-between overflow-hidden bg-cx-wash">
             <div className="flex-1 w-full relative min-h-[480px] bg-white border border-slate-200 shadow-2xs overflow-hidden">
               {renderSvgCanvas()}
             </div>
-            <div className="mt-2 flex items-center justify-between text-[11px] font-mono text-slate-500 px-1">
+            <div className="mt-2 flex items-center justify-between text-label font-mono text-slate-500 px-1">
               <span>Interactive Nodes: Click node to focus crosshairs and open inspector · Hover for rapid telemetry preview</span>
               <span>Press Esc or click Exit Studio to return to Cockpit</span>
             </div>
@@ -962,10 +962,10 @@ export function ChurnRadarScatter() {
 
           {/* Slide-over Inspector Drawer */}
           {inspectorOpen && (
-            <div className="w-[420px] xl:w-[460px] bg-[#F1F5F9] border-l border-slate-200 overflow-y-auto p-4 space-y-3 shrink-0 shadow-2xl animate-in slide-in-from-right duration-200 z-20">
+            <div className="w-[420px] xl:w-[460px] bg-cx-wash-2 border-l border-slate-200 overflow-y-auto p-4 space-y-3 shrink-0 shadow-2xl animate-in slide-in-from-right duration-200 z-20">
               <div className="flex items-center justify-between border-b border-slate-200 pb-2">
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-sharp text-sm text-[#106BA3]">tune</span>
+                  <span className="material-symbols-sharp text-sm text-cx-accent">tune</span>
                   <span className="text-xs font-bold font-mono uppercase text-slate-900">
                     Diagnostic Inspector · {selectedPartner.partnerId}
                   </span>
@@ -1002,18 +1002,18 @@ export function ChurnRadarScatter() {
         <div>
           <div className="flex items-center gap-2">
             <span className="material-symbols-sharp text-base text-rose-600">radar</span>
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wide text-slate-900">
+            <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
               Partner Churn Hazard Radar: P(churn) × Value at Risk (VaR)
             </h3>
           </div>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <p className="text-label text-slate-500 mt-0.5">
             Synchronized 2D Cartesian Survival Hazard Radar with High-Density Portfolio Triage.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           {/* View Mode Toggle */}
-          <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-[10px] font-mono">
+          <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-label font-mono">
             <button
               type="button"
               onClick={() => setViewMode('INDIVIDUAL')}
@@ -1035,7 +1035,7 @@ export function ChurnRadarScatter() {
           </div>
 
           {/* Segmented Filter */}
-          <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-[10px] font-mono">
+          <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-label font-mono">
             <button
               type="button"
               onClick={() => setFilterMode('ALL')}
@@ -1066,7 +1066,7 @@ export function ChurnRadarScatter() {
           </div>
 
           {/* Show All Trails Toggle */}
-          <label className="hidden sm:flex items-center gap-1 text-[10px] font-mono text-slate-600 cursor-pointer">
+          <label className="hidden sm:flex items-center gap-1 text-label font-mono text-slate-600 cursor-pointer">
             <input
               type="checkbox"
               checked={showAllTrails}
@@ -1080,7 +1080,7 @@ export function ChurnRadarScatter() {
           <button
             type="button"
             onClick={() => setInspectorOpen(!inspectorOpen)}
-            className={`px-2.5 py-1 text-[10px] font-mono font-bold border flex items-center gap-1 cursor-pointer transition-colors ${
+            className={`px-2.5 py-1 text-label font-mono font-bold border flex items-center gap-1 cursor-pointer transition-colors ${
               inspectorOpen
                 ? 'bg-blue-50 border-blue-400 text-blue-700'
                 : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
@@ -1096,7 +1096,7 @@ export function ChurnRadarScatter() {
             type="button"
             id="churn-radar-fullscreen-toggle"
             onClick={() => setIsFullscreen(true)}
-            className="px-2.5 py-1 text-[10px] font-mono font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 cursor-pointer flex items-center gap-1 transition-colors"
+            className="px-2.5 py-1 text-label font-mono font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 cursor-pointer flex items-center gap-1 transition-colors"
             title="Expand to Fullscreen Studio (Keyboard shortcut: F)"
           >
             <span className="material-symbols-sharp text-sm">fullscreen</span>
@@ -1112,7 +1112,7 @@ export function ChurnRadarScatter() {
             <span className="material-symbols-sharp text-base text-amber-600 shrink-0 mt-0.5">warning</span>
             <div>
               <strong className="block">Systemic Regional Risk Detected: 4 LatAm Partners Decaying Simultaneously</strong>
-              <span className="text-[11px] text-amber-800">
+              <span className="text-label text-amber-800">
                 Root cause is local DP2P Cashier clearing friction in Colombia (4.8h avg). Staging dedicated VIP rails protects the entire $1.99M cohort.
               </span>
             </div>
@@ -1128,7 +1128,7 @@ export function ChurnRadarScatter() {
       )}
 
       {/* 2D Cartesian Churn Radar Canvas (Full Width) */}
-      <div className="relative w-full h-[460px] bg-[#F8FAFC] border border-slate-200 overflow-hidden select-none">
+      <div className="relative w-full h-[460px] bg-cx-wash border border-slate-200 overflow-hidden select-none">
         {renderSvgCanvas()}
       </div>
 
@@ -1136,25 +1136,25 @@ export function ChurnRadarScatter() {
       <div className="p-3 bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
         <div className="flex items-center gap-4">
           <div>
-            <span className="text-slate-500 text-[10px] uppercase block">Monitored Portfolio</span>
+            <span className="text-slate-500 text-label uppercase block">Monitored Portfolio</span>
             <span className="font-bold text-slate-900">{partners.length} Partners</span>
           </div>
           <div>
-            <span className="text-slate-500 text-[10px] uppercase block">Critical At-Risk</span>
+            <span className="text-slate-500 text-label uppercase block">Critical At-Risk</span>
             <span className="font-bold text-rose-700">{partners.filter((p) => p.pChurn >= 0.5).length} Partners</span>
           </div>
           <div>
-            <span className="text-slate-500 text-[10px] uppercase block">Total Portfolio VaR</span>
+            <span className="text-slate-500 text-label uppercase block">Total Portfolio VaR</span>
             <span className="font-bold text-slate-900">${(partners.reduce((acc, p) => acc + p.valueAtRiskUsd, 0) / 1000000).toFixed(2)}M USD</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-slate-500 text-[11px]">Selected:</span>
+          <span className="text-slate-500 text-label">Selected:</span>
           <span className="px-2 py-0.5 bg-white border border-slate-300 font-bold text-slate-900">
             {selectedPartner.name} ({selectedPartner.partnerId})
           </span>
-          <span className={`px-1.5 py-0.5 text-[10px] font-bold border ${selectedPartner.pChurn >= 0.5 ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'}`}>
+          <span className={`px-1.5 py-0.5 text-label font-bold border ${selectedPartner.pChurn >= 0.5 ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'}`}>
             P(churn)={(selectedPartner.pChurn * 100).toFixed(0)}%
           </span>
         </div>
@@ -1162,7 +1162,7 @@ export function ChurnRadarScatter() {
 
       {/* Optional Collapsible Diagnostic Inspector (accessible via Inspector button or in DOM) */}
       <div id="radar-embedded-inspector" className={inspectorOpen ? 'block pt-2 animate-in fade-in duration-150' : 'hidden'}>
-        <div className="bg-[#F8FAFC] border border-slate-200 p-4 space-y-3">
+        <div className="bg-cx-wash border border-slate-200 p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-200 pb-2">
             <span className="text-xs font-bold font-mono uppercase text-slate-800">
               Diagnostic Deep-Dive &amp; What-If Counterfactuals ({selectedPartner.partnerId})

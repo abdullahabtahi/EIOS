@@ -5,9 +5,9 @@
 
 The Web Cockpit implements the **Tripartite Common Operating Picture (COP)**:
 - **Left Column (`<TriageRail />`)**: Priority triage queue, severity filters (Critical, High, Medium, Low), forensic search.
-- **Center Column (`<CopilotDossier />`)**: Evidence dossier, Gemini 3.8 Flash causal synthesis, metric provenance tags.
+- **Center Column (`<CopilotDossier />`)**: User-resizable (drag / arrow keys / double-click to reset; width persisted). Evidence dossier, Gemini 3.8 Flash causal synthesis, metric provenance tags.
 - **Right Column (`<KineticCanvas />`)**: Role-specific interactive analytical surfaces.
-- **Bottom Shelf (`<GovernedActionShelf />`)**: Two-phase commit action staging, Four-Eyes dual approval, KMS P-256 digital signing.
+- **Bottom Shelf (`<GovernedActionShelf />`)**: Slim 36px status bar (staged / expired counts), collapsed by default; expands as an overlay drawer so the three columns never resize. Two-phase commit action staging, Four-Eyes dual approval, KMS P-256 digital signing. Expired intents can only be discarded.
 - **Global Modal (`<CopilotCommandBar />`)**: Cmd+K command bar with real-time Metric Auditor Gate verification.
 
 ### Strict Design Rules (Institutional Sovereign Light)
@@ -15,14 +15,14 @@ The Web Cockpit implements the **Tripartite Common Operating Picture (COP)**:
    - **Scoped exception, dark global chrome**: exactly two elements are dark, the left navigation rail (`<AppNavRail />`, 48px icon strip that hover-expands to a 232px overlay) and the first row of the top header (`<HeaderNav />`: brand, telemetry, operator; the persona tab strip below it stays light). They use the `cockpit-rail` / `chrome-*` tokens in `globals.css` (`#1c2530` slate). Everything inside the three columns, the Kinetic Canvas studio bar and the action shelf stays light. No other dark surfaces.
 2. **Strict 2-Header Maximum**:
    - **Header 1 (Global Shell)**: Top bar, dark first row + light persona strip (right of the nav rail) (`EIOS / OPERATOR COCKPIT v2.4` + 5 Global Workstation tabs: Executive, AML Investigator, Partner Manager, Compliance & Audit, Data Operations).
-   - **Header 2 (Kinetic Canvas Studio Bar)**: Scoped exclusively to the right column (`KINETIC CANVAS: {ROLE} | Mode: {SECTION}` + segmented surface tabs + `Flywheel Feedback` trigger).
+   - **Header 2 (Kinetic Canvas Studio Bar)**: Scoped exclusively to the right column. Left: one-line segmented-control section tabs (rectangular, to stay visually distinct from the underline tabs of the persona strip) (short labels, full name in `title`, roving-tabindex arrow-key navigation). Right: `Diagnostics` toggle and `Feedback` (Flywheel) button. No role title and no `Mode:` readout: the persona strip already names the role and the selected tab already names the section.
    - **Header 3 is STRICTLY BANNED**: Workstations must never render a redundant 3rd internal toolbar.
 3. **Continuous Scrollable Workspaces**:
    - Workstations render all relevant analytical surfaces in a **continuous, vertically scrollable layout**.
    - Never isolate small 200px cards behind exclusive tab toggles that leave empty white space.
    - Implement **two-way scroll-spy synchronization**:
      - Clicking Header 2 tabs smoothly scrolls the container to that section anchor (`#panel-...`).
-     - Scrolling updates the active tab and `Mode: <section>` text in Header 2 dynamically.
+     - Scrolling updates the active tab in Header 2 dynamically.
 
 ---
 

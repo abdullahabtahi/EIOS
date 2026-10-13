@@ -35,7 +35,7 @@ export function FallbackReplayBadge({
   return (
     <span
       className={`inline-flex items-center gap-1.5 font-mono font-medium border border-amber-400 bg-amber-50 text-amber-900 rounded-none shadow-xs ${
-        size === 'sm' ? 'px-1.5 py-0.5 text-[10px]' : 'px-2 py-1 text-xs'
+        size === 'sm' ? 'px-1.5 py-0.5 text-label' : 'px-2 py-1 text-xs'
       } ${className}`}
       title={reason ?? `Deterministic Fallback: Serving verified snapshot cached as of ${formattedTime}`}
     >
@@ -100,7 +100,7 @@ export function FallbackReplayBanner({ className = '' }: FallbackReplayBannerPro
                 : 'Upstream Presentation Partition: Deterministic Fallback'}
             </span>
           </div>
-          <p className="text-[11px] text-amber-800 mt-0.5">
+          <p className="text-label text-amber-800 mt-0.5">
             Serving cryptographically verified offline snapshot cached at{' '}
             <span className="font-mono font-semibold tabular-nums text-amber-950">{formattedTime}</span>.
             Mutations will require two-phase commit queueing upon reconnect.

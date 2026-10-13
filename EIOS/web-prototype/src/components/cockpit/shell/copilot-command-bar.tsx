@@ -178,11 +178,11 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
             <DialogTitle className="text-sm font-bold font-mono tracking-wide text-white uppercase">
               Copilot Command Bar & Auditor Gate
             </DialogTitle>
-            <span className="hidden md:inline-block px-1.5 py-0.5 bg-blue-900/60 border border-blue-700 text-blue-300 text-[9px] font-mono">
+            <span className="hidden md:inline-block px-1.5 py-0.5 bg-blue-900/60 border border-blue-700 text-blue-300 text-label font-mono">
               LIVE GEMINI 3.8 FLASH
             </span>
           </div>
-          <div className="flex items-center gap-2.5 text-[10px] font-mono text-slate-400">
+          <div className="flex items-center gap-2.5 text-label font-mono text-slate-400">
             {history.length > 0 && (
               <button
                 type="button"
@@ -207,7 +207,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
         </div>
 
         {/* Conversation Stream (Scrollable) */}
-        <div className="flex-1 p-5 overflow-y-auto scrollbar-thin space-y-5 bg-[#fcfdfe]">
+        <div className="flex-1 p-5 overflow-y-auto scrollbar-thin space-y-5 bg-cx-wash-0">
           {history.length === 0 ? (
             <div className="py-10 text-center text-slate-500 space-y-4">
               <span className="material-symbols-sharp text-4xl text-slate-300 block">
@@ -217,7 +217,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                 <p className="text-xs font-semibold text-slate-800">
                   Institutional Intelligence Copilot
                 </p>
-                <p className="text-[11px] text-slate-500 leading-relaxed">
+                <p className="text-label text-slate-500 leading-relaxed">
                   Ask queries across AML Forensics, Partner Churn, Causal What-If simulations, or system capabilities.
                   All quantitative statements are verified against the Semantic Metric Registry by the Metric Auditor Gate.
                 </p>
@@ -230,7 +230,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                     key={preset}
                     type="button"
                     onClick={() => executeQuery(preset)}
-                    className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-mono text-[11px] transition-colors cursor-pointer shadow-2xs hover:border-blue-500"
+                    className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-mono text-label transition-colors cursor-pointer shadow-2xs hover:border-blue-500"
                   >
                     {preset}
                   </button>
@@ -249,7 +249,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                 <div key={turn.id} className="space-y-3 pb-3 border-b border-slate-200 last:border-b-0">
                   {/* User Query */}
                   <div className="flex justify-end items-start gap-2">
-                    <span className="text-[10px] font-mono text-slate-400 mt-1">{turn.timestamp}</span>
+                    <span className="text-label font-mono text-slate-400 mt-1">{turn.timestamp}</span>
                     <div className="px-3.5 py-2 bg-slate-900 text-white text-xs font-mono max-w-[85%] border border-slate-800 shadow-2xs">
                       {turn.query}
                     </div>
@@ -268,50 +268,50 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                       {/* Metric Auditor Gate Status Banner */}
                       {auditPassed ? (
                         anchoredCount > 0 ? (
-                          <div className="p-2.5 bg-[#EDF7ED] border border-[#C3E6D0] text-[#0D8050] flex items-center justify-between text-xs font-mono">
+                          <div className="p-2.5 bg-cx-ok-bg border border-cx-ok-line text-cx-ok flex items-center justify-between text-xs font-mono">
                             <div className="flex items-center gap-2">
                               <span className="material-symbols-sharp text-base">verified</span>
                               <div>
                                 <span className="font-bold tracking-tight">METRIC AUDITOR GATE: AUDIT PASSED</span>
-                                <div className="text-[10px] opacity-90">
+                                <div className="text-label opacity-90">
                                   Anchored {anchoredCount} numbers against semantic tool traces.
                                 </div>
                               </div>
                             </div>
-                            <span className="px-2 py-0.5 bg-white/80 border border-current text-[10px] font-bold">
+                            <span className="px-2 py-0.5 bg-white/80 border border-current text-label font-bold">
                               {toolTracesCount} Tool Traces Verified
                             </span>
                           </div>
                         ) : (
-                          <div className="p-2.5 bg-[#F0FDF4] border border-[#BBF7D0] text-[#15803D] flex items-center justify-between text-xs font-mono">
+                          <div className="p-2.5 bg-cx-ok-bg-2 border border-cx-ok-line-2 text-cx-ok-strong flex items-center justify-between text-xs font-mono">
                             <div className="flex items-center gap-2">
                               <span className="material-symbols-sharp text-base">verified_user</span>
                               <div>
                                 <span className="font-bold tracking-tight">SYSTEM GUIDANCE: QUALITATIVE PROVENANCE VERIFIED</span>
-                                <div className="text-[10px] opacity-90">
+                                <div className="text-label opacity-90">
                                   Principle I & III: Zero unanchored claims. Institutional capability explanation.
                                 </div>
                               </div>
                             </div>
-                            <span className="px-2 py-0.5 bg-white/80 border border-current text-[10px] font-bold">
+                            <span className="px-2 py-0.5 bg-white/80 border border-current text-label font-bold">
                               Qualitative Pass
                             </span>
                           </div>
                         )
                       ) : (
-                        <div className="p-2.5 bg-[#FAF0F0] border border-[#E8C5C5] text-[#A82A2A] flex items-center justify-between text-xs font-mono">
+                        <div className="p-2.5 bg-cx-bad-bg border border-cx-bad-line text-cx-bad flex items-center justify-between text-xs font-mono">
                           <div className="flex items-center gap-2">
                             <span className="material-symbols-sharp text-base">gpp_bad</span>
                             <div>
                               <span className="font-bold tracking-tight">METRIC AUDITOR GATE: BLOCKED</span>
-                              <div className="text-[10px] opacity-90">
+                              <div className="text-label opacity-90">
                                 {untraceableCount > 0
                                   ? `Flagged ${untraceableCount} unanchored hallucinated numbers.`
                                   : 'Unauthorized operation or speculative inquiry blocked.'}
                               </div>
                             </div>
                           </div>
-                          <span className="px-2 py-0.5 bg-white/80 border border-current text-[10px] font-bold">
+                          <span className="px-2 py-0.5 bg-white/80 border border-current text-label font-bold">
                             Policy Blocked
                           </span>
                         </div>
@@ -325,7 +325,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                       {/* Cited Provenance Badges */}
                       {(turn.response.citedMetrics ?? []).length > 0 && (
                         <div className="pt-2 border-t border-slate-100 space-y-1.5">
-                          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500">
+                          <div className="text-label font-mono uppercase tracking-wider text-slate-500">
                             Anchored Semantic Metrics (Principle I Provenance):
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -341,14 +341,14 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                         <div className="p-3 bg-blue-50/80 border border-blue-200 flex items-center justify-between gap-4">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-mono font-bold bg-blue-200 text-blue-900 px-1.5 py-0.5">
+                              <span className="text-label font-mono font-bold bg-blue-200 text-blue-900 px-1.5 py-0.5">
                                 SUGGESTED ACTION
                               </span>
                               <span className="text-xs font-bold font-mono text-slate-900">
                                 {turn.response.suggestedAction.actionType}
                               </span>
                             </div>
-                            <div className="text-[11px] text-slate-600 mt-1">
+                            <div className="text-label text-slate-600 mt-1">
                               {turn.response.suggestedAction.estimatedImpact}
                             </div>
                           </div>
@@ -438,14 +438,14 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                     className="p-2 hover:bg-blue-50 cursor-pointer flex items-center justify-between group"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="px-1.5 py-0.5 text-[9px] bg-slate-100 border border-slate-200 text-slate-700 font-bold">
+                      <span className="px-1.5 py-0.5 text-label bg-slate-100 border border-slate-200 text-slate-700 font-bold">
                         {match.type}
                       </span>
                       <span className="text-slate-900 group-hover:text-blue-700 font-medium">
                         {match.label}
                       </span>
                     </div>
-                    <span className="text-[10px] text-blue-600 underline group-hover:inline hidden">
+                    <span className="text-label text-blue-600 underline group-hover:inline hidden">
                       {match.action} &rarr;
                     </span>
                   </div>
@@ -454,14 +454,14 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
           )}
 
           {/* Quick preset chips */}
-          <div className="flex items-center gap-1.5 mt-2 overflow-x-auto text-[11px] pb-0.5">
-            <span className="text-slate-400 font-mono text-[10px] shrink-0">Presets:</span>
+          <div className="flex items-center gap-1.5 mt-2 overflow-x-auto text-label pb-0.5">
+            <span className="text-slate-400 font-mono text-label shrink-0">Presets:</span>
             {PRESET_QUERIES.map((preset) => (
               <button
                 key={preset}
                 type="button"
                 onClick={() => executeQuery(preset)}
-                className="px-2 py-0.5 bg-white hover:bg-slate-200 border border-slate-200 text-slate-700 font-mono text-[10px] truncate max-w-xs transition-colors cursor-pointer shrink-0"
+                className="px-2 py-0.5 bg-white hover:bg-slate-200 border border-slate-200 text-slate-700 font-mono text-label truncate max-w-xs transition-colors cursor-pointer shrink-0"
               >
                 {preset}
               </button>

@@ -16,6 +16,12 @@
 import * as React from 'react';
 import { HeaderNav } from './header-nav';
 import { AppNavRail } from './app-nav-rail';
+import { PaneResizer } from './pane-resizer';
+import { usePersistedWidth } from './use-persisted-width';
+
+const DOSSIER_DEFAULT_PX = 460;
+const DOSSIER_MIN_PX = 320;
+const DOSSIER_MAX_PX = 720;
 import { TriageRail } from './triage-rail';
 import { CopilotDossier } from './copilot-dossier';
 import { KineticCanvas } from './kinetic-canvas';
@@ -39,6 +45,12 @@ export function TripartiteShell({
   });
   const [rightCanvasCollapsed, setRightCanvasCollapsed] = React.useState(false);
   const [shortcutsModalOpen, setShortcutsModalOpen] = React.useState(false);
+  const [dossierWidth, setDossierWidth] = usePersistedWidth(
+    'eios.pane.dossier',
+    DOSSIER_DEFAULT_PX,
+    DOSSIER_MIN_PX,
+    DOSSIER_MAX_PX,
+  );
 
   // Global Keyboard Shortcuts ([, ], ?, 1-5)
   React.useEffect(() => {
@@ -76,7 +88,19 @@ export function TripartiteShell({
   }, [setRole]);
 
   return (
-    <div className="relative h-screen w-screen flex flex-row bg-[#f4f6f8] text-slate-900 font-sans antialiased overflow-hidden select-none">
+    <div data-cockpit-shell className="relative h-screen w-screen flex flex-row bg-cx-canvas text-slate-900 font-sans antialiased overflow-hidden">
+      {/* Skip link: first tab stop, jumps past the rail and header controls */}
+      <a
+        href="#workspace"
+        onClick={(e) => {
+          e.preventDefault();
+          document.getElementById('workspace')?.focus();
+        }}
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-[60] focus:px-3 focus:py-1.5 focus:bg-cx-ink focus:text-white focus:text-xs focus:font-medium focus:outline-none focus:ring-2 focus:ring-cx-accent"
+      >
+        Skip to workspace
+      </a>
+
       {/* Global Navigation Rail: permanent 48px dark icon strip, expands on hover as an overlay */}
       <AppNavRail onOpenShortcuts={() => setShortcutsModalOpen(true)} />
 
@@ -86,20 +110,11 @@ export function TripartiteShell({
         <HeaderNav onOpenShortcuts={() => setShortcutsModalOpen(true)} />
 
         {/* Tripartite COP Center Work Area */}
-        <div className="flex-1 flex overflow-hidden relative">
+        <div id="workspace" tabIndex={-1} className="flex-1 flex overflow-hidden relative outline-none">
           {/* Left Triage Rail: fluid (collapsible on smaller displays) */}
           {!leftRailCollapsed ? (
-            <div className="flex h-full relative">
-              <TriageRail />
-              <button
-                type="button"
-                onClick={() => setLeftRailCollapsed(true)}
-                className="absolute right-0 top-2 translate-x-1/2 z-20 size-5 bg-white border border-slate-300 rounded-full shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 cursor-pointer hidden lg:flex"
-                title="Collapse Left Rail (press [)"
-                aria-label="Collapse Left Rail"
-              >
-                <span className="material-symbols-sharp text-xs">chevron_left</span>
-              </button>
+            <div className="flex h-full">
+              <TriageRail onCollapse={() => setLeftRailCollapsed(true)} />
             </div>
           ) : (
             <div className="w-8 shrink-0 bg-slate-100 border-r border-slate-300 flex flex-col items-center py-3 select-none">
@@ -112,28 +127,29 @@ export function TripartiteShell({
               >
                 <span className="material-symbols-sharp text-sm">chevron_right</span>
               </button>
-              <span className="[writing-mode:vertical-rl] text-[10px] font-mono tracking-wider text-slate-500 uppercase mt-4">
+              <span className="[writing-mode:vertical-rl] text-label font-mono tracking-wider text-slate-500 uppercase mt-4">
                 Triage Signals
               </span>
             </div>
           )}
 
-          {/* Center Copilot Dossier: fluid */}
-          <CopilotDossier />
+          {/* Center Copilot Dossier: user-resizable, width remembered */}
+          <div style={{ width: dossierWidth }} className="shrink min-w-[300px] h-full flex">
+            <CopilotDossier />
+          </div>
+          <PaneResizer
+            label="Resize dossier"
+            value={dossierWidth}
+            min={DOSSIER_MIN_PX}
+            max={DOSSIER_MAX_PX}
+            defaultValue={DOSSIER_DEFAULT_PX}
+            onChange={setDossierWidth}
+          />
 
           {/* Right Kinetic Canvas: Flexible fill (collapsible) */}
           {!rightCanvasCollapsed ? (
-            <div className="flex-1 flex h-full relative overflow-hidden">
-              <button
-                type="button"
-                onClick={() => setRightCanvasCollapsed(true)}
-                className="absolute left-0 top-2 -translate-x-1/2 z-20 size-5 bg-white border border-slate-300 rounded-full shadow-xs flex items-center justify-center text-slate-500 hover:text-slate-900 cursor-pointer hidden lg:flex"
-                title="Collapse Right Canvas (press ])"
-                aria-label="Collapse Right Canvas"
-              >
-                <span className="material-symbols-sharp text-xs">chevron_right</span>
-              </button>
-              <KineticCanvas />
+            <div className="flex-1 flex h-full overflow-hidden">
+              <KineticCanvas onCollapse={() => setRightCanvasCollapsed(true)} />
             </div>
           ) : (
             <div className="w-8 shrink-0 bg-slate-100 border-l border-slate-300 flex flex-col items-center py-3 select-none">
@@ -146,7 +162,7 @@ export function TripartiteShell({
               >
                 <span className="material-symbols-sharp text-sm">chevron_left</span>
               </button>
-              <span className="[writing-mode:vertical-rl] text-[10px] font-mono tracking-wider text-slate-500 uppercase mt-4">
+              <span className="[writing-mode:vertical-rl] text-label font-mono tracking-wider text-slate-500 uppercase mt-4">
                 Kinetic Canvas
               </span>
             </div>

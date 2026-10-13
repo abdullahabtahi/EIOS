@@ -46,16 +46,16 @@ export function DrProofCard({ proof = DEFAULT_PROOF, onVerify }: DrProofCardProp
         <div className="flex items-center gap-2">
           <span className="material-symbols-sharp text-base text-blue-700">shield_lock</span>
           <div>
-            <h4 className="font-bold text-slate-900 uppercase tracking-tight">
+            <h4 className="text-title font-sans font-semibold tracking-normal text-slate-900">
               Disaster Recovery Runbook Proof (Feature 015)
             </h4>
-            <span className="text-[10px] text-slate-500 font-sans">
+            <span className="text-label text-slate-500 font-sans">
               Runbook: {proof.runbookId} — {proof.runbookName}
             </span>
           </div>
         </div>
 
-        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 text-[10px] font-bold">
+        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 text-label font-bold">
           STATUS: {proof.verificationStatus}
         </span>
       </div>
@@ -63,32 +63,32 @@ export function DrProofCard({ proof = DEFAULT_PROOF, onVerify }: DrProofCardProp
       {/* Proof Parameters Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
         <div className="p-2.5 bg-slate-50 border border-slate-200">
-          <span className="text-[10px] text-slate-500 block uppercase">Cloud KMS Keyring Rotation</span>
-          <span className="font-bold text-blue-800 text-[11px] block mt-0.5">
+          <span className="text-label text-slate-500 block uppercase">Cloud KMS Keyring Rotation</span>
+          <span className="font-bold text-blue-800 text-label block mt-0.5">
             {proof.kmsKeyringRotationStatus}
           </span>
-          <span className="text-[9px] text-slate-400 block mt-0.5">Rotation Interval: 90d</span>
+          <span className="text-label text-slate-400 block mt-0.5">Rotation Interval: 90d</span>
         </div>
 
         <div className="p-2.5 bg-slate-50 border border-slate-200">
-          <span className="text-[10px] text-slate-500 block uppercase">Warm-Start Cache State</span>
-          <span className="font-bold text-emerald-700 text-[11px] block mt-0.5">
+          <span className="text-label text-slate-500 block uppercase">Warm-Start Cache State</span>
+          <span className="font-bold text-emerald-700 text-label block mt-0.5">
             {proof.warmStartCacheState} (READY)
           </span>
-          <span className="text-[9px] text-slate-400 block mt-0.5">Hydration RTT: 42ms</span>
+          <span className="text-label text-slate-400 block mt-0.5">Hydration RTT: 42ms</span>
         </div>
 
         <div className="p-2.5 bg-slate-50 border border-slate-200">
-          <span className="text-[10px] text-slate-500 block uppercase">Last Verified At</span>
-          <span className="font-bold text-slate-800 text-[11px] block mt-0.5">
+          <span className="text-label text-slate-500 block uppercase">Last Verified At</span>
+          <span className="font-bold text-slate-800 text-label block mt-0.5">
             {new Date(lastVerified).toISOString().replace('T', ' ').slice(0, 19)} UTC
           </span>
-          <span className="text-[9px] text-slate-400 block mt-0.5">Automated Heartbeat</span>
+          <span className="text-label text-slate-400 block mt-0.5">Automated Heartbeat</span>
         </div>
       </div>
 
       {/* Backup Checkpoint SHA-256 Hash */}
-      <div className="p-2 bg-slate-100 border border-slate-200 flex items-center justify-between text-[10px]">
+      <div className="p-2 bg-slate-100 border border-slate-200 flex items-center justify-between text-label">
         <span className="text-slate-500">Backup Checkpoint Hash:</span>
         <span className="font-mono text-slate-800 truncate max-w-md">{proof.backupCheckpointHash}</span>
       </div>

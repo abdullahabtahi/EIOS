@@ -88,12 +88,12 @@ function FourEyesForm({ action, operatorId, onClose, onAuthorize }: FourEyesForm
             <DialogTitle className="text-sm font-bold tracking-tight uppercase font-mono">
               Four-Eyes Dual Authorization Required
             </DialogTitle>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-label text-slate-400 mt-0.5">
               Constitution Principle II • High/Critical Mutation Gate
             </p>
           </div>
         </div>
-        <span className="px-2 py-0.5 bg-rose-950 border border-rose-500 text-rose-300 font-mono text-[11px] font-bold">
+        <span className="px-2 py-0.5 bg-rose-950 border border-rose-500 text-rose-300 font-mono text-label font-bold">
           {action.severity} SEVERITY
         </span>
       </div>
@@ -106,14 +106,14 @@ function FourEyesForm({ action, operatorId, onClose, onAuthorize }: FourEyesForm
             <span className="font-mono font-bold text-slate-900 text-xs">
               {action.actionType} • {action.targetEntityId}
             </span>
-            <span className="text-[10px] text-slate-500 font-mono">
+            <span className="text-label text-slate-500 font-mono">
               Intent ID: {action.intentId}
             </span>
           </div>
           <p className="text-slate-600 text-xs leading-relaxed">
             {action.estimatedImpact}
           </p>
-          <div className="pt-1 flex items-center gap-4 text-[11px] text-slate-500 border-t border-slate-200 font-mono">
+          <div className="pt-1 flex items-center gap-4 text-label text-slate-500 border-t border-slate-200 font-mono">
             <span>Target: {action.targetEntityType}</span>
             <span>Lifecycle: {action.lifecycleState}</span>
           </div>
@@ -123,13 +123,13 @@ function FourEyesForm({ action, operatorId, onClose, onAuthorize }: FourEyesForm
         <div className="grid grid-cols-2 gap-4">
           {/* Officer 1 (Initiator) */}
           <div className="p-3 border border-slate-200 bg-slate-50/50 space-y-1">
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
+            <span className="text-label font-semibold text-slate-500 uppercase tracking-wider block">
               1. Initiating Primary Officer
             </span>
             <div className="font-mono font-bold text-slate-900 text-xs">
               {action.fourEyesRecord?.initiatorOfficerId || operatorId}
             </div>
-            <div className="text-[10px] text-emerald-700 flex items-center gap-1 font-mono">
+            <div className="text-label text-emerald-700 flex items-center gap-1 font-mono">
               <span className="material-symbols-sharp text-xs">check_circle</span>
               Initiator Verified
             </div>
@@ -139,7 +139,7 @@ function FourEyesForm({ action, operatorId, onClose, onAuthorize }: FourEyesForm
           <div className="p-3 border border-amber-300 bg-amber-50/40 space-y-1">
             <label
               htmlFor="secondary-officer-id"
-              className="text-[10px] font-semibold text-amber-900 uppercase tracking-wider block"
+              className="text-label font-semibold text-amber-900 uppercase tracking-wider block"
             >
               2. Secondary Approver ID *
             </label>
@@ -158,7 +158,7 @@ function FourEyesForm({ action, operatorId, onClose, onAuthorize }: FourEyesForm
         <div className="space-y-1">
           <label
             htmlFor="four-eyes-rationale"
-            className="text-[11px] font-semibold text-slate-900 uppercase tracking-wider block"
+            className="text-label font-semibold text-slate-900 uppercase tracking-wider block"
           >
             Institutional Approval Rationale & Audit Trail *
           </label>
@@ -173,11 +173,11 @@ function FourEyesForm({ action, operatorId, onClose, onAuthorize }: FourEyesForm
         </div>
 
         {/* Cryptographic Key Verification Callout */}
-        <div className="p-2.5 bg-blue-50 border border-blue-200 text-blue-900 text-[11px] flex items-start gap-2">
+        <div className="p-2.5 bg-blue-50 border border-blue-200 text-blue-900 text-label flex items-start gap-2">
           <span className="material-symbols-sharp text-base text-blue-700 shrink-0">key</span>
           <div>
             <span className="font-semibold">Cloud KMS ECDSA P-256 Signature Commitment:</span>
-            <p className="text-[10px] text-blue-800 mt-0.5">
+            <p className="text-label text-blue-800 mt-0.5">
               Commitment will create an immutable WORM ledger receipt signed by both officers.
               Key: <span className="font-mono">{action.kmsSignatureBadge.keyId}</span>
             </p>

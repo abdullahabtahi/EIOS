@@ -89,7 +89,7 @@ export function FlywheelFeedbackModal({ open, onOpenChange }: FlywheelFeedbackMo
               Active Learning Flywheel Feedback
             </DialogTitle>
           </div>
-          <span className="px-1.5 py-0.2 bg-purple-950 border border-purple-500 text-purple-300 font-mono text-[10px] font-bold">
+          <span className="px-1.5 py-0.2 bg-purple-950 border border-purple-500 text-purple-300 font-mono text-label font-bold">
             F014 CALIBRATION
           </span>
         </div>
@@ -122,7 +122,7 @@ export function FlywheelFeedbackModal({ open, onOpenChange }: FlywheelFeedbackMo
           <form onSubmit={handleSubmit} className="p-5 space-y-3.5 text-xs text-slate-800">
             {/* Feedback Type */}
             <div className="space-y-1">
-              <label htmlFor="feedback-type-select" className="text-[11px] font-semibold text-slate-900 uppercase tracking-wider block">
+              <label htmlFor="feedback-type-select" className="text-label font-semibold text-slate-900 uppercase tracking-wider block">
                 Discrepancy / Feedback Category *
               </label>
               <select
@@ -141,7 +141,7 @@ export function FlywheelFeedbackModal({ open, onOpenChange }: FlywheelFeedbackMo
 
             {/* Target Entity */}
             <div className="space-y-1">
-              <label htmlFor="feedback-entity-id" className="text-[11px] font-semibold text-slate-900 uppercase tracking-wider block">
+              <label htmlFor="feedback-entity-id" className="text-label font-semibold text-slate-900 uppercase tracking-wider block">
                 Target Entity ID *
               </label>
               <input
@@ -157,7 +157,7 @@ export function FlywheelFeedbackModal({ open, onOpenChange }: FlywheelFeedbackMo
 
             {/* Operator Rationale */}
             <div className="space-y-1">
-              <label htmlFor="feedback-operator-rationale" className="text-[11px] font-semibold text-slate-900 uppercase tracking-wider block">
+              <label htmlFor="feedback-operator-rationale" className="text-label font-semibold text-slate-900 uppercase tracking-wider block">
                 Investigator Rationale / Ground Truth Justification *
               </label>
               <textarea
@@ -173,7 +173,7 @@ export function FlywheelFeedbackModal({ open, onOpenChange }: FlywheelFeedbackMo
 
             {/* Corrected Text / Parameters */}
             <div className="space-y-1">
-              <label htmlFor="feedback-corrected-narrative" className="text-[11px] font-semibold text-slate-900 uppercase tracking-wider block">
+              <label htmlFor="feedback-corrected-narrative" className="text-label font-semibold text-slate-900 uppercase tracking-wider block">
                 Corrected Narrative / Replacement Payload
               </label>
               <textarea
@@ -182,7 +182,7 @@ export function FlywheelFeedbackModal({ open, onOpenChange }: FlywheelFeedbackMo
                 value={correctionText}
                 onChange={(e) => setCorrectionText(e.target.value)}
                 placeholder="Insert approved SAR narrative wording, adjusted weight, or dismissal code..."
-                className="w-full p-2 bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-blue-600 rounded-none resize-none font-mono text-[11px]"
+                className="w-full p-2 bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-blue-600 rounded-none resize-none font-mono text-label"
               />
             </div>
 

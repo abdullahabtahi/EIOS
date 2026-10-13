@@ -18,22 +18,22 @@ interface MetricProvenanceBadgeProps {
 }
 
 export function MetricCitationTag({ citation }: { citation: ProvenanceCitation | string }) {
-  let badgeColor = 'bg-[#F5F8FA] text-[#394B59] border-[#D8E1E8]';
+  let badgeColor = 'bg-cx-sub text-cx-ink-soft border-cx-line';
   if (citation === '[BRIEF]') {
-    badgeColor = 'bg-[#EDF5FA] text-[#106BA3] border-[#BFD3E6]';
+    badgeColor = 'bg-cx-info-bg text-cx-accent border-cx-info-line';
   } else if (citation === '[ASSUMPTION]') {
-    badgeColor = 'bg-[#FAF5EC] text-[#A66321] border-[#EAD8B5]';
+    badgeColor = 'bg-cx-warn-bg text-cx-warn border-cx-warn-line';
   } else if (citation === '[SPIKE]') {
-    badgeColor = 'bg-[#FAF0F0] text-[#A82A2A] border-[#E8C5C5]';
+    badgeColor = 'bg-cx-bad-bg text-cx-bad border-cx-bad-line';
   } else if (citation === '[TARGET]') {
-    badgeColor = 'bg-[#EDF7ED] text-[#0D8050] border-[#C3E6D0]';
+    badgeColor = 'bg-cx-ok-bg text-cx-ok border-cx-ok-line';
   } else if (citation === '[ILLUSTRATIVE]') {
-    badgeColor = 'bg-[#F5F8FA] text-[#5C7080] border-[#D8E1E8]';
+    badgeColor = 'bg-cx-sub text-cx-muted border-cx-line';
   }
 
   return (
     <span
-      className={`inline-flex items-center px-1.5 py-0.2 text-[10px] font-mono font-medium tracking-tight border rounded-none uppercase ${badgeColor}`}
+      className={`inline-flex items-center px-1.5 py-0.2 text-label font-mono font-medium tracking-tight border rounded-none uppercase ${badgeColor}`}
       title={`Citation type: ${citation}`}
     >
       {citation}
@@ -85,7 +85,7 @@ export function MetricProvenanceBadge({
         <div className="bg-slate-50 border-b border-slate-200 px-3 py-2 flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <span className="material-symbols-sharp text-sm text-blue-600">verified</span>
-            <span className="text-[11px] font-semibold tracking-wide text-slate-700 uppercase">
+            <span className="text-label font-semibold tracking-wide text-slate-700 uppercase">
               Semantic Provenance
             </span>
           </div>
@@ -110,21 +110,21 @@ export function MetricProvenanceBadge({
 
           <div className="flex items-center justify-between">
             <span className="text-slate-500">Semantic Version</span>
-            <span className="font-mono text-slate-800 bg-slate-100 px-1 py-0.5 text-[11px]">
+            <span className="font-mono text-slate-800 bg-slate-100 px-1 py-0.5 text-label">
               {metric.semanticDefinitionVersion}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
             <span className="text-slate-500">Calculation Engine</span>
-            <span className="font-mono text-[11px] text-blue-800 bg-blue-50 px-1.5 py-0.5 border border-blue-100">
+            <span className="font-mono text-label text-blue-800 bg-blue-50 px-1.5 py-0.5 border border-blue-100">
               {metric.originEngine}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
             <span className="text-slate-500">As-Of Snapshot</span>
-            <span className="font-mono text-[11px] text-slate-700">{formattedAsOf}</span>
+            <span className="font-mono text-label text-slate-700">{formattedAsOf}</span>
           </div>
 
           <div className="flex items-center justify-between">
@@ -135,7 +135,7 @@ export function MetricProvenanceBadge({
           <div className="flex items-center justify-between">
             <span className="text-slate-500">Live Telemetry</span>
             <span
-              className={`inline-flex items-center gap-1 text-[11px] font-mono ${
+              className={`inline-flex items-center gap-1 text-label font-mono ${
                 metric.isCached ? 'text-amber-700' : 'text-emerald-700'
               }`}
             >
@@ -150,8 +150,8 @@ export function MetricProvenanceBadge({
         </div>
 
         {/* Deterministic Rigor / Principle I Guarantee Footer */}
-        <div className="bg-slate-50 border-t border-slate-200 px-3 py-1.5 text-[10px] text-slate-500 flex items-center gap-1 font-mono">
-          <span className="material-symbols-sharp text-[11px] text-slate-400">shield</span>
+        <div className="bg-slate-50 border-t border-slate-200 px-3 py-1.5 text-label text-slate-500 flex items-center gap-1 font-mono">
+          <span className="material-symbols-sharp text-label text-slate-400">shield</span>
           <span>Principle I: Deterministic semantic layer. Zero LLM calculation.</span>
         </div>
       </PopoverContent>

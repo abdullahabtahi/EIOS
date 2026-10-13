@@ -74,8 +74,8 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
         {/* Header */}
         <div className="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-sharp text-base text-[#106BA3]">keyboard</span>
-            <h3 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900">
+            <span className="material-symbols-sharp text-base text-cx-accent">keyboard</span>
+            <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
               Institutional Operator Keybindings
             </h3>
           </div>
@@ -93,7 +93,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
         <div className="p-4 space-y-4 max-h-[70vh] overflow-y-auto scrollbar-thin">
           {SHORTCUT_GROUPS.map((group) => (
             <div key={group.category} className="space-y-2">
-              <h4 className="text-[10px] font-mono font-bold tracking-wider uppercase text-slate-500 border-b border-slate-100 pb-1">
+              <h4 className="text-label font-mono font-semibold uppercase tracking-wider text-slate-500 border-b border-slate-100 pb-1">
                 {group.category}
               </h4>
               <div className="space-y-1.5">
@@ -103,7 +103,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
                     className="flex items-center justify-between text-xs py-1 px-1.5 hover:bg-slate-50"
                   >
                     <span className="text-slate-700 font-sans text-xs">{sc.description}</span>
-                    <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 font-mono text-[11px] font-bold text-slate-800 shadow-2xs rounded-none">
+                    <kbd className="px-2 py-0.5 bg-slate-100 border border-slate-300 font-mono text-label font-bold text-slate-800 shadow-2xs rounded-none">
                       {sc.key}
                     </kbd>
                   </div>
@@ -114,8 +114,8 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: KeyboardShortcutsMod
         </div>
 
         {/* Footer Note */}
-        <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[11px] font-mono text-slate-500">
-          <span>Press <kbd className="px-1 bg-white border border-slate-300 text-[10px]">Esc</kbd> to exit</span>
+        <div className="px-4 py-2 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-label font-mono text-slate-500">
+          <span>Press <kbd className="px-1 bg-white border border-slate-300 text-label">Esc</kbd> to exit</span>
           <span className="text-slate-400">FEIOS v2.4 Institutional Ergonomics</span>
         </div>
       </div>
