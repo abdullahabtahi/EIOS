@@ -1,277 +1,250 @@
-# EIOS Architecture & Sprint Plan: Governed Geospatial Intelligence, Real-World Data Layer, MCP & Google ADK
+# EIOS Product Strategy & Plan v3: The Regulator-Grade AML Investigator
 
-**Version**: `2.0.0` (supersedes `1.0.0`, an unvalidated first draft)
+**Version**: `3.0.0` (supersedes `2.0.0`, an engineering-first draft)
 **Date**: `2026-10-13`
-**Status**: `DRAFT FOR REVIEW. No specs, ADRs or code have been written.`
-**Change basis**: independent research plus a read-only spike on 2026-10-13 (section 2). Every claim not verified is tagged `[SPIKE]` and listed in section 11.
-**Governance**: `CLAUDE.md` constitutional invariants RL-1..RL-7 and the provenance regime apply to everything below.
+**Status**: `DRAFT FOR REVIEW. Strategy and plan only; no specs, ADRs or code for the items below have been written.`
+**Audience**: the team, hackathon judges, and an investor reading cold. Read section 0 first.
+**Provenance tags**: `[BRIEF]` canonical requirement (`docs/brief/*`), `[ASSUMPTION]` a number we chose and must validate, `[ILLUSTRATIVE]` worked example, `[TARGET]` a commitment we will measure, `[SPIKE]` a technical claim from a time-boxed spike, `[EXTERNAL]` a third-party claim with a source link in section 13 (secondary sources are marked; verify before formal use), `[MEASURED]` reserved for results we actually produce.
 
 ---
 
-## 1. Thesis
+## 0. The one-page version
 
-### 1.1 What we are building
-Not a CARTO clone. CARTO sells ungoverned agentic GIS. EIOS's edge is that **the map is a view over ontology objects**, every number is gated by the Metric Auditor, and every consequential action ends as a KMS-signed four-eyes intent in a WORM ledger. That is the Palantir pattern (ontology plus actions), delivered with QuantumBlack-style measured rigor (evals on real labels) on a Google Cloud serverless stack.
+**Problem.** Anti-money-laundering (AML) teams drown in alerts that are almost all noise, and the work of clearing them is slow, manual and spread across five or more systems `[BRIEF monitoring.md: ~2,000 alerts/week, ~95% false positives, 5+ systems]`. The false-positive rate is widely reported at 90-95% `[EXTERNAL, secondary]`. Every alert costs analyst minutes. A reportable case then costs hours more to write up as a suspicious activity report (SAR). Regulators expect it done, documented and explainable, and US institutions file millions of SARs a year `[EXTERNAL]`.
 
-### 1.2 Flagship: "Follow the Money"
-An AML analyst opens a case and asks: *"Where does this ring's money end up, and who really owns it?"*
-1. The agent's plan streams as a **glass-box timeline** (live ADK events).
-2. It pulls counterparties through OMCP, resolves them against open entity data (entity resolution, an existing L1 service), and screens sanctions.
-3. It traverses ownership and offshore-structure graphs, then geocodes and routes through MCP tools.
-4. Arcs animate hop by hop on a Google Maps and deck.gl canvas to jurisdictions. Every datum is clickable to its source, licence and as-of date.
-5. The SAR draft cites every datum. The Auditor Gate blocks any number a tool did not produce.
-6. The analyst stages a freeze, which goes to KMS signing, four-eyes approval and the WORM ledger.
-7. Each answer carries a **proof bundle** (query hashes, BigQuery snapshot reference, signature) that replays exactly later.
+**Who hurts and who pays.** The investigator feels it daily; the head of compliance (MLRO) is accountable to the regulator and owns the budget. Mid-market brokerages, crypto exchanges, payment and cross-border fintechs have the volume and the obligation but cannot staff like a Tier-1 bank.
 
-Supporting scenarios, in order: partner churn cohorts by region (the churn brief asks for region/segment systemic risk) and macro/competitor shock into the causal DAG.
+**Solution.** EIOS is an investigation copilot that clears an alert in minutes, not by being a smarter black box, but by being **auditable**: every figure in its narrative is traced to a deterministic tool result, every consequential action needs two signed human approvals, and every answer ships with an evidence bundle a regulator can replay.
 
-### 1.3 Scoring alignment (AI Builder Cup)
-| Criterion | Weight | How this plan earns it |
-|---|---|---|
-| Technical merit and Gen AI | 40% | ADK multi-agent mesh; MCP consumed and exposed; typed `SpatialIntent` compiled deterministically (no free-form LLM math); measured evals on real labels; serverless Cloud Run scale-out |
-| Problem alignment | 25% | BFSI theme: AML, fraud, partner risk, all in the briefs |
-| Innovation | 25% | Governed agentic GIS, proof-carrying answers, structural precedent search over real offshore data |
-| UX and solution design | 10% | Glass-box timeline, map as ontology lens, existing cockpit shell |
+**Why now.** LLM agents are finally good enough to do the reading and drafting `[SPIKE: live answers passed the numeric audit 4 of 4 after fixes]`, and regulators are converging on explainability, governance and an audit trail of both the AI recommendation and the human decision `[EXTERNAL, secondary]`. Buyers will adopt AI faster if it comes with proof.
 
-Required platform fit: Gemini plus deployment on Cloud Run. Both are native here.
+**Why us, honestly.** The "AI investigator" category is already funded and crowded (section 4). Governance alone is a feature competitors can copy. Our durable edge has to be (a) proof-carrying output that survives a regulator, and (b) a data flywheel: every analyst decision becomes a labelled outcome that improves triage for that customer. Section 5 says how, and section 11 says what would prove us wrong.
+
+**What we build first.** One wedge: *alert triage plus SAR draft*, for one persona, measured against one baseline. Geography is an **evidence lens inside the investigation** (jurisdiction risk, IP-versus-KYC country, cross-border corridors, offshore-structure precedent). It is not the product.
+
+**The ask of this plan.** Prove three numbers with real or realistic cases before adding any breadth: minutes per alert, SAR drafting time, and accuracy of recommended dispositions against human decisions (section 6).
 
 ---
 
-## 2. Spike Findings (2026-10-13, read-only)
+## 1. The problem, quantified honestly
 
-| # | Finding | Evidence | Consequence |
-|---|---|---|---|
-| F1 | `gemini-3.8-flash` works on this project at location **`global`**, returns **404 in `us-central1`** `[SPIKE]` | direct `generateContent` calls | The gateway defaults to `us-central1` in `llm_gateway/providers/gemini_client.py:14` and `vertex.py:16`, so live calls fail unless `GOOGLE_CLOUD_LOCATION=global`. The synthesis node swallows exceptions, so the failure is invisible. **Fix first** (item P1-1). |
-| F2 | ICIJ Offshore Leaks latest dump: 72 MB zip, dated 2026-09-09 `[SPIKE]` | HTTP headers, download | Fetchable by a scheduled job |
-| F3 | Scale: 814,344 entities, 771,369 officers, 26,775 intermediaries, 402,321 addresses, 3,339,272 relationships `[SPIKE]` | file profile | In-memory NetworkX is no longer honest at this size, which justifies a graph backend |
-| F4 | Top entity jurisdictions: Bahamas 209,713; BVI 172,389; Malta 83,939; Nevis 70,604; Aruba 49,050; Panama 48,691 `[SPIKE]` | file profile | Real jurisdiction-risk context for the map |
-| F5 | Relationship types: `officer_of` 1.72M, `registered_address` 833k, `intermediary_of` 599k, plus `same_name_as`, `similar`, `same_as` `[SPIKE]` | file profile | The `same_*` edges are ICIJ's own entity-resolution hints |
-| F6 | Every row carries `sourceID` (Panama Papers, Paradise Papers, Bahamas Leaks and so on) `[SPIKE]` | file profile | Native provenance per row |
-| F7 | ICIJ licence: ODbL database, CC BY-SA contents; share-alike applies to derived databases `[SPIKE]` | ICIJ pages and a mirror | Attribution and non-implication disclaimer required in UI |
-| F8 | OpenSanctions bulk: CC BY-NC; any for-profit use or self-hosted screening needs a licence `[SPIKE]` | OpenSanctions docs | Hackathon use is fine; the production design uses a pluggable screening port |
-| F9 | OpenBB ODP is AGPL; unmodified internal use needs no release, modified network services do `[SPIKE]` | OpenBB FAQ | Run unmodified in an isolated service |
-| F10 | `openbb-mcp-server` exists (`openbb-mcp`, streamable HTTP, exposes GET endpoints as tools) `[SPIKE]` | OpenBB docs | Consume it as an MCP tool source |
-| F11 | Google managed MCP endpoints: `bigquery.googleapis.com/mcp`, `mapstools.googleapis.com/mcp` (Maps Grounding Lite); BigQuery is labelled "Preview" in one snapshot `[SPIKE]` | Google supported-products page | Treat as preview: wrap behind our own tool port |
-| F12 | Dekart is AGPLv3 (one mirror says MIT) `[SPIKE]` | repo page | Reference only, never embedded |
-| F13 | Google Isochrones API exists (separate service, 1 hour drive cap, pre-GA at launch) `[SPIKE]` | Google docs | Use for catchments if needed |
-
-Not verified: GLEIF terms (the official page links to separate Terms of Use), Elliptic licence, native H3 in BigQuery, BigQuery Graph and Spanner Graph feature parity, GDELT availability.
-
----
-
-## 3. Product & UX Design
-
-### 3.1 Placement
-A first-class destination in `<AppNavRail />` (the "Geospatial" item currently shows `SOON`), not a sub-tab of a workstation. Scenario views federate back into the AML, Partner and Executive workstations afterwards.
-
-### 3.2 Hard constraints from `EIOS/web-prototype/CLAUDE.md`
-- **Light mode on analytical surfaces.** The map must use a light Google Maps style. The v1.0.0 plan's "Carto Dark Matter" basemap violates this rule.
-- **Strict 2-header maximum**, no third toolbar. The agent panel and layer palette are floating overlays, not headers.
-- Text floor 11px; `cx-*` tokens; provenance tag on every figure.
-
-### 3.3 Interaction model
-- **Map as ontology lens.** Clicking any mark opens the existing Entity 360 inspector, not a bespoke popup.
-- **Glass-box timeline.** Plan, tool calls, tool results and auditor verdicts stream live; the GeoSQL/tool trace is expandable.
-- **Proof chip** on every answer: opens the evidence bundle and offers "replay".
-- **Governed action shelf** (existing) receives staged intents; the map never mutates state.
-- **Honest degradation.** A network partition shows `[REPLAY]` with the as-of time (RL-7).
-
----
-
-## 4. Data Architecture
-
-### 4.1 Two-layer data policy
-- **Real world layer** (open data, governed products): offshore structures, corporate ownership, sanctions, geography, macro, competitor markets.
-- **Client private layer** (synthetic, tagged `[ILLUSTRATIVE]`): accounts, partners, IPs, devices. This is how an FDE engagement works, because a client's private data is never open.
-
-### 4.2 Source register
-| Product | Source | Licence | Use | Status |
-|---|---|---|---|---|
-| `offshore_structures` | ICIJ Offshore Leaks | ODbL + CC BY-SA | Jurisdiction risk, structural precedent search | Spiked |
-| `corporate_ownership` | GLEIF Level 2 | verify | Who-owns-whom (accounting consolidation, not beneficial ownership) | Open |
-| `sanctions` | OpenSanctions (demo), official lists (production default) | CC BY-NC (demo) | Screening port | Spiked |
-| `illicit_graph_benchmark` | Elliptic1 / Elliptic++ (about 204k transactions, about 2% illicit) | verify | Detector benchmark on real labels | Open |
-| `geo_reference` | Overture Maps (BigQuery public dataset) | open | Divisions, places | Located |
-| `macro_market` | FRED, OpenBB (competitor equities) | public / AGPL | `MacroEvent`, `competitor_benchmarks` | Spiked |
-
-### 4.3 Policies
-- **P-1: no synthetic assertion about a real-named entity.** Fictional cases link to synthetic shell entities and to *jurisdictions* and *service-provider archetypes*, never to real named companies.
-- **P-2: entity-level and jurisdiction-level only.** No natural-person names or street-level geocoding from ICIJ.
-- **P-3: provenance on every row.** Source, licence, as-of date and a new tag `[EXTERNAL]` (to be decided in an ADR).
-- **P-4: UI disclaimer.** ICIJ's non-implication notice and attribution shown wherever its data appears.
-
-### 4.4 Structural precedent search
-Deterministic subgraph-pattern matching (for example, a jurisdiction chain of length 3 with shared intermediary) against the real offshore graph returns counts and anonymized precedents. The LLM only narrates the result (RL-1).
-
-### 4.5 Pipeline
-Cloud Run Jobs (Cloud Scheduler) fetch, validate against a Pydantic contract, write Parquet to GCS, load to BigQuery. H3 indexes are computed in the job with the `h3` library, which avoids depending on unverified native BigQuery H3. Failures go to the existing DLQ path.
-
----
-
-## 5. Ontology Extensions
-
-| Kind | Additions |
+### 1.1 What is known
+| Fact | Source |
 |---|---|
-| Object types | `Jurisdiction`, `OffshoreEntity` (reference), `Place`, `ShellEntity` (synthetic), `Corridor` (derived) |
-| Link types | `IncorporatedIn`, `RegisteredAt`, `ControlledBy`, `FlowsTo` (geo-annotated), `ResolvesTo` (entity resolution, with match score) |
-| Action types | `StageAccountFreeze`, `StageCorridorReview`, `ProposeFeeCorridorShift`, all intent-only |
-| Properties | `geo` (point or region reference), `h3_r8`, `provenance` |
+| ~2,000 alerts a week, ~95% false positives, 5+ systems to pull context from | `[BRIEF monitoring.md]` |
+| 90-95% of transaction-monitoring alerts are reported false positives (vendor and industry commentary; trace to the primary study before formal use) | `[EXTERNAL, secondary]` |
+| FinCEN received about 3.8M original SARs in calendar 2024 and about 4.7M in fiscal 2024 (different periods; cite FinCEN directly); the top 10 filers account for about 45% | `[EXTERNAL]` |
+| Regulators stress explainability, model governance, record-keeping and human accountability for final SAR decisions | `[EXTERNAL, secondary]` |
 
-The geo-metric registry sits beside the existing DuckDB/BigQuery metric registry: named, versioned, parameterized spatial metrics. The agent selects metrics; it never writes the math.
+### 1.2 The cost of the status quo, as a model you can check
+Cost per year = alerts per week x 52 x minutes per alert / 60 x loaded hourly cost.
+`[ILLUSTRATIVE]` with the brief's volume and our assumptions: 2,000 x 52 x 20 min / 60 x $60/h `[ASSUMPTION: 20 min and $60/h are placeholders to replace with design-partner data]` is about $2.1M a year of triage labour for one mid-size team, before SAR writing, rework and regulator findings.
+Savings case: if triage time falls 60% `[TARGET]`, the same team recovers about $1.2M a year. A fair price is a fraction of that (section 9). **Every number above is a hypothesis until a design partner replaces it.**
 
----
-
-## 6. Agent Architecture (Google ADK + MCP)
-
-### 6.1 Mesh
-ADK 2.0 on Cloud Run (pinned; 2.0 has breaking changes from 1.x). A coordinator delegates to specialists: the five existing ones, plus `GeospatialSpecialist` and `MacroMarketSpecialist`. The ADR-016 blackboard semantics and the 3-cycle bound carry over. Sessions use Firestore (already an optional dependency).
-
-### 6.2 Typed intent, deterministic compile
-Gemini emits a structured `SpatialIntent` (metric, filters, geometry, grouping). A deterministic compiler produces parameterized BigQuery SQL from the geo-metric registry. A free-form explore mode exists but passes an allowlist validator, a dry-run and a bytes-billed cap. This satisfies RL-1 by construction.
-
-### 6.3 MCP, both directions
-- **Consume:** BigQuery MCP, Maps Grounding Lite MCP, `openbb-mcp-server`, all wrapped behind our own tool port so a preview-status change never breaks the agent.
-- **Expose:** OMCP as an MCP server, so external agents query the governed ontology with the same markings and Auditor.
-- **Untrusted text:** all third-party tool output goes through `common/untrusted_text.py`; Model Armor is evaluated as a managed layer on top.
-
-### 6.4 Callbacks replacing LangGraph logic
-- Auditor egress scan on every response (today `egress_firewall`).
-- Compliance-hold arbitration (today in `supervisor_node`).
-- HITL interception: any mutation call yields an `ActionIntentToken` signed with Cloud KMS ECDSA P-256 and routed to the governed shelf (replaces `interrupt`).
-- Exceptions surface as typed errors with a labelled fallback, never canned text.
-
-### 6.5 Gateway
-Keep `llm_gateway/` (prompt lock, replay cache, caps). Fix the location default (F1). Use Gemini context caching for the long ontology and policy prefix. Record per-turn latency, tokens and cost in OTel.
+### 1.3 Why the pain recurs
+Alert volume is continuous and grows with the business; SAR obligations are legal; staff turnover resets institutional knowledge; regulators audit repeatedly. This is a daily, mandatory, budgeted workflow, which is the shape of a product people pay for.
 
 ---
 
-## 7. GCP Serverless Topology
+## 2. Customer and wedge
 
-```
-Browser ── Next.js (Cloud Run) ── deck.gl on Google Maps
-              │ REST + SSE
-   ┌──────────▼──────────┐   ┌───────────────────┐   ┌──────────────────┐
-   │ cockpit-api (FastAPI)│──▶│ agent-mesh (ADK)  │──▶│ Vertex Gemini     │
-   │ existing, split into │   │ MCP clients+server│   │ (location=global) │
-   │ routers              │   └─────────┬─────────┘   └──────────────────┘
-   └──────────┬───────────┘             │ MCP / OMCP
-              │                 ┌───────▼────────┐  ┌──────────────────────┐
-              │                 │ geo-api        │  │ market-data (OpenBB, │
-              │                 │ H3 aggregates  │  │ isolated, unmodified)│
-              │                 └───────┬────────┘  └──────────┬───────────┘
-   ┌──────────▼───────────────────────▼──────────────────────▼───────────┐
-   │ BigQuery (system of record, snapshots) │ GCS Parquet │ Firestore      │
-   │ graph backend (decision D-2)           │ Cloud KMS   │ Secret Manager │
-   └──────────────▲───────────────────────────────────────────────────────┘
-        Cloud Run Jobs + Scheduler (open-data ingestion) ── Pub/Sub ── DLQ
-```
+| | |
+|---|---|
+| **Ideal first customer** | Mid-market online brokerage, crypto exchange or cross-border payments firm with an in-house AML team of roughly 5-50 `[ASSUMPTION]`, real alert volume, and no appetite for a multi-year Tier-1 platform rollout |
+| **User** | AML investigator (clears alerts, drafts SARs) |
+| **Buyer** | MLRO / Head of Compliance, with the CFO or COO as budget holder |
+| **Wedge workflow** | Level-1 and Level-2 alert triage, evidence assembly, SAR narrative draft, dual-approved action (hold or freeze) |
+| **Expand later** | Case management, sanctions and adverse-media screening, partner/affiliate fraud and churn (the other briefs), cross-customer typology sharing under privacy constraints |
 
-- **Statelessness.** The DuckDB hot state and NetworkX graph are single-instance today. Readers warm-start from GCS Parquet snapshots; BigQuery serves analytics. Min-instances is set only where a warm start matters.
-- **IaC.** Extend the existing `infra/modules/run_service`; the `infra_policy` gate enforces least-privilege identities.
-- **Observability.** Existing OTel into Cloud Trace and Logging.
-- **Targets** (all `[TARGET]`, to be validated in load tests): p95 spatial aggregate under 1s for pre-aggregated H3 views; agent first-token under 2s.
+**What we are not building:** a map product, a CARTO clone, or a general chatbot.
 
 ---
 
-## 8. Red-Line Mapping
+## 3. Product: "Close an alert in three minutes"
 
-| Rule | How satisfied | Proof |
+### 3.1 The flagship demo (also the real workflow)
+An investigator opens alert `CR84920`, a synthetic account `[ILLUSTRATIVE]`.
+1. **Brief, not a blank page.** The copilot reads the alert and assembles the dossier: KYC claim versus realized activity, counterparties, device and IP clusters, ring structure with shared-gateway suppression (RL-4). Each figure links to the tool call that produced it.
+2. **Evidence lenses.** Behavioural signals (velocity, round-trip patterns), **geographic signals** (IP country versus KYC country, impossible travel, cross-border corridor, jurisdiction risk), ownership and offshore-structure precedent from public reference data, and sanctions screening. Each lens is deterministic; the model narrates.
+3. **Recommendation with uncertainty.** Disposition suggestion with confidence and the strongest counter-evidence; "Correlation Only" where causal claims fail the gate (RL-3).
+4. **SAR draft** with every number cited, statutory references normalized, ready for human edit.
+5. **Action.** Staging a hold or freeze creates a KMS-signed intent that needs two distinct approvers (RL-2); the ledger entry is hash-chained (RL-5).
+6. **Proof.** A "verify" control re-walks the ledger and replays the evidence bundle.
+7. **Timer.** The demo shows the same case done manually across five tools versus in EIOS, with the clock visible.
+
+### 3.2 The geographic lens, concretely (deterministic signals, no LLM math)
+- IP-derived country versus KYC country mismatch; impossible-travel velocity between logins.
+- Cross-border corridors: flows aggregated by origin and destination jurisdiction, with jurisdiction risk tiers from published lists `[to verify: FATF lists]`.
+- Offshore-structure precedent: how often a jurisdiction chain like this one appears in a public leak dataset (counts only; see data policy).
+- Presented on a light Google Maps canvas with deck.gl; clicking a mark opens the existing Entity 360 inspector. The map earns its place only where it shortens an investigation; if a lens does not, cut it.
+
+### 3.3 UX principles
+Glass-box timeline of what the agent did; proof chip on every answer; map as a lens on ontology objects; honest degradation (a replay is always labelled, RL-7); light analytical surfaces and two-header maximum per `EIOS/web-prototype/CLAUDE.md`.
+
+---
+
+## 4. Competition and defensibility
+
+| Player | What they are | Our difference |
 |---|---|---|
-| RL-1 | `SpatialIntent` compiles to registered metrics; free-form SQL gated; Auditor egress | hallucination eval over geo dialogs |
-| RL-2 | Mutations only as KMS-signed four-eyes intents | static check plus runtime deny test |
-| RL-3 | Macro and corridor causal claims pass the evidence gate or show "Correlation Only" | existing refuter tests extended |
-| RL-4 | CGNAT hub suppression applies to geo-clustered IP rings | existing detector tests plus geo fixtures |
-| RL-5 | Proof bundle references the ledger sequence | chain verification test |
-| RL-6 | What-if over regional macro shocks under 200ms `[TARGET]`, attribution sums to 100% | perf plus invariant test |
-| RL-7 | `[REPLAY]` fallback for MCP, OpenBB and map failures | partition simulation test |
+| Bretton AI (formerly Greenlite) | AI-agent AML investigations; reported $75M Series B, February 2026, with Robinhood and Mercury among customers `[EXTERNAL, secondary]` | The most direct competitor. We must beat them on provable correctness and auditability, not on "has an agent" |
+| Hawk AI, Unit21, Sardine, ComplyAdvantage, Featurespace, Feedzai | Detection and case platforms with AI features; several well funded `[EXTERNAL, round details conflict across sources]` | They sell detection and workflow; we sit on top as the investigation layer and consume their alerts |
+| Quantexa | Entity resolution and network analytics for large institutions | Heavy, Tier-1; we target mid-market speed to value |
+| Legacy suites (NICE Actimize and similar) | Incumbent rules-based monitoring | Slow and opaque; the thing buyers want to augment |
+| Chainalysis, Elliptic | Crypto blockchain analytics | Complement, not replace, for crypto buyers |
+
+**Where defensibility really comes from (ranked, honestly):**
+1. **Decision flywheel.** Each analyst accept, edit or reject is a labelled outcome in our ledger. Over time, per-customer triage priors and typologies improve, and switching means losing that history. This is the real moat and it needs real usage to exist.
+2. **Proof-carrying output.** Hallucination rate measured at zero numeric mismatches by a deterministic auditor, plus signed dual control and replayable evidence. A competitor can copy the idea; matching a measured, regulator-shaped track record takes time.
+3. **Ontology and integration depth.** Per-customer mapping of their alerts, accounts and counterparties into one governed ontology.
+4. *Not a moat:* using Gemini, using MCP, having a map.
 
 ---
 
-## 9. Evaluation Plan
+## 5. Evidence we will produce (so the pitch is not adjectives)
 
-- **Real-label benchmark** (Elliptic, once licence confirmed): mule-ring and graph detectors against baselines, reported as `[MEASURED]` in CI.
-- **Hallucination and citation evals** over geo dialogs: 100% of numbers match tool outputs, extending `evals/suites/redlines`.
-- **Golden dialogs** for the three scenarios, including adversarial prompt-injection through MCP output.
-- **Agent trajectory evals**: correct tool order, bounded cycles, correct refusal when a tool is unavailable.
-- **Load tests** for `geo-api` and agent turns, producing the `[TARGET]` validations above.
+The biggest weakness of an AI-for-compliance claim is that nobody can verify it. Our counter is a **backtest harness**: run the copilot on a labelled set of past alerts and report, with confidence intervals, how often its recommended disposition matches the human decision, how fast, and whether any figure was unsupported.
 
----
+| Headline metric | Definition | Baseline | Target | How measured |
+|---|---|---|---|---|
+| M1 Time to disposition | Median minutes from alert open to a justified disposition | `[ASSUMPTION]` 20 min, to be replaced by a timed manual run on the same cases | -60% `[TARGET]` | Timed study with volunteer analysts on seeded cases, then design-partner data |
+| M2 SAR draft time | Minutes to a reviewable SAR narrative | `[ASSUMPTION]` replace with measured | -70% `[TARGET]` | Same study |
+| M3 Numeric faithfulness | Share of figures in output traceable to a tool result | n/a | 100% `[TARGET]` (enforced by the auditor, reported as `[MEASURED]`) | Hallucination eval, CI-gated |
+| M4 Disposition agreement | Agreement with human disposition on labelled alerts | n/a | Set after the first backtest; never claimed before measured | Backtest harness |
+| M5 Cost and latency per turn | Dollars and seconds per investigation turn | now 5-65 s depending on corrections `[SPIKE]` | p95 under 15 s `[TARGET]` | OTel, load test |
 
-## 10. Sprint Plan
-
-No dates; each phase has an exit criterion. Spec-kit order applies: specs 021 (ADK migration), 022 (geospatial), 023 (open data and market) and the ADRs come first.
-
-### Phase 0: Decisions and documents
-- Register open decisions in `config/open_decisions.yaml` (D-1..D-6 below) so `open_decision_check` passes.
-- ADRs: supersede 016 for ADK; geo stack; `[EXTERNAL]` provenance tag; open-data licensing; graph backend.
-- **Exit:** specs and ADRs reviewed; `make check` green.
-
-### Phase 1: Foundations
-| ID | Item | Size |
-|---|---|---|
-| P1-1 | Fix gateway location default and stop swallowing LLM exceptions; add a live-call smoke test behind `requires_cloud` | S |
-| P1-2 | ADK migration with behavioral parity against current LangGraph tests; callbacks per 6.4 | L |
-| P1-3 | Real tool-calling loop for existing specialists (replace keyword routing) | M |
-| P1-4 | Trajectory and hallucination eval suites in the harness | M |
-
-**Exit:** parity tests green; live Gemini turn verified; evals gating in CI.
-
-### Phase 2: Real-world data layer (parallel with phase 3)
-| ID | Item | Size |
-|---|---|---|
-| P2-1 | Ingestion jobs and contracts for ICIJ and geo reference; provenance columns; H3 indexing | M |
-| P2-2 | Graph backend per D-2, with structural precedent search | L |
-| P2-3 | Entity resolution of synthetic counterparties to jurisdictions and archetypes | M |
-| P2-4 | Sanctions screening port with demo adapter | S |
-| P2-5 | `market-data` service wrapping OpenBB (isolated) with replay cache | M |
-
-**Exit:** data products pass contracts; precedent query returns deterministic results under load targets.
-
-### Phase 3: Geospatial experience (parallel with phase 2, contract-first with a `mock-geospatial.ts`)
-| ID | Item | Size |
-|---|---|---|
-| P3-1 | Activate Geospatial nav item and route | S |
-| P3-2 | deck.gl on Google Maps canvas, light style | M |
-| P3-3 | Glass-box timeline and proof chip | M |
-| P3-4 | Layer palette and viewport-reactive widgets | M |
-| P3-5 | `geo-api` aggregates and geo-metric registry | M |
-
-**Exit:** flagship flow works end to end against fixtures.
-
-### Phase 4: Integration and scenarios
-- Flagship "Follow the Money" end to end with real data layer, MCP tools and signed intent.
-- Churn cohort scenario and macro shock scenario.
-- OMCP exposed as MCP server with a demo external agent.
-
-**Exit:** golden dialogs green; proof-bundle replay verified.
-
-### Phase 5: Hardening
-Load tests, cost model update (`docs/cost_model.csv`), runbooks, security review, demo video, proposal deck.
+Public labelled data (for example a labelled illicit-transaction graph) can validate detector quality only if its licence allows; it carries no geography, so it cannot validate the map. The seeded synthetic cases carry the end-to-end story and are always tagged `[ILLUSTRATIVE]`.
 
 ---
 
-## 11. Open Decisions and Risks
+## 6. Validation plan (do this alongside the build, not after)
 
-| ID | Decision | Recommendation |
+1. **Ten discovery conversations** with MLROs and investigators at mid-market brokerages, exchanges and payments firms. Learn: current minutes per alert, tools, who signs off, what they would pay, what they fear about AI.
+2. **Three design partners** willing to run in shadow mode on historical closed alerts (no production risk), giving us labelled data for M4.
+3. **Pricing test:** per-investigator seat versus per-alert volume versus an outcome-linked tier; see section 9.
+4. **Kill criteria** (stop or pivot if true after the design-partner phase): partners will not let an LLM touch their alerts under any controls; backtest agreement stays below the level an investigator would trust `[TARGET to set with partners]`; the economic buyer will not pay a fraction of the measured savings.
+
+---
+
+## 7. Architecture (re-baselined to what exists today)
+
+### 7.1 Already built and deployed `[verified 2026-10-13]`
+Public `eios-web` (Next.js) and private `eios-api` (FastAPI) on Cloud Run; Identity Platform sign-in with role claims; KMS-signed action intents through an intent hub; four-eyes enforced on verified identities; Firestore-backed ledger, approvals and nonces; honest API proxies; live Gemini copilot with a bounded, allow-listed tool loop and bounded self-correction; Terraform for the environment; CI with provenance, ADR and infra-policy gates.
+
+### 7.2 To build, in this order
+1. **Migrate the agent to Google ADK** (decision made). Keep: auditor egress scan, compliance-hold arbitration, human-in-the-loop interception that mints a KMS-signed intent, the allow-listed tool set, the 3-cycle bound. Fix: replace keyword routing with real routing; surface replay status to the UI; cut correction-round latency.
+2. **Evidence tools** behind the existing OMCP tool port: geographic signals, jurisdiction risk, precedent counts, sanctions screening port.
+3. **Reference data layer** (section 8).
+4. **Backtest harness and eval flywheel** (section 10).
+5. **Wire the browser's governed-action shelf to the real endpoints.** It is client-side state today; judges and buyers will click it.
+
+### 7.3 Deliberate simplifications versus v2
+- **Two services, not six.** Keep `eios-web` and `eios-api`; run the ADK agent inside the API until load or isolation forces a split. Add `market-data` (OpenBB) only if a scenario needs it.
+- **No graph database until a spike justifies it.** Start with precomputed jurisdiction and ownership-chain tables in BigQuery; benchmark a graph backend only if multi-hop queries are slow. D-2 is a decision gate, not a plan.
+- **Typed intent, deterministic compile** stays (the model proposes a structured query; code builds parameterized SQL from a registry of named metrics). It is the cleanest way to satisfy RL-1 for spatial and aggregate questions.
+
+### 7.4 Operations (v2 omitted these)
+| Concern | Plan |
+|---|---|
+| SLOs `[TARGET]` | Turn p95 under 15 s; API availability and error budget defined per month; separate budget for the agent path |
+| Alerting | OTel metrics for agent latency, error rate, token spend and replay rate, alerts configured as Terraform (Google's agent-alerting guidance) |
+| Cost control | Per-operator and per-day token caps, global kill switch, Gemini context caching for the long ontology prefix, model routing (a fast model for routing and drafting, a stronger one only when needed) |
+| Abuse and safety | Rate limits per operator, Model Armor evaluated as a managed layer, all third-party and dataset text treated as untrusted input |
+| Replay and evidence | Evidence bundles reference **BigQuery table snapshots with a retention policy**, not time travel (which is short-lived), so "replay" stays true for audit periods |
+| Multi-tenancy | Single-tenant per customer in their own project first (buyers expect data to stay in their cloud); multi-tenant SaaS is a later decision |
+| Security roadmap | Customer-managed encryption keys and VPC Service Controls for regulated buyers; disaster-recovery stance written before the first pilot |
+| Permissions | Security markings on geo and reference data in the ontology, so a lens inherits the access rules of its objects |
+
+---
+
+## 8. Data policy and legal
+
+### 8.1 Two layers
+- **Customer private layer** (synthetic here, tagged `[ILLUSTRATIVE]`): accounts, partners, devices, IPs. In a real engagement this is the customer's data and stays in their project.
+- **Reference layer** (public, governed): jurisdiction risk, ownership and offshore-structure reference, sanctions, geography, macro.
+
+### 8.2 Sources and terms
+| Source | Terms to respect | Use |
 |---|---|---|
-| D-1 | Natural persons from ICIJ | Excluded (decided 2026-10-13) |
-| D-2 | Graph backend: BigQuery Graph vs Spanner Graph vs both `[SPIKE]` | Spike both on the ICIJ data; default to BigQuery for analytics |
-| D-3 | Elliptic and GLEIF licences | Verify before ingestion; drop Elliptic from CI if unclear |
-| D-4 | `[EXTERNAL]` provenance tag | Add via ADR |
-| D-5 | Managed MCP servers are preview | Wrap behind our tool port |
-| D-6 | Maps API key and billing | Use project credits; key restricted by referrer |
+| ICIJ Offshore Leaks (entity and jurisdiction level only) | ODbL database, CC BY-SA contents: attribution, share-alike on derived databases, and a non-implication notice in the UI | Structural precedent counts; `[SPIKE]` 814,344 entities and 3,339,272 relationships in the 2026-09 dump. The leaks are historical, so use for structure, not as current ownership truth |
+| GLEIF Level 2 | Terms to verify; accounting consolidation, not beneficial ownership | Corporate parent chains |
+| OpenSanctions | CC BY-NC for bulk data; commercial use needs a licence | Hackathon only; production uses a pluggable screening port with official lists |
+| Overture Maps (BigQuery public) | Check attribution terms | Divisions, places |
+| Google Maps Platform | Platform terms (no scraping or caching of tiles) | Basemap with deck.gl overlay |
+| OpenBB | AGPL: run unmodified in its own service; Dekart is AGPL, reference only | Macro and competitor market data, only if a scenario needs it |
+
+### 8.3 Policies
+- **P-1** No synthetic assertion about a real named entity. Fictional cases link to synthetic shells and to jurisdictions.
+- **P-2** Entity and jurisdiction level only; no natural-person names or street-level geocoding.
+- **P-3** Provenance on every row (source, licence, as-of) and an `[EXTERNAL]` tag, added by ADR.
+- **P-4** Attribution and the non-implication notice wherever leak data appears.
+- **P-5** Dataset text fields are untrusted prompt input.
+
+---
+
+## 9. Business model and go-to-market (hypotheses to test)
+
+- **Pricing:** per investigator seat plus a volume tier `[ASSUMPTION]`; an outcome-linked option (price tied to measured hours saved) is attractive to a CFO and is worth testing. Anchor on a fraction of the savings in section 1.2.
+- **Sizing method (fill with research, do not guess):** number of target firms x annual contract value x attainable share. Start from regulator and industry registries of brokerages, exchanges and payment institutions in one region, then expand.
+- **Go-to-market:** design partners through compliance consultants and AML communities; a measured backtest as the sales asset; reference customers before outbound.
+- **Land and expand:** triage and SAR drafting first; then case management, screening, and the fraud and churn modules already in the briefs.
+
+---
+
+## 10. Evaluation: Google's eval-flywheel method applied
+
+1. **Datasets from traces and synthetic scenarios.** Every live turn's trace becomes a candidate eval case; generate synthetic user scenarios for coverage.
+2. **Two kinds of checks.** Deterministic (the numeric auditor, citation coverage, tool-order and bounded-cycle trajectory checks) and rubric-based LLM-as-judge for narrative quality, with a human-labelled calibration set to keep the judge honest.
+3. **Cluster failures**, not just count them; fix the prompt, tool or data cause; re-run and compare before and after.
+4. **Gate in CI**: the deterministic suite blocks merges; judge scores are tracked and trended.
+5. **Adversarial suites**: prompt injection through tool output and dataset fields, attempts to bypass four-eyes, wrong-figure-near-dates tests for the auditor.
+6. **Backtest harness** for M4 on design-partner or public labelled data.
+
+---
+
+## 11. Roadmap with decision gates
+
+No dates; each phase has an exit criterion, and gates can stop work.
+
+| Phase | Work | Exit / gate |
+|---|---|---|
+| **A. Agent foundation** | ADR superseding 016 and spec 021; ADK supervisor plus the AML specialist at parity with current tests; real routing; replay status in the UI; latency and cost budget measured | Parity green; M5 measured; live turn p95 recorded |
+| **B. Walking skeleton** | "Close one alert" end to end on the deployed system: dossier, one geographic lens, SAR draft, dual-approved action, ledger verify, wired shelf | Demo works on the public URL; M1 timed on seeded cases |
+| **C. Evidence lenses** | Jurisdiction risk, IP-versus-KYC, corridors, precedent counts, sanctions port; reference data pipeline | Each lens passes the "does it shorten an investigation" test or is cut |
+| **D. Proof** | Eval flywheel, backtest harness, adversarial suite, first measured M3 and M4 | `[MEASURED]` results published in the repo |
+| **E. Pilot readiness** | SLOs and alerts, cost caps, DR note, security review, design-partner shadow-mode runbook | Gate: do design partners want to proceed (section 6)? |
+
+Critical path: A then B then D. Phase C items are parallelizable and individually cuttable. The v2 scenarios for partner churn and macro shocks are deferred until the wedge is proven.
+
+---
+
+## 12. Risks, decisions and kill criteria
 
 | Risk | Mitigation |
 |---|---|
-| Python 3.14 compatibility of `google-adk` and `openbb-core` `[SPIKE]` | Isolate in separate services with their own runtimes |
-| AGPL obligations | Run OpenBB unmodified in its own service; no modifications |
-| Real-person harm from real data | Policies P-1..P-4 |
-| Scope growth | Flagship first; churn and macro scenarios cut before the flagship slips |
-| ADK 2.0 session-schema churn | Pin version; parity tests |
+| Crowded category (funded competitors) | Win on measured proof and auditability; do not out-feature on "agents" |
+| LLM errors in a regulated workflow | Deterministic auditor, human-owned final decisions, dual control, replay; never claim autonomy |
+| Backtest shows low agreement | Treat as the most valuable finding; narrow scope to the alert types where agreement is high |
+| Data licences and real-person harm | Section 8 policies; verify GLEIF and any labelled-data licences before ingestion |
+| Latency and cost | Budgets, context caching, model routing, correction cap (section 7.4) |
+| Platform previews (managed MCP, ADK 2.0 churn, Python 3.14 compatibility) | Wrap behind our own tool port; pin versions; keep parity tests |
+| Scope growth | Phase gates; the map and extra scenarios are cuttable by design |
 
-Spikes still to run: GLEIF terms and sample, Elliptic licence, native H3 in BigQuery, graph backend benchmark, managed MCP stage check.
+| Decision | Status |
+|---|---|
+| D-1 No natural persons from leak data | Decided |
+| D-2 Graph backend | Gate: only if precomputed tables are too slow; spike BigQuery then Spanner |
+| D-3 GLEIF and labelled-data licences | Verify before ingestion |
+| D-4 `[EXTERNAL]` provenance tag | ADR |
+| D-5 Managed MCP preview status | Wrap behind tool port |
+| D-6 Pricing model | Test with design partners |
+| D-7 ADK in-process versus separate service | In-process until load requires a split |
 
 ---
 
-## 12. Sources
-[ICIJ Offshore Leaks](https://offshoreleaks.icij.org) · [OpenSanctions licensing](https://www.opensanctions.org/docs/commercial/exemption/) · [OpenBB licence FAQ](https://docs.openbb.co/odp/python/faqs/license) · [OpenBB MCP](https://docs.openbb.co/odp/python/quickstart/mcp) · [Google MCP supported products](https://docs.cloud.google.com/mcp/supported-products) · [ADK 2.0](https://cdn.jsdelivr.net/gh/google/adk-python@main/README.md) · [Overture on BigQuery](https://docs.overturemaps.org/getting-data/data-mirrors/bigquery/) · [Dekart](https://github.com/dekart-xyz/dekart) · [Google Isochrones API](https://developers.google.com/maps/documentation/isochrones/key-concepts) · [AI Builder Cup themes](https://aibuildercup.com/themes.html)
+## 13. Sources
+- FinCEN SAR volumes: [Thomson Reuters SARs report 2024](https://www.thomsonreuters.com/en-us/posts/corporates/sars-report-2024) (calendar 2024 original filings), [FinCEN FY2024 infographic](https://www.fincen.gov/sites/default/files/shared/FinCEN-Infographic-Public-2025-508.pdf) (top-10 filer share); fiscal-2024 total from a [secondary summary](https://www.fluxforce.ai/statistics/sar-filing-volumes-by-country), verify against FinCEN.
+- False-positive rates and cost of compliance (vendor and industry commentary, secondary): [Lucinity](https://lucinity.com/blog/understanding-false-positives-in-transaction-monitoring-what-causes-them-and-how-can-ai-can-reduce-operational-waste), [Flagright](https://flagright.com/understanding-false-positives-in-transaction-monitoring), [Elliptic](https://www.elliptic.co/corpus/gen-3220/profit-maximization/profit-impact-of-false-positives-in-crypto-aml-and-sanctions-screening.html).
+- Competitors and funding (secondary; conflicting round details): [Hawk Series C](https://fintech.global/2025/04/08/hawks-ai-solutions-attract-56m-for-global-aml-efforts/), [AI x Fintech landscape](https://insights.tryspecter.com/ai-x-fintech-landscape/), [AML software roundup](https://salv.com/blog/best-aml-software/).
+- Regulatory direction on AI in AML (secondary; verify primary texts): [FinTech Global, readiness 2026](https://fintech.global/2025/11/26/ai-in-aml-readiness-now-key-to-2026-success/), [explainability](https://fintech.global/2026/08/26/explainability-becomes-amls-new-ai-currency/), [auditable AI](https://www.sanctions.io/blog/auditable-ai-in-aml).
+- Data and platform: [ICIJ Offshore Leaks](https://offshoreleaks.icij.org), [OpenSanctions licensing](https://www.opensanctions.org/docs/commercial/exemption/), [OpenBB licence FAQ](https://docs.openbb.co/odp/python/faqs/license), [Overture on BigQuery](https://docs.overturemaps.org/getting-data/data-mirrors/bigquery/), [Google MCP supported products](https://docs.cloud.google.com/mcp/supported-products), [ADK 2.0](https://cdn.jsdelivr.net/gh/google/adk-python@main/README.md), [Google agent eval flywheel skill](https://raw.githubusercontent.com/google/skills/main/skills/cloud/agent-platform-eval-flywheel/SKILL.md).
