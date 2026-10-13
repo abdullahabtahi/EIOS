@@ -172,14 +172,18 @@ Numbers continue from 020. **Build order is not numeric order.** `021` keeps the
 | S-TBX-1 | MCP Toolbox: Python SDK on 3.14, Cloud Run service identity, offline stand-in for tests | 025 | Not run |
 | S-DATA-1 | Hot-state rehydrate time from Parquet and from BigQuery | 025 | Not run |
 
-## 7. Open items for you
+## 7. Decisions recorded 2026-10-14
+
+You approved: the build order and renumbering (section 6); embedding the agent in `eios-api` on Cloud Run (A-3); the reference-based answer design with a typed envelope, failing closed (A-5); and bounded live-Gemini spikes against an EIOS project. For the regulator corpus (D-3) the rule you set is: choose the use case with the best value that has publicly attainable data, which spec 024 applies when it is specified. A-2, A-4 and A-6 to A-10 proceed on their recommendations, since no objection was raised; A-9 (the dependency pins) still waits for the A0 PR. Spec 022 is being specified first.
+
+## 8. Remaining open items for you
 
 1. Approve the build order and the renumbering (section 6), or reorder.
 2. Decisions A-2, A-3, A-4, A-5 (section 4). I would proceed on the recommendations unless you object.
 3. Which regulators for the corpus (D-3), and whether the lighthouse M4 bar and stop thresholds are yours to set (`lighthouse.md` section 9).
 4. Permission to run live-Gemini spikes against an EIOS project (a small, bounded bill).
 
-## 8. Sources
+## 9. Sources
 
 - ADK 2.11.0 package source (read locally): `integrations/firestore`, `integrations/bigquery`, `integrations/model_armor`, `plugins/bigquery_agent_analytics_plugin.py`, `tools/discovery_engine_search_tool.py`, `tools/set_model_response_tool.py`, `workflow/`, `evaluation/`.
 - ADK docs (via Context7 and adk.dev): graphs and routes, tool confirmation, safety callbacks, evaluation, sessions and state, built-in tool limits and `bypass_multi_tools_limit`, Model Armor plugin, A2A, Cloud Run deployment.
