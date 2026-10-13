@@ -3,10 +3,11 @@
 from unittest.mock import MagicMock
 
 import pytest
-from google.genai import errors
 
 from eios.llm_gateway.providers.base import ProviderUnavailable
-from eios.llm_gateway.providers.vertex import VertexProvider
+from eios.llm_gateway.providers.vertex import GenAIAPIError, VertexProvider
+
+MODEL = "model-under-test"
 
 
 def _provider(client: MagicMock) -> VertexProvider:
@@ -30,21 +31,21 @@ def test_generate_returns_text_and_reported_token_counts() -> None:
     client.models.generate_content.return_value = MagicMock(
         text="hello", usage_metadata=MagicMock(prompt_token_count=11, candidates_token_count=3)
     )
-    result = _provider(client).generate("prompt", "gemini-3.8-flash", {"max_output_tokens": 64})
+    result = _provider(client).generate("prompt", MODEL, {"max_output_tokens": 64})
     assert (result.content, result.tokens_in, result.tokens_out) == ("hello", 11, 3)
     kwargs = client.models.generate_content.call_args.kwargs
-    assert kwargs["model"] == "gemini-3.8-flash"
+    assert kwargs["model"] == MODEL
     assert kwargs["config"].temperature == 0.0
     assert kwargs["config"].max_output_tokens == 64
 
 
 def test_api_errors_become_provider_unavailable() -> None:
     client = MagicMock()
-    client.models.generate_content.side_effect = errors.APIError(
+    client.models.generate_content.side_effect = GenAIAPIError(
         404, {"error": {"message": "not found"}}
     )
     with pytest.raises(ProviderUnavailable):
-        _provider(client).generate("prompt", "gemini-3.8-flash", {})
+        _provider(client).generate("prompt", MODEL, {})
 
 
 def test_missing_model_id_is_rejected() -> None:
@@ -58,4 +59,4 @@ def test_empty_answer_is_invalid_not_silent() -> None:
     client = MagicMock()
     client.models.generate_content.return_value = MagicMock(text=None, usage_metadata=None)
     with pytest.raises(ProviderOutputInvalid):
-        _provider(client).generate("prompt", "gemini-3.8-flash", {})
+        _provider(client).generate("prompt", MODEL, {})

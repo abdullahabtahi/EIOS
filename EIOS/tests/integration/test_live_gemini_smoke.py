@@ -10,11 +10,15 @@ pytestmark = pytest.mark.requires_cloud
 
 
 @pytest.mark.skipif(
-    not os.getenv("GOOGLE_CLOUD_PROJECT") or os.getenv("EIOS_TEST_CLOUD") != "1",
-    reason="set GOOGLE_CLOUD_PROJECT and EIOS_TEST_CLOUD=1 to call Vertex AI",
+    not (
+        os.getenv("GOOGLE_CLOUD_PROJECT")
+        and os.getenv("EIOS_GEMINI_MODEL")
+        and os.getenv("EIOS_TEST_CLOUD") == "1"
+    ),
+    reason="set GOOGLE_CLOUD_PROJECT, EIOS_GEMINI_MODEL and EIOS_TEST_CLOUD=1 to call Vertex AI",
 )
 def test_gemini_answers_on_the_global_endpoint() -> None:
-    model = os.getenv("EIOS_GEMINI_MODEL", "gemini-3.8-flash")
+    model = os.environ["EIOS_GEMINI_MODEL"]
     result = VertexProvider().generate(
         "Reply with the single word OK.", model, {"max_output_tokens": 256}
     )

@@ -19,6 +19,8 @@ from eios.llm_gateway.providers.base import (
 # Gemini 3.x is served from the global endpoint; regional endpoints return 404.
 DEFAULT_LOCATION = "global"
 DEFAULT_MAX_OUTPUT_TOKENS = 2048
+# Re-exported so callers and tests need no direct vendor-SDK import (ADR-002 scope).
+GenAIAPIError = errors.APIError
 # Thinking tokens count against max_output_tokens; unbounded thinking can leave an empty answer.
 THINKING_LEVEL = types.ThinkingLevel.LOW
 
@@ -53,7 +55,7 @@ class VertexProvider:
                     max_output_tokens=limits.get("max_output_tokens", DEFAULT_MAX_OUTPUT_TOKENS),
                 ),
             )
-        except errors.APIError as exc:
+        except GenAIAPIError as exc:
             raise ProviderUnavailable(f"Vertex AI API error {exc.code}") from exc
         usage = response.usage_metadata
         if not response.text:
