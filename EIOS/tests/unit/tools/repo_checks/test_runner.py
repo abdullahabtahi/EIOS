@@ -26,8 +26,14 @@ def _report(root: Path) -> dict[str, object]:
     return loaded
 
 
-def test_check_names_are_the_four_checks() -> None:
-    assert CHECK_NAMES == ("file_size", "forbidden_literals", "frozen_models", "pinned_deps")
+def test_check_names_are_the_five_checks() -> None:
+    assert CHECK_NAMES == (
+        "file_size",
+        "forbidden_artifacts",
+        "forbidden_literals",
+        "frozen_models",
+        "pinned_deps",
+    )
 
 
 def test_bare_temp_project_passes_with_built_in_defaults(tmp_path: Path) -> None:
