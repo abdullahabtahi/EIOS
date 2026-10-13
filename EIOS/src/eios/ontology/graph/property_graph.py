@@ -137,8 +137,8 @@ class InMemPropertyGraph:
                 if suppress_hubs and is_hub and curr_node != seed_id:
                     continue
 
-                if edge_entry not in discovered_edges:
-                    discovered_edges.append(edge_entry)
+                # Each node is expanded once (see visited_nodes), so each edge is produced once.
+                discovered_edges.append(edge_entry)
 
                 if neighbor not in visited_nodes:
                     # If neighbor is a hub and suppress_hubs is True, visit but do not expand
