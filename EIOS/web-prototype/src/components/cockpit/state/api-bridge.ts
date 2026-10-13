@@ -10,9 +10,11 @@ import {
 } from './cockpit-types';
 import { getFallbackWorkstationData } from './fixtures';
 import { authFetch } from '@/lib/auth/token';
+import { createSseParser } from '@/lib/sse';
 
+// An explicit (even empty) NEXT_PUBLIC_API_URL wins; empty means same-origin, served by the /api/v1 gateway.
 export const BACKEND_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_API_URL ??
   (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
     ? ''
     : 'http://localhost:8002');
@@ -22,47 +24,63 @@ export interface StreamSubscription {
 }
 
 /**
- * Universal SSE streaming subscription using browser-native EventSource.
- * Auto-reconnects and dispatches typed payload events.
+ * Server-Sent Events subscription over authenticated fetch (EventSource cannot send an
+ * Authorization header). Reconnects with exponential backoff until closed.
  */
 export function subscribeToSseStream<T>(
   endpoint: string,
   eventName: string,
   onData: (data: T) => void,
-  onError?: (err: any) => void
+  onError?: (err: unknown) => void
 ): StreamSubscription {
   if (typeof window === 'undefined') {
     return { close: () => {} };
   }
 
   const url = `${BACKEND_BASE_URL}${endpoint}`;
-  let es: EventSource | null = null;
+  const controller = new AbortController();
+  let closed = false;
 
-  try {
-    es = new EventSource(url);
-
-    es.addEventListener(eventName, (event: MessageEvent) => {
+  const run = async () => {
+    let delayMs = 1000;
+    while (!closed) {
       try {
-        const parsed = JSON.parse(event.data);
-        onData(parsed);
-      } catch (e) {
-        console.warn(`[API Bridge SSE Parse Error] ${e}`);
+        const res = await authFetch(url, {
+          headers: { Accept: 'text/event-stream' },
+          signal: controller.signal,
+        });
+        if (!res.ok || !res.body) throw new Error(`SSE stream HTTP ${res.status}`);
+        delayMs = 1000;
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        const feed = createSseParser((name, data) => {
+          if (name !== eventName) return;
+          try {
+            onData(JSON.parse(data) as T);
+          } catch (e) {
+            console.warn(`[API Bridge SSE Parse Error] ${e}`);
+          }
+        });
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          feed(decoder.decode(value, { stream: true }));
+        }
+      } catch (err) {
+        if (closed) return;
+        if (onError) onError(err);
       }
-    });
-
-    es.onerror = (err) => {
-      if (onError) onError(err);
-    };
-  } catch (err) {
-    if (onError) onError(err);
-  }
+      if (closed) return;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      delayMs = Math.min(delayMs * 2, 30000);
+    }
+  };
+  void run();
 
   return {
     close: () => {
-      if (es) {
-        es.close();
-        es = null;
-      }
+      closed = true;
+      controller.abort();
     },
   };
 }

@@ -103,3 +103,20 @@ variable "notification_email" {
   description = "Email address for budget alerts."
   type        = string
 }
+
+variable "cockpit_api_image" {
+  description = "cockpit_api image by digest. Null until the first image is pushed."
+  type        = string
+  default     = null
+}
+
+variable "cockpit_web_image" {
+  description = "cockpit_web image by digest. Null until the first image is pushed."
+  type        = string
+  default     = null
+}
+
+variable "gemini_model" {
+  description = "Gemini model id served from the global Vertex AI endpoint. Set in terraform.tfvars; verified per project."
+  type        = string
+}

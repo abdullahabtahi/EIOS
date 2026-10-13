@@ -1,15 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServiceIdToken } from './iam';
 
 export const BACKEND_URL = process.env.EIOS_BACKEND_URL || 'http://127.0.0.1:8000';
-const TIMEOUT_MS = 8000;
+const DEFAULT_TIMEOUT_MS = 8000;
 
-/** Call the EIOS API with the caller's Authorization header. Returns null only when the backend is unreachable. */
-export async function callBackend(req: NextRequest, path: string, init: RequestInit = {}): Promise<Response | null> {
+interface CallOptions {
+  /** Abort after this many ms; null for no limit (streaming). */
+  timeoutMs?: number | null;
+}
+
+/**
+ * Call the EIOS API on behalf of the operator. Forwards the operator's Authorization header and,
+ * when the API is IAM-protected, adds the service identity. Returns null only when the backend is
+ * unreachable or the service identity cannot be obtained.
+ */
+export async function callBackend(
+  req: NextRequest | Request,
+  path: string,
+  init: RequestInit = {},
+  options: CallOptions = {},
+): Promise<Response | null> {
   const headers = new Headers(init.headers);
   const authorization = req.headers.get('authorization');
   if (authorization) headers.set('Authorization', authorization);
+  const timeoutMs = options.timeoutMs === undefined ? DEFAULT_TIMEOUT_MS : options.timeoutMs;
   try {
-    return await fetch(`${BACKEND_URL}${path}`, { ...init, headers, cache: 'no-store', signal: AbortSignal.timeout(TIMEOUT_MS) });
+    const serviceToken = await getServiceIdToken();
+    if (serviceToken) headers.set('X-Serverless-Authorization', `Bearer ${serviceToken}`);
+    return await fetch(`${BACKEND_URL}${path}`, {
+      ...init,
+      headers,
+      cache: 'no-store',
+      ...(timeoutMs === null ? {} : { signal: AbortSignal.timeout(timeoutMs) }),
+    });
   } catch {
     return null;
   }

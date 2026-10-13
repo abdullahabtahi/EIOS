@@ -52,4 +52,11 @@ Secret Manager holds containers only; values are added out of band and never app
 
 ## Not verified without a cloud account
 
-Static validation only: nothing here was applied. Unverified until a real project exists: provider behaviour at apply time, org-policy permissions, federation claim mapping, Firestore TTL and database settings, KMS settings and retention-lock behaviour. Tracked as `[ASSUMPTION]` in `docs/runbooks/bootstrap.md`.
+Static validation, plus a first apply of the prod-like environment in the hackathon project (dev and stage not yet applied). Unverified until a real project exists: provider behaviour at apply time, org-policy permissions, federation claim mapping, Firestore TTL and database settings, KMS settings and retention-lock behaviour. Tracked as `[ASSUMPTION]` in `docs/runbooks/bootstrap.md`.
+
+## Recorded exceptions (hackathon deployment, eios-hackathon-prod)
+- `enforce_guardrails = false`: the deploying identity has no `orgpolicy.policyAdmin`. Service-account-key and public-bucket
+  guardrails are not enforced by policy in this project; the code never creates keys or public buckets. Re-enable when granted.
+- `allow_public_invocation = true` on `cockpit_web` only: judges must reach the demo without an IAM allowlist. The application
+  authenticates every operator; the API is private.
+- `evidence_lock_retention = false`: avoids an irreversible retention lock (365 days `[ASSUMPTION]` default) in a throwaway project.

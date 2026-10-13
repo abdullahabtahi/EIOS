@@ -3,12 +3,15 @@
 import base64
 import hashlib
 import json
+import logging
 import os
 from typing import Any, Protocol
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
+
+_LOG = logging.getLogger("eios.ontology.actions.signer")
 
 KMS_KEY_VERSION_ENV = "EIOS_KMS_KEY_VERSION"
 ENVIRONMENT_ENV = "EIOS_ENVIRONMENT"
@@ -64,7 +67,8 @@ class _TokenVerifyMixin:
 
         try:
             return self.verify_payload(signing_payload, token.signature)
-        except SignatureVerificationError:
+        except SignatureVerificationError as exc:
+            _LOG.warning("action intent %s failed signature verification: %s", token.intent_id, exc)
             return False
 
 

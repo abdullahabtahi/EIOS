@@ -3,6 +3,9 @@ import { ActionIntentCard, CopilotQueryResponse, MetricProvenance } from '@/comp
 
 import { backendUnavailable, callBackend, relayError } from '@/lib/server/backend';
 
+// A live Gemini turn with tool calls can take well over the default proxy timeout.
+const COPILOT_TIMEOUT_MS = 90_000;
+
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown> = {};
   try {
@@ -19,7 +22,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
-    });
+    }, { timeoutMs: COPILOT_TIMEOUT_MS });
     if (!res) return backendUnavailable();
     if (!res.ok) return relayError(res);
     if (res.ok) {

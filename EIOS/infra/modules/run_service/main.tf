@@ -88,3 +88,15 @@ resource "google_cloud_run_v2_service_iam_member" "invoker" {
   role     = "roles/run.invoker"
   member   = each.value
 }
+
+# The single public entry point. The application authenticates every operator (Identity Platform
+# ID tokens); the API behind it is private and reachable only through its own service identity.
+resource "google_cloud_run_v2_service_iam_member" "public" {
+  count = var.allow_public_invocation ? 1 : 0
+
+  project  = var.project_id
+  location = google_cloud_run_v2_service.this.location
+  name     = google_cloud_run_v2_service.this.name
+  role     = "roles/run.invoker"
+  member   = "allUsers"
+}

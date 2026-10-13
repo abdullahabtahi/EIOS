@@ -16,7 +16,12 @@ from typing import Any, Protocol
 from google.api_core.exceptions import Aborted
 from pydantic import BaseModel
 
-from eios.ontology.actions.ledger_store import ENVIRONMENT_ENV, LOCAL_ENVIRONMENTS, PERSISTENCE_ENV
+from eios.ontology.actions.ledger_store import (
+    ENVIRONMENT_ENV,
+    LOCAL_ENVIRONMENTS,
+    PERSISTENCE_ENV,
+    firestore_client,
+)
 
 Record = dict[str, Any]
 Mutation = Callable[[Record], Record]
@@ -86,7 +91,7 @@ class FirestoreRecordStore:
         from google.cloud import firestore
 
         self._firestore = firestore
-        self._db = client if client is not None else firestore.Client()
+        self._db = client if client is not None else firestore_client()
         self._col = self._db.collection(collection)
 
     def get(self, key: str) -> Record | None:

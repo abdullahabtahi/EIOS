@@ -150,3 +150,9 @@ variable "invoker_members" {
     error_message = "Public invocation is not allowed. Grant specific identities."
   }
 }
+
+variable "allow_public_invocation" {
+  description = "Grant roles/run.invoker to allUsers. Only for the one public entry point (the web UI), which enforces operator sign-in itself. Every other service stays private; this is a deliberate, reviewed exception."
+  type        = bool
+  default     = false
+}
