@@ -95,3 +95,20 @@ identities:
   roles: *id009
   can_read_eval_truth: false
   impersonable_by: *id010
+- service: cockpit_api
+  environment: prod-like
+  roles:
+  - roles/aiplatform.user
+  - roles/cloudtrace.agent
+  - roles/logging.logWriter
+  - roles/monitoring.metricWriter
+  can_read_eval_truth: false
+  impersonable_by: []
+- service: cockpit_web
+  environment: prod-like
+  roles:
+  - roles/cloudtrace.agent
+  - roles/logging.logWriter
+  - roles/monitoring.metricWriter
+  can_read_eval_truth: false
+  impersonable_by: []

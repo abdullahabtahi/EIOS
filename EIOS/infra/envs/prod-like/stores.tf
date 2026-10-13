@@ -8,12 +8,15 @@ module "secret_store" {
 
   # Action Intents are signed by the core service and verified at the edge. No identity
   # that can propose an action may also hold a signing permission beyond skeleton_core.
-  signer_members   = { skeleton_core = module.identity_skeleton_core.member }
-  verifier_members = { skeleton_edge = module.identity_skeleton_edge.member }
+  signer_members   = { skeleton_core = module.identity_skeleton_core.member, cockpit_api = module.identity_cockpit_api.member }
+  verifier_members = { skeleton_edge = module.identity_skeleton_edge.member, cockpit_api = module.identity_cockpit_api.member }
 
   secrets = {
     llm_provider_credential = {
       accessors = { skeleton_core = module.identity_skeleton_core.member }
+    }
+    cashier_webhook_secret = {
+      accessors = { cockpit_api = module.identity_cockpit_api.member }
     }
   }
 
@@ -82,6 +85,7 @@ module "state_stores" {
   user_members = {
     skeleton_edge = module.identity_skeleton_edge.member
     skeleton_core = module.identity_skeleton_core.member
+    cockpit_api   = module.identity_cockpit_api.member
   }
 
   depends_on = [module.project_baseline]

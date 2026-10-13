@@ -23,6 +23,7 @@ from eios.ontology.actions.models import LedgerEntry
 GENESIS_ANCHOR: str = hashlib.sha256(b"EIOS_GENESIS_ANCHOR_V1_20261008").hexdigest()
 
 PERSISTENCE_ENV = "EIOS_PERSISTENCE"
+FIRESTORE_DATABASE_ENV = "EIOS_FIRESTORE_DATABASE"
 ENVIRONMENT_ENV = "EIOS_ENVIRONMENT"
 LOCAL_ENVIRONMENTS = frozenset({"dev", "test"})
 
@@ -83,6 +84,13 @@ class InMemoryLedgerStore:
             return list(self.entries)
 
 
+def firestore_client() -> Any:
+    """A Firestore client for the configured database (a named database in deployed environments)."""
+    from google.cloud import firestore
+
+    return firestore.Client(database=os.getenv(FIRESTORE_DATABASE_ENV) or None)
+
+
 class FirestoreLedgerStore:
     """Firestore-backed store. One document per entry plus a head document, written in a transaction."""
 
@@ -90,7 +98,7 @@ class FirestoreLedgerStore:
         from google.cloud import firestore
 
         self._firestore = firestore
-        self._db = client if client is not None else firestore.Client()
+        self._db = client if client is not None else firestore_client()
         self._entries = self._db.collection(f"{collection_prefix}_entries")
         self._head_ref = self._db.collection(f"{collection_prefix}_meta").document("head")
 

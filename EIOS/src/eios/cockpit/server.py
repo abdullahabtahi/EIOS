@@ -46,6 +46,7 @@ from eios.cockpit.auth import (
 )
 from eios.cockpit.governance_runtime import build_governance_runtime
 from eios.cockpit.governance_shelf import GovernedActionCard
+from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
     CANONICAL_ACTION_SPECS,
     ConcurrentModificationError,
@@ -1033,17 +1034,21 @@ def submit_flywheel_feedback(
 
 @router.get(AUDIT_VERIFY_PATH)
 def verify_ledger_continuity() -> Dict[str, Any]:
-    """Cryptographically verifies SHA-256 monotonic ledger continuity."""
-    report = compliance_svc.verify_hash_chain_interactive()
+    """Walk the real decision ledger: sequence continuity, SHA-256 hash chain and signed checkpoints."""
+    report = ContinuousAuditWalker(governance.sequencer, governance.worm).verify_ledger()
+    checkpoints = governance.worm.get_checkpoints()
     return {
-        "status": report.get("status", "VALID"),
-        "total_records": report.get(
-            "total_entries_verified", len(outcomes_ledger._records) or 10000
-        ),
-        "last_hash": report.get("chain_head_hash", outcomes_ledger._last_hash),
-        "worm_mode": "LOCKED",
+        "status": "VALID" if report.is_valid else "TAMPERED",
+        "total_records": report.total_entries,
+        "last_hash": report.head_hash,
+        "genesis_hash": report.genesis_hash,
+        "tampered_sequence_id": report.tampered_sequence_id,
+        "failure_reason": report.failure_reason,
+        "worm_checkpoints_verified": report.worm_checkpoints_verified,
+        # Checkpoints are signed at the application level; no bucket retention lock is claimed here.
+        "worm_mode": "SIGNED_CHECKPOINTS" if checkpoints else "NO_CHECKPOINTS",
+        "audit_duration_ms": report.audit_duration_ms,
         "verified_at": _get_utc_now(),
-        "details": report,
     }
 
 

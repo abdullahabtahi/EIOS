@@ -16,6 +16,7 @@ from eios.ontology.actions.record_store import default_record_store
 from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.signer import default_action_signer
 from eios.ontology.actions.sink import SimulatedWriteBackSink
+from eios.ontology.actions.worm import WORMAnchorService
 
 DEMO_SEED_FLAG = "demo_cards_v1"
 
@@ -56,6 +57,7 @@ class GovernanceRuntime:
     sequencer: LedgerSequencer
     hub: ActionIntentHub
     shelf: GovernedActionShelf
+    worm: WORMAnchorService
 
     def seed_demo_intents(self) -> None:
         """Propose the demo intents once across all instances (atomic create-if-absent flag)."""
@@ -80,5 +82,8 @@ def build_governance_runtime() -> GovernanceRuntime:
         signer=signer, sequencer=sequencer, sink=SimulatedWriteBackSink(sequencer=sequencer)
     )
     return GovernanceRuntime(
-        sequencer=sequencer, hub=hub, shelf=GovernedActionShelf(intent_hub=hub, signer=signer)
+        sequencer=sequencer,
+        hub=hub,
+        shelf=GovernedActionShelf(intent_hub=hub, signer=signer),
+        worm=WORMAnchorService(sequencer=sequencer, signer=signer),
     )

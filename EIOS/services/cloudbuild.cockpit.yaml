@@ -1,0 +1,25 @@
+# Builds and pushes the two cockpit images. Run from the repository root:
+#   gcloud builds submit . --project <project> --region <region> \
+#     --config EIOS/services/cloudbuild.cockpit.yaml \
+#     --substitutions _REPO=<region>-docker.pkg.dev/<project>/images,_FIREBASE_API_KEY=<public web key>,_FIREBASE_PROJECT_ID=<project>
+# The images are addressed by digest afterwards (see docs/runbooks/cockpit-deploy.md).
+steps:
+  - id: api
+    name: gcr.io/cloud-builders/docker
+    args: ["build", "-f", "EIOS/services/cockpit_api/Dockerfile", "-t", "${_REPO}/cockpit-api:${BUILD_ID}", "."]
+  - id: web
+    name: gcr.io/cloud-builders/docker
+    dir: EIOS/web-prototype
+    args:
+      - build
+      - --build-arg=NEXT_PUBLIC_FIREBASE_API_KEY=${_FIREBASE_API_KEY}
+      - --build-arg=NEXT_PUBLIC_FIREBASE_PROJECT_ID=${_FIREBASE_PROJECT_ID}
+      - --build-arg=NEXT_PUBLIC_API_URL=
+      - -t
+      - ${_REPO}/cockpit-web:${BUILD_ID}
+      - .
+images:
+  - ${_REPO}/cockpit-api:${BUILD_ID}
+  - ${_REPO}/cockpit-web:${BUILD_ID}
+options:
+  logging: CLOUD_LOGGING_ONLY
