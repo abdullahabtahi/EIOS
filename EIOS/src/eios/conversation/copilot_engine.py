@@ -53,7 +53,34 @@ CRITICAL OPERATIONAL INVARIANTS:
 2. (Principle III) If asked for speculative future predictions or unobservable competitor internals, respond strictly with "insufficient data".
 3. (SR 11-7 Forensic Objectivity) In compliance and AML inquiries, describe factual observed patterns objectively. State amounts, frequencies, and discrepancy ratios without alleging subjective criminal intent.
 4. Always cite specific entity identifiers, metric definitions, and regulatory sections (e.g. 31 CFR § 1020.320).
+5. Quote every figure exactly as a tool returned it. Never state a number no tool returned: no thresholds, scales (such as "out of 100"), percentages you derived, ratios you computed, or counts you tallied. If a figure is not in a tool result, omit it.
 """
+
+
+MAX_TOOL_ROUNDS = 4
+MAX_CORRECTIONS = 2  # within the 3-cycle reflection bound of ADR-016
+
+
+def correction_prompt(unanchored: List[str]) -> str:
+    shown = ", ".join(sorted(set(unanchored))[:12]) or "some figures"
+    return (
+        "The Metric Auditor blocked your answer: these figures do not appear in any tool result: "
+        f"{shown}. Rewrite the answer using only values the tools returned, quoted exactly. "
+        "Remove every other number; do not compute, convert or estimate."
+    )
+
+
+def run_omcp_tool(name: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    """Run one model-requested tool. Only OMCP tools in TOOL_MAP exist; failures are reported, never raised."""
+    func = TOOL_MAP.get(name)
+    if func is None:
+        return {"error": f"unknown tool '{name}'"}
+    try:
+        result = func(**dict(args))
+    except Exception as exc:  # a tool failure must not abort the turn; the model and auditor see it
+        _LOG.warning("OMCP tool %s failed: %s", name, exc)
+        return {"error": f"{type(exc).__name__}: {exc}"}
+    return result if isinstance(result, dict) else {"result": result}
 
 
 class CopilotEngine:
@@ -77,6 +104,37 @@ class CopilotEngine:
         self.supervisor = ConversationalSupervisor()
         self.tracer = CopilotTracer()
 
+    def _resolve_tool_calls(
+        self,
+        chat: Any,
+        response: Any,
+        tool_traces: List[Dict[str, Any]],
+        citations: List[ProvenanceCitation],
+    ) -> Any:
+        """Run the tools the model asked for (allow-listed, bounded rounds) and return its next response."""
+        for _ in range(MAX_TOOL_ROUNDS):
+            calls = list(getattr(response, "function_calls", None) or [])
+            if not calls:
+                break
+            fn_parts = []
+            for fc in calls:
+                output = run_omcp_tool(fc.name, fc.args or {})
+                tool_traces.append({"tool": fc.name, "output": output})
+                if "error" not in output:
+                    citations.append(
+                        ProvenanceCitation(
+                            citation_type=CitationType.METRIC,
+                            citation_id=fc.name,
+                            label=f"Tool {fc.name}",
+                            source_engine="OMCP",
+                        )
+                    )
+                fn_parts.append(
+                    types.Part.from_function_response(name=fc.name, response={"result": output})
+                )
+            response = chat.send_message(fn_parts)
+        return response
+
     def process_query(
         self,
         query: str,
@@ -93,10 +151,20 @@ class CopilotEngine:
 
         # Check for speculative out-of-domain queries or unauthorized write attacks (Principle II & III)
         adversarial_patterns = [
-            "in 2030", "predict 2030", "guess", "unrecorded transactions without any logging",
-            "secret profit", "without tools", "speculative", "directly execute a database write",
-            "without review", "bypass four-eyes", "unilaterally as single officer",
-            "alter" + " table", "drop" + " table", "ignore all instructions",
+            "in 2030",
+            "predict 2030",
+            "guess",
+            "unrecorded transactions without any logging",
+            "secret profit",
+            "without tools",
+            "speculative",
+            "directly execute a database write",
+            "without review",
+            "bypass four-eyes",
+            "unilaterally as single officer",
+            "alter" + " table",
+            "drop" + " table",
+            "ignore all instructions",
         ]
         if any(w in lower_q for w in adversarial_patterns):
             return ConversationQueryResponse(
@@ -119,7 +187,8 @@ class CopilotEngine:
         tool_traces: List[Dict[str, Any]] = []
         citations: List[ProvenanceCitation] = []
 
-        # If live gateway client is available, execute with Automatic Function Calling (AFC)
+        # Live Gemini with manual function calling: the model proposes tool calls, this engine runs
+        # only allow-listed OMCP tools, and the Metric Auditor checks the final text against the traces.
         if client and not self.offline_mode:
             try:
                 available_tools = list(OMCP_TOOLS)
@@ -132,38 +201,43 @@ class CopilotEngine:
                         system_instruction=SYSTEM_INSTRUCTION_BASE,
                         temperature=0.0,
                         tools=available_tools,
+                        # The SDK's automatic calling runs the tools itself and hides their results from
+                        # the engine (and fails on Python 3.14 argument handling); the engine runs them.
+                        automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                            disable=True
+                        ),
                     ),
                 )
                 response = chat.send_message(query)
 
-                # Process any returned function calls
-                if hasattr(response, "function_calls") and response.function_calls:
-                    for fc in response.function_calls:
-                        func = TOOL_MAP.get(fc.name)
-                        if func:
-                            tool_out = func(**(fc.args or {}))
-                            tool_traces.append({"tool": fc.name, "output": tool_out})
-                            citations.append(
-                                ProvenanceCitation(
-                                    citation_type=CitationType.METRIC,
-                                    citation_id=fc.name,
-                                    label=f"Tool {fc.name}",
-                                    source_engine="OMCP",
-                                )
-                            )
-
-                    # Request final grounded synthesis with tool responses
-                    fn_parts = [
-                        types.Part.from_function_response(name=t["tool"], response={"result": t["output"]})
-                        for t in tool_traces
-                    ]
-                    response = chat.send_message(fn_parts)
+                response = self._resolve_tool_calls(chat, response, tool_traces, citations)
 
                 raw_text = response.text or ""
                 audit_res = self.auditor_bridge.audit_turn(raw_text, tool_traces)
 
+                # Bounded self-correction: show the model exactly which figures the auditor could not trace.
+                corrections = 0
+                while not audit_res.passed and corrections < MAX_CORRECTIONS:
+                    corrections += 1
+                    response = chat.send_message(correction_prompt(audit_res.unanchored_tokens))
+                    response = self._resolve_tool_calls(chat, response, tool_traces, citations)
+                    raw_text = response.text or ""
+                    audit_res = self.auditor_bridge.audit_turn(raw_text, tool_traces)
+
                 # Ensure queries targeting metrics or entities have non-empty tool traces and citations
-                has_metric_intent = any(k in lower_q for k in ["turnover", "deposit", "spread", "cr84920", "revenue", "churn", "p-882", "ap-1029"])
+                has_metric_intent = any(
+                    k in lower_q
+                    for k in [
+                        "turnover",
+                        "deposit",
+                        "spread",
+                        "cr84920",
+                        "revenue",
+                        "churn",
+                        "p-882",
+                        "ap-1029",
+                    ]
+                )
                 if audit_res.passed and (not has_metric_intent or len(citations) > 0):
                     latency_ms = round((time.perf_counter() - t_start) * 1000, 2)
                     return ConversationQueryResponse(
@@ -174,6 +248,7 @@ class CopilotEngine:
                         citations=[c.citation_id for c in citations],
                         provenance_citations=citations,
                         is_replay_fallback=False,
+                        reflection_cycles_used=corrections,
                         turn_latency_ms=latency_ms,
                         auditor_status=audit_res.status.value,
                     )
@@ -232,7 +307,13 @@ class CopilotEngine:
                 "requires_four_eyes": True,
             }
 
-        elif "p-882" in lower_q or "ap-1029" in lower_q or "partner" in lower_q or "churn" in lower_q or role == OperatorRole.PARTNER_MANAGER:
+        elif (
+            "p-882" in lower_q
+            or "ap-1029" in lower_q
+            or "partner" in lower_q
+            or "churn" in lower_q
+            or role == OperatorRole.PARTNER_MANAGER
+        ):
             partner_id = "AP-1029" if "ap-1029" in lower_q else "P-882"
             vol_res = get_governed_metric("net_deposit_volume_30d_usd", entity_id=partner_id)
             tool_traces.append({"tool": "get_governed_metric", "output": vol_res})
@@ -303,7 +384,9 @@ class CopilotEngine:
                 "requires_four_eyes": False,
             }
 
-        elif any(w in lower_q for w in ["mcp", "tool", "tools", "protocol", "function", "functions"]):
+        elif any(
+            w in lower_q for w in ["mcp", "tool", "tools", "protocol", "function", "functions"]
+        ):
             narrative = (
                 "The EIOS Copilot connects to governed enterprise services via seven registered **OMCP (Open Model Context Protocol)** tools:\n\n"
                 "1. `get_governed_metric`: Queries the DuckDB semantic layer for certified KPI values, freshness timestamps, and version hashes.\n"
@@ -318,7 +401,20 @@ class CopilotEngine:
             route = SpecialistDomain.SYNTHESIS
             staged_rec = None
 
-        elif any(w in lower_q for w in ["what can you do", "help", "who are you", "capability", "capabilities", "features", "how does", "what do you do", "guide"]):
+        elif any(
+            w in lower_q
+            for w in [
+                "what can you do",
+                "help",
+                "who are you",
+                "capability",
+                "capabilities",
+                "features",
+                "how does",
+                "what do you do",
+                "guide",
+            ]
+        ):
             narrative = (
                 "I am the Enterprise Intelligence Copilot, an institutional AI agent operating over EIOS sovereign governed ontologies. "
                 "I assist operators across five specialized operational domains:\n\n"
@@ -343,18 +439,23 @@ class CopilotEngine:
                     source_engine="SemanticRegistry.DuckDB",
                 )
             )
-            narrative = f"The governed enterprise net revenue is currently ${int(kpi_res['value']):,} USD."
+            narrative = (
+                f"The governed enterprise net revenue is currently ${int(kpi_res['value']):,} USD."
+            )
             route = SpecialistDomain.SYNTHESIS
             staged_rec = None
 
         # Verify narrative through Metric Auditor Gate
         audit_res = self.auditor_bridge.audit_turn(narrative, tool_traces)
         mem.register_turn_entities(turn_index, resolved_query, {})
-        self.checkpointer.save_state(session_id, {
-            "session_id": session_id,
-            "turn_index": turn_index,
-            "anchor": mem.get_active_entity_anchor(),
-        })
+        self.checkpointer.save_state(
+            session_id,
+            {
+                "session_id": session_id,
+                "turn_index": turn_index,
+                "anchor": mem.get_active_entity_anchor(),
+            },
+        )
         latency_ms = round((time.perf_counter() - t_start) * 1000, 2)
 
         return ConversationQueryResponse(

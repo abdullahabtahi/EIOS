@@ -16,6 +16,19 @@ STATUTORY_PATTERNS = [
     re.compile(r"\b(?:Section|Sec\.)\s*\d+(?:\([a-zA-Z0-9]+\))*", re.IGNORECASE),
     re.compile(r"\b(?:Form|FinCEN\s*Form)\s*\d+", re.IGNORECASE),
     re.compile(r"\bFATF\s*(?:Recommendation|Rec\.)\s*\d+", re.IGNORECASE),
+    re.compile(r"\bSR\s*\d{1,2}-\d{1,2}\b"),  # Federal Reserve supervisory letters, e.g. SR 11-7
+]
+
+# Dates, timestamps and explicit version labels carry digits but are not business metrics. The patterns
+# are deliberately narrow: an ISO date or datetime, an HH:MM:SS clock time, and a `v`-prefixed or
+# `version`-labelled dotted version. A bare ratio such as 3:20 or a decimal such as 2.5 stays auditable.
+NON_METRIC_PATTERNS = [
+    re.compile(
+        r"\b\d{4}-\d{2}-\d{2}(?:[T ]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:\s?(?:UTC|Z)|[+-]\d{2}:?\d{2})?)?"
+    ),
+    re.compile(r"\b\d{1,2}:\d{2}:\d{2}(?:\.\d+)?(?:\s?(?:UTC|Z))?"),
+    re.compile(r"\bv\d+(?:\.\d+){1,3}\b", re.IGNORECASE),
+    re.compile(r"\bversion\s+\d+(?:\.\d+){1,3}\b", re.IGNORECASE),
 ]
 
 # Matches any identifier code containing letters and digits like CR84920, AP1029, Tier1, VIP_Spread_Rebate_Tier1
@@ -52,6 +65,10 @@ class ConversationAuditorBridge:
             tag = letters[idx % len(letters)] * 4
             masked_text = masked_text.replace(citation, f"STATUTORYMASK{tag}")
 
+        # Mask dates, timestamps and version labels (pure-letter tokens, no digits)
+        for idx, pat in enumerate(NON_METRIC_PATTERNS):
+            masked_text = pat.sub(f"NONMETRICMASK{letters[idx % len(letters)] * 2}", masked_text)
+
         # Mask alphanumeric codes like Tier1, CR84920, P-882 so identifier digits aren't treated as financial KPIs
         for idx, match in enumerate(ALPHANUMERIC_IDENTIFIER_PATTERN.finditer(masked_text)):
             matched_code = match.group(0)
@@ -74,7 +91,9 @@ class ConversationAuditorBridge:
             trace_id=trace_id,
         )
 
-    def scan_egress_response(self, response_text: str, evidence_ledger: List[Dict[str, Any]]) -> str:
+    def scan_egress_response(
+        self, response_text: str, evidence_ledger: List[Dict[str, Any]]
+    ) -> str:
         """Convenience method returning safe narrative or refusal message."""
         record = self.audit_turn(response_text, evidence_ledger)
         if not record.passed:
