@@ -43,9 +43,8 @@ class IngestionConfig(BaseModel):
     microbatch_max_delay_ms: int = Field(default=500)
 
     # Security & Token Vault
-    hmac_salt: str = Field(
-        default_factory=lambda: os.getenv("EIOS_HMAC_SALT", "eios-default-dev-salt-2026")
-    )
+    # Resolved (and enforced outside dev/test) by `vault.resolve_master_salt`; supplied from Secret Manager.
+    hmac_salt: str | None = Field(default_factory=lambda: os.getenv("EIOS_HMAC_SALT"))
     vault_key_version: str = Field(default="v1")
 
     # Service endpoints

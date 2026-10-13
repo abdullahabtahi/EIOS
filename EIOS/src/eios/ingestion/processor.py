@@ -13,7 +13,7 @@ from eios.ingestion.dq import DQMonitor
 from eios.ingestion.hot_state import HotStateEngine
 from eios.ingestion.queue import IngestionQueue, get_ingestion_queue
 from eios.ingestion.validator import ContractValidator, ValidationErrorDetail
-from eios.ingestion.vault import TokenVault
+from eios.ingestion.vault import TokenVault, resolve_master_salt
 
 logger = logging.getLogger("eios.ingestion.processor")
 
@@ -58,10 +58,7 @@ class IngestionPipeline:
         self.dlq_dispatcher = dlq_dispatcher or DLQDispatcher(dlq_topic=self.config.dlq_topic_id)
         self.circuit_breaker = circuit_breaker or IngestionCircuitBreaker()
         self.hot_state = hot_state or HotStateEngine()
-        salt_bytes = getattr(
-            self.config, "token_vault_salt", "deriv-eios-dev-salt-32bytes-secret"
-        ).encode("utf-8")
-        self.vault = vault or TokenVault(master_salt=salt_bytes)
+        self.vault = vault or TokenVault(master_salt=resolve_master_salt(self.config.hmac_salt))
         self.dq_monitor = dq_monitor or DQMonitor()
         self.queue = queue or get_ingestion_queue()
 

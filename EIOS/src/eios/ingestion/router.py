@@ -20,7 +20,7 @@ from eios.ingestion.processor import IngestionPipeline
 from eios.ingestion.queue import IngestionQueue, get_ingestion_queue
 from eios.ingestion.subscriber import IngestionSubscriber
 from eios.ingestion.validator import ContractValidator
-from eios.ingestion.vault import TokenVault
+from eios.ingestion.vault import TokenVault, resolve_master_salt
 from eios.ingestion.warm_start import ParquetWarmStartLoader
 
 logger = logging.getLogger("eios.ingestion.router")
@@ -100,10 +100,7 @@ def create_ingestion_app(  # noqa: C901, PLR0913, PLR0915
     app_dlq = dlq_dispatcher or DLQDispatcher(dlq_topic=app_config.dlq_topic_id)
     app_cb = circuit_breaker or IngestionCircuitBreaker()
     app_hot_state = hot_state or HotStateEngine()
-    salt_bytes = getattr(
-        app_config, "token_vault_salt", "deriv-eios-dev-salt-32bytes-secret"
-    ).encode("utf-8")
-    app_vault = vault or TokenVault(master_salt=salt_bytes)
+    app_vault = vault or TokenVault(master_salt=resolve_master_salt(app_config.hmac_salt))
     app_dq = dq_monitor or DQMonitor()
 
     app_pipeline = pipeline or IngestionPipeline(
