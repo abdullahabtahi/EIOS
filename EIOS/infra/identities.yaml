@@ -95,7 +95,7 @@ identities:
   roles: *id009
   can_read_eval_truth: false
   impersonable_by: *id010
-- service: cockpit_api
+- service: eios_api
   environment: prod-like
   roles:
   - roles/aiplatform.user
@@ -104,7 +104,7 @@ identities:
   - roles/monitoring.metricWriter
   can_read_eval_truth: false
   impersonable_by: []
-- service: cockpit_web
+- service: eios_web
   environment: prod-like
   roles:
   - roles/cloudtrace.agent

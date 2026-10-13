@@ -9,7 +9,7 @@ data "google_project" "this" {
 locals {
   # Cloud Run's deterministic URL form, so the two services can reference each other without a cycle.
   run_url_suffix  = "${data.google_project.this.number}.${var.region}.run.app"
-  cockpit_web_url = "https://eios-${local.run_url_suffix}"
+  cockpit_web_url = "https://eios-web-${local.run_url_suffix}"
 
   cockpit_api_roles = concat(local.runtime_roles, ["roles/aiplatform.user"])
 
@@ -34,7 +34,7 @@ module "identity_cockpit_api" {
 
   project_id     = var.project_id
   environment    = local.environment
-  service        = "cockpit_api"
+  service        = "eios_api"
   roles          = local.cockpit_api_roles
   act_as_members = { pipeline = module.identity_pipeline.member }
 
@@ -46,7 +46,7 @@ module "identity_cockpit_web" {
 
   project_id     = var.project_id
   environment    = local.environment
-  service        = "cockpit_web"
+  service        = "eios_web"
   roles          = local.runtime_roles
   act_as_members = { pipeline = module.identity_pipeline.member }
 
@@ -61,7 +61,7 @@ module "service_cockpit_api" {
   project_id            = var.project_id
   environment           = local.environment
   region                = var.region
-  service               = "eios_api" # Cloud Run service name; the identity keeps the cockpit_api name
+  service               = "eios_api"
   image                 = var.cockpit_api_image
   service_account_email = module.identity_cockpit_api.email
   stateful              = false
@@ -101,7 +101,7 @@ module "service_cockpit_web" {
   project_id              = var.project_id
   environment             = local.environment
   region                  = var.region
-  service                 = "eios" # public entry point: https://eios-<project number>.<region>.run.app
+  service                 = "eios_web" # public entry point: https://eios-web-<project number>.<region>.run.app
   image                   = var.cockpit_web_image
   service_account_email   = module.identity_cockpit_web.email
   stateful                = false
