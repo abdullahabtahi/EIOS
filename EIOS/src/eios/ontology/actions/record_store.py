@@ -128,9 +128,8 @@ class FirestoreRecordStore:
                 if isinstance(exc, ValueError) and not isinstance(exc.__cause__, Aborted):
                     raise  # a rejected mutation, not contention
                 last_error = exc
-                time.sleep(
-                    random.uniform(0, min(BACKOFF_CAP_SECONDS, BACKOFF_BASE_SECONDS * 2**attempt))
-                )  # noqa: S311
+                delay = min(BACKOFF_CAP_SECONDS, BACKOFF_BASE_SECONDS * 2**attempt)
+                time.sleep(random.uniform(0, delay))  # noqa: S311 - jitter, not cryptography
         raise RuntimeError("record contended beyond the retry budget") from last_error
 
     def list(self) -> list[Record]:
