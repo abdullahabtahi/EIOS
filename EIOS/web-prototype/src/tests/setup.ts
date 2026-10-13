@@ -5,7 +5,13 @@ if (typeof (workerThreads as any).markAsUncloneable !== 'function') {
 
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, beforeAll, vi } from 'vitest';
+
+beforeAll(() => {
+  vi.spyOn(console, 'info').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, 'warn').mockImplementation(() => {});
+});
 
 afterEach(() => {
   cleanup();
