@@ -19,7 +19,24 @@ router = APIRouter(tags=["Webhooks"])
 sentinel = WithdrawalSentinel()
 
 CASHIER_WITHDRAWAL_PATH = "/api/v1/webhooks/cashier/withdrawal"
-WEBHOOK_SECRET = os.environ.get("EIOS_CASHIER_WEBHOOK_SECRET", "eios-cashier-sentinel-secret-v1").encode("utf-8")
+# Not a credential: a fixed value so local tests can sign requests. Deployed environments must supply
+# the real secret (from Secret Manager) or the service refuses to start.
+_DEV_WEBHOOK_SECRET = b"dev-only-webhook-secret"
+
+
+def _load_webhook_secret() -> bytes:
+    secret = os.environ.get("EIOS_CASHIER_WEBHOOK_SECRET")
+    if secret:
+        return secret.encode("utf-8")
+    environment = os.environ.get("EIOS_ENVIRONMENT", "dev")
+    if environment in {"dev", "test"}:
+        return _DEV_WEBHOOK_SECRET
+    raise RuntimeError(
+        f"EIOS_CASHIER_WEBHOOK_SECRET must be set in the '{environment}' environment"
+    )
+
+
+WEBHOOK_SECRET = _load_webhook_secret()
 
 # In-memory replay attack prevention nonce cache
 PROCESSED_NONCES: Set[str] = set()
@@ -66,6 +83,7 @@ async def handle_cashier_withdrawal_webhook(
 
     try:
         import json
+
         body_dict = json.loads(raw_body.decode("utf-8"))
         payload = CashierWithdrawalPayload(**body_dict)
     except Exception as exc:
@@ -93,7 +111,9 @@ async def handle_cashier_withdrawal_webhook(
     )
 
     elapsed_ms = round((time.perf_counter() - start_time) * 1000, 2)
-    disposition_str = "RELEASE" if assessment.recommendation == WithdrawalDisposition.ALLOW else "HOLD"
+    disposition_str = (
+        "RELEASE" if assessment.recommendation == WithdrawalDisposition.ALLOW else "HOLD"
+    )
 
     return {
         "status": "PROCESSED",

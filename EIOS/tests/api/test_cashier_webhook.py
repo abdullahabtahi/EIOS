@@ -136,3 +136,14 @@ def test_webhook_rejects_replay_attack(client):
     )
     assert res2.status_code == 409
     assert "Replay attack detected" in res2.json()["detail"]
+
+
+def test_deployed_environment_refuses_to_start_without_the_webhook_secret(monkeypatch):
+    from eios.api.routes_webhooks import _load_webhook_secret
+
+    monkeypatch.delenv("EIOS_CASHIER_WEBHOOK_SECRET", raising=False)
+    monkeypatch.setenv("EIOS_ENVIRONMENT", "prod-like")
+    with pytest.raises(RuntimeError, match="EIOS_CASHIER_WEBHOOK_SECRET"):
+        _load_webhook_secret()
+    monkeypatch.setenv("EIOS_CASHIER_WEBHOOK_SECRET", "from-secret-manager")
+    assert _load_webhook_secret() == b"from-secret-manager"

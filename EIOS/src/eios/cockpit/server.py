@@ -19,11 +19,12 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import logging
 import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, FastAPI, HTTPException, Query, status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 import uvicorn
@@ -35,6 +36,14 @@ from eios.cockpit.aml import AMLWorkstationService
 from eios.cockpit.partner import PartnerWorkstationService
 from eios.cockpit.compliance import ComplianceExplorerService
 from eios.cockpit.operations import DataPlatformOperationsService
+from eios.cockpit.auth import (
+    APPROVE_ROLES,
+    STAGE_ROLES,
+    Operator,
+    cors_origins,
+    current_operator,
+    require_roles,
+)
 from eios.cockpit.governance_runtime import build_governance_runtime
 from eios.cockpit.governance_shelf import GovernedActionCard
 from eios.ontology.actions.intent_hub import (
@@ -53,6 +62,8 @@ from eios.ontology.auditor.gate import MetricAuditorGate
 from eios.flywheel.ledger import DecisionOutcomesLedger, DecisionOutcomeRecord
 from eios.conversation.copilot_engine import CopilotEngine
 
+_LOG = logging.getLogger("eios.cockpit.server")
+
 copilot_engine = CopilotEngine()
 
 app = FastAPI(
@@ -63,10 +74,10 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins(),
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 # Global Service Singletons
@@ -168,7 +179,7 @@ def _ensure_default_staged_cards() -> None:
     governance.seed_demo_intents()
 
 
-def _build_contract_state(role_str: str) -> Dict[str, Any]:
+def _build_contract_state(role_str: str, operator_id: Optional[str] = None) -> Dict[str, Any]:
     """Compiles the full CockpitUiContract JSON structure for a role."""
     norm_role = role_str.lower().strip()
     now_iso = _get_utc_now()
@@ -711,7 +722,7 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
         "session": {
             "session_id": f"sess_{role_enum}_{int(time.time())}",
             "active_role": role_enum,
-            "operator_id": "OPERATOR_EIOS_LEAD",
+            "operator_id": operator_id or "OPERATOR_EIOS_LEAD",
             "clearance_level": "LEVEL_3_EXECUTIVE" if role_enum == "executive" else "LEVEL_2",
             "timestamp": now_iso,
         },
@@ -819,12 +830,13 @@ COPILOT_QUERY_PATH = "/api/cockpit/copilot/query"
 FLYWHEEL_FEEDBACK_PATH = "/api/cockpit/flywheel/feedback"
 AUDIT_VERIFY_PATH = "/api/cockpit/audit/verify"
 
-router = APIRouter(tags=["Cockpit Presentation"])
+public_router = APIRouter(tags=["Cockpit Presentation"])
+router = APIRouter(tags=["Cockpit Presentation"], dependencies=[Depends(current_operator)])
 
 
 # Endpoints
-@router.get(HEALTH_PATH)
-@router.get(API_HEALTH_PATH)
+@public_router.get(HEALTH_PATH)
+@public_router.get(API_HEALTH_PATH)
 def get_health() -> Dict[str, Any]:
     return {
         "status": "UP",
@@ -838,14 +850,17 @@ def get_health() -> Dict[str, Any]:
 
 
 @router.get(WORKSTATIONS_PATH)
-def get_workstation_state(role: str) -> Dict[str, Any]:
+def get_workstation_state(
+    role: str, operator: Operator | None = Depends(current_operator)
+) -> Dict[str, Any]:
     """Returns the full contract-compliant client state for the requested workstation."""
     try:
-        return _build_contract_state(role)
+        return _build_contract_state(role, operator_id=operator.uid if operator else None)
     except Exception as exc:
+        _LOG.exception("failed to assemble workstation state for %s", role)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to assemble workstation state for {role}: {str(exc)}",
+            detail="Failed to assemble workstation state",
         ) from exc
 
 
@@ -881,7 +896,9 @@ def _resolve_parameters(
 
 
 @router.post(STAGE_ACTION_PATH)
-def stage_governed_action(req: StageActionRequest) -> Dict[str, Any]:
+def stage_governed_action(
+    req: StageActionRequest, operator: Operator | None = Depends(require_roles(STAGE_ROLES))
+) -> Dict[str, Any]:
     """Propose an action through the intent hub: validated, KMS-signed, nonce-registered and ledgered."""
     action_type = _ACTION_ALIASES.get(req.action_type, req.action_type)
     try:
@@ -889,7 +906,7 @@ def stage_governed_action(req: StageActionRequest) -> Dict[str, Any]:
             action_type=action_type,
             parameters=_resolve_parameters(action_type, req.target_entity_id, req.metadata),
             evidence_refs=["ev_user_staged"],
-            requester_agent_id=req.initiator_officer_id,
+            requester_agent_id=operator.uid if operator else req.initiator_officer_id,
             policy_tags=["STAGED_VIA_COCKPIT"],
             require_dual_approval=req.requires_four_eyes,
         )
@@ -906,13 +923,15 @@ def stage_governed_action(req: StageActionRequest) -> Dict[str, Any]:
 
 
 @router.post(AUTHORIZE_ACTION_PATH)
-def authorize_governed_action(req: AuthorizeActionRequest) -> Dict[str, Any]:
+def authorize_governed_action(
+    req: AuthorizeActionRequest, operator: Operator | None = Depends(require_roles(APPROVE_ROLES))
+) -> Dict[str, Any]:
     """Record a Four-Eyes approval; commit the action once every required approval is in."""
     try:
         card = action_shelf.submit_approval(
             intent_id=req.intent_id,
-            approver_id=req.authorizer_id,
-            approver_role="COMPLIANCE_OFFICER",
+            approver_id=operator.uid if operator else req.authorizer_id,
+            approver_role=operator.role if operator else "COMPLIANCE_OFFICER",
             comment="Authorized via Cockpit Governed Action Shelf",
         )
         if card.status == "APPROVED":
@@ -979,7 +998,9 @@ def query_copilot(req: CopilotQueryRequest) -> Dict[str, Any]:
 
 
 @router.post(FLYWHEEL_FEEDBACK_PATH)
-def submit_flywheel_feedback(req: FlywheelFeedbackRequest) -> Dict[str, Any]:
+def submit_flywheel_feedback(
+    req: FlywheelFeedbackRequest, operator: Operator | None = Depends(current_operator)
+) -> Dict[str, Any]:
     """Records operator annotation/revision into closed-loop Decision Outcomes Ledger."""
     decision_id = f"dec_{int(time.time() * 1000)}"
     now = datetime.now(timezone.utc)
@@ -993,7 +1014,7 @@ def submit_flywheel_feedback(req: FlywheelFeedbackRequest) -> Dict[str, Any]:
         entity_id=req.case_id,
         propensity_score=0.92,
         treatment_assigned=not req.false_positive,
-        covariates={"annotator": req.annotator_id},
+        covariates={"annotator": operator.uid if operator else req.annotator_id},
         predicted_impact_30d=0.0,
         predicted_impact_60d=0.0,
         predicted_impact_90d=0.0,
@@ -1026,6 +1047,7 @@ def verify_ledger_continuity() -> Dict[str, Any]:
     }
 
 
+app.include_router(public_router)
 app.include_router(router)
 
 
