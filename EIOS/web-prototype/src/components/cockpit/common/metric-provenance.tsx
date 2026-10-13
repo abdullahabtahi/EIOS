@@ -10,6 +10,7 @@
 import * as React from 'react';
 import { MetricProvenance, ProvenanceCitation } from '../state/cockpit-types';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { formatUtcTimestamp } from '@/lib/utils';
 
 interface MetricProvenanceBadgeProps {
   metric: MetricProvenance;
@@ -46,13 +47,7 @@ export function MetricProvenanceBadge({
   displayMode = 'inline',
   className = '',
 }: MetricProvenanceBadgeProps) {
-  const formattedAsOf = React.useMemo(() => {
-    try {
-      return new Date(metric.asOfTimestamp).toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
-    } catch {
-      return metric.asOfTimestamp;
-    }
-  }, [metric.asOfTimestamp]);
+  const formattedAsOf = React.useMemo(() => formatUtcTimestamp(metric.asOfTimestamp), [metric.asOfTimestamp]);
 
   return (
     <Popover>
@@ -159,4 +154,3 @@ export function MetricProvenanceBadge({
   );
 }
 
-export const ProvenancePopover = MetricProvenanceBadge;

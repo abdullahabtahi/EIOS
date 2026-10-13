@@ -9,6 +9,7 @@
 
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
+import { formatUtcTimestamp } from '@/lib/utils';
 
 interface FallbackReplayBadgeProps {
   timestamp?: string;
@@ -24,12 +25,7 @@ export function FallbackReplayBadge({
   className = '',
 }: FallbackReplayBadgeProps) {
   const formattedTime = React.useMemo(() => {
-    if (!timestamp) return 'PRE-COMPILED SNAPSHOT';
-    try {
-      return new Date(timestamp).toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
-    } catch {
-      return timestamp;
-    }
+    return timestamp ? formatUtcTimestamp(timestamp) : 'PRE-COMPILED SNAPSHOT';
   }, [timestamp]);
 
   return (
@@ -72,13 +68,7 @@ export function FallbackReplayBanner({ className = '' }: FallbackReplayBannerPro
     }
   };
 
-  const formattedTime = (() => {
-    try {
-      return new Date(state.asOfTimestamp).toISOString().replace('T', ' ').slice(0, 19) + ' UTC';
-    } catch {
-      return state.asOfTimestamp;
-    }
-  })();
+  const formattedTime = formatUtcTimestamp(state.asOfTimestamp);
 
   return (
     <aside

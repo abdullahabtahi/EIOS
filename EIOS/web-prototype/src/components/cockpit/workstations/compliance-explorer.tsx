@@ -11,6 +11,8 @@
 import * as React from 'react';
 import { LedgerAuditRecord } from '../state/cockpit-types';
 import { DrProofCard } from '../common/dr-proof-card';
+import { authFetch } from '@/lib/auth/token';
+import { formatUtcTimestamp } from '@/lib/utils';
 
 const MOCK_LEDGER: LedgerAuditRecord[] = [
   { ledgerSeq: 10482, recordHash: 'a8f9c2d1e03b7194f882a1c0d4e9b47c001928374655bbccddeeff1122334455', previousHash: '9d8e7f6a11029384756bca9928174625142536475869708192a3b4c5d6e7f800', actionIntentId: 'act_hold_1001', actionType: 'HOLD_WITHDRAWAL', targetEntity: 'ACC-88219', approverClaims: ['claim_okta_p9_executive', 'claim_okta_p9_aml_lead'], timestamp: '2026-10-10T09:42:15Z', wormLocked: true, chainVerificationStatus: 'VALID' },
@@ -26,7 +28,7 @@ export function ComplianceExplorerView() {
   const handleVerifyChain = async () => {
     setIsVerifying(true);
     try {
-      const res = await fetch('/api/cockpit/audit/verify');
+      const res = await authFetch('/api/cockpit/audit/verify');
       if (res.ok) {
         const data = await res.json();
         setChainValid(data.chainVerificationStatus === 'VALID');
@@ -74,7 +76,7 @@ export function ComplianceExplorerView() {
 
                   <div className="flex items-center gap-2 text-label">
                     <span className="text-cx-faint">
-                      {new Date(record.timestamp).toISOString().replace('T', ' ').slice(0, 19)} UTC
+                      {formatUtcTimestamp(record.timestamp)}
                     </span>
                     <span className="px-1.5 py-0.2 bg-cx-ok-bg text-cx-ok font-bold border border-cx-ok-line">
                       WORM LOCKED
