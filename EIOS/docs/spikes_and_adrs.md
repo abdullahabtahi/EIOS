@@ -41,6 +41,7 @@ Status: **Accepted** = decided; **Proposed** = drafted, awaiting spike/evidence;
 | [ADR-013](adr/013-streaming-batch-separation.md) | Streaming vs batch separation and shared hot state | Accepted | Invariant 3 | — |
 | ADR-014 | API surface: GraphQL + SSE vs REST + SSE | Open | Decide with ADR-009 | — |
 | [ADR-015](adr/015-synthetic-data-split-policy.md) | Synthetic-data split policy (dev/validation/sealed) & anti-circularity controls | Accepted | See `docs/synthetic_data_strategy.md` | — |
+| [ADR-018](adr/018-bounded-contexts-and-governed-tool-surface.md) | Bounded contexts and a single governed tool surface | Proposed | Per-context schemas; OMCP is the only agent-facing surface | — |
 
 ### ADR template
 ```

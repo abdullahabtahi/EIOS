@@ -171,7 +171,7 @@ Public `eios-web` (Next.js) and private `eios-api` (FastAPI) on Cloud Run; Ident
 | OpenSanctions | CC BY-NC for bulk data; commercial use needs a licence | Hackathon only; production uses a pluggable screening port with official lists |
 | Overture Maps (BigQuery public) | Check attribution terms | Divisions, places |
 | Google Maps Platform | Platform terms (no scraping or caching of tiles) | Basemap with deck.gl overlay |
-| OpenBB | AGPL: run unmodified in its own service; Dekart is AGPL, reference only | Macro and competitor market data, only if a scenario needs it |
+| OpenBB | V5 is Apache-2.0 (V4 and earlier were AGPL); data terms are per provider. Dekart is AGPL, reference only | Macro and competitor market data, only if a scenario needs it |
 
 ### 8.3 Policies
 - **P-1** No synthetic assertion about a real named entity. Fictional cases link to synthetic shells and to jurisdictions.
