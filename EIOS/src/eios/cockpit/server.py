@@ -565,16 +565,38 @@ def _build_contract_state(role_str: str) -> Dict[str, Any]:
             for p in products
         ]
 
+        total_products = len(products)
+        breached_products = [p for p in products if p.status.value == "BREACHED"]
+        degraded_products = [p for p in products if p.status.value == "DEGRADED"]
+        if breached_products:
+            names = ", ".join(p.product_name for p in breached_products)
+            health_summary = (
+                f"{len(breached_products)} of {total_products} data products breached freshness SLA ({names})."
+            )
+        elif degraded_products:
+            health_summary = f"{len(degraded_products)} of {total_products} data products degraded."
+        else:
+            health_summary = f"All {total_products} data products meeting freshness SLAs."
+        passing_gates = sum(1 for g in red_lines if g["status"] == "PASS")
+        budgets_healthy = all(b["status"] == "HEALTHY" for b in err_budgets)
+        budget_narrative = (
+            f"All {len(err_budgets)} error budgets are within 30-day thresholds."
+            if budgets_healthy
+            else "One or more error budgets are outside 30-day thresholds; see the SLO board."
+        )
+
         active_dossier = {
             "dossier_id": "dos_data_ops",
             "entity_id": "PLATFORM-OPERATIONS",
             "headline": "Real-Time Data Platform Operations & 10-SLO Engine Monitor",
-            "executive_summary": "All 6 streaming data products meeting sub-30s freshness SLAs. Red-line test gates RL-1 through RL-7 passing.",
+            "executive_summary": (
+                f"{health_summary} {passing_gates} of {len(red_lines)} red-line gates passing."
+            ),
             "sections": [
                 {
                     "section_id": "sec_slos",
                     "title": "Continuous 10-SLO Status & Error Budget",
-                    "narrative_text": "Streaming latency, metric calculation drift, and refuter verification budgets all within 30-day thresholds.",
+                    "narrative_text": budget_narrative,
                     "citations": ["streaming_lag_ms"],
                     "metrics": [
                         {

@@ -121,3 +121,27 @@ def test_flywheel_feedback_and_ledger_verify(client):
     verify_resp = client.get("/api/cockpit/audit/verify")
     assert verify_resp.status_code == 200
     assert verify_resp.json()["status"] == "VALID"
+
+
+def test_data_operations_dossier_narrative_is_derived_from_computed_health(client):
+    """The dossier text must never claim health that the computed SLA statuses contradict."""
+    data = client.get("/api/cockpit/workstations/data_operations").json()
+    payload = data["kinetic_canvas"]["payload"]
+    products = payload["sla_statuses"]
+    gates = payload["red_line_gates"]
+    summary = data["active_dossier"]["executive_summary"]
+
+    breached = [p for p in products if p["status"] == "BREACHED"]
+    degraded = [p for p in products if p["status"] == "DEGRADED"]
+    passing = sum(1 for g in gates if g["status"] == "PASS")
+
+    if breached:
+        assert f"{len(breached)} of {len(products)} data products breached" in summary
+        for p in breached:
+            assert p["product_name"] in summary
+        assert "meeting" not in summary.lower()
+    elif degraded:
+        assert f"{len(degraded)} of {len(products)} data products degraded" in summary
+    else:
+        assert f"All {len(products)} data products meeting freshness SLAs" in summary
+    assert f"{passing} of {len(gates)} red-line gates passing" in summary
