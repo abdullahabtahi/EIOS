@@ -66,6 +66,7 @@ An engineer changing the agent needs to see whether it still picks the right gov
 2. **Given** a question whose required data is unavailable (tool error or empty result), **When** the agent answers, **Then** it states that the data is unavailable and states no figure.
 3. **Given** a question that no tool can answer, **When** asked, **Then** the answer is the canonical "insufficient data" refusal.
 4. **Given** a turn that calls a tool outside the agent's allow-list for that role, **When** judged, **Then** the turn fails.
+5. **Given** a workstation shows a partner with a 78% churn hazard and a 68% login drop, **When** the operator asks the agent about that partner, **Then** the figures in the answer equal the figures on screen, and any difference is reported with both values.
 
 ---
 
@@ -151,7 +152,7 @@ The engineer rebuilding the agent needs the same suites to run unchanged against
 **Golden cases and data**
 
 - **FR-010**: Golden cases MUST exist for each workstation (AML investigator, partner manager, executive, compliance auditor, data operations), each stating the question, role, expected tool path, expected facts and data origin, and covering answerable, unanswerable, ambiguous follow-up, multi-turn and tool-failure cases.
-- **FR-011**: Cases MUST draw their data from the synthetic foundry with the development, validation and sealed splits of ADR-015; sealed results MUST be produced only on release candidates.
+- **FR-011**: Every case MUST carry its data split (development, validation or sealed, per ADR-015) and, where the runtime reads foundry data, MUST draw from it; every report MUST state which turns ran on fixture data. Sealed results MUST be produced only on release candidates.
 - **FR-012**: Ground truth MUST stay in the eval-only store and MUST never appear in the agent's context, tools or prompts.
 
 **Trajectory and safety**
@@ -179,6 +180,10 @@ The engineer rebuilding the agent needs the same suites to run unchanged against
 - **FR-024**: Inconclusive runs (provider outage, timeout) MUST never count as a pass.
 - **FR-025**: Adding or tightening a gate MUST require configuration only, not changes to evaluation code.
 
+**Agreement with the workstation**
+
+- **FR-026**: For an entity shown on a workstation, every figure the agent states about that entity MUST agree with the figure the workstation shows for it. A disagreement fails the case and names both values and where each came from.
+
 ### Key Entities
 
 - **Turn Record**: one evaluated turn, runtime-neutral; the shared input of every gate and of telemetry.
@@ -202,6 +207,7 @@ The engineer rebuilding the agent needs the same suites to run unchanged against
 - **SC-008**: A scan of all telemetry rows from a full suite run finds 0 raw identifiers.
 - **SC-009**: The deterministic gates complete within 10 minutes on a pull request `[TARGET]`.
 - **SC-010**: A release owner can read one page and state, per gate, pass or fail, and see the first failing case with its evidence.
+- **SC-011**: The baseline report lists every disagreement between the agent and the workstation for the golden entities, with both values; after spec 023 lands, the same suite shows 0 disagreements.
 
 ## Assumptions
 
@@ -212,5 +218,6 @@ The engineer rebuilding the agent needs the same suites to run unchanged against
 - Thresholds other than faithfulness (100%) are set after the first baseline, as in lighthouse section 4; none are claimed here.
 - LLM-judged metrics (groundedness, rubric quality) are reported for information only.
 - The timed study for M1 and M2 is carried out by a person outside this feature; only the protocol is in scope.
+- The workstation's figures are read from the same contract the cockpit serves, so a mismatch is a real mismatch and not a test artefact.
 - Out of scope: new detection models, the new runtime, the tool port, UI changes, decision-outcome logging for the flywheel, and executing the timed study.
 - Dependencies: the foundry seeds and splits (ADR-015), the 13 pinned cases from PR #33, and the lighthouse definitions in `docs/lighthouse.md`.

@@ -79,7 +79,8 @@ src/eios/agent_gates/
 │   ├── exempt.py            # the one reviewed list of exempt categories
 │   ├── faithfulness.py      # judge(record) -> figure verdicts
 │   ├── trajectory.py        # judge(record, case) -> verdict
-│   └── safety.py            # judge(record, attack) -> verdict
+│   ├── safety.py            # judge(record, attack) -> verdict
+│   └── consistency.py       # judge(record, workstation payload) -> disagreements (FR-026)
 ├── records.py               # frozen pydantic TurnRecord and friends; to and from JSON
 ├── port.py                  # AgentPort protocol, TurnRequest, ToolFixture
 ├── adapters/
@@ -90,6 +91,8 @@ src/eios/agent_gates/
 ├── telemetry.py             # TurnRecord -> TelemetryEvent, redaction, scanner, JSONL sink
 └── report.py                # baseline and release report (JSON, Markdown, one page)
 
+src/eios/cockpit/server.py   # one added call in `query_copilot` that emits a telemetry event (FR-020)
+
 evals/
 ├── agent/
 │   ├── faithfulness_suite.py  trajectory_suite.py  safety_suite.py  baseline.py
@@ -98,6 +101,7 @@ evals/
 ├── golden/agent_cases/        # YAML per workstation (extends the dialogue format)
 ├── golden/attacks/            # YAML attack cases, paraphrased to avoid blocklist keywords
 ├── recorded/                  # committed Turn Record corpus (good and known-bad)
+├── agent/screen_payloads.py   # loads workstation payloads from the contract the cockpit serves
 └── registry.yaml              # new rows only (FR-025)
 
 tests/agent_gates/             # unit, mutation, corpus re-judge, parity, telemetry scan
@@ -111,7 +115,7 @@ docs/lighthouse-study-protocol.md   # M1/M2 timed-study protocol (FR-019)
 0. **Faithfulness core, test-first.** Start red with the 13 pinned cases, then the mutation corpus (scale, wrong-field and unit swaps applied to faithful answers) and templated faithful paraphrases. Calibrate until all mutations are caught and no faithful paraphrase is blocked. This is the riskiest piece (FR-005) and goes first.
 1. **Turn Record, Agent Port, copilot adapter, recorder.** Capture today's copilot turns (tool name, arguments, result) by spying on `run_omcp_tool`; record identity source, replay flag, audit verdict, latency.
 2. **Safety and adversarial suites.** Red lines RL-1 to RL-7 as behavioural checks; five attack families, paraphrased; tool-result injection through `ToolFixture`; canary tokens for exfiltration; all-repeats-pass rule.
-3. **Capabilities and golden cases.** Introduce capability ids; re-anchor the ten existing dialogues (which name tools that exist nowhere) and add the missing workstations; trajectory suite.
+3. **Capabilities, golden cases and screen consistency.** Introduce capability ids; add the agent-versus-workstation check (FR-026); re-anchor the ten existing dialogues (which name tools that exist nowhere) and add the missing workstations; trajectory suite.
 4. **Baseline report and study protocol.** Live run of the dev split on today's copilot under a spend cap; one-page report; red results listed with evidence.
 5. **Telemetry.** Event schema, redaction, scanner, local sink.
 6. **Parity.** Stand-in agent fails the right suites; `agents-cli eval grade` adapter proven on the recorded corpus.

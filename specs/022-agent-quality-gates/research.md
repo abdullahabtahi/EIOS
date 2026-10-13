@@ -69,3 +69,9 @@ Evidence tiers: **RUN** executed by me, **SRC** read in code or package source, 
 ## R-12. Study protocol
 
 - **Decision**: a document, `docs/lighthouse-study-protocol.md`, defining cases, participants, timed intervals, recording sheet and median computation for M1 and M2. Not executed here (FR-019).
+
+## R-13. Agreement between the agent and the workstation (FR-026)
+
+- **Finding (SRC, 2026-10-14)**: for the partner on screen the workstation shows a churn hazard of 78% and a login drop of 68% (`src/eios/cockpit/partner.py`), while the copilot's partner tool returns 0.84, a 62.4% decay and a named rival as constants for any partner id (`src/eios/conversation/tools.py`). Its suggested action is a hard-coded literal (`DISPATCH_RETENTION_PLAYBOOK`, `src/eios/conversation/copilot_engine.py`).
+- **Decision**: the check compares the figures an answer states about an entity with the workstation payload for the same entity, loaded from the contract the cockpit serves. The baseline reports every disagreement with both values. The fix itself (one governed read path for both) belongs to spec 023.
+- **Why a gate and not a fix here**: a fix without a gate regresses silently; the gate makes spec 023's result provable (SC-011).

@@ -169,3 +169,27 @@ Deriv's licensing entities are from third-party listings and are recorded as `[A
 2. **FATF Recommendations**: left out of v1 (user).
 3. **Reuse terms**: not a blocker for this non-commercial prototype (user); the manifest still records them as unverified and the corpus is not redistributed.
 4. **Overnight pre-assembled dossiers**: **deferred to after spec 021** (my decision, the user asked me to choose). Reasons: (a) lighthouse M1 has no measured baseline yet, and adding the largest M1 lever before the baseline would make any before-and-after comparison unattributable; (b) it needs the deployed event-driven data path (data-strategy R1, spec 025) to be honest rather than fixture-backed; (c) it should reuse the typed tool port and the reference-answer renderer, which only exist after specs 023 and 021. It gets its own spec (029, ambient dossiers) once the ADK runtime proves faithful answers on the baseline.
+
+## 9. Frontend direction (input to spec 030, agent workspace UX)
+
+**User preference (2026-10-14).** Inside the existing dossier pane, a switch between the dossier and a chat view; the command-bar button opens that chat view instead of a modal. The quick wording and data fix I proposed was deferred by the user to stay in the ADK spec lane; it is listed here so it is not lost.
+
+**What the user reported**: the Cmd+K modal blocks the workstation, so the assistant feels separate; the on-screen wording is internal jargon; `DISPATCH_RETENTION_PLAYBOOK` is meaningless to an operator.
+
+**What the code shows (SRC, 2026-10-14)**
+- The workstation shows churn hazard 78% and login drop 68% for PTR-882 (`src/eios/cockpit/partner.py`); the copilot's partner tool returns 0.84, a 62.4% decay and a named rival as constants for any partner id (`src/eios/conversation/tools.py`). The assistant cannot agree with the screen because it reads different data.
+- The suggested action is a literal string in `src/eios/conversation/copilot_engine.py`, unrelated to the question or to the Concession Simulator in the dossier. The workstation already has real retention deals (`RetentionPlaybookDeal`: title, estimated cost, projected uplift, whether a second approver is needed) that the proposal should be built from.
+- Partner ids drift between layers: the radar and triage use `PTR-882`, the backend dossier endpoint and the copilot use `AP-1029` and `P-882` for the same story.
+- The browser sends `activeEntityId` but the server reads `context_entity_id`, so the assistant never learns which entity is on screen (defect B2).
+- Internal labels shown to operators: "Principle I & III: Zero unanchored claims", "Qualitative Pass", "AIP Logic · Gemini 3.8 Flash (Dual-Verified)", "TIER_1_SUPER", a per-chip "[ILLUSTRATIVE]" tag, "Stage to Shelf".
+
+**Requirements for spec 030**
+1. The assistant reads the same objects the cards show (one governed read path, spec 023) and can see the operator's selection and filters.
+2. The assistant can operate the view (select, filter, highlight, set the simulator), visibly and with undo; it can never change data except by proposal.
+3. Plain operator language; trust shown by exception (a failed check, a saved answer, demo data), details on demand.
+4. Proposals read as: what, to whom, how much, expected effect with range, who must approve. Built from the real deal data, not a canned name.
+5. Retire the modal. The dossier gets a Dossier and Chat switch as the user prefers; the command-bar button opens the chat view.
+
+**Trade-off to design around.** With a switch, figure chips cannot highlight their source card while chat is showing. Mitigation to specify: chips carry the value, unit and as-of inline; "show in dossier" flips back and highlights the card; the chat view pins a one-line context strip (entity, key figures, data origin); a Focus expand is the only other mode.
+
+**Gate added to spec 022**: FR-026 and SC-011 check that the agent's figures agree with the workstation's, so spec 023's fix is provable.

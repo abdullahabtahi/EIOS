@@ -109,16 +109,18 @@
 
 - [ ] T039 [P] [US3] Trajectory judge tests in `tests/agent_gates/test_trajectory_judge.py`: expected capabilities in order with allowed extras, forbidden capability fails, rounds over `max_rounds` fail, `capability_missing` is reported not passed, refusal required yields refusal marker and no figures, missing data yields an honest refusal
 - [ ] T040 [P] [US3] Re-anchoring test in `tests/agent_gates/test_golden_reanchor.py`: every capability named in every golden case exists in `capabilities.py`, and none names a tool (the old dialogues name tools that exist nowhere)
+- [ ] T041 [P] [US3] Screen-consistency tests in `tests/agent_gates/test_screen_consistency.py`: figures stated about an entity equal the workstation payload's figures for it; a disagreement fails and names both values and sources; the 78% versus 0.84 case is the first fixture (FR-026)
 
 ### Implementation for User Story 3
 
-- [ ] T041 [P] [US3] Implement `judge(record, case_turn)` in `src/eios/agent_gates/core/trajectory.py` (standard library only)
-- [ ] T042 [P] [US3] Re-anchor the ten dialogues in `evals/golden/dialogues/*.yaml` into capability-based cases under `evals/golden/agent_cases/` (leave the originals so the existing `dialogue-evals` suite keeps running); note the unmoored tool names in the new files' header
-- [ ] T043 [P] [US3] Write AML investigator cases (20) in `evals/golden/agent_cases/aml_investigator/`: triage, dossier, network, timeline, withdrawal risk, regulation lookup, SAR draft, propose hold, unanswerable, ambiguous follow-up, multi-turn, tool failure
-- [ ] T044 [P] [US3] Write partner manager cases (12) in `evals/golden/agent_cases/partner_manager/`: worklist, drivers, integrity, comms (untrusted text), propose action, unanswerable
-- [ ] T045 [P] [US3] Write executive cases (12) in `evals/golden/agent_cases/executive/`: briefing, metric movement, forecast, what-if, causal versus correlation, unanswerable
-- [ ] T046 [P] [US3] Write compliance auditor cases (6) in `evals/golden/agent_cases/compliance_auditor/` and data operations cases (6) in `evals/golden/agent_cases/data_operations/`
-- [ ] T047 [US3] Implement `evals/agent/trajectory_suite.py` and register `agent-trajectory` (tier `eval_smoke`, scripted re-judge) and `agent-trajectory-live` (tier `validation`, live) in `evals/registry.yaml`
+- [ ] T042 [P] [US3] Implement `judge(record, case_turn)` in `src/eios/agent_gates/core/trajectory.py` (standard library only)
+- [ ] T043 [US3] Implement `src/eios/agent_gates/core/consistency.py` (standard library only) and `evals/agent/screen_payloads.py` that loads the partner radar payload from the contract the cockpit serves (`PartnerWorkstationService.get_churn_radar_scatter` to start); register `agent-screen-consistency` (tier `eval_smoke`) in `evals/registry.yaml`
+- [ ] T044 [P] [US3] Re-anchor the ten dialogues in `evals/golden/dialogues/*.yaml` into capability-based cases under `evals/golden/agent_cases/` (leave the originals so the existing `dialogue-evals` suite keeps running); note the unmoored tool names in the new files' header
+- [ ] T045 [P] [US3] Write AML investigator cases (20) in `evals/golden/agent_cases/aml_investigator/`: triage, dossier, network, timeline, withdrawal risk, regulation lookup, SAR draft, propose hold, unanswerable, ambiguous follow-up, multi-turn, tool failure
+- [ ] T046 [P] [US3] Write partner manager cases (12) in `evals/golden/agent_cases/partner_manager/`: worklist, drivers, integrity, comms (untrusted text), propose action, unanswerable; include 4 screen-consistency cases for PTR-882 (churn hazard, login decay, value at risk, root cause) whose expected facts come from the workstation payload
+- [ ] T047 [P] [US3] Write executive cases (12) in `evals/golden/agent_cases/executive/`: briefing, metric movement, forecast, what-if, causal versus correlation, unanswerable
+- [ ] T048 [P] [US3] Write compliance auditor cases (6) in `evals/golden/agent_cases/compliance_auditor/` and data operations cases (6) in `evals/golden/agent_cases/data_operations/`
+- [ ] T049 [US3] Implement `evals/agent/trajectory_suite.py` and register `agent-trajectory` (tier `eval_smoke`, scripted re-judge) and `agent-trajectory-live` (tier `validation`, live) in `evals/registry.yaml`
 
 **Checkpoint**: US3 judges any runtime's tool use against capability-level expectations.
 
@@ -132,16 +134,16 @@
 
 ### Tests for User Story 4 (write first)
 
-- [ ] T048 [P] [US4] Report tests in `tests/agent_gates/test_report.py`: per-workstation rates computed from scripted records; failures listed with evidence; share of fixture turns and of request-body identity shown; `inconclusive` listed separately and marks the gate "not proven"; only measured values appear
-- [ ] T049 [P] [US4] Baseline runner tests in `tests/agent_gates/test_baseline_runner.py`: spend cap stops a run before it starts; provider outage yields `inconclusive`; repeats recorded; dev split only unless explicitly overridden; sealed split refused outside release-candidate CI
+- [ ] T050 [P] [US4] Report tests in `tests/agent_gates/test_report.py`: per-workstation rates computed from scripted records; failures listed with evidence; share of fixture turns and of request-body identity shown; agent-versus-workstation disagreements listed with both values (SC-011); `inconclusive` listed separately and marks the gate "not proven"; only measured values appear
+- [ ] T051 [P] [US4] Baseline runner tests in `tests/agent_gates/test_baseline_runner.py`: spend cap stops a run before it starts; provider outage yields `inconclusive`; repeats recorded; dev split only unless explicitly overridden; sealed split refused outside release-candidate CI
 
 ### Implementation for User Story 4
 
-- [ ] T050 [US4] Implement `src/eios/agent_gates/report.py` (JSON and one-page Markdown)
-- [ ] T051 [US4] Implement `evals/agent/baseline.py` (`--runtime`, `--split`, `--repeats`, live calls only through `llm_gateway`, model id from configuration, cap from `EIOS_AGENT_EVAL_MAX_TURNS`) (depends on T033, T050)
-- [ ] T052 [P] [US4] Write the timed-study protocol `docs/lighthouse-study-protocol.md` for M1 and M2: cases, participants, intervals, recording sheet, medians; do not execute
-- [ ] T053 [US4] Run the baseline once against an EIOS project (quota project set; `global` endpoint) and commit the report as `docs/agent-baseline.md`, tagging measured values `[MEASURED]`; list red results, the keyword versus paraphrased attack split and capability coverage
-- [ ] T054 [US4] Update `docs/lighthouse.md` (M3 and M5 baseline rows) and `docs/adk.md` (A2 status) with the measured numbers and the link to `docs/agent-baseline.md`
+- [ ] T052 [US4] Implement `src/eios/agent_gates/report.py` (JSON and one-page Markdown)
+- [ ] T053 [US4] Implement `evals/agent/baseline.py` (`--runtime`, `--split`, `--repeats`, live calls only through `llm_gateway`, model id from configuration, cap from `EIOS_AGENT_EVAL_MAX_TURNS`) (depends on T033, T052)
+- [ ] T054 [P] [US4] Write the timed-study protocol `docs/lighthouse-study-protocol.md` for M1 and M2: cases, participants, intervals, recording sheet, medians; do not execute
+- [ ] T055 [US4] Run the baseline once against an EIOS project (quota project set; `global` endpoint) and commit the report as `docs/agent-baseline.md`, tagging measured values `[MEASURED]`; list red results, the keyword versus paraphrased attack split and capability coverage
+- [ ] T056 [US4] Update `docs/lighthouse.md` (M3 and M5 baseline rows) and `docs/adk.md` (A2 status) with the measured numbers and the link to `docs/agent-baseline.md`
 
 **Checkpoint**: the "before" picture exists. Spec 021 can now claim improvement.
 
@@ -155,14 +157,14 @@
 
 ### Tests for User Story 5 (write first)
 
-- [ ] T055 [P] [US5] Telemetry tests in `tests/agent_gates/test_telemetry.py`: event derived from a Turn Record has every required field and validates against `contracts/telemetry-event.schema.json`; raw identifiers rejected; excerpt bounded and redacted
-- [ ] T056 [P] [US5] Scanner test in `tests/agent_gates/test_telemetry_scan.py`: a full suite run's events contain 0 raw identifiers (SC-008); a planted raw identifier is detected
+- [ ] T057 [P] [US5] Telemetry tests in `tests/agent_gates/test_telemetry.py`: event derived from a Turn Record has every required field and validates against `contracts/telemetry-event.schema.json`; raw identifiers rejected; excerpt bounded and redacted
+- [ ] T058 [P] [US5] Scanner test in `tests/agent_gates/test_telemetry_scan.py`: a full suite run's events contain 0 raw identifiers (SC-008); a planted raw identifier is detected
 
 ### Implementation for User Story 5
 
-- [ ] T057 [US5] Implement `src/eios/agent_gates/telemetry.py`: `TurnRecord` to `TelemetryEvent`, redaction, scanner, JSONL sink
-- [ ] T058 [US5] Emit one event per live turn from `query_copilot` in `src/eios/cockpit/server.py` using the fields the route has (role, latency, replay flag and reason, audit status, citation count, tool trace count, session id); keep the change minimal and covered by a test in `tests/cockpit/test_copilot_telemetry.py`
-- [ ] T059 [P] [US5] Add an M3 and M5 computation from events to `src/eios/agent_gates/report.py` and a test that both derive from events alone
+- [ ] T059 [US5] Implement `src/eios/agent_gates/telemetry.py`: `TurnRecord` to `TelemetryEvent`, redaction, scanner, JSONL sink
+- [ ] T060 [US5] Emit one event per live turn from `query_copilot` in `src/eios/cockpit/server.py` (the one production-code change in this feature) using the fields the route has (role, latency, replay flag and reason, audit status, citation count, tool trace count, session id); keep the change minimal and covered by a test in `tests/cockpit/test_copilot_telemetry.py`
+- [ ] T061 [P] [US5] Add an M3 and M5 computation from events to `src/eios/agent_gates/report.py` and a test that both derive from events alone
 
 **Checkpoint**: US5 provides the production-side data for the lighthouse metrics.
 
@@ -176,15 +178,15 @@
 
 ### Tests for User Story 6 (write first)
 
-- [ ] T060 [P] [US6] Parity test `tests/agent_gates/test_parity.py`: same case ids against `copilot` (scripted) and `standin:always42`; the stand-in fails faithfulness and trajectory with the stated reasons
-- [ ] T061 [P] [US6] Trace-mapping test `tests/agent_gates/test_agents_cli_mapping.py`: a Turn Record maps to an eval case with `prompt`, `responses` and `agent_data` per `contracts/agents-cli-trace-mapping.md`, and the `responses` field is always present
+- [ ] T062 [P] [US6] Parity test `tests/agent_gates/test_parity.py`: same case ids against `copilot` (scripted) and `standin:always42`; the stand-in fails faithfulness and trajectory with the stated reasons
+- [ ] T063 [P] [US6] Trace-mapping test `tests/agent_gates/test_agents_cli_mapping.py`: a Turn Record maps to an eval case with `prompt`, `responses` and `agent_data` per `contracts/agents-cli-trace-mapping.md`, and the `responses` field is always present
 
 ### Implementation for User Story 6
 
-- [ ] T062 [P] [US6] Implement the stand-in adapters in `src/eios/agent_gates/adapters/standin.py` (`always42`, `scripted`)
-- [ ] T063 [P] [US6] Implement `to_agents_cli_case(record)` in `src/eios/agent_gates/records.py`
-- [ ] T064 [P] [US6] Write the metric shims `evals/agent/metrics/faithfulness.py`, `trajectory.py`, `safety.py` (each `def evaluate(instance)`, loading `core/` by path, never `import eios`) and `evals/agent/eval_config.yaml`
-- [ ] T065 [US6] Add `tests/agent_gates/test_agents_cli_grade.py` (marked `requires_agents_cli`, skipped when the CLI is absent) that runs `agents-cli eval grade` on the recorded corpus and compares scores with our own suite
+- [ ] T064 [P] [US6] Implement the stand-in adapters in `src/eios/agent_gates/adapters/standin.py` (`always42`, `scripted`)
+- [ ] T065 [P] [US6] Implement `to_agents_cli_case(record)` in `src/eios/agent_gates/records.py`
+- [ ] T066 [P] [US6] Write the metric shims `evals/agent/metrics/faithfulness.py`, `trajectory.py`, `safety.py` (each `def evaluate(instance)`, loading `core/` by path, never `import eios`) and `evals/agent/eval_config.yaml`
+- [ ] T067 [US6] Add `tests/agent_gates/test_agents_cli_grade.py` (marked `requires_agents_cli`, skipped when the CLI is absent) that runs `agents-cli eval grade` on the recorded corpus and compares scores with our own suite
 
 **Checkpoint**: all six stories work independently.
 
@@ -192,12 +194,13 @@
 
 ## Phase 9: Polish and cross-cutting
 
-- [ ] T066 [P] Raise coverage on `src/eios/agent_gates/` to at least 80% and add missing edge-case tests (spelled-out numbers at the extremes, empty answers, results with no numerics)
-- [ ] T067 [P] Run `make lint`, `make types` and `repo_checks` over `src/eios/agent_gates/` and `evals/agent/`; split any file above 400 lines; confirm frozen models everywhere
-- [ ] T068 Run `make check` and confirm no new failures beyond the known quarantined and flaky ones (CLAUDE.md section 8)
-- [ ] T069 [P] Draft a scheduled live-eval workflow `.github/workflows/agent-eval-live.yml` (cron plus manual dispatch, spend cap, disabled until you approve it, because it needs the CI identity and the cloud quota project)
-- [ ] T070 Walk through `specs/022-agent-quality-gates/quickstart.md` end to end and tick each scenario
-- [ ] T071 Update `CLAUDE.md` with the one-line entry for `evals/agent/` and the agent-gates command, trimming an equal amount elsewhere (keep the file lean)
+- [ ] T068 [P] Add `tests/agent_gates/test_gate_policy.py`: no registered gating suite uses an LLM judge (FR-017); every attack family has at least 3 cases (SC-004); the deterministic tiers finish within 10 minutes on a timed run (SC-009)
+- [ ] T069 [P] Raise coverage on `src/eios/agent_gates/` to at least 80% and add missing edge-case tests (spelled-out numbers at the extremes, empty answers, results with no numerics)
+- [ ] T070 [P] Run `make lint`, `make types` and `repo_checks` over `src/eios/agent_gates/` and `evals/agent/`; split any file above 400 lines; confirm frozen models everywhere
+- [ ] T071 Run `make check` and confirm no new failures beyond the known quarantined and flaky ones (CLAUDE.md section 8)
+- [ ] T072 [P] Draft a scheduled live-eval workflow `.github/workflows/agent-eval-live.yml` (cron plus manual dispatch, spend cap, disabled until you approve it, because it needs the CI identity and the cloud quota project)
+- [ ] T073 Walk through `specs/022-agent-quality-gates/quickstart.md` end to end and tick each scenario
+- [ ] T074 Update `CLAUDE.md` with the one-line entry for `evals/agent/` and the agent-gates command, trimming an equal amount elsewhere (keep the file lean)
 
 ---
 
@@ -213,13 +216,13 @@
 - Phase 2: T005, T007, T009, T011, T013 are independent files.
 - US1: tests T014 to T019 together; then T020, T021, T022 together.
 - US2: T029 to T032 together; then T034, T035, T036 together.
-- US3: T043 to T046 (case authoring) together after T041.
+- US3: T045 to T048 (case authoring) together after T042.
 - US5 and US6 can proceed in parallel once Phase 2 is done.
 
 ## Implementation strategy
 
 1. **MVP = Phase 1, Phase 2 and US1.** It delivers a usable release gate (M3) on its own. Stop there for review.
 2. Add US2 next: the other P1 scope and the non-negotiable constitutional principle.
-3. US3 and US4 together give the baseline; do not start spec 023 or 021 before T053.
-4. US5 and US6 are P3 and can slip without blocking the baseline; US6's metric shims (T064) are needed before spec 021 can use `agents-cli eval generate`.
+3. US3 and US4 together give the baseline; do not start spec 023 or 021 before T055.
+4. US5 and US6 are P3 and can slip without blocking the baseline; US6's metric shims (T066) are needed before spec 021 can use `agents-cli eval generate`.
 5. Commit on `spec/022-agent-quality-gates` after each checkpoint; one PR (#37) carries the feature.
