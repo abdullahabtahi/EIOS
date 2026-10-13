@@ -11,7 +11,7 @@ import random
 import threading
 import time
 from collections.abc import Callable
-from typing import Any, Generic, Protocol, TypeVar
+from typing import Any, Protocol
 
 from google.api_core.exceptions import Aborted
 from pydantic import BaseModel
@@ -20,7 +20,6 @@ from eios.ontology.actions.ledger_store import ENVIRONMENT_ENV, LOCAL_ENVIRONMEN
 
 Record = dict[str, Any]
 Mutation = Callable[[Record], Record]
-T = TypeVar("T", bound=BaseModel)
 
 ATTEMPTS = 25
 BACKOFF_BASE_SECONDS = 0.02
@@ -92,7 +91,8 @@ class FirestoreRecordStore:
 
     def get(self, key: str) -> Record | None:
         snapshot = self._col.document(key).get()
-        return snapshot.to_dict() if snapshot.exists else None
+        data: Record | None = snapshot.to_dict() if snapshot.exists else None
+        return data
 
     def put(self, key: str, value: Record) -> None:
         self._col.document(key).set(value)
@@ -114,7 +114,8 @@ class FirestoreRecordStore:
             snapshot = ref.get(transaction=transaction)
             if not snapshot.exists:
                 raise KeyError(key)
-            updated: Record = mutate(snapshot.to_dict())
+            current: Record = snapshot.to_dict() or {}
+            updated: Record = mutate(current)
             transaction.set(ref, updated)
             return updated
 
@@ -133,14 +134,14 @@ class FirestoreRecordStore:
         raise RuntimeError("record contended beyond the retry budget") from last_error
 
     def list(self) -> list[Record]:
-        return [doc.to_dict() for doc in self._col.stream()]
+        return [doc.to_dict() or {} for doc in self._col.stream()]
 
     def delete_all_for_testing(self) -> None:
         for doc in self._col.stream():
             doc.reference.delete()
 
 
-class ModelStore(Generic[T]):
+class ModelStore[T: BaseModel]:
     """Typed view of a RecordStore for one pydantic model."""
 
     def __init__(self, store: RecordStore, model: type[T]) -> None:
