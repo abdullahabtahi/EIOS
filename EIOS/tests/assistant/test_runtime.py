@@ -160,7 +160,9 @@ def test_the_drafter_caps_thinking_and_leaves_room_for_the_answer() -> None:
     from eios.ontology.omcp.port.readmodels import ReadModels
 
     port = build_port(ReadModels.default())
-    agent = build_agent(port=port, principal=principal_for("op-1", "executive"), model=ScriptedLlm(steps=[]))
+    agent = build_agent(
+        port=port, principal=principal_for("op-1", "executive"), model=ScriptedLlm(steps=[])
+    )
     config = agent.sub_agents[0].generate_content_config  # type: ignore[attr-defined]
     assert config.max_output_tokens == DRAFT_MAX_OUTPUT_TOKENS
     assert config.thinking_config.thinking_level.value == DRAFT_THINKING_LEVEL

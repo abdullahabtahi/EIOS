@@ -131,3 +131,23 @@ def test_fail_closed_answer_has_no_figure_and_none_of_the_models_numbers() -> No
 )
 def test_a_number_dressed_as_an_identifier_is_still_a_typed_figure(draft: str) -> None:
     assert isinstance(_assemble(draft), Rejected), draft
+
+
+@pytest.mark.parametrize(
+    ("draft", "shown"),
+    [
+        ("It is {{fact:aml.dossier:AC-1:discrepancy_multiplier}}x the declared income.", "16x the"),
+        ("Exposure is {{fact:aml.dossier:AC-1:exposure_usd}} USD today.", "$1,234,567 today"),
+        ("Churn is {{fact:metric.get:churn@PTR-882:value}} percent.", "12.5%."),
+    ],
+)
+def test_a_unit_repeated_after_a_placeholder_is_not_shown_twice(draft: str, shown: str) -> None:
+    out = _assemble(draft)
+    assert isinstance(out, Assembled)
+    assert shown in out.text
+
+
+def test_a_word_that_only_starts_like_a_unit_is_kept() -> None:
+    out = _assemble("There are {{fact:aml.dossier:AC-1:open_alerts}} xylophone alerts.")
+    assert isinstance(out, Assembled)
+    assert "3 alerts xylophone alerts" in out.text

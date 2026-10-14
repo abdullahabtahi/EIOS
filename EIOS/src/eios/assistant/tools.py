@@ -9,6 +9,7 @@ Fact ids of every figure a result returned are kept in turn state, which is what
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterator
 from typing import Any
 
 from google.adk.tools.base_tool import BaseTool
@@ -43,11 +44,14 @@ class PortTool(BaseTool):
 
     async def run_async(self, *, args: dict[str, Any], tool_context: ToolContext) -> dict[str, Any]:
         outcome = await asyncio.to_thread(self._port.call, self._principal, self.name, dict(args))
-        payload = outcome.payload()
+        raw = outcome.payload()
         if outcome.result is None:
-            return payload
+            return raw
+        payload = expand_fact_ids(
+            raw
+        )  # what the model sees; the facts are read from the result as the port gave it
         state = tool_context.state
-        state[FACTS_KEY] = {**state.get(FACTS_KEY, {}), **_turn_facts(payload)}
+        state[FACTS_KEY] = {**state.get(FACTS_KEY, {}), **_turn_facts(raw)}
         state[SOURCES_KEY] = [*state.get(SOURCES_KEY, []), payload["source"]]
         state[ORIGINS_KEY] = [*state.get(ORIGINS_KEY, []), payload["data_origin"]]
         if self._spec.kind == _PROPOSAL_KIND:
@@ -55,32 +59,66 @@ class PortTool(BaseTool):
         return payload
 
 
-def _figure(payload: dict[str, Any], path: str) -> float | None:
-    """The number at a dotted path of a result, or None for list items and anything that is not a plain number."""
-    if "[]" in path:
-        return None
-    node: Any = payload
-    for key in path.split("."):
-        if not isinstance(node, dict) or key not in node:
-            return None
-        node = node[key]
-    return float(node) if isinstance(node, int | float) and not isinstance(node, bool) else None
+# A list result names its facts with a template path (`events[].event_amount_usd`); each item gets its own id so a
+# model can cite one item's figure. Bounded so a long list cannot flood the model's context. [ASSUMPTION]
+MAX_LIST_ITEMS = 40
+
+
+def _concrete_paths(node: Any, segments: list[str], prefix: str = "") -> Iterator[tuple[str, Any]]:
+    """Every (concrete path, value) a template path reaches; `name[]` fans out over the items of a list."""
+    if not segments:
+        yield prefix, node
+        return
+    segment, rest = segments[0], segments[1:]
+    wildcard = segment.endswith("[]")
+    key = segment[:-2] if wildcard else segment
+    if not isinstance(node, dict) or key not in node:
+        return
+    child, base = node[key], f"{prefix}.{key}" if prefix else key
+    if not wildcard:
+        yield from _concrete_paths(child, rest, base)
+    elif isinstance(child, list):
+        for index, item in enumerate(child[:MAX_LIST_ITEMS]):
+            yield from _concrete_paths(item, rest, f"{base}[{index}]")
+
+
+def _facts_of(payload: dict[str, Any]) -> list[tuple[str, str, str | None, Any]]:
+    """(concrete path, fact id, unit, value) for every value a result's `fact_ids` names, one per list item."""
+    out: list[tuple[str, str, str | None, Any]] = []
+    for path, fact_id in (payload.get("fact_ids") or {}).items():
+        if "[]" in path and not fact_id.endswith(path):
+            continue
+        unit = (payload.get("units") or {}).get(path)
+        for concrete, value in _concrete_paths(payload, path.split(".")):
+            if value is None:  # an item without a value offers nothing to cite
+                continue
+            out.append((concrete, fact_id[: len(fact_id) - len(path)] + concrete, unit, value))
+    return out
+
+
+def expand_fact_ids(payload: dict[str, Any]) -> dict[str, Any]:
+    """A copy of a tool payload whose `fact_ids` and `units` name one fact per value, never a list template."""
+    facts = _facts_of(payload)
+    return {
+        **payload,
+        "fact_ids": {path: fact_id for path, fact_id, _, _ in facts},
+        "units": {path: unit for path, _, unit, _ in facts if unit},
+    }
 
 
 def _turn_facts(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
     """Every figure of a result the assembler may later show: its value, unit, as-of and origin, by fact id."""
-    facts: dict[str, dict[str, Any]] = {}
-    for path, fact_id in (payload.get("fact_ids") or {}).items():
-        value, unit = _figure(payload, path), (payload.get("units") or {}).get(path)
-        if value is not None and unit:
-            facts[fact_id] = {
-                "value": value,
-                "unit": unit,
-                "as_of": payload["as_of"],
-                "data_origin": payload["data_origin"],
-                "source": payload["source"],
-            }
-    return facts
+    return {
+        fact_id: {
+            "value": float(value),
+            "unit": unit,
+            "as_of": payload["as_of"],
+            "data_origin": payload["data_origin"],
+            "source": payload["source"],
+        }
+        for _, fact_id, unit, value in _facts_of(payload)
+        if unit and isinstance(value, int | float) and not isinstance(value, bool)
+    }
 
 
 def build_toolset(port: GovernedToolPort, principal: Principal) -> list[PortTool]:

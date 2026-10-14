@@ -97,3 +97,37 @@ def test_a_proposal_is_kept_for_the_answer_and_stages_nothing(port: GovernedTool
         assert not ctx.state.get(PROPOSALS_KEY)
     else:
         assert ctx.state[PROPOSALS_KEY] == [payload]
+
+
+def test_a_list_result_names_one_fact_per_item_and_each_can_be_shown(
+    port: GovernedToolPort,
+) -> None:
+    tools = {t.name: t for t in build_toolset(port, principal_for("op-1", "aml_investigator"))}
+    ctx = _context()
+    payload = _run(tools["get_activity_timeline"], {"entity_id": "CR84920"}, ctx)
+    ids = payload["fact_ids"]
+    assert "events[].event_amount_usd" not in ids
+    with_amount = [i for i, e in enumerate(payload["events"]) if e["event_amount_usd"] is not None]
+    assert with_amount, "the fixture has at least one event with an amount"
+    first = with_amount[0]
+    fact_id = f"aml.timeline:CR84920:events[{first}].event_amount_usd"
+    assert ids[f"events[{first}].event_amount_usd"] == fact_id
+    assert ctx.state[FACTS_KEY][fact_id]["value"] == payload["events"][first]["event_amount_usd"]
+    assert ctx.state[FACTS_KEY][fact_id]["unit"] == "USD"
+    assert not any(
+        f"events[{i}]" in key
+        for i in range(len(payload["events"]))
+        if i not in with_amount
+        for key in ids
+    )
+
+
+def test_a_long_list_is_bounded_so_it_cannot_flood_the_model() -> None:
+    from eios.assistant.tools import MAX_LIST_ITEMS, expand_fact_ids
+
+    payload = {
+        "rows": [{"amount": float(i)} for i in range(MAX_LIST_ITEMS + 25)],
+        "fact_ids": {"rows[].amount": "cap:E1:rows[].amount"},
+        "units": {"rows[].amount": "USD"},
+    }
+    assert len(expand_fact_ids(payload)["fact_ids"]) == MAX_LIST_ITEMS
