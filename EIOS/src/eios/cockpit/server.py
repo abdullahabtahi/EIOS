@@ -1011,7 +1011,8 @@ async def query_copilot(
         )
         if outcome.status != "ok":  # an outage is offline, never a 200 that looks like an answer
             return JSONResponse(  # type: ignore[return-value]
-                status_code=503, content={"detail": "offline", **assistant_response_body(req.query, outcome)}
+                status_code=503,
+                content={"detail": "offline", **assistant_response_body(req.query, outcome)},
             )
         return assistant_response_body(req.query, outcome)
 
