@@ -54,7 +54,9 @@ _DLQ_STORE: list[dict[str, Any]] = [
 class OpsTelemetryResponse(BaseModel):
     as_of: str = Field(..., description="Telemetry snapshot timestamp in ISO 8601 UTC")
     sla_freshness_target_seconds: int = Field(default=30, description="Freshness target in seconds")
-    slo_met: bool = Field(default=True, description="Whether data products meet freshness SLA targets")
+    slo_met: bool = Field(
+        default=True, description="Whether data products meet freshness SLA targets"
+    )
     total_data_products: int = Field(..., description="Count of monitored data products")
     products: list[dict[str, Any]] = Field(..., description="Data product contract states")
     breach_alerts: list[dict[str, Any]] = Field(..., description="Active contract breach alerts")

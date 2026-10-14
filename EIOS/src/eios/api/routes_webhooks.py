@@ -7,7 +7,6 @@ import hmac
 import os
 import time
 from datetime import UTC, datetime
-from typing import Any
 
 from fastapi import APIRouter, Header, HTTPException, Request, status
 from pydantic import BaseModel, Field
@@ -66,7 +65,9 @@ class CashierWithdrawalResponse(BaseModel):
     decision_rationale: str = Field(..., description="Auditable reasoning behind the disposition")
     evaluation_latency_ms: float = Field(..., description="Evaluation latency in milliseconds")
     sla_met: bool = Field(..., description="Whether execution finished within the 150ms SLA")
-    action_intent_id: str | None = Field(default=None, description="Action intent token if staged/held")
+    action_intent_id: str | None = Field(
+        default=None, description="Action intent token if staged/held"
+    )
     evaluated_at: str = Field(..., description="Evaluation timestamp in ISO 8601 UTC format")
 
 

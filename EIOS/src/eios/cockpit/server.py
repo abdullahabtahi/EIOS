@@ -131,27 +131,42 @@ class StageActionRequest(BaseModel):
     action_type: str = Field(..., description="Canonical action type name")
     target_entity_id: str = Field(..., description="Target business entity ID")
     severity: str = Field(default="HIGH", description="Severity classification")
-    initiator_officer_id: str | None = Field(default=None, description="Optional officer identifier for dev/test staging")
-    requires_four_eyes: bool = Field(default=True, description="Whether action requires dual approval")
-    metadata: dict[str, Any] = Field(default_factory=dict, description="Action parameters and context")
+    initiator_officer_id: str | None = Field(
+        default=None, description="Optional officer identifier for dev/test staging"
+    )
+    requires_four_eyes: bool = Field(
+        default=True, description="Whether action requires dual approval"
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Action parameters and context"
+    )
 
 
 class StageActionResponse(BaseModel):
     status: str = Field(default="STAGED", description="Action lifecycle status")
-    card: dict[str, Any] = Field(..., description="Governed action card contract conforming to UI spec")
+    card: dict[str, Any] = Field(
+        ..., description="Governed action card contract conforming to UI spec"
+    )
     total_staged: int = Field(..., description="Total active staged actions count")
 
 
 class AuthorizeActionRequest(BaseModel):
     intent_id: str = Field(..., description="Target action intent ID")
     authorizer_id: str = Field(..., description="Authorizing officer ID")
-    second_eye_token: str | None = Field(default=None, description="Optional second-eye verification token")
+    second_eye_token: str | None = Field(
+        default=None, description="Optional second-eye verification token"
+    )
 
 
 class AuthorizeActionResponse(BaseModel):
-    status: str = Field(..., description="Action lifecycle transition outcome (PENDING_SECOND_EYE, COMMITTED, APPROVED)")
+    status: str = Field(
+        ...,
+        description="Action lifecycle transition outcome (PENDING_SECOND_EYE, COMMITTED, APPROVED)",
+    )
     card: dict[str, Any] = Field(..., description="Updated governed action card contract")
-    committed_timestamp: str = Field(..., description="Approval/commit timestamp in ISO 8601 UTC format")
+    committed_timestamp: str = Field(
+        ..., description="Approval/commit timestamp in ISO 8601 UTC format"
+    )
 
 
 class CopilotQueryRequest(BaseModel):
@@ -168,12 +183,16 @@ class CopilotQueryRequest(BaseModel):
 
 class FlywheelFeedbackRequest(BaseModel):
     case_id: str = Field(..., description="Investigation case reference")
-    feedback_type: str = Field(default="SAR_NARRATIVE_EDIT", description="Annotation or revision type")
+    feedback_type: str = Field(
+        default="SAR_NARRATIVE_EDIT", description="Annotation or revision type"
+    )
     original_text: str = Field(..., description="Original model-generated text")
     revised_text: str = Field(..., description="Operator-revised ground truth text")
     annotator_id: str | None = Field(default=None, description="Annotator identifier")
     false_positive: bool = Field(default=False, description="Whether alert was a false positive")
-    propensity_score: float | None = Field(default=None, ge=0.0, le=1.0, description="Propensity score at decision time")
+    propensity_score: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Propensity score at decision time"
+    )
 
 
 class FlywheelFeedbackResponse(BaseModel):
@@ -189,11 +208,19 @@ class AuditVerifyResponse(BaseModel):
     total_records: int = Field(..., description="Total records walked in hash chain")
     last_hash: str = Field(..., description="Head SHA-256 block hash")
     genesis_hash: str = Field(..., description="Genesis SHA-256 block hash")
-    tampered_sequence_id: int | None = Field(default=None, description="Sequence ID of corrupted block if tampered")
-    failure_reason: str | None = Field(default=None, description="Detailed failure diagnosis if invalid")
-    worm_checkpoints_verified: int = Field(..., description="Count of validated WORM signed checkpoints")
+    tampered_sequence_id: int | None = Field(
+        default=None, description="Sequence ID of corrupted block if tampered"
+    )
+    failure_reason: str | None = Field(
+        default=None, description="Detailed failure diagnosis if invalid"
+    )
+    worm_checkpoints_verified: int = Field(
+        ..., description="Count of validated WORM signed checkpoints"
+    )
     worm_mode: str = Field(..., description="WORM mode: SIGNED_CHECKPOINTS or NO_CHECKPOINTS")
-    audit_duration_ms: float = Field(..., description="Wall-clock audit traversal latency in milliseconds")
+    audit_duration_ms: float = Field(
+        ..., description="Wall-clock audit traversal latency in milliseconds"
+    )
     verified_at: str = Field(..., description="Audit run timestamp")
 
 
