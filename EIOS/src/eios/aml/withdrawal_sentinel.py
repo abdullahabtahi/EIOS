@@ -24,6 +24,32 @@ from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.actions.intent_hub import ActionIntentHub
 
 
+def score_withdrawal(
+    recent_alert_score: float,
+    hours_since_deposit: float,
+    market_risk_pct: float,
+    hours_since_kyc: float,
+) -> float:
+    """The composite withdrawal risk score in [0.01, 0.99]. Pure: no intent is proposed and nothing is stored."""
+    # Velocity penalty: funds leaving within 12-24h of deposit
+    if hours_since_deposit <= 24.0:
+        turnaround_risk = math.exp(-hours_since_deposit / 12.0)
+    else:
+        turnaround_risk = 0.05
+
+    # Micro-risk trading penalty: zero risk taken before withdrawal
+    if market_risk_pct <= 0.01:
+        wash_risk = 1.0 - (market_risk_pct / 0.01)
+    else:
+        wash_risk = 0.0
+
+    # KYC Recency factor
+    kyc_factor = 1.3 if hours_since_kyc <= 72.0 else 1.0
+
+    raw_score = (0.45 * recent_alert_score + 0.30 * turnaround_risk + 0.25 * wash_risk) * kyc_factor
+    return round(min(0.99, max(0.01, raw_score)), 4)
+
+
 class WithdrawalSentinel:
     """Real-time withdrawal intervention engine."""
 
@@ -50,28 +76,12 @@ class WithdrawalSentinel:
         """Evaluate real-time risk of an inbound withdrawal request."""
         start_time = time.perf_counter()
 
-        # 1. Scoring Logic
-        # Velocity penalty: funds leaving within 12-24h of deposit
-        if hours_since_deposit <= 24.0:
-            turnaround_risk = math.exp(-hours_since_deposit / 12.0)
-        else:
-            turnaround_risk = 0.05
-
-        # Micro-risk trading penalty: zero risk taken before withdrawal
-        if market_risk_pct <= 0.01:
-            wash_risk = 1.0 - (market_risk_pct / 0.01)
-        else:
-            wash_risk = 0.0
-
-        # KYC Recency factor
-        kyc_factor = 1.3 if hours_since_kyc <= 72.0 else 1.0
-
-        # Composite withdrawal risk score
-        raw_score = (
-            0.45 * recent_alert_score + 0.30 * turnaround_risk + 0.25 * wash_risk
-        ) * kyc_factor
-
-        risk_score = round(min(0.99, max(0.01, raw_score)), 4)
+        risk_score = score_withdrawal(
+            recent_alert_score=recent_alert_score,
+            hours_since_deposit=hours_since_deposit,
+            market_risk_pct=market_risk_pct,
+            hours_since_kyc=hours_since_kyc,
+        )
 
         # 2. Decision Formulation & Action Intent Emission
         intent_id: str | None = None

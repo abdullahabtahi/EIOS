@@ -75,6 +75,8 @@ Kinds: **E** evidence read, **K** knowledge search, **C** deterministic compute,
 
 Counts per agent: AML 11, partner 8, executive 8 (shared tools included), compliance 4 to 6, operations 4 to 6. AML is the largest and is the first to need splitting if selection quality drops (decided by the trajectory suite, spec 022).
 
+**Built (spec 023, `EIOS/src/eios/ontology/omcp/port/`).** The catalogue above exists with the target names, 28 capabilities. Differences from the table: entity arguments are all `entity_id` and are resolved through one alias map; `compare_facts` takes fact ids from earlier results (not numbers) and re-reads them through the port with the caller's own principal; `get_metric` accepts a closed set of governed metric ids; `propose_hold` and `propose_partner_action` return drafts that are never signed or staged, and their action kinds map to the intent hub's vocabulary internally. Not yet built: `search_regulations`, `search_policy` (spec 024), `get_cohort_trend` (spec 025), `get_market_context` (spec 026). Results and gaps are in `agent-baseline.md` section 6.
+
 **Surface hygiene (spec 023).** OMCP has 42 handlers (SRC); about eight are duplicates or overlaps (`get_client_aml_dossier`/`get_aml_entity_dossier`, `generate_sar_draft`/`compose_sar_draft`, `get_briefing`/`get_morning_briefing`, `run_scenario`/`simulate_what_if_shock`, three graph tools, two chain-verify tools). Today's copilot exposes a different, smaller fixture set (`get_governed_metric`, `inspect_aml_entity`, `query_graph_topology`, `inspect_partner_churn`, `run_causal_what_if`, `stage_action_intent`) plus two fake retrieval tools. The port replaces both with the one typed catalogue above.
 
 ## 3. Agent topology

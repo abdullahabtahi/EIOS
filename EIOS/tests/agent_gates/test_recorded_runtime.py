@@ -32,3 +32,23 @@ def test_a_turn_absent_from_the_run_is_inconclusive_not_invented(tmp_path: Path)
     path.write_text("", encoding="utf-8")
     got = RecordedRuntime(path).run_turn(_request("missing"))
     assert got.outcome is Outcome.INCONCLUSIVE
+
+
+def test_the_runtime_name_comes_from_the_records(tmp_path):
+    from eios.agent_gates.adapters.recorded import RecordedRuntime
+    from eios.agent_gates.adapters.toolport import ToolPortRuntime
+    from eios.agent_gates.port import TurnRequest
+    from eios.agent_gates.records import Role
+
+    record = ToolPortRuntime().run_turn(
+        TurnRequest(
+            question="Give me the morning briefing.",
+            role=Role.EXECUTIVE,
+            operator_id="u",
+            session_id="s",
+            case_id="c",
+        )
+    )
+    path = tmp_path / "records.jsonl"
+    path.write_text(record.model_dump_json() + "\n", encoding="utf-8")
+    assert RecordedRuntime(path).runtime_name == "toolport"

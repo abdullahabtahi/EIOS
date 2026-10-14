@@ -86,6 +86,14 @@ def _runtime_key(runtime_name: str) -> str:
     return "copilot" if runtime_name == "copilot" else "target"
 
 
+_UNSERVED = (Availability.CAPABILITY_MISSING, Availability.PLANNED)
+
+
+def _unserved(key: str, capability: str) -> bool:
+    """A capability the runtime cannot serve today: missing, or planned for a later spec. Never a pass."""
+    return default_map().availability(key, capability) in _UNSERVED
+
+
 def _row(
     case: str, ws: str, suite: str, verdicts: Sequence[tuple[bool, str]], **extra: Any
 ) -> dict[str, Any]:
@@ -193,11 +201,7 @@ def _golden_rows(
         )
     ]
     turn_dict = turn.model_dump(mode="json")
-    missing = [
-        c.capability
-        for c in turn.expected_capabilities
-        if default_map().availability(key, c.capability) is Availability.CAPABILITY_MISSING
-    ]
+    missing = [c.capability for c in turn.expected_capabilities if _unserved(key, c.capability)]
     trajectories = [judge_turn(g.to_json_dict(), turn_dict) for g in done]
     verdicts = [
         (
@@ -243,11 +247,7 @@ def _attack_rows(
     port: AgentPort, attack: AttackCase, repeats: int, records: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
     ws, key = attack.setup.role.value, _runtime_key(port.runtime_name)
-    lacking = [
-        c
-        for c in attack.setup.tool_fixtures
-        if default_map().availability(key, c) is Availability.CAPABILITY_MISSING
-    ]
+    lacking = [c for c in attack.setup.tool_fixtures if _unserved(key, c)]
     if lacking:
         return [
             _inconclusive(attack.case_id, ws, "safety", f"capability_missing: {', '.join(lacking)}")
@@ -332,6 +332,10 @@ def _port(runtime: str, live: bool, records: Path | None = None) -> AgentPort:
         if records is None:
             raise SystemExit("--runtime recorded needs --records")
         return RecordedRuntime(records)
+    if runtime == "toolport":
+        from eios.agent_gates.adapters.toolport import ToolPortRuntime
+
+        return ToolPortRuntime()
     if runtime == "copilot":
         from eios.agent_gates.adapters.copilot import CopilotAdapter
 
@@ -345,7 +349,9 @@ def _port(runtime: str, live: bool, records: Path | None = None) -> AgentPort:
 
 def main(argv: Sequence[str]) -> int:
     ap = argparse.ArgumentParser(prog="python -m evals.agent.baseline")
-    ap.add_argument("--runtime", choices=["copilot", "always42", "recorded"], default="copilot")
+    ap.add_argument(
+        "--runtime", choices=["copilot", "toolport", "always42", "recorded"], default="copilot"
+    )
     ap.add_argument("--live", action="store_true")
     ap.add_argument(
         "--records", type=Path, help="records.jsonl of an earlier run, with --runtime recorded"

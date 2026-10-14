@@ -14,10 +14,11 @@ from eios.agent_gates.records import TurnRecord
 class RecordedRuntime:
     """Looks a record up by case id and repeat index."""
 
-    def __init__(self, records_path: Path, runtime_name: str = "copilot") -> None:
-        self.runtime_name = runtime_name
+    def __init__(self, records_path: Path, runtime_name: str | None = None) -> None:
         lines = records_path.read_text(encoding="utf-8").splitlines()
         loaded = [TurnRecord.model_validate(json.loads(line)) for line in lines if line.strip()]
+        # The runtime the records came from decides which tool names the judges expect.
+        self.runtime_name = runtime_name or (loaded[0].runtime if loaded else "copilot")
         self._by_key = {(r.case_id, r.repeat): r for r in loaded}
 
     def run_turn(self, request: TurnRequest) -> TurnRecord:
