@@ -134,3 +134,14 @@ def test_fail_closed_answer_has_no_figure_and_says_why() -> None:
     assert answer.blocked is False
     assert answer.fallback_reason is None
     assert MAX_ATTEMPTS == 3
+
+
+@pytest.mark.parametrize("ident", ["CR84920", "PTR882", "ALT-CR84920", "P-882", "AC1000001"])
+def test_entity_identifiers_are_not_figures(ident: str) -> None:
+    out = _assemble(f"Account {ident} shows {{{{fact:aml.dossier:AC-1:discrepancy_multiplier}}}}.")
+    assert isinstance(out, Assembled), ident
+
+
+def test_a_figure_next_to_an_identifier_is_still_caught() -> None:
+    out = _assemble("Account CR84920 moved 40 times.")
+    assert isinstance(out, Rejected)

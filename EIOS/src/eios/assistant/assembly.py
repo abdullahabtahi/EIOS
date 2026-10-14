@@ -38,6 +38,9 @@ class Assembled:
 @dataclass(frozen=True)
 class Rejected:
     problems: tuple[str, ...]
+# An entity or alert identifier (CR84920, PTR-882, ALT-CR84920) is a name, not a figure: a token that starts with a
+# letter and contains a digit. A number that starts with a digit (16x, 40) is never exempt.
+_IDENTIFIER = re.compile(r"\b[A-Za-z][A-Za-z0-9_-]*\d[A-Za-z0-9_-]*\b")
 
 
 def _plain(value: float) -> str:
@@ -109,7 +112,7 @@ def assemble_draft(
     if "{{" in text or "}}" in text:
         problems.append("a placeholder is malformed; use exactly {{fact:<fact id>}}")
     # Numbers are searched in the draft with every placeholder removed, so a resolved figure is never mistaken for one.
-    prose = _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", draft))
+    prose = _IDENTIFIER.sub(" ", _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", draft)))
     typed = [n.raw_string for n in _NORMALIZER.extract_numbers(prose)]
     if typed:
         problems.append(
