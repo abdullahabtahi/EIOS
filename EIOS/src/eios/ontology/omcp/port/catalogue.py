@@ -1,13 +1,13 @@
 """The one catalogue: every capability the assistant can be offered, and the port built over it."""
 
-from eios.ontology.omcp.port import aml_tools
+from eios.ontology.omcp.port import aml_tools, partner_tools, proposals
 from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.registry import ToolSpec
 from eios.ontology.omcp.port.service import GovernedToolPort, RefusalLog
 
 
 def all_specs() -> tuple[ToolSpec, ...]:
-    return (*aml_tools.TOOLS,)
+    return (*aml_tools.TOOLS, *partner_tools.TOOLS, *proposals.TOOLS)
 
 
 def build_port(
