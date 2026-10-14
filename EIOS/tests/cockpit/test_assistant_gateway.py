@@ -213,3 +213,26 @@ def test_a_retention_proposal_stages_through_the_same_endpoint(client: TestClien
     [proposal] = body["proposals"]
     staged = client.post("/api/cockpit/actions/stage", json=proposal["stage_request"])
     assert staged.status_code == 200, staged.text
+
+
+def test_startup_warm_up_builds_the_runtime_and_warms_it() -> None:
+    class Spy:
+        warmed = 0
+
+        async def warm_up(self) -> None:
+            Spy.warmed += 1
+
+    assistant_gateway.set_runtime_for_testing(Spy())  # type: ignore[arg-type]
+    try:
+        asyncio.run(assistant_gateway.warm_up())
+        assert Spy.warmed == 1
+    finally:
+        assistant_gateway.set_runtime_for_testing(None)
+
+
+def test_startup_warm_up_never_stops_the_app_from_starting(monkeypatch: pytest.MonkeyPatch) -> None:
+    def broken() -> None:
+        raise assistant_gateway.AssistantConfigError("not configured")
+
+    monkeypatch.setattr(assistant_gateway, "get_runtime", broken)
+    asyncio.run(assistant_gateway.warm_up())  # logs, returns, does not raise

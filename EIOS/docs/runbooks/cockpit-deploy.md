@@ -47,6 +47,32 @@ There is no replay of past answers for free-text questions (decision of 2026-10-
 labelled replay. The runtime's service account needs `roles/aiplatform.user` and Firestore access to `eios-state`, plus
 `roles/modelarmor.user` once the templates exist.
 
+## Model Armor templates (dev sandbox first)
+The templates are a Terraform module, `infra/modules/model_armor`, applied on its own in the dev sandbox project through
+`infra/sandboxes/model-armor` (its own state prefix; the full `envs/dev` skeleton is not touched). Filters: Responsible-AI
+categories and malicious links on both templates, prompt injection and jailbreak on the prompt template, all at medium
+confidence and blocking. Sensitive Data Protection is off on purpose: answers carry ids, names and amounts.
+
+1. `cd EIOS/infra/sandboxes/model-armor`; pass the project id on the command line (`-var project_id=<id>`) rather than a tfvars file, which the infra policy gate flags when it holds a real id.
+2. `terraform init -backend-config=bucket=eios-tfstate-eios-hackathon`, then `terraform plan` and read it. **Applying needs the user's say-so.**
+3. After an apply, measure before choosing thresholds, with no model call:
+   `PYTHONPATH=src:. uv run python -m evals.agent.screening_probe --template <prompt template name> --out <report.json>`.
+   It screens every golden question (a block is a false positive) and every attack question, and times each call. Pass criteria are
+   fixed in `evals/agent/screening_probe.py` before the run. Attacks that arrive inside a tool result are not screened by the plugin
+   (the tool port marks such text untrusted), so a missed attack there is information, not a failure.
+4. Then run the gateway locally with `EIOS_MODEL_ARMOR_PROMPT_TEMPLATE` and `EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE` set to the two
+   outputs, `GOOGLE_CLOUD_QUOTA_PROJECT` set to the sandbox project, and `GOOGLE_GENAI_USE_ENTERPRISE=true`. Measure the added latency, send an
+   obvious injection, and read the matches in Cloud Logging before choosing thresholds for prod-like.
+5. prod-like reuses the same module, adds `roles/modelarmor.user` for the `eios_api` identity, sets the two variables on the Cloud Run
+   service, and needs its own plan, approval and deploy.
+
+### Dev sandbox measurement (2026-10-14; the numbers are in PR #51)
+- Applied: the API and the two templates. No false positive on the golden questions, no screening failure, and no block on real assistant answers.
+- Latency was measured from a laptop over the internet, which misses the budget of 400 ms at p95 `[ASSUMPTION]`. The figure that matters is from Cloud Run in the same region and has not been measured: re-run `screening_probe` from inside `us-central1` before choosing prod-like thresholds.
+- Attacks: Model Armor blocked one of the attack questions. It is a content-safety filter, not our access control: write attempts, impersonation, stage-then-approve and cross-scope requests are stopped by the tool port (role scoping, no approve or execute tool) and judged by the spec 022 attack gates.
+- Cold start: the first screened turn after a restart was about twice as slow because the service connection opens lazily. The app now warms it in the background at startup (`assistant_gateway.warm_up`), and the first turn is then a normal turn.
+- Open: whether Sensitive Data Protection is wanted, after reading real traffic.
+
 ## Known exceptions
 - **Guardrails off** (`enforce_guardrails = false`) in eios-hackathon-prod: the deploying identity lacks
   `orgpolicy.policyAdmin`. Re-enable once granted. [ASSUMPTION: hackathon project]
