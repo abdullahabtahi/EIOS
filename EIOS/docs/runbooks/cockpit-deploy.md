@@ -18,6 +18,25 @@ the hash-chained decision ledger in Firestore (database `eios-state`).
 4. Create the webhook secret value: `openssl rand -hex 32 | gcloud secrets versions add cashier_webhook_secret --data-file=-`.
 5. Provision operators: `uv run python -m tools.seed_demo_operators --project <id> --credentials-file <new file>`.
 
+## Local gcloud setup
+The machine default project is the legacy `spatial-cat-489006-a4`, so gcloud and application-default credentials bill and
+check the wrong project. Use a named configuration and leave `default` alone:
+
+```
+gcloud config configurations create eios --activate
+gcloud config set account <the account with access to eios-hackathon>
+gcloud config set project eios-hackathon
+gcloud config set billing/quota_project eios-hackathon
+gcloud config set api_endpoint_overrides/modelarmor https://modelarmor.us-central1.rep.googleapis.com/
+```
+
+- The endpoint override is needed because gcloud sends Model Armor calls to the multi-region `us` endpoint, which refuses
+  a template that lives in `us-central1` with a misleading "Read access to project was denied". Change it if the templates move region.
+- Python tools take the quota project from `GOOGLE_CLOUD_QUOTA_PROJECT=eios-hackathon` (see the smoke-test notes); gcloud's
+  setting does not change the application-default credentials.
+- `gcloud config configurations activate default` switches back. A second account with an expired token only needs
+  `gcloud auth login <account>` (or `gcloud auth revoke <account>` if it is no longer used).
+
 ## Release
 1. Grant the build identity read on the source bucket once: `roles/storage.objectViewer` on `gs://<project>_cloudbuild` for `pipeline@`.
 2. Build both images as the pipeline identity (see the header of `EIOS/services/cloudbuild.cockpit.yaml`).
