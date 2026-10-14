@@ -82,7 +82,7 @@ export function SystemStatusDialog({
             </h3>
             <p className="text-xs text-slate-600 leading-relaxed font-sans">
               Injects a simulated upstream partition to verify deterministic offline fallback and cryptographic cache
-              replay (Principle VIII).
+              replay.
             </p>
             <button
               type="button"

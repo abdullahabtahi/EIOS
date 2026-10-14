@@ -229,7 +229,7 @@ export function OperationsBoardView() {
               <div className="flex items-center gap-2">
                 <span className="material-symbols-sharp text-base text-amber-600">electrical_services</span>
                 <h3 className="text-title font-sans font-semibold tracking-normal text-cx-ink">
-                  Resilience Gate (Principle VIII) • Deterministic Fallback &amp; Partition Verification
+                  Resilience Gate • Deterministic Fallback &amp; Partition Verification
                 </h3>
               </div>
               <span className={`px-2 py-0.5 text-label font-bold font-mono border ${

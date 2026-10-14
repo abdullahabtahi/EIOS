@@ -49,4 +49,19 @@ describe('the provenance badge claims only what the backend said', () => {
     expect(screen.queryByText(/real-time synchronized/i)).not.toBeInTheDocument();
     expect(screen.getByText(/origin not stated/i)).toBeInTheDocument();
   });
+
+  it('states the unit once in the popover, hides empty rows and the illustrative tag, and wraps no steward code path', () => {
+    render(
+      <MetricProvenanceBadge
+        metric={metric({ dataOrigin: 'fixture', formattedValue: '12 days', unit: 'days', semanticDefinitionVersion: '' })}
+        displayMode="badge"
+      />,
+    );
+    fireEvent.click(screen.getByText('12 days'));
+    expect(screen.queryAllByText(/^days$/)).toHaveLength(0); // the unit is part of "12 days", not repeated
+    expect(screen.queryByText('Semantic Version')).not.toBeInTheDocument();
+    expect(screen.queryByText('Business Steward')).not.toBeInTheDocument(); // same string as the engine
+    expect(screen.queryByText('[ILLUSTRATIVE]')).not.toBeInTheDocument();
+    expect(screen.getByText('Calculation Engine')).toBeInTheDocument();
+  });
 });

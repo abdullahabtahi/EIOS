@@ -106,9 +106,6 @@ export function LegacyAuditBanner({ response }: { response: CopilotQueryResponse
               <span className="material-symbols-sharp text-base">verified_user</span>
               <div>
                 <span className="font-bold tracking-tight">SYSTEM GUIDANCE: QUALITATIVE PROVENANCE VERIFIED</span>
-                <div className="text-label opacity-90">
-                  Principle I & III: Zero unanchored claims. Institutional capability explanation.
-                </div>
               </div>
             </div>
             <span className="px-2 py-0.5 bg-white/80 border border-current text-label font-bold">

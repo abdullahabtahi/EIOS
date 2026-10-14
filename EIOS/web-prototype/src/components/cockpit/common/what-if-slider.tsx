@@ -164,7 +164,7 @@ export function WhatIfSlider() {
             100.0%
           </div>
           <div className="text-label font-mono text-cx-muted mt-0.5">
-            Principle III Attributed
+            Attributed
           </div>
         </div>
       </div>

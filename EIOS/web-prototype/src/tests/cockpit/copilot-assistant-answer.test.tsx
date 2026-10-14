@@ -107,6 +107,15 @@ describe('an ADK assistant answer in the command bar', () => {
     expect(screen.queryByText(/^demo$/i)).not.toBeInTheDocument();
     expect(screen.queryByText('[ILLUSTRATIVE]')).not.toBeInTheDocument();
     expect(screen.queryByTestId(/^figure-source-/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Governed tools used/i)).not.toBeInTheDocument();
+  });
+
+  it('renders **bold** as bold, not as asterisks', async () => {
+    mockBackend(reply(assembled({ responseMarkdown: 'The **riskiest** partner needs a call.' })));
+    await ask();
+    const bold = await screen.findByText('riskiest');
+    expect(bold.tagName).toBe('STRONG');
+    expect(screen.queryByText(/\*\*/)).not.toBeInTheDocument();
   });
 
   it('does not call data live unless the backend said so', async () => {

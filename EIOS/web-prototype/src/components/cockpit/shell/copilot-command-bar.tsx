@@ -13,6 +13,7 @@ import { useCockpit } from '../state/cockpit-context';
 import { CopilotQueryResponse, ActionIntentCard, AssistantProposal } from '../state/cockpit-types';
 import { MetricProvenanceBadge } from '../common/metric-provenance';
 import { CopilotWorking } from './copilot-working';
+import { SimpleMarkdown } from '../common/simple-markdown';
 import { AnswerStatusBanner, LegacyAuditBanner } from './copilot-status';
 import { ProposalCard, ProposalState } from './copilot-proposals';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
@@ -276,27 +277,23 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                       )}
 
                       {/* Natural Language Narrative Synthesis */}
-                      <div className="text-xs leading-relaxed text-slate-800 whitespace-pre-wrap font-sans">
-                        {turn.response.responseMarkdown}
-                      </div>
-
-                      {turn.response.steps && turn.response.assistantStatus === 'ASSEMBLED' && turn.response.steps.length > 0 && (
-                        <div className="text-label font-mono text-slate-500">
-                          Governed tools used: {turn.response.steps.join(', ')}
-                        </div>
-                      )}
+                      <SimpleMarkdown
+                        source={turn.response.responseMarkdown}
+                        className="text-xs leading-relaxed text-slate-800 font-sans"
+                      />
 
                       {/* Cited Provenance Badges */}
                       {(turn.response.citedMetrics ?? []).length > 0 && (
                         <div className="pt-2 border-t border-slate-100 space-y-1.5">
                           <div className="text-label font-mono uppercase tracking-wider text-slate-500">
-                            {turn.response.assistantStatus
-                              ? 'Figures from governed data:'
-                              : 'Anchored Semantic Metrics (Principle I Provenance):'}
+                            Figures from governed data:
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {(turn.response.citedMetrics ?? []).map((m) => (
-                              <MetricProvenanceBadge key={m.metricId} metric={m} displayMode="badge" />
+                              <div key={m.metricId} className="flex flex-col gap-0.5">
+                                <span className="text-label text-slate-500 capitalize">{m.name}</span>
+                                <MetricProvenanceBadge metric={m} displayMode="badge" />
+                              </div>
                             ))}
                           </div>
                         </div>
