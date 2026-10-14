@@ -27,7 +27,8 @@ class IngestionConfig(BaseModel):
         default_factory=lambda: os.getenv("EIOS_DUCKDB_PATH", ":memory:eios_hot_state")
     )
     parquet_lakehouse_root: str = Field(
-        default_factory=lambda: os.getenv("EIOS_LAKEHOUSE_ROOT", "data/raw")
+        # The directory holding `raw/` (foundry baseline) and `lakehouse/` (exported batches).
+        default_factory=lambda: os.getenv("EIOS_LAKEHOUSE_ROOT", "data")
     )
     rehydration_timeout_seconds: float = Field(default=3.0)
 
