@@ -42,6 +42,7 @@ Status: **Accepted** = decided; **Proposed** = drafted, awaiting spike/evidence;
 | ADR-014 | API surface: GraphQL + SSE vs REST + SSE | Open | Decide with ADR-009 | — |
 | [ADR-015](adr/015-synthetic-data-split-policy.md) | Synthetic-data split policy (dev/validation/sealed) & anti-circularity controls | Accepted | See `docs/synthetic_data_strategy.md` | — |
 | [ADR-018](adr/018-bounded-contexts-and-governed-tool-surface.md) | Bounded contexts and a single governed tool surface | Proposed | Per-context schemas; OMCP is the only agent-facing surface | — |
+| [ADR-019](adr/019-adk-assistant-runtime.md) | Google ADK as the assistant runtime, embedded in the API service | Proposed | One ADK agent per workstation over the governed tool port; supersedes ADR-016 once accepted | ADR-018 |
 
 ### ADR template
 ```

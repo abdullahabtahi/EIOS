@@ -336,6 +336,10 @@ def _port(runtime: str, live: bool, records: Path | None = None) -> AgentPort:
         from eios.agent_gates.adapters.toolport import ToolPortRuntime
 
         return ToolPortRuntime()
+    if runtime == "adk":
+        from eios.agent_gates.adapters.adk import AdkRuntime
+
+        return AdkRuntime(offline=not live)
     if runtime == "copilot":
         from eios.agent_gates.adapters.copilot import CopilotAdapter
 
@@ -350,7 +354,9 @@ def _port(runtime: str, live: bool, records: Path | None = None) -> AgentPort:
 def main(argv: Sequence[str]) -> int:
     ap = argparse.ArgumentParser(prog="python -m evals.agent.baseline")
     ap.add_argument(
-        "--runtime", choices=["copilot", "toolport", "always42", "recorded"], default="copilot"
+        "--runtime",
+        choices=["copilot", "toolport", "adk", "always42", "recorded"],
+        default="copilot",
     )
     ap.add_argument("--live", action="store_true")
     ap.add_argument(

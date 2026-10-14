@@ -28,8 +28,17 @@ import uvicorn
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
+from starlette.concurrency import run_in_threadpool
+from starlette.responses import JSONResponse
 
+from eios.assistant.config import AssistantConfigError
+from eios.assistant.sessions import valid_entity_id
 from eios.cockpit.aml import AMLWorkstationService
+from eios.cockpit.assistant_gateway import (
+    assistant_enabled,
+    get_runtime,
+)
+from eios.cockpit.assistant_gateway import response_body as assistant_response_body
 from eios.cockpit.auth import (
     APPROVE_ROLES,
     STAGE_ROLES,
@@ -975,7 +984,7 @@ def authorize_governed_action(
 
 
 @router.post(COPILOT_QUERY_PATH)
-def query_copilot(
+async def query_copilot(
     req: CopilotQueryRequest, operator: Operator | None = Depends(current_operator)
 ) -> dict[str, Any]:
     """Processes Copilot queries with Metric Auditor Gate verification and dual-engine grounding.
@@ -988,7 +997,27 @@ def query_copilot(
     except PortError as exc:
         raise HTTPException(status_code=422, detail=exc.error.message) from exc
 
-    response_model = copilot_engine.process_query(
+    if not valid_entity_id(req.context_entity_id):
+        raise HTTPException(status_code=422, detail="activeEntityId is not a valid identifier")
+    try:
+        use_assistant = assistant_enabled()
+        runtime = await run_in_threadpool(get_runtime) if use_assistant else None
+    except AssistantConfigError as exc:
+        logging.getLogger(__name__).error("assistant is not configured: %s", exc)
+        raise HTTPException(status_code=503, detail="offline") from exc
+    if runtime is not None:
+        outcome = await runtime.run_turn(
+            principal=principal, question=req.query, entity_id=req.context_entity_id
+        )
+        if outcome.status != "ok":  # an outage is offline, never a 200 that looks like an answer
+            return JSONResponse(  # type: ignore[return-value]
+                status_code=503,
+                content={"detail": "offline", **assistant_response_body(req.query, outcome)},
+            )
+        return assistant_response_body(req.query, outcome)
+
+    response_model = await run_in_threadpool(
+        copilot_engine.process_query,
         query=req.query,
         role=EngineOperatorRole(principal.workstation.value),
         session_id=f"sess_{principal.uid}_{principal.workstation.value}",
