@@ -57,6 +57,48 @@ def set_runtime_for_testing(runtime: AssistantRuntime | None) -> None:
         _runtime = runtime
 
 
+def assistant_status(answer: Answer) -> str:
+    """What the operator should be told about this answer, apart from the legacy auditor vocabulary.
+
+    ASSEMBLED: every figure was filled in by the system from a governed result of this turn.
+    BLOCKED: screening stopped the question or the answer (`block_reason` says which).
+    FAILED_CLOSED: the assistant could not support an answer, so it showed no figure at all.
+    UNAVAILABLE: the model or data failed; nothing was invented.
+    """
+    if answer.blocked:
+        return "BLOCKED"
+    if answer.failed_closed:
+        return "FAILED_CLOSED"
+    if answer.fallback_reason:
+        return "UNAVAILABLE"
+    return "ASSEMBLED"
+
+
+_PROPOSAL_FIELDS = (
+    "proposal_ref",
+    "kind",
+    "label",
+    "offer",
+    "estimated_cost_usd",
+    "expected_effect_low",
+    "expected_effect_high",
+    "expected_effect_basis",
+    "approval_requirement",
+    "signed",
+    "staged",
+    "next_step",
+    "as_of",
+    "data_origin",
+    "source",
+    "stage_request",
+)
+
+
+def _proposal_view(raw: Mapping[str, Any]) -> dict[str, Any]:
+    """The proposal as the browser needs it: what is offered, what it costs, how it is approved, how to stage it."""
+    return {name: raw[name] for name in _PROPOSAL_FIELDS if name in raw}
+
+
 def _auditor_status(answer: Answer) -> str:
     """The Metric Auditor Gate does not run on this path, so this never says PASS; ASSEMBLED means every figure was
     inserted by the system from a governed result of this turn (spec 021 FR-001)."""
@@ -73,6 +115,8 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
         "query": query,
         "response": answer.text,
         "auditor_status": _auditor_status(answer),
+        "assistant_status": assistant_status(answer),
+        "failed_closed": answer.failed_closed,
         "is_replay_fallback": answer.is_replay_fallback,
         "fallback_reason": answer.fallback_reason,
         "provenance_citations": [
@@ -80,6 +124,9 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
                 "metric_id": figure.fact_id,
                 "formatted_value": figure.text,
                 "steward": figure.source,
+                "source": figure.source,
+                "unit": figure.unit,
+                "data_origin": figure.data_origin.value,
                 "as_of": figure.as_of.isoformat(),
             }
             for figure in answer.figures
@@ -97,6 +144,7 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
         "block_reason": answer.block_reason,
         "steps": list(outcome.steps),
         "proposed_actions": list(answer.proposed_actions),
+        "proposals": [_proposal_view(p) for p in answer.proposed_actions],
         "data_origin": answer.data_origin.value,
         "verification": {
             "method": "assembled_from_governed_results",

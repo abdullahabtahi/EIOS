@@ -6,7 +6,9 @@ an internal constant: it is used when a human stages the draft and never appears
 """
 
 import hashlib
+from collections.abc import Mapping
 from enum import StrEnum
+from typing import Any
 
 from eios.common.validation import StrictModel
 from eios.ontology.config import SecurityMarking
@@ -52,6 +54,41 @@ class Proposal(ToolResult):
     signed: bool = False
     staged: bool = False
     next_step: str = _NEXT_STEP
+
+
+_HOLD_REASON = "Held for review on the assistant's proposal"
+_HOLD_SEVERITY = "HIGH"
+_DEAL_SEVERITY = "MEDIUM"
+
+
+def stage_request(proposal: Proposal, args: Mapping[str, Any]) -> dict[str, Any]:
+    """The request a human's click sends to the stage endpoint: the hub's action name and its required parameters.
+
+    Built here, beside `KIND_TO_HUB_ACTION`, so the browser forwards it unchanged and never invents a vocabulary or
+    guesses which id a parameter wants (a hold needs the withdrawal id, not the account id). It is kept out of the
+    result the model reads. Staging it is a human act; nothing here signs, stages or approves.
+    """
+    entity = proposal.entity_id
+    if entity is None:
+        raise ValueError("a proposal names the entity it is about")
+    if proposal.kind is ProposalKind.HOLD_WITHDRAWAL:
+        pending = PENDING_WITHDRAWALS[entity]
+        metadata: dict[str, Any] = {"txn_id": pending.withdrawal_id, "reason": _HOLD_REASON}
+        severity, dual = _HOLD_SEVERITY, True
+    else:
+        metadata = {
+            "partner_ids": [entity],
+            "playbook_id": args["playbook_id"],
+            "budget": proposal.estimated_cost_usd,
+        }
+        severity, dual = _DEAL_SEVERITY, proposal.approval_requirement.startswith("Dual")
+    return {
+        "action_type": KIND_TO_HUB_ACTION[proposal.kind],
+        "target_entity_id": entity,
+        "severity": severity,
+        "requires_four_eyes": dual,
+        "metadata": metadata,
+    }
 
 
 class ProposeDealArgs(StrictModel):
