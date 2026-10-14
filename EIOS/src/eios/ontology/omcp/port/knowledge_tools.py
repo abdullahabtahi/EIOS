@@ -37,7 +37,9 @@ BUDGET_MS = 4000.0  # [ASSUMPTION] one managed-search round trip; measured on th
 class RegulationArgs(StrictModel):
     query: str = Field(min_length=3, max_length=300)
     jurisdiction: Jurisdiction | None = None
-    limit: int = Field(default=5, ge=1, le=8)
+    limit: int = Field(
+        default=3, ge=1, le=8
+    )  # recall at 3 is full on the retrieval cases, and fewer passages means a faster draft
 
     @field_validator("jurisdiction", mode="before")
     @classmethod

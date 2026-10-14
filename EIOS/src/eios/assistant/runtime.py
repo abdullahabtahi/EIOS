@@ -29,6 +29,7 @@ from eios.assistant.assembler_agent import (
     FEEDBACK_KEY,
 )
 from eios.assistant.config import AssistantConfigError, AssistantSettings
+from eios.assistant.prefetch import PLATFORM_CALL, PREFETCH_KEY
 from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED
 from eios.assistant.sessions import APP_NAME, session_key, valid_entity_id
 from eios.assistant.tools import (
@@ -95,7 +96,14 @@ class _TurnLog:
 
 def _model_calls(events: list[Any]) -> int:
     return sum(
-        1 for e in events if e.author == "drafter" and e.content and e.content.role == "model"
+        1
+        for e in events
+        if e.author == "drafter"
+        and e.content
+        and e.content.role == "model"
+        and not (e.custom_metadata or {}).get(
+            PLATFORM_CALL
+        )  # a tool the platform ran is not a model call
     )
 
 
@@ -109,6 +117,7 @@ def _fresh_turn_state(
     return {
         ATTEMPT_KEY: 0,
         FEEDBACK_KEY: "",
+        PREFETCH_KEY: False,
         FACTS_KEY: {},
         SOURCES_KEY: [],
         PASSAGES_KEY: {},
@@ -196,7 +205,13 @@ class AssistantRuntime:
         entity_context: dict[str, Any] | None,
         log: _TurnLog,
     ) -> TurnOutcome:
-        agent = build_agent(port=self._port, principal=principal, model=self._model)
+        agent = build_agent(
+            port=self._port,
+            principal=principal,
+            model=self._model,
+            prefetch=self._settings.prefetch,
+            hedge_after_s=self._settings.hedge_after_s,
+        )
         app = App(name=APP_NAME, root_agent=agent, plugins=list(self._plugins))
         runner = Runner(app=app, session_service=self._sessions, auto_create_session=True)
         offered = {spec.name for spec in self._port.list_tools(principal)}

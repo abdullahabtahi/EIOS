@@ -10,7 +10,11 @@ from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.readmodels import ReadModels
 
 SETTINGS = AssistantSettings.from_env(
-    {"EIOS_ENVIRONMENT": "test", "EIOS_ASSISTANT_TURN_DEADLINE_S": "10"}
+    {
+        "EIOS_ENVIRONMENT": "test",
+        "EIOS_ASSISTANT_TURN_DEADLINE_S": "10",
+        "EIOS_ASSISTANT_PREFETCH": "0",
+    }
 )
 
 
