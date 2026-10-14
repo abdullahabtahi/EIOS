@@ -141,6 +141,13 @@ class AssistantRuntime:
             *plugins,
         )
 
+    async def warm_up(self) -> None:
+        """Let each plugin that can open its connection ahead of the first turn do so (best effort)."""
+        for plugin in self._plugins:
+            warm = getattr(plugin, "warm_up", None)
+            if warm is not None:
+                await warm()
+
     async def run_turn(
         self,
         *,

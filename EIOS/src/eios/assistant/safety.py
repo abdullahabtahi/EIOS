@@ -8,6 +8,7 @@ outside as untrusted instead). Deployed environments must name both templates, o
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from google.adk.agents.callback_context import CallbackContext
@@ -18,6 +19,7 @@ from google.adk.plugins.base_plugin import BasePlugin
 
 from eios.assistant.config import AssistantConfigError, AssistantSettings
 
+_LOG = logging.getLogger(__name__)
 INPUT_BLOCKED = "I can't help with that request."
 OUTPUT_BLOCKED = "I can't share that answer. Please rephrase the question."
 BLOCKED_METADATA_KEY = "model_armor_blocked"
@@ -41,6 +43,18 @@ class ScreenOncePerTurn(ModelArmorPlugin):
         if blocked is None:
             callback_context.state[SCREENED_KEY] = True
         return blocked
+
+    async def warm_up(self) -> None:
+        """Open the screening connection before the first operator turn. The service channel and credentials are
+        created on first use, which costs the first turn several seconds. A fixed text is sent, never operator
+        text. A failure here is logged and ignored: the first real turn still blocks if screening is down."""
+        template = self._config.prompt_template_name
+        if not template:
+            return
+        try:
+            await self._sanitize_user_prompt("warm up", template)
+        except Exception:
+            _LOG.warning("Model Armor warm-up failed; the first turn will retry", exc_info=True)
 
 
 def build_safety_plugins(

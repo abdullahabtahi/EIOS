@@ -7,6 +7,8 @@ session failure is reported as such: it is labelled and carries no invented figu
 
 from __future__ import annotations
 
+import asyncio
+import logging
 import threading
 from collections.abc import Mapping
 from typing import Any
@@ -19,6 +21,7 @@ from eios.assistant.sessions import build_session_service
 from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.readmodels import ReadModels
 
+_LOG = logging.getLogger(__name__)
 _lock = threading.Lock()
 _runtime: AssistantRuntime | None = None
 
@@ -36,6 +39,18 @@ def get_runtime() -> AssistantRuntime:
                 plugins=build_safety_plugins(settings),
             )
         return _runtime
+
+
+async def warm_up() -> None:
+    """Build the runtime and open its connections at startup, so the first operator does not pay for it.
+
+    Best effort: a missing configuration or an unreachable service is logged, never raised. The first real turn
+    reports its own failure (503 offline), so a warm-up that cannot run changes nothing about honesty."""
+    try:
+        runtime = await asyncio.to_thread(get_runtime)
+        await runtime.warm_up()
+    except Exception:
+        _LOG.warning("assistant warm-up skipped", exc_info=True)
 
 
 def set_runtime_for_testing(runtime: AssistantRuntime | None) -> None:

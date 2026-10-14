@@ -121,3 +121,24 @@ def test_deployed_without_both_templates_refuses_to_start() -> None:
 
 def test_locally_without_templates_there_is_no_screening_and_it_says_so() -> None:
     assert build_safety_plugins(AssistantSettings.from_env({"EIOS_ENVIRONMENT": "test"})) == ()
+
+
+def test_warming_up_opens_the_connection_with_a_fixed_text_and_never_raises() -> None:
+    armor = FakeArmor()
+    (plugin,) = build_safety_plugins(SETTINGS, client=armor)
+    asyncio.run(plugin.warm_up())
+    assert armor.screened_prompts == ["warm up"]  # a fixed string: no operator text, nothing to log
+
+    failing = FakeArmor(fail=True)
+    (broken,) = build_safety_plugins(SETTINGS, client=failing)
+    asyncio.run(
+        broken.warm_up()
+    )  # a warm-up failure is not an outage; the first real turn still blocks
+
+
+def test_the_runtime_warms_every_plugin_that_can_be_warmed() -> None:
+    armor = FakeArmor()
+    runtime, _ = make_runtime([])
+    runtime._plugins = build_safety_plugins(SETTINGS, client=armor)
+    asyncio.run(runtime.warm_up())
+    assert armor.screened_prompts == ["warm up"]
