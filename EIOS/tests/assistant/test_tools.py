@@ -173,3 +173,9 @@ def test_the_sar_tool_says_the_dossier_comes_first() -> None:
     from eios.ontology.omcp.port.descriptions import DESCRIPTIONS
 
     assert "get_aml_dossier" in DESCRIPTIONS["aml.sar_draft"]
+
+
+def test_a_proposal_reference_is_a_name_the_operator_may_be_told() -> None:
+    from eios.assistant.tools import identifiers_of
+
+    assert identifiers_of({"proposal_ref": "prop-23f928c1d5"}) == {"prop-23f928c1d5"}
