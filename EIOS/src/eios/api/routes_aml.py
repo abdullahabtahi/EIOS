@@ -10,6 +10,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
+from eios.dataplane.aml_insights import node_insights
 from eios.dataplane.aml_service import UnknownAccountError, normalize_ref
 from eios.dataplane.plane import engine_service, read_models
 
@@ -79,9 +80,11 @@ def get_aml_graph(case_id: str, hub_threshold: int = Query(default=100)) -> dict
     engine = engine_service()
     if engine is not None:
         try:
-            return engine.get_kinetic_network_graph(
-                normalize_ref(case_id), hub_threshold
-            ).to_contract_dict()
+            graph = engine.get_kinetic_network_graph(normalize_ref(case_id), hub_threshold)
+            return {
+                **graph.to_contract_dict(),
+                "node_insights": node_insights(engine.snapshot, graph),
+            }
         except UnknownAccountError as exc:
             raise HTTPException(status_code=404, detail="no such account") from exc
     entity_id = case_id.replace("case_aml_", "").replace("ALT-", "")

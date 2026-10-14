@@ -63,6 +63,19 @@ _HOLD_SEVERITY = "HIGH"
 _DEAL_SEVERITY = "MEDIUM"
 
 
+def hold_stage_request(
+    entity_id: str, withdrawal_id: str, reason: str = _HOLD_REASON
+) -> dict[str, Any]:
+    """The request that stages a hold on one pending withdrawal. A hold needs the withdrawal id, not the account id."""
+    return {
+        "action_type": KIND_TO_HUB_ACTION[ProposalKind.HOLD_WITHDRAWAL],
+        "target_entity_id": entity_id,
+        "severity": _HOLD_SEVERITY,
+        "requires_four_eyes": True,
+        "metadata": {"txn_id": withdrawal_id, "reason": reason},
+    }
+
+
 def stage_request(proposal: Proposal, args: Mapping[str, Any]) -> dict[str, Any]:
     """The request a human's click sends to the stage endpoint: the hub's action name and its required parameters.
 
@@ -76,15 +89,13 @@ def stage_request(proposal: Proposal, args: Mapping[str, Any]) -> dict[str, Any]
     if proposal.kind is ProposalKind.HOLD_WITHDRAWAL:
         if proposal.withdrawal_id is None:
             raise ValueError("a hold proposal names the withdrawal it holds")
-        metadata: dict[str, Any] = {"txn_id": proposal.withdrawal_id, "reason": _HOLD_REASON}
-        severity, dual = _HOLD_SEVERITY, True
-    else:
-        metadata = {
-            "partner_ids": [entity],
-            "playbook_id": args["playbook_id"],
-            "budget": proposal.estimated_cost_usd,
-        }
-        severity, dual = _DEAL_SEVERITY, proposal.approval_requirement.startswith("Dual")
+        return hold_stage_request(entity, proposal.withdrawal_id)
+    metadata = {
+        "partner_ids": [entity],
+        "playbook_id": args["playbook_id"],
+        "budget": proposal.estimated_cost_usd,
+    }
+    severity, dual = _DEAL_SEVERITY, proposal.approval_requirement.startswith("Dual")
     return {
         "action_type": KIND_TO_HUB_ACTION[proposal.kind],
         "target_entity_id": entity,

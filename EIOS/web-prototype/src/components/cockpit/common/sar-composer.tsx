@@ -11,6 +11,7 @@
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
 import { SarDraftDocument } from '../state/cockpit-types';
+import { useStageRequest } from './use-stage-request';
 
 interface SarComposerProps {
   draft?: SarDraftDocument;
@@ -37,12 +38,37 @@ const DEFAULT_DRAFT: SarDraftDocument = {
   status: 'DRAFT',
 };
 
-export function SarComposer({ draft = DEFAULT_DRAFT, onSave }: SarComposerProps) {
+/**
+ * The composer for the selected case. Engine-backed cases bring their own draft; the sample draft is only for the
+ * fixture workstation. The body is keyed by case so switching cases never carries one case's edits to another.
+ */
+export function SarComposer({ draft, onSave }: SarComposerProps) {
+  const { state } = useCockpit();
+  const engine = state.dataOrigin === 'engine';
+  const chosen = draft ?? (engine ? state.caseExtras.sarDraft : DEFAULT_DRAFT);
+  if (!chosen) {
+    return (
+      <div className="bg-white border border-slate-200 p-4 text-xs font-mono text-slate-500" data-testid="sar-loading">
+        {state.caseStatus === 'error' ? 'No SAR draft: the case could not be loaded.' : 'Preparing the SAR draft...'}
+      </div>
+    );
+  }
+  return <SarComposerBody key={chosen.caseId} draft={chosen} onSave={onSave} engine={engine} />;
+}
+
+function SarComposerBody({ draft, onSave, engine }: { draft: SarDraftDocument; onSave?: (t: string) => void; engine: boolean }) {
   const { stageAction, state } = useCockpit();
+  const staging = useStageRequest();
+  const fileSar = state.caseExtras.caseActions?.fileSar ?? null;
   const [narrative, setNarrative] = React.useState(draft.summaryNarrative);
   const [isSaved, setIsSaved] = React.useState(false);
 
   const handleStageFiling = () => {
+    if (engine) {
+      if (fileSar) void staging.stage(fileSar);
+      return;
+    }
+    // Fixture workstation only: a placeholder card. It carries no signature and claims none.
     stageAction({
       intentId: `act_sar_${Date.now()}`,
       actionType: 'FILE_SAR_SUBMISSION',
@@ -52,24 +78,14 @@ export function SarComposer({ draft = DEFAULT_DRAFT, onSave }: SarComposerProps)
       lifecycleState: 'STAGED',
       stagedTimestamp: new Date().toISOString(),
       expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      parameters: {
-        caseId: draft.caseId,
-        narrative,
-        citations: draft.statutoryCitations,
-        turnoverUsd: draft.totalTurnover,
-      },
-      estimatedImpact: `Files official SAR with FinCEN & locks $${draft.totalTurnover.toLocaleString()} in assets`,
+      parameters: { caseId: draft.caseId, narrative, citations: draft.statutoryCitations, turnoverUsd: draft.totalTurnover },
+      estimatedImpact: `Files a SAR and locks $${draft.totalTurnover.toLocaleString()} in assets`,
       requiresFourEyes: true,
-      kmsSignatureBadge: {
-        keyId: 'projects/feios-prod/locations/global/keyRings/eios-cockpit/cryptoKeys/action-signer-p256',
-        algorithm: 'ECDSA_P256_SHA256',
-        signatureDigest: `DIGEST_SIM_${Date.now()}`,
-        verified: true,
-      },
+      kmsSignatureBadge: { keyId: '', algorithm: '', signatureDigest: '', verified: false },
       fourEyesRecord: {
         initiatorOfficerId: state.operator.officerId,
         initiatorTimestamp: new Date().toISOString(),
-        idpClaimValidation: true,
+        idpClaimValidation: false,
       },
     });
   };
@@ -112,6 +128,11 @@ export function SarComposer({ draft = DEFAULT_DRAFT, onSave }: SarComposerProps)
           Statutory Normalization Citations:
         </span>
         <div className="flex flex-wrap gap-1.5">
+          {draft.statutoryCitations.length === 0 && (
+            <span className="text-label font-mono text-cx-muted" data-testid="sar-no-citations">
+              {draft.statutoryNote ?? 'None attached.'}
+            </span>
+          )}
           {draft.statutoryCitations.map((cite, i) => (
             <span
               key={i}
@@ -126,7 +147,7 @@ export function SarComposer({ draft = DEFAULT_DRAFT, onSave }: SarComposerProps)
       {/* Narrative Editor Area */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-xs font-semibold text-cx-ink">
-          <label htmlFor="sar-narrative-textarea">Suspicious Activity Description (FinCEN Compliant Narrative):</label>
+          <label htmlFor="sar-narrative-textarea">Suspicious Activity Description:</label>
           <span className="text-label font-mono text-cx-muted">{narrative.length} chars</span>
         </div>
         <textarea
@@ -137,6 +158,15 @@ export function SarComposer({ draft = DEFAULT_DRAFT, onSave }: SarComposerProps)
           className="w-full p-3 bg-white border border-cx-line text-cx-ink text-xs font-mono focus:outline-none focus:border-cx-accent rounded-none leading-relaxed"
         />
       </div>
+
+      {staging.message && (
+        <div
+          role={staging.message.tone === 'error' ? 'alert' : 'status'}
+          className={`p-2 text-label font-mono border ${staging.message.tone === 'error' ? 'bg-cx-bad-bg border-cx-bad-line text-cx-bad' : 'bg-cx-ok-bg border-cx-ok-line text-cx-ok'}`}
+        >
+          {staging.message.text}
+        </div>
+      )}
 
       {/* Action Controls */}
       <div className="flex items-center justify-between pt-2 border-t border-cx-line-soft">
@@ -151,7 +181,9 @@ export function SarComposer({ draft = DEFAULT_DRAFT, onSave }: SarComposerProps)
         <button
           type="button"
           onClick={handleStageFiling}
-          className="px-4 py-1.5 bg-cx-bad-solid hover:bg-cx-bad text-white font-semibold text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer"
+          disabled={engine && (staging.busy || !fileSar)}
+          title={engine && !fileSar ? 'This case has no filing action available' : undefined}
+          className="px-4 py-1.5 bg-cx-bad-solid hover:bg-cx-bad text-white font-semibold text-xs rounded-none transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
         >
           <span className="material-symbols-sharp text-sm">security</span>
           Stage Official SAR Filing (Four-Eyes Required)

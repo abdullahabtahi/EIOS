@@ -8,14 +8,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from eios.cockpit import aml_case_extras as extras
 from eios.cockpit.aml import EntityInvestigationDossier
+from eios.cockpit.aml_metric import ENGINE_NAME as _ENGINE
+from eios.cockpit.aml_metric import metric as _metric
 from eios.dataplane.aml_service import CORRELATION_ONLY, EngineAMLService
 
 QUEUE_LIMIT = 50
 _SEVERITY = {"CRITICAL": "CRITICAL", "HIGH": "HIGH"}
-_STEWARD = "AMLComplianceSteward"
-_ENGINE = "EngineAMLService"
-_CITATION = "[COMPUTED]"
 
 
 def triage_items(engine: EngineAMLService, now_iso: str) -> list[dict[str, Any]]:
@@ -48,21 +48,6 @@ def default_entity(engine: EngineAMLService) -> str:
     return str(engine.get_triage_cases(min_score=0, limit=1)[0]["entity_id"])
 
 
-def _metric(
-    metric_id: str, formatted: str, raw: float, as_of: str, *, engine_name: str = _ENGINE
-) -> dict[str, Any]:
-    return {
-        "metric_id": metric_id,
-        "formatted_value": formatted,
-        "raw_value": raw,
-        "semantic_definition_version": "v1.2",
-        "as_of_timestamp": as_of,
-        "origin_engine": engine_name,
-        "steward_role": _STEWARD,
-        "citation": _CITATION,
-    }
-
-
 def active_dossier(engine: EngineAMLService, entity_id: str) -> dict[str, Any]:
     dossier = engine.get_entity_dossier(entity_id)
     view = engine.get_case_view(entity_id)
@@ -91,6 +76,21 @@ def active_dossier(engine: EngineAMLService, entity_id: str) -> dict[str, Any]:
         "sections": sections,
         "as_of_timestamp": as_of,
         "is_cached_snapshot": False,
+        "sar_draft": extras.sar_panel(engine, entity_id),
+        "trade_offs": extras.trade_offs(engine, entity_id),
+    }
+
+
+def case_payload(engine: EngineAMLService, entity_id: str) -> dict[str, Any]:
+    """Everything the AML screen shows for one account: dossier, network, evidence strip, SAR panel, stage requests."""
+    return {
+        "entity_id": entity_id,
+        "active_dossier": active_dossier(engine, entity_id),
+        "kinetic_canvas": kinetic_canvas(engine, entity_id),
+        "evidence_strip": extras.evidence_strip(engine, entity_id),
+        "sar_draft": extras.sar_panel(engine, entity_id),
+        "case_actions": extras.case_actions(engine, entity_id),
+        "data_origin": "engine",
     }
 
 

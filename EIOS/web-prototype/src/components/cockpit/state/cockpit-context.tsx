@@ -21,6 +21,7 @@ import {
   PersonaRole,
   WorkstationApiResponse,
   CaseApiResponse,
+  CaseExtras,
   DataOrigin,
   TriageItem,
   CopilotDossier,
@@ -82,6 +83,8 @@ export interface CockpitState {
   /** The selected AML case: its computed dossier is fetched on selection when the data is engine-backed. */
   caseStatus: 'idle' | 'loading' | 'ready' | 'error';
   caseError: string | null;
+  /** What surrounds the selected engine-computed case: evidence strip, SAR panel and the stage requests that apply. */
+  caseExtras: CaseExtras;
   isSimulatedOutage: boolean;
   asOfTimestamp: string;
   systemLatencyMs: number;
@@ -113,6 +116,15 @@ export type CockpitAction =
   | { type: 'MARK_CHAT_UNREAD' }
   | { type: 'TOGGLE_SIMULATED_OUTAGE'; payload?: boolean }
   | { type: 'SELECT_ENTITY'; payload: string };
+
+/** The parts of a response that surround an engine-computed case; anything absent stays absent. */
+function extrasOf(source: CaseExtras | undefined): CaseExtras {
+  return {
+    evidenceStrip: source?.evidenceStrip,
+    sarDraft: source?.sarDraft,
+    caseActions: source?.caseActions,
+  };
+}
 
 /** True when the AML workstation shows engine-computed cases, so selections are fetched, not looked up locally. */
 function isEngineCaseView(state: CockpitState): boolean {
@@ -155,6 +167,7 @@ const initialState: CockpitState = {
   dataOrigin: initialData.dataOrigin ?? 'fixture',
   caseStatus: 'idle',
   caseError: null,
+  caseExtras: {},
   isSimulatedOutage: false,
   asOfTimestamp: initialData.asOfTimestamp,
   systemLatencyMs: 14,
@@ -347,6 +360,7 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
         dataOrigin: resp?.dataOrigin ?? 'fixture',
         caseStatus: 'ready',
         caseError: null,
+        caseExtras: extrasOf(resp),
         asOfTimestamp: resp?.asOfTimestamp ?? state.asOfTimestamp,
         triageItems: resp?.triageItems ?? state.triageItems,
         activeTriageItemId: initialActiveId ?? state.activeTriageItemId,
@@ -372,6 +386,7 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
         canvasPayload: loaded.canvasPayload ?? state.canvasPayload,
         caseStatus: 'ready',
         caseError: null,
+        caseExtras: extrasOf(loaded),
       };
     }
 

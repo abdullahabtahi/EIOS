@@ -104,6 +104,8 @@ export interface DossierSection {
 }
 
 export interface TradeOffCard {
+  /** When present, staging this card goes through the backend with exactly this request. */
+  stageRequest?: StageRequest;
   proposedAction: string;
   projectedReturn: string;
   projectedRisk: string;
@@ -120,8 +122,11 @@ export interface SarDraftDocument {
   summaryNarrative: string;
   transactionHistorySummary: string;
   totalTurnover: number;
-  netLossProfitRatio: number;
+  /** Absent when the backend computed no such ratio; never filled in. */
+  netLossProfitRatio?: number;
   statutoryCitations: string[];
+  /** Why `statutoryCitations` is empty, when it is. */
+  statutoryNote?: string | null;
   generatedTimestamp: string;
   status: 'DRAFT' | 'READY_FOR_FILING' | 'FILED';
 }
@@ -213,6 +218,9 @@ export interface GraphEdge {
   type: GraphEdgeType;
   weight: number;
   label?: string;
+  /** Measured by the backend; absent when the edge carries no volume or date. */
+  amountUsd?: number;
+  dayIndex?: number;
 }
 
 export interface TopologicalGraphPayload {
@@ -458,14 +466,43 @@ export interface RedLineGateStatus {
 }
 
 /** One account's computed dossier and canvas, fetched when the operator selects a case. */
-export interface CaseApiResponse {
+export interface CaseApiResponse extends CaseExtras {
   entityId: string;
   dataOrigin: DataOrigin;
   activeDossier: CopilotDossier;
   canvasPayload: WorkstationApiResponse['canvasPayload'] | null;
 }
 
-export interface WorkstationApiResponse {
+/** One tile of the AML evidence strip: a computed figure with what it is measured against. */
+export interface EvidenceTile {
+  label: string;
+  value: string;
+  caption: string;
+  tone: 'alert' | 'neutral';
+}
+
+export interface EvidenceStrip {
+  title: string;
+  severity: string;
+  score: number | null;
+  tiles: EvidenceTile[];
+  metrics: MetricProvenance[];
+}
+
+/** Stage requests the hub understands for the selected account; null means the action does not apply to it. */
+export interface CaseActions {
+  hold: StageRequest | null;
+  fileSar: StageRequest | null;
+}
+
+/** What the AML screen shows around a case's dossier when the data is engine-computed. */
+export interface CaseExtras {
+  evidenceStrip?: EvidenceStrip;
+  sarDraft?: SarDraftDocument;
+  caseActions?: CaseActions;
+}
+
+export interface WorkstationApiResponse extends CaseExtras {
   workstation: PersonaRole;
   isLiveConnected: boolean;
   isCachedFallback: boolean;

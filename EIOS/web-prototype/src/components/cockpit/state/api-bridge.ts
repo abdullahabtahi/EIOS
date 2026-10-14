@@ -6,12 +6,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { authFetch } from '@/lib/auth/token';
 
-// An explicit (even empty) NEXT_PUBLIC_API_URL wins; empty means same-origin, served by the /api/v1 gateway.
-export const BACKEND_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ??
-  (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
-    ? ''
-    : 'http://localhost:8002');
+// Same-origin by default: the browser calls the /api/v1 proxy, which forwards to EIOS_BACKEND_URL, so a page and its
+// data always come from the backend that page was started against. An explicit NEXT_PUBLIC_API_URL still wins.
+export const BACKEND_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? '';
 
 /**
  * Fetches live Partner Churn Radar dataset with fallback to mock fixtures.

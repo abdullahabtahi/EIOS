@@ -11,7 +11,7 @@ import {
 import { getMockWorkstationState } from '@/components/cockpit/state/fixtures';
 
 import { callBackend, relayError } from '@/lib/server/backend';
-import { dataOriginOf, normalizeActionCard, normalizeCanvas, normalizeDossier } from '@/lib/server/normalize';
+import { normalizeActionCard, normalizeCanvas, normalizeCaseExtras, normalizeDossier } from '@/lib/server/normalize';
 
 /** The backend labels its own data. Anything but an explicit [LIVE] or [ENGINE] badge is treated as fixture. */
 function originOfBadge(badge: unknown): DataOrigin {
@@ -46,11 +46,13 @@ function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationAp
   }
 
   // 2. Active Dossier
+  const origin = originOfBadge(raw.fallback_state?.badge_label);
+  // An engine-computed case never borrows the fixture's trade-offs or SAR block: absent means none.
+  const shape: CopilotDossier =
+    origin === 'engine' ? { ...mock.activeDossier, tradeOffs: undefined, sarDraft: undefined } : mock.activeDossier;
   const rawDossier = raw.active_dossier || raw.activeDossier;
   const activeDossier: CopilotDossier =
-    rawDossier && typeof rawDossier === 'object'
-      ? normalizeDossier(rawDossier, role, mock.activeDossier)
-      : mock.activeDossier;
+    rawDossier && typeof rawDossier === 'object' ? normalizeDossier(rawDossier, role, shape) : shape;
 
   // 3. Canvas Payload
   const canvasPayload = normalizeCanvas(raw.kinetic_canvas || raw.canvasPayload, mock.canvasPayload);
@@ -67,7 +69,8 @@ function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationAp
     isLiveConnected: true,
     isCachedFallback: false,
     // The backend labels its own data; anything but an explicit [LIVE] badge is treated as fixture.
-    dataOrigin: originOfBadge(raw.fallback_state?.badge_label),
+    dataOrigin: origin,
+    ...(origin === 'engine' ? normalizeCaseExtras(raw) : {}),
     asOfTimestamp: raw.as_of_timestamp || raw.asOfTimestamp || new Date().toISOString(),
     session: {
       ...mock.session,
