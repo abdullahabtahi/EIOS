@@ -8,6 +8,7 @@ figure the assembler placed is bound to the governed result it came from, so the
 from __future__ import annotations
 
 import asyncio
+import logging
 import re
 from typing import Any
 
@@ -34,6 +35,7 @@ from eios.ontology.omcp.port.principal import principal_for
 from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.service import GovernedToolPort
 
+logger = logging.getLogger(__name__)
 REFUSED_IDENTITY = "I cannot answer that from the governed data available to this workstation."
 _EVAL_ENVIRONMENT = "test"
 
@@ -105,8 +107,16 @@ class AdkRuntime:
                 entity_context=context,
             )
         )
+        logger.info("%s", trace_line(request, outcome))
         if outcome.status != "ok":
-            return inconclusive_record(request, self.runtime_name, outcome.error or outcome.status)
+            return inconclusive_record(
+                request,
+                self.runtime_name,
+                outcome.error or outcome.status,
+                latency_ms=outcome.latency_ms,
+                rounds=outcome.model_calls,
+                tool_calls=[self._tool_call(trace) for trace in outcome.tool_calls],
+            )
         return self._record(request, outcome)
 
     def _record(self, request: TurnRequest, outcome: TurnOutcome) -> TurnRecord:
@@ -143,10 +153,22 @@ class AdkRuntime:
         )
 
 
+def trace_line(request: TurnRequest, outcome: TurnOutcome) -> str:
+    """One log line saying where a turn's time went: model calls, the gaps between events, tools, status."""
+    stamps = [e.timestamp for e in outcome.events if getattr(e, "timestamp", None)]
+    gaps = [round((b - a) * 1000) for a, b in zip(stamps, stamps[1:], strict=False)]
+    return (
+        f"turn {request.case_id or request.session_id}.{request.repeat} {outcome.status} "
+        f"{outcome.latency_ms:.0f} ms, {outcome.model_calls} model calls, "
+        f"tools={[t.name for t in outcome.tool_calls]}, attempts={outcome.answer.attempts}, "
+        f"event_gaps_ms={gaps}"
+    )
+
+
 def _live_env() -> dict[str, str]:
     import os
 
-    return {k: v for k, v in os.environ.items() if k.startswith("EIOS_GEMINI")}
+    return {k: v for k, v in os.environ.items() if k.startswith(("EIOS_GEMINI", "EIOS_ASSISTANT_"))}
 
 
 def _standalone(text: str) -> str:

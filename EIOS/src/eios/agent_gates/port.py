@@ -3,6 +3,7 @@
 Contract: `specs/022-agent-quality-gates/contracts/agent-port.md`.
 """
 
+import time
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import TimeoutError as FutureTimeout
 from typing import Any, Protocol
@@ -40,8 +41,19 @@ class AgentPort(Protocol):
     def run_turn(self, request: TurnRequest) -> TurnRecord: ...
 
 
-def inconclusive_record(request: TurnRequest, runtime: str, reason: str) -> TurnRecord:
-    """A complete record for a turn that could not be judged; it can never count as a pass."""
+def inconclusive_record(
+    request: TurnRequest,
+    runtime: str,
+    reason: str,
+    *,
+    latency_ms: float = 0.0,
+    rounds: int = 0,
+    tool_calls: list[ToolCall] | None = None,
+) -> TurnRecord:
+    """A complete record for a turn that could not be judged; it can never count as a pass.
+
+    What the turn did before it stopped (time spent, model calls, tools) stays on the record, so a slow turn is
+    diagnosable and counts toward latency instead of vanishing from it."""
     return TurnRecord(
         record_id=f"{request.case_id or request.session_id}.{request.repeat}",
         case_id=request.case_id,
@@ -54,12 +66,12 @@ def inconclusive_record(request: TurnRequest, runtime: str, reason: str) -> Turn
         role=request.role,
         entity_context=request.entity_context,
         question=request.question,
-        tool_calls=[],
-        rounds=0,
+        tool_calls=tool_calls or [],
+        rounds=rounds,
         answer="",
         is_replay_fallback=False,
         data_origin=DataOrigin.FIXTURE,
-        latency_ms=0.0,
+        latency_ms=latency_ms,
         outcome=Outcome.INCONCLUSIVE,
         inconclusive_reason=reason,
     )
@@ -68,15 +80,19 @@ def inconclusive_record(request: TurnRequest, runtime: str, reason: str) -> Turn
 def run_with_deadline(port: AgentPort, request: TurnRequest) -> TurnRecord:
     """Run one turn; a timeout or a crash becomes an inconclusive record, never an exception."""
     pool = ThreadPoolExecutor(max_workers=1)
+    started = time.perf_counter()
+    elapsed_ms = 0.0
     try:
         return pool.submit(port.run_turn, request).result(timeout=request.deadline_s)
     except FutureTimeout:
         reason = f"deadline of {request.deadline_s}s exceeded"
+        elapsed_ms = request.deadline_s * 1000
     except Exception as exc:  # any runtime failure must surface as inconclusive
         reason = f"{type(exc).__name__}: {exc}"
+        elapsed_ms = round((time.perf_counter() - started) * 1000, 2)
     finally:
         pool.shutdown(wait=False, cancel_futures=True)
-    return inconclusive_record(request, port.runtime_name, reason)
+    return inconclusive_record(request, port.runtime_name, reason, latency_ms=elapsed_ms)
 
 
 def completed_record(
