@@ -8,7 +8,7 @@ from eios.ontology.omcp.port.common import envelope
 from eios.ontology.omcp.port.contracts import DataOrigin, PortError, ToolErrorCode, ToolResult
 from eios.ontology.omcp.port.principal import Principal, Workstation
 from eios.ontology.omcp.port.readmodels import ReadModels
-from eios.ontology.omcp.port.registry import ToolSpec
+from eios.ontology.omcp.port.registry import Handler, ToolSpec
 
 AUDITOR = (Workstation.COMPLIANCE_AUDITOR,)
 MARK = (SecurityMarking.SENSITIVE_COMPLIANCE,)
@@ -195,7 +195,9 @@ def verify_chain(ctx: ReadModels, _who: Principal, _args: NoArgs) -> ChainVerifi
     )
 
 
-def _spec(name: str, cap: str, args: type[StrictModel], out: type[ToolResult], fn) -> ToolSpec:
+def _spec(
+    name: str, cap: str, args: type[StrictModel], out: type[ToolResult], fn: Handler
+) -> ToolSpec:
     return ToolSpec(name, cap, "evidence", AUDITOR, args, out, fn, 300.0, MARK)
 
 

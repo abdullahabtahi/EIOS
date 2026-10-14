@@ -15,7 +15,7 @@ from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode, ToolResu
 from eios.ontology.omcp.port.entities import EntityKind
 from eios.ontology.omcp.port.principal import Principal, Workstation
 from eios.ontology.omcp.port.readmodels import ReadModels
-from eios.ontology.omcp.port.registry import ToolSpec
+from eios.ontology.omcp.port.registry import Handler, ToolSpec
 
 AML = (Workstation.AML_INVESTIGATOR,)
 PRIVATE = (SecurityMarking.PII, SecurityMarking.SENSITIVE_COMPLIANCE)
@@ -347,7 +347,7 @@ def _spec(
     kind: str,
     args: type[StrictModel],
     out: type[ToolResult],
-    fn,
+    fn: Handler,
     budget_ms: float = 300.0,
 ) -> ToolSpec:
     return ToolSpec(

@@ -8,6 +8,7 @@ from eios.agent_gates.capabilities import FORBIDDEN_AGENT_TOOLS, default_map
 from eios.ontology.omcp.port.catalogue import all_specs
 from eios.ontology.omcp.port.contracts import ToolErrorCode
 from eios.ontology.omcp.port.principal import Workstation, principal_for
+from eios.ontology.omcp.port.registry import ToolSpec
 from eios.ontology.omcp.port.service import GovernedToolPort, RefusalLog
 
 # Capabilities the golden cases name that other specs deliver (reported as planned, never as passing).
@@ -106,9 +107,7 @@ def test_no_capability_takes_free_text() -> None:
     for spec in all_specs():
         for name, field in spec.args_model.model_fields.items():
             annotation = field.annotation
-            is_text = annotation is str or (
-                getattr(annotation, "__args__", None) and str in annotation.__args__
-            )
+            is_text = annotation is str or str in getattr(annotation, "__args__", ())
             is_enum = isinstance(annotation, type) and issubclass(annotation, Enum)
             if is_text and not is_enum:
                 assert name.endswith("_id"), f"{spec.name}.{name} is free text"
@@ -124,7 +123,9 @@ def test_every_catalogue_tool_has_a_sample_or_is_known_unavailable() -> None:
 
 
 @pytest.mark.parametrize("spec", all_specs(), ids=lambda s: s.name)
-def test_every_result_validates_and_carries_the_envelope(spec, port: GovernedToolPort) -> None:
+def test_every_result_validates_and_carries_the_envelope(
+    spec: ToolSpec, port: GovernedToolPort
+) -> None:
     principal = principal_for("u", CALLER.get(spec.name, spec.workstations[0].value))
     outcome = port.call(principal, spec.name, SAMPLE_ARGS.get(spec.name, {}))
     if spec.name in UNAVAILABLE_TODAY:

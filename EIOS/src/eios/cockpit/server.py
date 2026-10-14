@@ -27,7 +27,7 @@ from typing import Any
 import uvicorn
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
 from eios.cockpit.aml import AMLWorkstationService
 from eios.cockpit.auth import (
@@ -44,9 +44,10 @@ from eios.cockpit.governance_runtime import build_governance_runtime
 from eios.cockpit.governance_shelf import GovernedActionCard
 from eios.cockpit.operations import DataPlatformOperationsService
 from eios.cockpit.partner import PartnerWorkstationService
-from eios.cockpit.session import OperatorRole, SessionManager
+from eios.cockpit.session import SessionManager
 from eios.cockpit.shell import CockpitShellPresenter
 from eios.conversation.copilot_engine import CopilotEngine
+from eios.conversation.models import OperatorRole as EngineOperatorRole
 from eios.flywheel.ledger import DecisionOutcomeRecord, DecisionOutcomesLedger
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
@@ -59,6 +60,8 @@ from eios.ontology.actions.models import (
     ActionIntentToken,
 )
 from eios.ontology.auditor.gate import MetricAuditorGate
+from eios.ontology.omcp.port.contracts import PortError
+from eios.ontology.omcp.port.principal import principal_for
 
 _LOG = logging.getLogger("eios.cockpit.server")
 
@@ -114,8 +117,14 @@ class AuthorizeActionRequest(BaseModel):
 
 
 class CopilotQueryRequest(BaseModel):
+    """`activeEntityId` is the name the browser sends today; both names are accepted until the browser is aligned."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
     query: str
-    context_entity_id: str | None = None
+    context_entity_id: str | None = Field(
+        default=None, validation_alias=AliasChoices("context_entity_id", "activeEntityId")
+    )
     role: str = "executive"
 
 
@@ -966,17 +975,23 @@ def authorize_governed_action(
 
 
 @router.post(COPILOT_QUERY_PATH)
-def query_copilot(req: CopilotQueryRequest) -> dict[str, Any]:
-    """Processes Copilot queries with Metric Auditor Gate verification and dual-engine grounding."""
-    role_enum = OperatorRole.EXECUTIVE
-    for r in OperatorRole:
-        if r.value == req.role.lower():
-            role_enum = r
-            break
+def query_copilot(
+    req: CopilotQueryRequest, operator: Operator | None = Depends(current_operator)
+) -> dict[str, Any]:
+    """Processes Copilot queries with Metric Auditor Gate verification and dual-engine grounding.
+
+    Identity is the verified operator; the workstation is only the scope they ask to work in, and an unknown one is
+    refused rather than widened to a default. The session belongs to the operator, so memory is never shared.
+    """
+    try:
+        principal = principal_for(operator.uid if operator else None, req.role.strip().lower())
+    except PortError as exc:
+        raise HTTPException(status_code=422, detail=exc.error.message) from exc
 
     response_model = copilot_engine.process_query(
         query=req.query,
-        role=role_enum,
+        role=EngineOperatorRole(principal.workstation.value),
+        session_id=f"sess_{principal.uid}_{principal.workstation.value}",
     )
 
     audit = response_model.audit_record

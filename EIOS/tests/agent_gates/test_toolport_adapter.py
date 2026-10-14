@@ -1,6 +1,7 @@
 """The reference runtime over the governed tool port, judged by the 022 cases (spec 023 T021, T023)."""
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -14,9 +15,14 @@ from evals.agent.baseline import run_baseline
 GOLDEN = Path(__file__).resolve().parents[2] / "evals" / "golden"
 
 
-def _turn(question: str, role: Role, **extra: object) -> TurnRequest:
+def _turn(question: str, role: Role, entity_context: dict[str, Any] | None = None) -> TurnRequest:
     return TurnRequest(
-        question=question, role=role, operator_id="uid-1", session_id="s1", case_id="c", **extra
+        question=question,
+        role=role,
+        operator_id="uid-1",
+        session_id="s1",
+        case_id="c",
+        entity_context=entity_context,
     )
 
 

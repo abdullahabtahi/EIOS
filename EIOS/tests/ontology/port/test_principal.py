@@ -42,4 +42,4 @@ def test_an_unknown_workstation_is_refused(claimed: str) -> None:
 def test_the_principal_cannot_be_changed_after_it_is_built() -> None:
     principal = principal_for("uid", "executive")
     with pytest.raises(ValueError):
-        principal.workstation = Workstation.AML_INVESTIGATOR  # type: ignore[misc]
+        principal.workstation = Workstation.AML_INVESTIGATOR

@@ -12,6 +12,9 @@ from eios.ontology.omcp.port.principal import Principal, Workstation
 KINDS = frozenset({"evidence", "compute", "draft", "propose", "knowledge"})
 
 
+Handler = Callable[[Any, Principal, Any], ToolResult]
+
+
 @dataclass(frozen=True)
 class ToolSpec:
     name: str
@@ -20,7 +23,7 @@ class ToolSpec:
     workstations: tuple[Workstation, ...]
     args_model: type[StrictModel]
     result_model: type[ToolResult]
-    handler: Callable[[Any, Principal, Any], ToolResult]
+    handler: Handler
     budget_ms: float
     markings: tuple[SecurityMarking, ...] = ()
     description: str = ""

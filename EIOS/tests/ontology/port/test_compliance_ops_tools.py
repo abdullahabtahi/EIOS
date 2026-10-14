@@ -1,8 +1,11 @@
 """Compliance and operations capabilities: read and explain, and never present absence of data as health."""
 
+from typing import Any
+
 from eios.cockpit.operations import DataPlatformOperationsService
 from eios.hardening.runbooks import RunbookVerificationEngine
 from eios.ontology.omcp.port.contracts import ToolErrorCode
+from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
 from tests.ontology.port.conftest import who
 
@@ -11,8 +14,8 @@ OPS = who("data_operations")
 
 
 def _ok(
-    port: GovernedToolPort, principal, tool: str, args: dict[str, object] | None = None
-) -> dict[str, object]:
+    port: GovernedToolPort, principal: Principal, tool: str, args: dict[str, Any] | None = None
+) -> dict[str, Any]:
     outcome = port.call(principal, tool, args or {})
     assert outcome.error is None, outcome.error
     return outcome.payload()
@@ -23,10 +26,8 @@ def test_ledger_timeline_is_ordered_and_bounded(port: GovernedToolPort) -> None:
     seqs = [e["ledger_seq"] for e in got["entries"]]
     assert seqs == sorted(seqs) and len(seqs) == 2
     assert got["units"]["entries[].ledger_seq"] == "sequence"
-    assert (
-        port.call(AUDITOR, "get_ledger_timeline", {"limit": 5000}).error.code
-        is ToolErrorCode.INVALID_ARGUMENTS
-    )
+    too_many = port.call(AUDITOR, "get_ledger_timeline", {"limit": 5000})
+    assert too_many.error is not None and too_many.error.code is ToolErrorCode.INVALID_ARGUMENTS
 
 
 def test_intent_status_defaults_to_the_latest_and_hides_approver_identities(

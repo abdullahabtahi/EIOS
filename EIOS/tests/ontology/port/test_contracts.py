@@ -36,7 +36,7 @@ def _make(**over: object) -> _Sample:
         "ratio": 16.0,
         "label": "x",
     }
-    return _Sample(**{**base, **over})
+    return _Sample.model_validate({**base, **over})
 
 
 def test_every_figure_gets_a_stable_fact_id() -> None:

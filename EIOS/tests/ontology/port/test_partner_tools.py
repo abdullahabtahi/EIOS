@@ -1,11 +1,13 @@
 """Partner capabilities and proposals: the screen's numbers, one identity, honest gaps (spec 023 US3)."""
 
 import json
+from typing import Any
 
 import pytest
 
 from eios.cockpit.partner import PartnerWorkstationService
 from eios.ontology.omcp.port.contracts import ToolErrorCode
+from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.proposals import KIND_TO_HUB_ACTION
 from eios.ontology.omcp.port.service import GovernedToolPort
 from tests.ontology.port.conftest import who
@@ -14,16 +16,18 @@ PARTNER = who("partner_manager")
 AML = who("aml_investigator")
 
 
-def _ok(port: GovernedToolPort, principal, tool: str, args: dict[str, object]) -> dict[str, object]:
+def _ok(
+    port: GovernedToolPort, principal: Principal, tool: str, args: dict[str, Any]
+) -> dict[str, Any]:
     outcome = port.call(principal, tool, args)
     assert outcome.error is None, outcome.error
     return outcome.payload()
 
 
-def _radar(partner_id: str) -> dict[str, object]:
+def _radar(partner_id: str) -> dict[str, Any]:
     for p in PartnerWorkstationService().get_churn_radar_scatter().to_contract_dict()["partners"]:
         if p["partner_id"] == partner_id:
-            return p
+            return dict(p)
     raise AssertionError(partner_id)
 
 

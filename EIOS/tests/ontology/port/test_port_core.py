@@ -1,6 +1,7 @@
 """The port enforces scope, arguments, markings and the output contract where capabilities are served."""
 
 from datetime import UTC, datetime
+from typing import Any
 
 import pytest
 
@@ -13,7 +14,7 @@ from eios.ontology.omcp.port.contracts import (
     ToolResult,
 )
 from eios.ontology.omcp.port.principal import Workstation, principal_for
-from eios.ontology.omcp.port.registry import ToolSpec
+from eios.ontology.omcp.port.registry import Handler, ToolSpec
 from eios.ontology.omcp.port.service import GovernedToolPort, RefusalLog
 
 
@@ -52,7 +53,7 @@ def _wrong_type(_ctx: object, _who: object, args: _Args) -> ToolResult:
     )
 
 
-def _spec(name: str, handler=_ok, **over) -> ToolSpec:
+def _spec(name: str, handler: Handler = _ok, **over: Any) -> ToolSpec:
     base = dict(
         name=name,
         capability="aml.dossier",

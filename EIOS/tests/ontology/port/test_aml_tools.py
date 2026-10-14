@@ -1,5 +1,7 @@
 """AML capabilities: the figures are the workstation's figures (spec 023 US1)."""
 
+from typing import Any
+
 import pytest
 
 from eios.cockpit.aml import AMLWorkstationService
@@ -10,7 +12,7 @@ from tests.ontology.port.conftest import who
 AML = who("aml_investigator")
 
 
-def _ok(port: GovernedToolPort, tool: str, args: dict[str, object]) -> dict[str, object]:
+def _ok(port: GovernedToolPort, tool: str, args: dict[str, Any]) -> dict[str, Any]:
     outcome = port.call(AML, tool, args)
     assert outcome.error is None, outcome.error
     return outcome.payload()

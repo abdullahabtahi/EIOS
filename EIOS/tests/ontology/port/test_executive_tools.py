@@ -1,22 +1,29 @@
 """Shared and executive capabilities: governed numbers, derived figures, causal labels (spec 023 US4)."""
 
+from typing import Any
+
 import pytest
 
 from eios.cockpit.executive import ExecutiveCockpitService
 from eios.ontology.omcp.port.contracts import ToolErrorCode
+from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
 from tests.ontology.port.conftest import who
 
 EXEC = who("executive")
 
 
-def _ok(port: GovernedToolPort, principal, tool: str, args: dict[str, object]) -> dict[str, object]:
+def _ok(
+    port: GovernedToolPort, principal: Principal, tool: str, args: dict[str, Any]
+) -> dict[str, Any]:
     outcome = port.call(principal, tool, args)
     assert outcome.error is None, outcome.error
     return outcome.payload()
 
 
-def _err(port: GovernedToolPort, principal, tool: str, args: dict[str, object]) -> ToolErrorCode:
+def _err(
+    port: GovernedToolPort, principal: Principal, tool: str, args: dict[str, Any]
+) -> ToolErrorCode:
     outcome = port.call(principal, tool, args)
     assert outcome.error is not None, outcome.result
     return outcome.error.code

@@ -2,6 +2,7 @@
 
 from pydantic import Field
 
+from eios.cockpit.partner import PartnerChurnItem
 from eios.common.validation import StrictModel
 from eios.ontology.config import SecurityMarking
 from eios.ontology.omcp.port.common import envelope
@@ -10,7 +11,7 @@ from eios.ontology.omcp.port.entities import EntityKind
 from eios.ontology.omcp.port.partner_fixtures import MESSAGES, STORY_PARTNER
 from eios.ontology.omcp.port.principal import Principal, Workstation
 from eios.ontology.omcp.port.readmodels import ReadModels
-from eios.ontology.omcp.port.registry import ToolSpec
+from eios.ontology.omcp.port.registry import Handler, ToolSpec
 from eios.ontology.omcp.port.untrusted import bound_excerpt
 
 PM = (Workstation.PARTNER_MANAGER,)
@@ -30,7 +31,7 @@ def _partner(ctx: ReadModels, raw: str) -> str:
     return ctx.directory.resolve(raw, EntityKind.PARTNER).entity_id
 
 
-def _radar_item(ctx: ReadModels, partner_id: str):
+def _radar_item(ctx: ReadModels, partner_id: str) -> PartnerChurnItem:
     return next(
         p for p in ctx.partner.get_churn_radar_scatter().partners if p.partner_id == partner_id
     )
@@ -276,7 +277,9 @@ def read_partner_comms(ctx: ReadModels, _who: Principal, args: PartnerArgs) -> P
     )
 
 
-def _spec(name: str, cap: str, args: type[StrictModel], out: type[ToolResult], fn) -> ToolSpec:
+def _spec(
+    name: str, cap: str, args: type[StrictModel], out: type[ToolResult], fn: Handler
+) -> ToolSpec:
     return ToolSpec(name, cap, "evidence", PM, args, out, fn, 300.0, COMMERCIAL)
 
 
