@@ -13,6 +13,8 @@ import time
 from collections.abc import Mapping
 from enum import StrEnum
 
+from eios.cockpit.compliance import ComplianceExplorerService
+from eios.cockpit.governance_runtime import GovernanceRuntime, build_governance_runtime
 from eios.cockpit.partner import PartnerWorkstationService
 from eios.dataplane.aml_engine import run_aml_engine
 from eios.dataplane.aml_service import EngineAMLService
@@ -46,6 +48,16 @@ def plane_kind(env: Mapping[str, str] | None = None) -> PlaneKind:
 _lock = threading.Lock()
 _models: ReadModels | None = None
 _engine: EngineAMLService | None = None
+_governance: GovernanceRuntime | None = None
+
+
+def governance() -> GovernanceRuntime:
+    """The process-wide governed-action stack: the shelf writes to it and the compliance views read it."""
+    global _governance
+    with _lock:
+        if _governance is None:
+            _governance = build_governance_runtime()
+        return _governance
 
 
 def world_config(partner: PartnerWorkstationService) -> AmlWorldConfig:
@@ -77,13 +89,19 @@ def _build_engine() -> EngineAMLService:
 def read_models() -> ReadModels:
     """The process-wide read models; every route and the assistant share these objects."""
     global _models, _engine
+    ledger = governance()
     with _lock:
         if _models is None:
             if plane_kind() is PlaneKind.ENGINE:
                 _engine = _build_engine()
                 engine = _engine
                 _models = ReadModels.over(
-                    engine, clock=lambda: engine.as_of, aml_origin=DataOrigin.ENGINE
+                    engine,
+                    clock=lambda: engine.as_of,
+                    aml_origin=DataOrigin.ENGINE,
+                    compliance=ComplianceExplorerService.over_ledger(
+                        ledger.sequencer, ledger.worm, ledger.hub
+                    ),
                 )
             else:
                 _models = ReadModels.default()
@@ -102,6 +120,6 @@ def aml_data_origin() -> str:
 
 
 def reset_for_testing() -> None:
-    global _models, _engine
+    global _models, _engine, _governance
     with _lock:
-        _models, _engine = None, None
+        _models, _engine, _governance = None, None, None

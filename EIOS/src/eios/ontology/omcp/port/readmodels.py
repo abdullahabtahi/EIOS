@@ -54,14 +54,15 @@ class ReadModels:
         aml: AmlReadModel,
         clock: Callable[[], datetime] = _utc_now,
         aml_origin: DataOrigin = DataOrigin.FIXTURE,
+        compliance: ComplianceExplorerService | None = None,
     ) -> ReadModels:
-        """Read models over the given AML plane; everything else is built fresh."""
+        """Read models over the given AML plane (and ledger, when given); everything else is built fresh."""
         partner = PartnerWorkstationService()
         return cls(
             aml=aml,
             partner=partner,
             executive=ExecutiveCockpitService(),
-            compliance=ComplianceExplorerService(),
+            compliance=compliance or ComplianceExplorerService(),
             operations=DataPlatformOperationsService(),
             directory=build_directory(aml, partner),
             slo_engine=SLOMonitoringEngine(),

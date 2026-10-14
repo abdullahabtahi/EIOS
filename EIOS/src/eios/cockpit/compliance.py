@@ -12,7 +12,9 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from eios.cockpit import compliance_ledger as ledger
 from eios.ontology.actions.audit import ContinuousAuditWalker
+from eios.ontology.actions.intent_hub import ActionIntentHub
 from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.worm import WORMAnchorService
 
@@ -58,30 +60,31 @@ class ComplianceExplorerService:
         sequencer: LedgerSequencer | None = None,
         audit_walker: ContinuousAuditWalker | None = None,
         worm_service: WORMAnchorService | None = None,
+        hub: ActionIntentHub | None = None,
     ) -> None:
         self.sequencer = sequencer
         self.audit_walker = audit_walker
         self.worm_service = worm_service
+        self.hub = hub
+
+    @classmethod
+    def over_ledger(
+        cls, sequencer: LedgerSequencer, worm: WORMAnchorService, hub: ActionIntentHub
+    ) -> ComplianceExplorerService:
+        """The service over the governance runtime's real ledger, checkpoints and intents."""
+        return cls(
+            sequencer=sequencer,
+            audit_walker=ContinuousAuditWalker(sequencer, worm),
+            worm_service=worm,
+            hub=hub,
+        )
 
     def get_ledger_timeline(self, start_seq: int = 1, limit: int = 20) -> list[dict[str, Any]]:
         """Returns sequential monotonic ledger records."""
-        # If live sequencer has entries, retrieve from hot state
-        if self.sequencer and len(self.sequencer.entries) > 0:
-            all_entries = self.sequencer.entries
-            sliced = [e for e in all_entries if e.ledger_seq >= start_seq][:limit]
-            if sliced:
-                return [
-                    {
-                        "ledger_seq": e.ledger_seq,
-                        "event_type": e.event_type.value,
-                        "prev_hash": e.prev_hash,
-                        "current_hash": e.current_hash,
-                        "actor_id": e.actor_id,
-                        "timestamp": e.timestamp.isoformat(),
-                        "is_worm_anchored": bool(e.worm_checkpoint_id),
-                    }
-                    for e in sliced
-                ]
+        if self.sequencer is not None:
+            return ledger.ledger_timeline(
+                self.sequencer, self.worm_service, self.hub, start_seq, limit
+            )
 
         # Canonical demo sequence (ledger_seq = 1, 2, 3...)
         now = datetime.now(UTC)
@@ -157,7 +160,8 @@ class ComplianceExplorerService:
 
     def get_worm_compliance_proofs(self) -> list[dict[str, Any]]:
         """Returns verified immutable WORM compliance retention proofs."""
-        datetime.now(UTC)
+        if self.worm_service is not None:
+            return ledger.checkpoint_proofs(self.worm_service)
         expiration = datetime(2033, 10, 9, 0, 0, tzinfo=UTC)  # 7-year statutory retention
 
         return [
@@ -174,6 +178,8 @@ class ComplianceExplorerService:
 
     def get_four_eyes_approval_log(self) -> list[dict[str, Any]]:
         """Returns dual human approval log entries for High-severity mutations."""
+        if self.hub is not None:
+            return ledger.approval_log(self.hub)
         now = datetime.now(UTC)
         return [
             {

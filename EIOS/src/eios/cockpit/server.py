@@ -34,6 +34,7 @@ from starlette.responses import JSONResponse
 from eios.assistant.config import AssistantConfigError
 from eios.assistant.sessions import valid_entity_id
 from eios.cockpit import aml_engine_view as aml_view
+from eios.cockpit import compliance_view
 from eios.cockpit.aml_engine_view import default_entity
 from eios.cockpit.assistant_gateway import (
     get_runtime,
@@ -47,12 +48,12 @@ from eios.cockpit.auth import (
     current_operator,
     require_roles,
 )
-from eios.cockpit.governance_runtime import build_governance_runtime
 from eios.cockpit.governance_shelf import GovernedActionCard
 from eios.cockpit.session import SessionManager
 from eios.cockpit.shell import CockpitShellPresenter
 from eios.dataplane.aml_service import EngineAMLService, UnknownAccountError
 from eios.dataplane.plane import engine_service, read_models
+from eios.dataplane.plane import governance as plane_governance
 from eios.flywheel.ledger import DecisionOutcomeRecord
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
@@ -88,7 +89,7 @@ app.add_middleware(
 
 # Global Service Singletons
 session_mgr = SessionManager()
-governance = build_governance_runtime()
+governance = plane_governance()
 # Seed demo intents once on startup for local / dev / test environments
 if os.getenv("EIOS_ENVIRONMENT", "dev") in {"dev", "test"}:
     governance.seed_demo_intents()
@@ -588,69 +589,9 @@ def _build_contract_state(  # noqa: PLR0915
 
     elif norm_role in ("compliance_auditor", "compliance", "audit"):
         role_enum = "compliance_auditor"
-        timeline = compliance_svc.get_ledger_timeline(start_seq=1, limit=10)
-        worm_proofs = compliance_svc.get_worm_compliance_proofs()
-        primary_worm = (
-            worm_proofs[0]
-            if worm_proofs
-            else {
-                "checkpoint_id": "WORM-CKPT-20261009-001",
-                "retention_expiration": "2033-10-09T00:00:00+00:00",
-                "compliance_lock_mode": "COMPLIANCE",
-            }
+        triage_items, active_dossier, kinetic_canvas = compliance_view.workstation(
+            compliance_svc, now_iso
         )
-
-        triage_items = [
-            {
-                "id": f"item_seq_{e['ledger_seq']}",
-                "title": f"Ledger #{e['ledger_seq']} {e['event_type']}",
-                "subtitle": f"Actor: {e['actor_id']} | Hash: {e['current_hash'][:12]}...",
-                "entity_id": f"SEQ-{e['ledger_seq']}",
-                "priority_score": 0.5,
-                "severity": "INFO",
-                "status": "RESOLVED",
-                "timestamp": e["timestamp"],
-            }
-            for e in timeline
-        ]
-
-        active_dossier = {
-            "dossier_id": "dos_compliance_timeline",
-            "entity_id": "LEDGER-WORM",
-            "headline": "Cryptographic Decision Ledger & WORM Proof Explorer",
-            "executive_summary": "Monotonic SHA-256 hash-chain verified. Cloud Storage WORM compliance lock active.",
-            "sections": [
-                {
-                    "section_id": "sec_worm",
-                    "title": "WORM Retention Lock Proof",
-                    "narrative_text": f"GCS bucket object held under WORM compliance retention until {primary_worm.get('retention_expiration')}. Root hash anchor matches Cloud KMS ECDSA attestation.",
-                    "citations": ["worm_checkpoint_id"],
-                    "metrics": [
-                        {
-                            "metric_id": "worm_retention_days",
-                            "formatted_value": "2,555 Days Locked",
-                            "raw_value": 2555,
-                            "semantic_definition_version": "v1.0",
-                            "as_of_timestamp": now_iso,
-                            "origin_engine": "WORMComplianceService",
-                            "steward_role": "ComplianceAuditor",
-                            "citation": "[BRIEF]",
-                        }
-                    ],
-                }
-            ],
-            "as_of_timestamp": now_iso,
-            "is_cached_snapshot": False,
-        }
-
-        kinetic_canvas = {
-            "canvas_type": "LEDGER_TIMELINE",
-            "payload": {
-                "timeline": timeline,
-                "worm_proof": primary_worm,
-                "chain_valid": True,
-            },
-        }
 
     else:  # data_operations / platform_ops
         role_enum = "data_operations"
@@ -958,6 +899,7 @@ AML_CASE_PATH = "/api/cockpit/aml/cases/{entity_id}"
 COPILOT_QUERY_PATH = "/api/cockpit/copilot/query"
 FLYWHEEL_FEEDBACK_PATH = "/api/cockpit/flywheel/feedback"
 AUDIT_VERIFY_PATH = "/api/cockpit/audit/verify"
+COMPLIANCE_LEDGER_PATH = "/api/cockpit/compliance/ledger"
 
 public_router = APIRouter(tags=["Cockpit Presentation"])
 router = APIRouter(tags=["Cockpit Presentation"], dependencies=[Depends(current_operator)])
@@ -1204,6 +1146,12 @@ def verify_ledger_continuity() -> AuditVerifyResponse:
         audit_duration_ms=report.audit_duration_ms,
         verified_at=_get_utc_now(),
     )
+
+
+@router.get(COMPLIANCE_LEDGER_PATH)
+def compliance_ledger() -> dict[str, Any]:
+    """The decision ledger as the auditor reads it: entries, sign-offs, signed checkpoints and an audit walk."""
+    return compliance_view.ledger_payload(compliance_svc)
 
 
 app.include_router(public_router)

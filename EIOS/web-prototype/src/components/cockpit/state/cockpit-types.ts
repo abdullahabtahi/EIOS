@@ -359,6 +359,58 @@ export interface LedgerAuditRecord {
   chainVerificationStatus: 'VALID' | 'TAMPERED';
 }
 
+/** One decision-ledger entry as the auditor reads it (spec 032). */
+export interface LedgerRow {
+  ledgerSeq: number;
+  eventType: string;
+  entityId: string;
+  actorId: string;
+  previousHash: string;
+  recordHash: string;
+  timestamp: string;
+  anchored: boolean;
+}
+
+export interface SignOff {
+  officerId: string;
+  role: string;
+  approvedAt: string;
+}
+
+/** An intent and the human sign-offs it has so far; a pending intent has none. */
+export interface IntentSignOffs {
+  intentId: string;
+  actionType: string;
+  targetEntityId: string;
+  severity: string;
+  status: string;
+  requiresDualApproval: boolean;
+  first: SignOff | null;
+  second: SignOff | null;
+}
+
+export interface SignedCheckpoint {
+  checkpointId: string;
+  chainHeadSeq: number;
+  rootHash: string;
+  retentionExpiration: string;
+}
+
+export interface ChainVerification {
+  entriesVerified: number;
+  unbroken: boolean;
+  headHash: string;
+  anchorsMatched: number;
+}
+
+export interface ComplianceLedger {
+  entries: LedgerRow[];
+  approvals: IntentSignOffs[];
+  checkpoints: SignedCheckpoint[];
+  verification: ChainVerification;
+  isSimulated: boolean;
+}
+
 export interface SloHealthItem {
   sloId: string;
   name: string;
