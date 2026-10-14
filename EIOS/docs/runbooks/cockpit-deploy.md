@@ -32,8 +32,8 @@ assistant (`src/eios/assistant/`, ADR-019). Nothing in this section is applied b
 | Variable | Value | Notes |
 |---|---|---|
 | `EIOS_ASSISTANT_RUNTIME` | `legacy` or `adk` | Per environment. **Kill switch: set it back to `legacy`** and redeploy the revision; no code change. Any other value makes the endpoint answer 503 `offline`. |
-| `GOOGLE_GENAI_USE_ENTERPRISE` | `true` | Makes the Gemini client use Vertex AI with the service identity instead of an API key. |
-| `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION` | project id, `global` | Gemini 3.x is served from the `global` endpoint only. |
+| `GOOGLE_GENAI_USE_ENTERPRISE` | `true` | Makes the model client use Vertex AI with the service identity instead of an API key. |
+| `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION` | project id, `global` | The current model generation is served from the `global` endpoint only. |
 | `EIOS_GEMINI_MODEL` | model id | Lives in tfvars/config only (ADR-002). |
 | `EIOS_PERSISTENCE`, `EIOS_FIRESTORE_DATABASE` | `firestore`, `eios-state` | Conversation sessions. Outside dev/test the service refuses to start without them: an in-memory thread would not survive a revision or be shared across instances. |
 | `EIOS_MODEL_ARMOR_PROMPT_TEMPLATE`, `EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE` | full template resource names | Both or neither. Outside dev/test the service refuses to start without both. The templates do not exist yet: they need Terraform, which is not written until approved. If screening fails the turn is blocked, never passed through. |
