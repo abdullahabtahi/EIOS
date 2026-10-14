@@ -24,6 +24,7 @@ import { useCockpit } from '../state/cockpit-context';
 import { GraphNode, GraphEdge } from '../state/cockpit-types';
 import { fetchAmlGraph } from '../state/api-bridge';
 import { useStageRequest } from './use-stage-request';
+import { nodeOpensCase } from './graph-selection';
 
 interface SimNode extends GraphNode {
   x: number;
@@ -1094,8 +1095,7 @@ export function TopologicalGraphCanvas() {
           setPathEndNode(hit.id);
         }
       } else {
-        setSelectedNode(hit);
-        selectEntity(hit.id);
+        openNode(hit);
         setInspectorOpen(true);
       }
     }
@@ -1114,8 +1114,7 @@ export function TopologicalGraphCanvas() {
   const centerCameraOnNode = (nodeId: string) => {
     const target = simNodesRef.current.find((n) => n.id.toLowerCase().includes(nodeId.toLowerCase()));
     if (!target) return;
-    setSelectedNode(target);
-    selectEntity(target.id);
+    openNode(target);
     setTransform({
       x: -target.x * 1.3,
       y: -target.y * 1.3,
@@ -1131,6 +1130,13 @@ export function TopologicalGraphCanvas() {
       ? (state.caseExtras.caseActions?.hold ?? null)
       : null;
   const holdUnavailable = state.dataOrigin === 'engine' && !holdRequest;
+
+  // Selecting a node always shows it in the inspector. Only an account opens a case: a device, a payment method, a
+  // gateway or a collapsed ring has no dossier of its own, so selecting one must not ask the backend for one.
+  const openNode = (node: GraphNode) => {
+    setSelectedNode(node);
+    if (nodeOpensCase(node, state.dataOrigin)) selectEntity(node.id);
+  };
 
   const handleStageHold = async () => {
     if (!selectedNode) return;
@@ -1978,8 +1984,7 @@ export function TopologicalGraphCanvas() {
                     <div
                       key={idx}
                       onClick={() => {
-                        setSelectedNode(counterparty);
-                        selectEntity(counterparty.id);
+                        openNode(counterparty);
                       }}
                       className={`p-2 border flex items-center justify-between cursor-pointer transition-colors ${
                         isFullscreen
