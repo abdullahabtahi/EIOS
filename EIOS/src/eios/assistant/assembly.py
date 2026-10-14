@@ -79,6 +79,15 @@ _DISGUISED_FIGURE = re.compile(r"\b[a-z][A-Za-z]*-\d[\d,.]*%?")
 _LIST_MARKER = re.compile(r"(?m)^[ \t]*(?:[-*>][ \t]+)?\**\d{1,3}[.)]\**[ \t]+")
 
 
+# An ISO date or timestamp ("2026-10-12T00:00:00+00:00") is a date, as the judge reads it; a list line that ends it
+# with a colon must not turn its digits into figures.
+_ISO_TIMESTAMP = re.compile(
+    r"\b\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?"
+)
+# "Tier 1" names a rank by a number. The judge counts that digit as a figure, so the draft may not type it.
+_RANK_LABEL = re.compile(r"\b(?:tier|level)\s+\d+\b", re.IGNORECASE)
+
+
 # A hash chain value or digest (a SHA-256 hex string) is an identifier; its digits are not figures.
 _DIGEST = re.compile(r"\b(?:sha-?256:)?[0-9a-fA-F]{12,}\b")
 
@@ -175,8 +184,9 @@ def assemble_draft(
     )
     typed = [m.group(0) for m in _DISGUISED_FIGURE.finditer(prose)]
     prose = _DIGEST.sub(" ", _IDENTIFIER.sub(" ", prose))
-    prose = _LIST_MARKER.sub("", prose)
+    prose = _LIST_MARKER.sub("", _ISO_TIMESTAMP.sub(" ", prose))
     typed = [_where(prose, t) for t in typed]
+    typed += [_where(prose, m.group(0), m.start()) for m in _RANK_LABEL.finditer(prose)]
     typed += [_where(prose, n.raw_string, n.start_char) for n in _NORMALIZER.extract_numbers(prose)]
     if typed:
         problems.append(

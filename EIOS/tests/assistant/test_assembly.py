@@ -200,3 +200,14 @@ def test_markdown_list_numbering_is_not_a_figure_even_when_bold_or_nested() -> N
 
 def test_a_number_that_only_looks_like_list_numbering_mid_sentence_is_still_a_figure() -> None:
     assert isinstance(assemble_draft("It lost about 2. Then it fell.", facts=FACTS), Rejected)
+
+
+def test_a_timestamp_in_a_list_line_is_a_date_not_a_figure() -> None:
+    draft = "Recent events:\n- 2026-10-12T00:00:00+00:00: Deposit received\n- 2026-10-13T09:30:00Z: Withdrawal asked"
+    assert isinstance(assemble_draft(draft, facts=FACTS), Assembled)
+
+
+def test_a_tier_number_is_a_figure_the_model_may_not_type() -> None:
+    out = assemble_draft("PTR-882 is a Tier 1 Super partner.", facts=FACTS)
+    assert isinstance(out, Rejected)
+    assert "Tier 1" in out.problems[0]
