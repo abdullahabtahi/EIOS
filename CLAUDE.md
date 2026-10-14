@@ -15,6 +15,7 @@ Read the doc for the area you touch, not all of them:
 | Measured "before" picture of the copilot | `docs/agent-baseline.md` |
 | First measured workflow, metrics M1-M6 | `docs/lighthouse.md` |
 | Data platform, warm tier, DDD contexts | `docs/data-strategy.md` |
+| Regulation retrieval (Agent Search, quotes, ingestion, eval) | `docs/knowledge-retrieval.md` |
 | Geo/AML product direction | `docs/financial_geospatial.md` (v3 draft) |
 | Deploy, environments, exceptions | `docs/runbooks/cockpit-deploy.md`, `EIOS/docs/environments.md` |
 

@@ -1,7 +1,8 @@
 import * as React from 'react';
 
 /**
- * The few Markdown forms the assistant writes: paragraphs, "- " and "* " bullets, "1." lists, **bold** and _italic_.
+ * The few Markdown forms the assistant writes: paragraphs, "- " and "* " bullets, "1." lists, "> " quoted passages,
+ * **bold** and _italic_.
  * Built from React elements, never from HTML strings, so a draft cannot inject markup.
  */
 
@@ -24,8 +25,9 @@ function inline(text: string): React.ReactNode[] {
 
 const BULLET = /^\s*[-*]\s+(.*)$/;
 const NUMBERED = /^\s*\d{1,3}[.)]\s+(.*)$/;
+const QUOTE = /^\s*>\s?(.*)$/;
 
-type Block = { kind: 'p' | 'ul' | 'ol'; lines: string[] };
+type Block = { kind: 'p' | 'ul' | 'ol' | 'quote'; lines: string[] };
 
 function blocks(source: string): Block[] {
   const out: Block[] = [];
@@ -34,10 +36,11 @@ function blocks(source: string): Block[] {
       out.push({ kind: 'p', lines: [] });
       continue;
     }
-    const bullet = BULLET.exec(line);
-    const numbered = bullet ? null : NUMBERED.exec(line);
-    const kind = bullet ? 'ul' : numbered ? 'ol' : 'p';
-    const text = bullet?.[1] ?? numbered?.[1] ?? line.trim();
+    const quote = QUOTE.exec(line);
+    const bullet = quote ? null : BULLET.exec(line);
+    const numbered = quote || bullet ? null : NUMBERED.exec(line);
+    const kind = quote ? 'quote' : bullet ? 'ul' : numbered ? 'ol' : 'p';
+    const text = quote?.[1] ?? bullet?.[1] ?? numbered?.[1] ?? line.trim();
     const last = out[out.length - 1];
     if (last && last.kind === kind && last.lines.length > 0) last.lines.push(text);
     else out.push({ kind, lines: [text] });
@@ -54,6 +57,13 @@ export function SimpleMarkdown({ source, className = '' }: { source: string; cla
             <ul key={i} className="list-disc pl-5 space-y-1">
               {block.lines.map((l, j) => <li key={j}>{inline(l)}</li>)}
             </ul>
+          );
+        }
+        if (block.kind === 'quote') {
+          return (
+            <blockquote key={i} className="border-l-2 border-cx-line pl-3 text-cx-muted">
+              {block.lines.map((l, j) => <p key={j}>{l}</p>)}
+            </blockquote>
           );
         }
         if (block.kind === 'ol') {
