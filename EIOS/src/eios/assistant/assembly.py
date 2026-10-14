@@ -117,10 +117,18 @@ def _footer(figures: tuple[FigureRef, ...]) -> str:
     return f"\n\n_{origin}as of {as_of}._"
 
 
+def _without_identifiers(prose: str, identifiers: frozenset[str]) -> str:
+    """The prose with each identifier a governed result returned this turn removed; longest first, whole tokens only."""
+    for name in sorted(identifiers, key=len, reverse=True):
+        prose = re.sub(rf"(?<![A-Za-z0-9_]){re.escape(name)}(?![A-Za-z0-9_])", " ", prose)
+    return prose
+
+
 def assemble_draft(
     draft: str,
     *,
     facts: Mapping[str, TurnFact],
+    identifiers: frozenset[str] = frozenset(),
 ) -> Assembled | Rejected:
     if not draft.strip():
         return Rejected(("the draft is empty",))
@@ -154,7 +162,9 @@ def assemble_draft(
     if "{{" in text or "}}" in text:
         problems.append("a placeholder is malformed; use exactly {{fact:<fact id>}}")
     # Numbers are searched in the draft with every placeholder removed, so a resolved figure is never mistaken for one.
-    prose = _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", draft))
+    prose = _without_identifiers(
+        _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", draft)), identifiers
+    )
     typed = [m.group(0) for m in _DISGUISED_FIGURE.finditer(prose)]
     prose = _DIGEST.sub(" ", _IDENTIFIER.sub(" ", prose))
     typed = [_where(prose, t) for t in typed]

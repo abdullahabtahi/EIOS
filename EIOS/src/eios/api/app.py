@@ -51,13 +51,18 @@ def create_app() -> FastAPI:
     @app.get(HEALTH_PATH)
     @app.get(API_HEALTH_PATH)
     def health_check() -> dict[str, Any]:
+        now_str = datetime.now(UTC).isoformat()
         return {
             "status": "UP",
             "version": "0.19.0",
             "service": "EIOS Enterprise API Gateway",
+            "engine": "EIOS Presentation & Intelligence Engine",
+            "design_system": "EIOS Sovereign Design Tokens (Light Mode)",
+            "security_standard": "Google Cloud KMS ECDSA P-256",
             "cors_configured": True,
             "sse_enabled": True,
-            "as_of": datetime.now(UTC).isoformat(),
+            "as_of": now_str,
+            "timestamp": now_str,
         }
 
     return app

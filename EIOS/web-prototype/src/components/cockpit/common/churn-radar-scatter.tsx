@@ -135,6 +135,11 @@ export function ChurnRadarScatter() {
     });
   }, [partners, filterMode]);
 
+  // ⚡ Bolt: Memoized expensive array reductions and filters to prevent recalculation on every render (e.g. on hover).
+  const criticalCount = React.useMemo(() => partners.filter((p) => p.pChurn >= 0.5).length, [partners]);
+  const stableCount = React.useMemo(() => partners.filter((p) => p.pChurn < 0.5).length, [partners]);
+  const totalPortfolioVaRMillion = React.useMemo(() => (partners.reduce((acc, p) => acc + p.valueAtRiskUsd, 0) / 1000000).toFixed(2), [partners]);
+
   const activeFocusPartner = hoveredPartner || selectedPartner;
 
   // Keyboard shortcut listener: ESC exits studio, F toggles studio
@@ -844,7 +849,7 @@ export function ChurnRadarScatter() {
                 </span>
               </div>
               <span className="text-label font-mono text-slate-500">
-                Synchronized 2D Cartesian Risk Space ({partners.length} Monitored Partners · ${(partners.reduce((acc, p) => acc + p.valueAtRiskUsd, 0) / 1000000).toFixed(2)}M Portfolio VaR)
+                Synchronized 2D Cartesian Risk Space ({partners.length} Monitored Partners · ${totalPortfolioVaRMillion}M Portfolio VaR)
               </span>
             </div>
           </div>
@@ -890,7 +895,7 @@ export function ChurnRadarScatter() {
                   filterMode === 'CRITICAL' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
-                CRITICAL ({partners.filter((p) => p.pChurn >= 0.5).length})
+                CRITICAL ({criticalCount})
               </button>
               <button
                 type="button"
@@ -899,7 +904,7 @@ export function ChurnRadarScatter() {
                   filterMode === 'STABLE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
-                STABLE ({partners.filter((p) => p.pChurn < 0.5).length})
+                STABLE ({stableCount})
               </button>
             </div>
 
@@ -1045,7 +1050,7 @@ export function ChurnRadarScatter() {
                 filterMode === 'CRITICAL' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
-              CRITICAL ({partners.filter((p) => p.pChurn >= 0.5).length})
+              CRITICAL ({criticalCount})
             </button>
             <button
               type="button"
@@ -1054,7 +1059,7 @@ export function ChurnRadarScatter() {
                 filterMode === 'STABLE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
-              STABLE ({partners.filter((p) => p.pChurn < 0.5).length})
+              STABLE ({stableCount})
             </button>
           </div>
 
@@ -1134,11 +1139,11 @@ export function ChurnRadarScatter() {
           </div>
           <div>
             <span className="text-slate-500 text-label uppercase block">Critical At-Risk</span>
-            <span className="font-bold text-rose-700">{partners.filter((p) => p.pChurn >= 0.5).length} Partners</span>
+            <span className="font-bold text-rose-700">{criticalCount} Partners</span>
           </div>
           <div>
             <span className="text-slate-500 text-label uppercase block">Total Portfolio VaR</span>
-            <span className="font-bold text-slate-900">${(partners.reduce((acc, p) => acc + p.valueAtRiskUsd, 0) / 1000000).toFixed(2)}M USD</span>
+            <span className="font-bold text-slate-900">${totalPortfolioVaRMillion}M USD</span>
           </div>
         </div>
 

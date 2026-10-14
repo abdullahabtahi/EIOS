@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from eios.assistant.tools import FACTS_KEY, PROPOSALS_KEY, build_toolset
+from eios.assistant.tools import FACTS_KEY, IDENTIFIERS_KEY, PROPOSALS_KEY, build_toolset
 from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.principal import Workstation, principal_for
 from eios.ontology.omcp.port.service import GovernedToolPort
@@ -131,3 +131,45 @@ def test_a_long_list_is_bounded_so_it_cannot_flood_the_model() -> None:
         "units": {"rows[].amount": "USD"},
     }
     assert len(expand_fact_ids(payload)["fact_ids"]) == MAX_LIST_ITEMS
+
+
+def test_identifiers_a_result_returned_are_remembered_for_the_assembler(
+    port: GovernedToolPort,
+) -> None:
+    tools = {t.name: t for t in build_toolset(port, principal_for("op-1", "aml_investigator"))}
+    ctx = _context()
+    _run(tools["draft_sar"], {"entity_id": "CR84920"}, ctx)
+    ids = set(ctx.state[IDENTIFIERS_KEY])
+    assert {"case_aml_84920", "sar_20261014_CR84920"} <= ids
+    assert not any(" " in i for i in ids)  # prose such as the narrative is never an identifier
+
+
+def test_text_marked_untrusted_never_contributes_an_identifier(port: GovernedToolPort) -> None:
+    from eios.assistant.tools import identifiers_of
+
+    payload = {"untrusted": True, "case_id": "case_evil_99999", "source": "x"}
+    assert identifiers_of(payload) == set()
+    assert identifiers_of({"untrusted": False, "case_id": "case_ok_12345"}) == {"case_ok_12345"}
+    assert identifiers_of({"narrative_summary": "case_x_12345 is here", "note_id": "a b"}) == set()
+
+
+def test_every_capability_tells_the_model_what_it_is_for() -> None:
+    from eios.ontology.omcp.port.catalogue import all_specs
+    from eios.ontology.omcp.port.descriptions import DESCRIPTIONS
+
+    specs = all_specs()
+    assert all(s.description for s in specs), [s.capability for s in specs if not s.description]
+    assert set(DESCRIPTIONS) == {s.capability for s in specs}  # none stale, none missing
+
+
+def test_a_description_carries_no_number_for_the_model_to_copy() -> None:
+    from eios.ontology.omcp.port.descriptions import DESCRIPTIONS
+
+    for capability, text in DESCRIPTIONS.items():
+        assert not any(ch.isdigit() for ch in text), capability
+
+
+def test_the_sar_tool_says_the_dossier_comes_first() -> None:
+    from eios.ontology.omcp.port.descriptions import DESCRIPTIONS
+
+    assert "get_aml_dossier" in DESCRIPTIONS["aml.sar_draft"]

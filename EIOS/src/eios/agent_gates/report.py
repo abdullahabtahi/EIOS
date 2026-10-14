@@ -17,6 +17,26 @@ def _p95(values: Sequence[float]) -> float | None:
     return ordered[max(0, math.ceil(0.95 * len(ordered)) - 1)]
 
 
+def latency_summary(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """p95 over every turn that ran, one value per turn, a timeout counted at the time it took.
+
+    The report's own p95 is per judged case (first repeat, completed turns only), so a turn that hit the deadline
+    drops out of it. This one cannot hide a timeout. A turn that never started (a capability gap) is not a turn.
+    """
+    ran = [r for r in records if r.get("outcome") == "completed" or _timed_out(r)]
+    return {
+        "p95_ms": _p95([float(r["latency_ms"]) for r in ran]),
+        "turns": len(ran),
+        "timed_out": sum(1 for r in ran if _timed_out(r)),
+    }
+
+
+def _timed_out(record: Mapping[str, Any]) -> bool:
+    return record.get("outcome") == "inconclusive" and str(
+        record.get("inconclusive_reason") or ""
+    ).startswith("deadline")
+
+
 def _share(results: Sequence[Mapping[str, Any]], key: str, value: str) -> float | None:
     seen = [r for r in results if r.get(key) is not None]
     return sum(1 for r in seen if r[key] == value) / len(seen) if seen else None
@@ -86,6 +106,16 @@ def _fmt(value: float | None, pattern: str) -> str:
     return "not measured" if value is None else pattern.format(value)
 
 
+def _latency_all_turns_line(report: Mapping[str, Any]) -> list[str]:
+    summary = report.get("latency_all_turns")
+    if not summary:
+        return []
+    return [
+        f"- p95 over every turn, timeouts counted: {_fmt(summary['p95_ms'], '{:.0f} ms')} "
+        f"({summary['turns']} turns, {summary['timed_out']} timed out)"
+    ]
+
+
 def render_markdown(report: Mapping[str, Any]) -> str:
     c = report["counts"]
     lines = [
@@ -96,6 +126,7 @@ def render_markdown(report: Mapping[str, Any]) -> str:
         "",
         f"- Faithfulness (share of figures supported): {_fmt(report['faithfulness_rate'], '{:.1%}')}",
         f"- p95 turn latency: {_fmt(report['p95_latency_ms'], '{:.0f} ms')}",
+        *_latency_all_turns_line(report),
         f"- Cost per turn: {_fmt(report['cost_usd_per_turn'], '${:.4f}')}",
         f"- Turns on fixture data: {_fmt(report['share_fixture'], '{:.0%}')}",
         f"- Turns with identity taken from the request body: {_fmt(report['share_request_body_identity'], '{:.0%}')}",

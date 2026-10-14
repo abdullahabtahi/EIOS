@@ -9,6 +9,7 @@ Fact ids of every figure a result returned are kept in turn state, which is what
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Iterator
 from typing import Any
 
@@ -25,7 +26,29 @@ FACTS_KEY = "temp:facts"  # fact id -> the figure, unit and envelope a tool retu
 SOURCES_KEY = "temp:sources"
 ORIGINS_KEY = "temp:data_origins"
 PROPOSALS_KEY = "temp:proposals"
+IDENTIFIERS_KEY = (
+    "temp:identifiers"  # names a trusted result returned (case, SAR, cluster ids): not figures
+)
 _PROPOSAL_KIND = "propose"
+_IDENTIFIER_FIELD = re.compile(r"(?:^id|_id|_key)$")
+_IDENTIFIER_VALUE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:\-]{2,79}$")
+
+
+def identifiers_of(payload: dict[str, Any]) -> set[str]:
+    """The identifier strings a trusted result names in its own id and key fields.
+
+    Only a result's top-level `*_id` and `*_key` fields count, and never a result marked untrusted, so free text (a
+    narrative, an injected sentence) cannot smuggle a number past the assembler as if it were a name.
+    """
+    if payload.get("untrusted"):
+        return set()
+    return {
+        value
+        for key, value in payload.items()
+        if _IDENTIFIER_FIELD.search(key)
+        and isinstance(value, str)
+        and _IDENTIFIER_VALUE.match(value)
+    }
 
 
 class PortTool(BaseTool):
@@ -54,6 +77,7 @@ class PortTool(BaseTool):
         state[FACTS_KEY] = {**state.get(FACTS_KEY, {}), **_turn_facts(raw)}
         state[SOURCES_KEY] = [*state.get(SOURCES_KEY, []), payload["source"]]
         state[ORIGINS_KEY] = [*state.get(ORIGINS_KEY, []), payload["data_origin"]]
+        state[IDENTIFIERS_KEY] = sorted({*state.get(IDENTIFIERS_KEY, []), *identifiers_of(raw)})
         if self._spec.kind == _PROPOSAL_KIND:
             state[PROPOSALS_KEY] = [*state.get(PROPOSALS_KEY, []), payload]
         return payload

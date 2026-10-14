@@ -31,7 +31,13 @@ from eios.assistant.assembler_agent import (
 from eios.assistant.config import AssistantConfigError, AssistantSettings
 from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED
 from eios.assistant.sessions import APP_NAME, session_key, valid_entity_id
-from eios.assistant.tools import FACTS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
+from eios.assistant.tools import (
+    FACTS_KEY,
+    IDENTIFIERS_KEY,
+    ORIGINS_KEY,
+    PROPOSALS_KEY,
+    SOURCES_KEY,
+)
 from eios.llm_gateway.providers.adk_types import text_of, user_message
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
@@ -64,6 +70,34 @@ class TurnOutcome:
     events: tuple[Any, ...] = field(default=(), repr=False)
 
 
+@dataclass
+class _TurnLog:
+    """What a turn did so far. It lives outside the turn so a timeout or crash can still say where the time went."""
+
+    traces: list[ToolCallTrace] = field(default_factory=list)
+    events: list[Any] = field(default_factory=list)
+
+    def outcome(
+        self, answer: Answer, *, status: str, error: str | None, latency_ms: float
+    ) -> TurnOutcome:
+        return TurnOutcome(
+            answer,
+            tuple(self.traces),
+            steps=tuple(t.name for t in self.traces),
+            latency_ms=latency_ms,
+            status=status,
+            error=error,
+            model_calls=_model_calls(self.events),
+            events=tuple(self.events),
+        )
+
+
+def _model_calls(events: list[Any]) -> int:
+    return sum(
+        1 for e in events if e.author == "drafter" and e.content and e.content.role == "model"
+    )
+
+
 def _unavailable(text: str, reason: str) -> Answer:
     return Answer(text=text, fallback_reason=reason)
 
@@ -77,6 +111,7 @@ def _fresh_turn_state(
         FACTS_KEY: {},
         SOURCES_KEY: [],
         ORIGINS_KEY: [],
+        IDENTIFIERS_KEY: [],
         PROPOSALS_KEY: [],
         "entity_id": entity_id,
         "entity_context": entity_context or {},
@@ -117,17 +152,18 @@ class AssistantRuntime:
         if not valid_entity_id(entity_id):
             raise ValueError("entity id is not a valid identifier")
         started = time.perf_counter()
+        log = _TurnLog()
         try:
             outcome = await asyncio.wait_for(
-                self._consume(principal, question, entity_id, entity_context),
+                self._consume(principal, question, entity_id, entity_context, log),
                 timeout=self._settings.turn_deadline_s,
             )
         except TimeoutError:
-            return TurnOutcome(
+            return log.outcome(
                 _unavailable(TIMEOUT_TEXT, "turn deadline exceeded"),
-                latency_ms=_ms(started),
                 status="timeout",
                 error=f"deadline of {self._settings.turn_deadline_s}s exceeded",
+                latency_ms=_ms(started),
             )
         except (
             Exception
@@ -135,11 +171,11 @@ class AssistantRuntime:
             logger.exception(
                 "assistant turn failed for workstation %s", principal.workstation.value
             )
-            return TurnOutcome(
+            return log.outcome(
                 _unavailable(UNAVAILABLE_TEXT, type(exc).__name__),
-                latency_ms=_ms(started),
                 status="error",
                 error=f"{type(exc).__name__}: {exc}",
+                latency_ms=_ms(started),
             )
         return TurnOutcome(**{**outcome.__dict__, "latency_ms": _ms(started)})
 
@@ -149,6 +185,7 @@ class AssistantRuntime:
         question: str,
         entity_id: str | None,
         entity_context: dict[str, Any] | None,
+        log: _TurnLog,
     ) -> TurnOutcome:
         agent = build_agent(port=self._port, principal=principal, model=self._model)
         app = App(name=APP_NAME, root_agent=agent, plugins=list(self._plugins))
@@ -157,8 +194,7 @@ class AssistantRuntime:
         answer: Answer | None = None
         blocked: str | None = None
         calls: dict[str, dict[str, Any]] = {}
-        traces: list[ToolCallTrace] = []
-        events: list[Any] = []
+        traces, events = log.traces, log.events
         async for event in runner.run_async(
             user_id=principal.uid,
             session_id=session_key(principal.workstation.value, entity_id),
@@ -188,24 +224,13 @@ class AssistantRuntime:
                 block_reason="input" if blocked == INPUT_BLOCKED else "output",
             )
         if answer is None:
-            return TurnOutcome(
+            return log.outcome(
                 _unavailable(UNAVAILABLE_TEXT, "no answer was assembled"),
-                tuple(traces),
                 status="error",
                 error="the assembler produced no answer",
-                events=tuple(events),
+                latency_ms=0.0,
             )
-        return TurnOutcome(
-            answer,
-            tuple(traces),
-            steps=tuple(t.name for t in traces),
-            events=tuple(events),
-            model_calls=sum(
-                1
-                for e in events
-                if e.author == "drafter" and e.content and e.content.role == "model"
-            ),
-        )
+        return log.outcome(answer, status="ok", error=None, latency_ms=0.0)
 
     def _trace(
         self,
