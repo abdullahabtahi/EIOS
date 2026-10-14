@@ -109,12 +109,24 @@ def get_aml_graph(case_id: str, hub_threshold: int = Query(default=100)) -> dict
 @router.get(STREAM_PATH, response_class=EventSourceResponse)
 async def stream_aml_triage() -> AsyncIterable[ServerSentEvent]:
     """Streams live real-time AML triage alerts via native Server-Sent Events."""
-    for i in range(3):
-        triage_data = get_aml_triage_queue()
+    try:
+        for i in range(3):
+            triage_data = get_aml_triage_queue()
+            yield ServerSentEvent(
+                data=triage_data,
+                event="aml_alert",
+                id=f"aml_{int(datetime.now(UTC).timestamp() * 1000)}_{i}",
+            )
+            await asyncio.sleep(0.5)
+        yield ServerSentEvent(data={"status": "STREAM_ACTIVE"}, event="heartbeat")
         yield ServerSentEvent(
-            data=triage_data,
-            event="aml_alert",
-            id=f"aml_{int(datetime.now(UTC).timestamp() * 1000)}_{i}",
+            data={"status": "STREAM_COMPLETE", "reason": "BATCH_END"},
+            event="stream_end",
+            id=f"aml_end_{int(datetime.now(UTC).timestamp() * 1000)}",
         )
-        await asyncio.sleep(0.5)
-    yield ServerSentEvent(data={"status": "STREAM_ACTIVE"}, event="heartbeat")
+    except Exception as exc:
+        yield ServerSentEvent(
+            data={"status": "STREAM_ERROR", "detail": str(exc)},
+            event="error",
+            id=f"aml_err_{int(datetime.now(UTC).timestamp() * 1000)}",
+        )

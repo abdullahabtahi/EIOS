@@ -80,15 +80,27 @@ def get_churn_cohorts() -> dict[str, Any]:
 @router.get(STREAM_PATH, response_class=EventSourceResponse)
 async def stream_churn_radar() -> AsyncIterable[ServerSentEvent]:
     """Streams live real-time partner churn hazard updates via native Server-Sent Events."""
-    for i in range(3):
-        radar_data = get_churn_radar()
+    try:
+        for i in range(3):
+            radar_data = get_churn_radar()
+            yield ServerSentEvent(
+                data=radar_data,
+                event="churn_update",
+                id=f"churn_{int(datetime.now(UTC).timestamp() * 1000)}_{i}",
+            )
+            await asyncio.sleep(0.5)
+        yield ServerSentEvent(data={"status": "STREAM_ACTIVE"}, event="heartbeat")
         yield ServerSentEvent(
-            data=radar_data,
-            event="churn_update",
-            id=f"churn_{int(datetime.now(UTC).timestamp() * 1000)}_{i}",
+            data={"status": "STREAM_COMPLETE", "reason": "BATCH_END"},
+            event="stream_end",
+            id=f"churn_end_{int(datetime.now(UTC).timestamp() * 1000)}",
         )
-        await asyncio.sleep(0.5)
-    yield ServerSentEvent(data={"status": "STREAM_ACTIVE"}, event="heartbeat")
+    except Exception as exc:
+        yield ServerSentEvent(
+            data={"status": "STREAM_ERROR", "detail": str(exc)},
+            event="error",
+            id=f"churn_err_{int(datetime.now(UTC).timestamp() * 1000)}",
+        )
 
 
 class WhatIfRequest(BaseModel):

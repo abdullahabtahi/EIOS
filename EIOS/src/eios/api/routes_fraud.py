@@ -74,12 +74,24 @@ def get_mirror_trading_pairs() -> dict[str, Any]:
 @router.get(STREAM_PATH, response_class=EventSourceResponse)
 async def stream_fraud_updates() -> AsyncIterable[ServerSentEvent]:
     """Streams live real-time fraud tree and mirror trading detections via native SSE."""
-    for i in range(3):
-        pairs_data = get_mirror_trading_pairs()
+    try:
+        for i in range(3):
+            pairs_data = get_mirror_trading_pairs()
+            yield ServerSentEvent(
+                data=pairs_data,
+                event="fraud_update",
+                id=f"fraud_{int(datetime.now(UTC).timestamp() * 1000)}_{i}",
+            )
+            await asyncio.sleep(0.5)
+        yield ServerSentEvent(data={"status": "STREAM_ACTIVE"}, event="heartbeat")
         yield ServerSentEvent(
-            data=pairs_data,
-            event="fraud_update",
-            id=f"fraud_{int(datetime.now(UTC).timestamp() * 1000)}_{i}",
+            data={"status": "STREAM_COMPLETE", "reason": "BATCH_END"},
+            event="stream_end",
+            id=f"fraud_end_{int(datetime.now(UTC).timestamp() * 1000)}",
         )
-        await asyncio.sleep(0.5)
-    yield ServerSentEvent(data={"status": "STREAM_ACTIVE"}, event="heartbeat")
+    except Exception as exc:
+        yield ServerSentEvent(
+            data={"status": "STREAM_ERROR", "detail": str(exc)},
+            event="error",
+            id=f"fraud_err_{int(datetime.now(UTC).timestamp() * 1000)}",
+        )

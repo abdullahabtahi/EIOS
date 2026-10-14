@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from eios.aml.models import WithdrawalDisposition
 from eios.aml.withdrawal_sentinel import WithdrawalSentinel
+from eios.ontology.actions.record_store import default_record_store
 
 router = APIRouter(tags=["Webhooks"])
 sentinel = WithdrawalSentinel()
@@ -38,7 +39,9 @@ def _load_webhook_secret() -> bytes:
 
 WEBHOOK_SECRET = _load_webhook_secret()
 
-# In-memory replay attack prevention nonce cache
+# Durable replay attack prevention store (atomic create-if-absent, backed by Firestore in prod-like)
+_NONCE_STORE = default_record_store("webhook_nonces")
+# Process-local cache for fast path and test inspection backward compatibility
 PROCESSED_NONCES: set[str] = set()
 
 
@@ -54,6 +57,19 @@ class CashierWithdrawalPayload(BaseModel):
     market_risk_pct: float = Field(default=0.15, ge=0)
 
 
+class CashierWithdrawalResponse(BaseModel):
+    status: str = Field(default="PROCESSED", description="Processing lifecycle state")
+    withdrawal_id: str = Field(..., description="Unique payment transaction reference")
+    client_id: str = Field(..., description="Target client / account ID")
+    disposition: str = Field(..., description="Inline sentinel disposition: RELEASE or HOLD")
+    composite_risk_score: float = Field(..., description="Sentinel composite risk score [0.0, 1.0]")
+    decision_rationale: str = Field(..., description="Auditable reasoning behind the disposition")
+    evaluation_latency_ms: float = Field(..., description="Evaluation latency in milliseconds")
+    sla_met: bool = Field(..., description="Whether execution finished within the 150ms SLA")
+    action_intent_id: str | None = Field(default=None, description="Action intent token if staged/held")
+    evaluated_at: str = Field(..., description="Evaluation timestamp in ISO 8601 UTC format")
+
+
 def verify_hmac_signature(raw_body: bytes, signature_header: str | None) -> bool:
     """Verifies HMAC SHA-256 signature against cashier shared secret."""
     if not signature_header:
@@ -64,12 +80,12 @@ def verify_hmac_signature(raw_body: bytes, signature_header: str | None) -> bool
     return hmac.compare_digest(expected_hex, computed_hex)
 
 
-@router.post(CASHIER_WITHDRAWAL_PATH)
+@router.post(CASHIER_WITHDRAWAL_PATH, response_model=CashierWithdrawalResponse)
 async def handle_cashier_withdrawal_webhook(
     request: Request,
     x_signature_sha256: str | None = Header(None, alias="X-Signature-SHA256"),
     x_cashier_signature: str | None = Header(None, alias="X-Cashier-Signature"),
-) -> dict[str, Any]:
+) -> CashierWithdrawalResponse:
     """In-line webhook interceptor returning pre-settlement HOLD / RELEASE decision in < 150ms."""
     start_time = time.perf_counter()
     raw_body = await request.body()
@@ -92,8 +108,17 @@ async def handle_cashier_withdrawal_webhook(
             detail=f"Malformed webhook payload: {str(exc)}",
         ) from exc
 
-    # Replay Attack Prevention
-    if payload.nonce in PROCESSED_NONCES:
+    # Distributed Replay Attack Prevention: atomic create-if-absent across all instances
+    created = _NONCE_STORE.create(
+        payload.nonce,
+        {
+            "nonce": payload.nonce,
+            "withdrawal_id": payload.withdrawal_id,
+            "client_id": payload.client_id,
+            "processed_at": datetime.now(UTC).isoformat(),
+        },
+    )
+    if not created or payload.nonce in PROCESSED_NONCES:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Replay attack detected: nonce '{payload.nonce}' has already been processed",
@@ -115,15 +140,15 @@ async def handle_cashier_withdrawal_webhook(
         "RELEASE" if assessment.recommendation == WithdrawalDisposition.ALLOW else "HOLD"
     )
 
-    return {
-        "status": "PROCESSED",
-        "withdrawal_id": payload.withdrawal_id,
-        "client_id": payload.client_id,
-        "disposition": disposition_str,
-        "composite_risk_score": assessment.risk_score,
-        "decision_rationale": f"Sentinel evaluated risk {assessment.risk_score:.2f} ({assessment.recommendation.value})",
-        "evaluation_latency_ms": elapsed_ms,
-        "sla_met": elapsed_ms <= 150.0,
-        "action_intent_id": assessment.intent_id,
-        "evaluated_at": datetime.now(UTC).isoformat(),
-    }
+    return CashierWithdrawalResponse(
+        status="PROCESSED",
+        withdrawal_id=payload.withdrawal_id,
+        client_id=payload.client_id,
+        disposition=disposition_str,
+        composite_risk_score=assessment.risk_score,
+        decision_rationale=f"Sentinel evaluated risk {assessment.risk_score:.2f} ({assessment.recommendation.value})",
+        evaluation_latency_ms=elapsed_ms,
+        sla_met=elapsed_ms <= 150.0,
+        action_intent_id=assessment.intent_id,
+        evaluated_at=datetime.now(UTC).isoformat(),
+    )

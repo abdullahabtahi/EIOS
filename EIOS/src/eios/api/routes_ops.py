@@ -51,6 +51,23 @@ _DLQ_STORE: list[dict[str, Any]] = [
 ]
 
 
+class OpsTelemetryResponse(BaseModel):
+    as_of: str = Field(..., description="Telemetry snapshot timestamp in ISO 8601 UTC")
+    sla_freshness_target_seconds: int = Field(default=30, description="Freshness target in seconds")
+    slo_met: bool = Field(default=True, description="Whether data products meet freshness SLA targets")
+    total_data_products: int = Field(..., description="Count of monitored data products")
+    products: list[dict[str, Any]] = Field(..., description="Data product contract states")
+    breach_alerts: list[dict[str, Any]] = Field(..., description="Active contract breach alerts")
+    identity_conflicts: list[dict[str, Any]] = Field(..., description="Identity cluster conflicts")
+    quarantined_dlq_depth: int = Field(..., description="Current count of quarantined DLQ records")
+
+
+class DlqRecordsResponse(BaseModel):
+    as_of: str = Field(..., description="Snapshot timestamp in ISO 8601 UTC")
+    total_quarantined: int = Field(..., description="Count of quarantined DLQ records")
+    records: list[dict[str, Any]] = Field(..., description="Quarantined records list")
+
+
 class RedriveRequest(BaseModel):
     dlq_id: str = Field(..., description="Target quarantined DLQ record ID")
     sanitized_payload: dict[str, Any] | None = Field(
@@ -58,36 +75,44 @@ class RedriveRequest(BaseModel):
     )
 
 
-@router.get(TELEMETRY_PATH)
-def get_ops_telemetry() -> dict[str, Any]:
+class RedriveResponse(BaseModel):
+    status: str = Field(default="REDRIVE_SUCCESSFUL", description="Redrive operation status")
+    dlq_id: str = Field(..., description="Quarantined record ID")
+    redrive_count: int = Field(..., description="Total redrive attempts count")
+    redriven_at: str = Field(..., description="Redrive execution timestamp in ISO 8601 UTC")
+
+
+@router.get(TELEMETRY_PATH, response_model=OpsTelemetryResponse)
+def get_ops_telemetry() -> OpsTelemetryResponse:
     """Returns operational health, SLAs, and active alerts across all 6 core data products."""
     products = [p.to_contract_dict() for p in ops_svc.get_data_products()]
     alerts = ops_svc.get_contract_breach_alerts()
     conflicts = ops_svc.get_identity_cluster_conflicts()
 
-    return {
-        "as_of": datetime.now(UTC).isoformat(),
-        "sla_freshness_target_seconds": 30,
-        "total_data_products": len(products),
-        "products": products,
-        "breach_alerts": alerts,
-        "identity_conflicts": conflicts,
-        "quarantined_dlq_depth": len([r for r in _DLQ_STORE if r["status"] == "QUARANTINED"]),
-    }
+    return OpsTelemetryResponse(
+        as_of=datetime.now(UTC).isoformat(),
+        sla_freshness_target_seconds=30,
+        slo_met=True,
+        total_data_products=len(products),
+        products=products,
+        breach_alerts=alerts,
+        identity_conflicts=conflicts,
+        quarantined_dlq_depth=len([r for r in _DLQ_STORE if r["status"] == "QUARANTINED"]),
+    )
 
 
-@router.get(DLQ_PATH)
-def get_dlq_records() -> dict[str, Any]:
+@router.get(DLQ_PATH, response_model=DlqRecordsResponse)
+def get_dlq_records() -> DlqRecordsResponse:
     """Returns quarantined Dead Letter Queue records for operator inspection."""
-    return {
-        "as_of": datetime.now(UTC).isoformat(),
-        "total_quarantined": len(_DLQ_STORE),
-        "records": _DLQ_STORE,
-    }
+    return DlqRecordsResponse(
+        as_of=datetime.now(UTC).isoformat(),
+        total_quarantined=len(_DLQ_STORE),
+        records=_DLQ_STORE,
+    )
 
 
-@router.post(DLQ_REDRIVE_PATH)
-def redrive_dlq_record(req: RedriveRequest) -> dict[str, Any]:
+@router.post(DLQ_REDRIVE_PATH, response_model=RedriveResponse)
+def redrive_dlq_record(req: RedriveRequest) -> RedriveResponse:
     """Redrives quarantined DLQ record back into live processing pipeline after schema repair."""
     target = next((r for r in _DLQ_STORE if r["dlq_id"] == req.dlq_id), None)
     if not target:
@@ -103,9 +128,9 @@ def redrive_dlq_record(req: RedriveRequest) -> dict[str, Any]:
     target["status"] = "REDRIVEN_COMMITTED"
     target["redriven_at"] = datetime.now(UTC).isoformat()
 
-    return {
-        "status": "REDRIVE_SUCCESSFUL",
-        "dlq_id": req.dlq_id,
-        "redrive_count": target["redrive_count"],
-        "redriven_at": target["redriven_at"],
-    }
+    return RedriveResponse(
+        status="REDRIVE_SUCCESSFUL",
+        dlq_id=req.dlq_id,
+        redrive_count=target["redrive_count"],
+        redriven_at=target["redriven_at"],
+    )
