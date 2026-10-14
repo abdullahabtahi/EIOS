@@ -78,10 +78,8 @@ export function MetricProvenanceBadge({
         {metric.unit && metric.dataOrigin === undefined && (
           <span className="text-xs text-slate-500 font-normal">{metric.unit}</span>
         )}
-        {metric.dataOrigin === 'fixture' && (
-          <span className="px-1 text-label font-mono uppercase text-cx-warn bg-cx-warn-bg border border-cx-warn-line">demo</span>
-        )}
-        <MetricCitationTag citation={metric.citation} />
+        {/* The figure itself stays clean; the citation type and data origin are in the popover. */}
+        {metric.citation !== '[ILLUSTRATIVE]' && <MetricCitationTag citation={metric.citation} />}
         {/* A tick only when the figure names where it came from. */}
         {metric.originEngine && (
           <span

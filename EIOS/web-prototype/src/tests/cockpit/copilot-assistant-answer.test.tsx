@@ -96,29 +96,23 @@ async function ask(text = 'What is the discrepancy?') {
 afterEach(() => vi.restoreAllMocks());
 
 describe('an ADK assistant answer in the command bar', () => {
-  it('is shown as figures filled from governed data, never as blocked or as an audit pass', async () => {
+  it('shows a clean answer with its figures and no status banner, DEMO chip or audit claim', async () => {
     mockBackend(reply(assembled()));
     await ask();
-    expect(await screen.findByText(/FIGURES FILLED FROM GOVERNED DATA/i)).toBeInTheDocument();
+    await screen.findByText(figure.formattedValue);
+    expect(screen.queryByText(/FIGURES FILLED FROM GOVERNED DATA/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/BLOCKED/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/AUDIT PASSED/i)).not.toBeInTheDocument();
-    expect(screen.getByText(/did not run/i)).toBeInTheDocument(); // says the Metric Auditor Gate did not run
-  });
-
-  it('labels demo data, and shows each figure with its source and as-of', async () => {
-    mockBackend(reply(assembled()));
-    await ask();
-    await screen.findByText(/FIGURES FILLED FROM GOVERNED DATA/i);
-    expect(screen.getAllByText(/demo data/i).length).toBeGreaterThan(0);
-    const row = screen.getByTestId('figure-source-aml.dossier:CR84920:discrepancy_multiplier');
-    expect(row).toHaveTextContent('cockpit.aml.get_entity_dossier');
-    expect(row).toHaveTextContent('2026-10-14');
+    expect(screen.queryByText(/did not run/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^demo$/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('[ILLUSTRATIVE]')).not.toBeInTheDocument();
+    expect(screen.queryByTestId(/^figure-source-/)).not.toBeInTheDocument();
   });
 
   it('does not call data live unless the backend said so', async () => {
     mockBackend(reply(assembled({ dataOrigin: undefined, citedMetrics: [{ ...figure, dataOrigin: undefined }] })));
     await ask();
-    await screen.findByText(/FIGURES FILLED FROM GOVERNED DATA/i);
+    await screen.findByText(figure.formattedValue);
     expect(screen.queryByText(/live data/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/real-time synchronized/i)).not.toBeInTheDocument();
   });
@@ -134,7 +128,6 @@ describe('an ADK assistant answer in the command bar', () => {
     mockBackend(reply(assembled({ assistantStatus: 'FAILED_CLOSED', citedMetrics: [], responseMarkdown: 'I could not put together an answer.' })));
     await ask();
     expect(await screen.findByText(/COULD NOT VERIFY/i)).toBeInTheDocument();
-    expect(screen.queryByText(/FIGURES FILLED FROM GOVERNED DATA/i)).not.toBeInTheDocument();
   });
 
   it('shows a working indicator with elapsed time while the answer is pending', async () => {

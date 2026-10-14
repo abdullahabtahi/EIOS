@@ -13,7 +13,7 @@ import { useCockpit } from '../state/cockpit-context';
 import { CopilotQueryResponse, ActionIntentCard, AssistantProposal } from '../state/cockpit-types';
 import { MetricProvenanceBadge } from '../common/metric-provenance';
 import { CopilotWorking } from './copilot-working';
-import { AnswerStatusBanner, FigureSources, LegacyAuditBanner } from './copilot-status';
+import { AnswerStatusBanner, LegacyAuditBanner } from './copilot-status';
 import { ProposalCard, ProposalState } from './copilot-proposals';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -302,7 +302,6 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                         </div>
                       )}
 
-                      <FigureSources response={turn.response} />
 
                       {(turn.response.proposals ?? []).map((proposal) => (
                         <ProposalCard

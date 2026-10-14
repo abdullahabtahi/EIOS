@@ -61,6 +61,8 @@ Process gates: add gates as rows in `config/gates.yaml`, never as runner edits. 
 
 Every quantitative claim in code, tests, fixtures, docs and UI carries a tag: `[BRIEF]` (from `docs/brief/*`), `[ASSUMPTION]`, `[ILLUSTRATIVE]` (non-production fixture), `[TARGET]` (SLO), `[SPIKE]` (exploratory; needs an `S-NN` id), `[MEASURED]` (a result our harness produced). `label_check` enforces it on docs.
 
+UI decision (2026-10-14, user): the cockpit does not show per-figure `DEMO` or `[ILLUSTRATIVE]` chips, the green "figures filled" banner, or a synthetic-data marker. Other citation tags (`[BRIEF]`, `[TARGET]`, `[ASSUMPTION]`) still show on a figure, and a figure's popover still states its data origin and source. Provenance stays in the wire contract (`data_origin`, per-figure source and as-of) and in docs, code and fixtures. Consequence to remember: nothing on screen says the data is synthetic, so do not put this build in front of anyone who could take it for production data; if real data is wired, restore a visible cue first.
+
 ## 6. Environments (Google Cloud)
 
 - Projects: `eios-hackathon` (dev sandbox and control: Terraform state bucket `eios-tfstate-eios-hackathon`, GitHub OIDC pool `eios-ci`), `eios-hackathon-stage` (unused), `eios-hackathon-prod` (prod-like, hosts the demo). `spatial-cat-489006-a4` is legacy; nothing depends on it.

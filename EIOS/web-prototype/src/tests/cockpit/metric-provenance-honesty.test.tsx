@@ -20,10 +20,16 @@ const metric = (overrides: Partial<MetricProvenance> = {}): MetricProvenance => 
 });
 
 describe('the provenance badge claims only what the backend said', () => {
-  it('marks a fixture figure as demo data and does not repeat the unit the value already carries', () => {
+  it('keeps the figure clean (no demo or illustrative chip) and does not repeat the unit the value carries', () => {
     render(<MetricProvenanceBadge metric={metric({ dataOrigin: 'fixture' })} displayMode="badge" />);
-    expect(screen.getByText('demo')).toBeInTheDocument();
+    expect(screen.queryByText('demo')).not.toBeInTheDocument();
+    expect(screen.queryByText('[ILLUSTRATIVE]')).not.toBeInTheDocument();
     expect(screen.queryByText('multiplier')).not.toBeInTheDocument();
+  });
+
+  it('still shows other citation types on the figure', () => {
+    render(<MetricProvenanceBadge metric={metric({ citation: '[TARGET]' })} displayMode="badge" />);
+    expect(screen.getByText('[TARGET]')).toBeInTheDocument();
   });
 
   it('shows no verified tick for a figure that names no source', () => {
