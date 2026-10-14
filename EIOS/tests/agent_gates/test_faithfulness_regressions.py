@@ -50,6 +50,19 @@ EXEC = {
             {"ftd_decay_pct": -45.0},
             {"ftd_decay_pct": ["first deposits"]},
         ),
+        # Found by the first live run: the model writes "Label: `value`" bullets, so the label sits
+        # before the colon. Without it every figure looked unlabelled and was marked wrong_field.
+        (
+            "* **Composite Risk Score**: `89`\n* **Syndicate Ring Size**: `23`\n"
+            "* **Velocity Transfers Count**: `16`\n* **Discrepancy Multiplier**: `16`",
+            {
+                "composite_risk_score": 89,
+                "syndicate_ring_size": 23,
+                "velocity_transfers_count": 16,
+                "discrepancy_multiplier": 16.0,
+            },
+            None,
+        ),
     ],
 )
 def test_faithful_variants_the_corpus_found_are_accepted(

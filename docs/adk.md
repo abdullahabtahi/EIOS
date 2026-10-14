@@ -13,7 +13,7 @@
 |---|---|---|---|
 | A0 | Dependency alignment PR (`opentelemetry-*`, `fastapi`, `websockets` pins that `google-adk` requires) | Not started | `make check` green on the new pins |
 | A1 | ADR superseding 016, and spec 021 | Not started | Reviewed; `open_decisions.yaml` updated |
-| A2 | Eval set first (probe cases below plus golden questions for expected tool calls) | In progress: auditor cases pinned in PR #33; golden tool-call questions and the lighthouse suites (`lighthouse.md`) not started | Suite runs red against today's engine, as expected |
+| A2 | Eval set first (probe cases below plus golden questions for expected tool calls) | Done (spec 022): 22 golden cases `[MEASURED]`, 15 attacks `[MEASURED]`, deterministic judges and a port any runtime plugs into. Baseline in `agent-baseline.md`: 28 of 61 case results fail `[MEASURED]` against today's engine | Suite runs red against today's engine, as expected: met |
 | A3 | Thin slice: one ADK `LlmAgent`, 2-3 tools behind a tool port (real OMCP handlers over the existing hot state first; MCP Toolbox when the warm tier exists), reference-based answer check, honest replay | Not started | Same `/api/cockpit/copilot/query` contract; A2 suite green; bugs B1-B4 fixed |
 | A4 | Sub-agents, Agent Search RAG, Model Armor plugin, ADK session service on Firestore | Not started | Parity with the 24 existing conversation test files, ported not deleted |
 | A5 | Wire the browser action shelf to real stage/authorize; remove client-side fabricated fallbacks | Not started | Shelf actions hit the intent hub |

@@ -143,8 +143,8 @@
 - [X] T055 [US4] Implement `src/eios/agent_gates/report.py` (JSON and one-page Markdown)
 - [X] T056 [US4] Implement `evals/agent/baseline.py` (`--runtime`, `--split`, `--repeats`, live calls only through `llm_gateway`, model id from configuration, cap from `EIOS_AGENT_EVAL_MAX_TURNS`) (depends on T033, T055)
 - [X] T057 [P] [US4] Write the timed-study protocol `docs/lighthouse-study-protocol.md` for M1 and M2: cases, participants, intervals, recording sheet, medians; do not execute
-- [ ] T058 [US4] Run the baseline once against an EIOS project (quota project set; `global` endpoint) and commit the report as `docs/agent-baseline.md`, tagging measured values `[MEASURED]`; list red results, the keyword versus paraphrased attack split and capability coverage; every mapped field carries its `x-otel` annotation and the mapping table is asserted
-- [ ] T059 [US4] Update `docs/lighthouse.md` (M3 and M5 baseline rows) and `docs/adk.md` (A2 status) with the measured numbers and the link to `docs/agent-baseline.md`
+- [x] T058 [US4] Run the baseline once against an EIOS project (quota project set; `global` endpoint) and commit the report as `docs/agent-baseline.md`, tagging measured values `[MEASURED]`; list red results, the keyword versus paraphrased attack split and capability coverage; every mapped field carries its `x-otel` annotation and the mapping table is asserted
+- [x] T059 [US4] Update `docs/lighthouse.md` (M3 and M5 baseline rows) and `docs/adk.md` (A2 status) with the measured numbers and the link to `docs/agent-baseline.md`
 
 **Checkpoint**: the "before" picture exists. Spec 021 can now claim improvement.
 

@@ -98,6 +98,14 @@ def _period_in(window: str) -> str | None:
     return None
 
 
+def _label_clause(prefix: str) -> str:
+    """The clause that labels a figure. In "Risk score: `89`" the label sits before the colon."""
+    parts = _CLAUSE.split(prefix)
+    if len(parts) > 1 and not content_tokens(parts[-1]) and prefix.rstrip(" `*_\"'(").endswith(":"):
+        return parts[-2]
+    return parts[-1]
+
+
 def _make_figure(
     text: str,
     start: int,
@@ -108,7 +116,7 @@ def _make_figure(
     spelled: bool,
 ) -> Figure:
     left, right = _sentence_bounds(text, start, end)
-    before = content_tokens(_CLAUSE.split(text[left:start])[-1])[-8:]
+    before = content_tokens(_label_clause(text[left:start]))[-8:]
     after = content_tokens(_CLAUSE.split(text[end:right])[0])[:6]
     window = text[max(left, start - 30) : min(right, end + 30)]
     return Figure(

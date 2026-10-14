@@ -325,7 +325,13 @@ def _git_sha() -> str:
     return out.stdout.strip() or "unknown"
 
 
-def _port(runtime: str, live: bool) -> AgentPort:
+def _port(runtime: str, live: bool, records: Path | None = None) -> AgentPort:
+    if runtime == "recorded":
+        from eios.agent_gates.adapters.recorded import RecordedRuntime
+
+        if records is None:
+            raise SystemExit("--runtime recorded needs --records")
+        return RecordedRuntime(records)
     if runtime == "copilot":
         from eios.agent_gates.adapters.copilot import CopilotAdapter
 
@@ -339,8 +345,11 @@ def _port(runtime: str, live: bool) -> AgentPort:
 
 def main(argv: Sequence[str]) -> int:
     ap = argparse.ArgumentParser(prog="python -m evals.agent.baseline")
-    ap.add_argument("--runtime", choices=["copilot", "always42"], default="copilot")
+    ap.add_argument("--runtime", choices=["copilot", "always42", "recorded"], default="copilot")
     ap.add_argument("--live", action="store_true")
+    ap.add_argument(
+        "--records", type=Path, help="records.jsonl of an earlier run, with --runtime recorded"
+    )
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--out", type=Path, default=Path("evals/reports/agent_baseline"))
     ap.add_argument("--compare", type=Path)
@@ -357,7 +366,9 @@ def main(argv: Sequence[str]) -> int:
     except (ThresholdsError, SpendCapError) as exc:
         print(f"refused: {exc}", file=sys.stderr)
         return 2
-    report, records = run_baseline(_port(args.runtime, args.live), golden, attacks, args.repeats)
+    report, records = run_baseline(
+        _port(args.runtime, args.live, args.records), golden, attacks, args.repeats
+    )
     report["meta"]["thresholds_version"] = thresholds.get("version")
     markdown = render_markdown(report)
     if args.compare:
