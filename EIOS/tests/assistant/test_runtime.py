@@ -45,6 +45,10 @@ def test_a_typed_figure_is_sent_back_and_the_second_draft_is_shown() -> None:
     assert "rejected" in retry_instruction
     # The ids of this turn's results are still valid after a rejection, so the model must not re-call its tools.
     assert "still valid" in retry_instruction
+    # The operator never saw the rejected draft, so the retry must not point back at it ("listed above").
+    assert "has not seen" in retry_instruction
+    # The ids of this turn's results are still valid after a rejection, so the model must not re-call its tools.
+    assert "still valid" in retry_instruction
 
 
 def test_three_bad_drafts_fail_closed_with_no_figure() -> None:
@@ -181,3 +185,18 @@ def test_a_timed_out_turn_still_reports_what_it_did() -> None:
     assert [t.name for t in out.tool_calls] == ["get_aml_dossier"]
     assert out.model_calls == 1
     assert out.latency_ms >= 1000
+
+
+def test_the_assistant_is_told_to_keep_answers_short() -> None:
+    from eios.assistant.agents import instruction_for
+    from eios.ontology.omcp.port.principal import Workstation
+
+    class _Ctx:
+        state: dict = {}
+
+    text = instruction_for(Workstation.PARTNER_MANAGER)(_Ctx())  # type: ignore[arg-type]
+    assert "Keep the answer short" in text
+    assert (
+        "Never state how many" in text
+    )  # a count the model writes is a figure the judge will flag
+    assert "in digits or in words" in text

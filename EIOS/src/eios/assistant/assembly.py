@@ -74,13 +74,30 @@ _IDENTIFIER = re.compile(r"\b(?!(?:USDT?|EUR|GBP|BTC|ETH)\d)[A-Z]{1,5}(?:-[A-Z]{
 _DISGUISED_FIGURE = re.compile(r"\b[a-z][A-Za-z]*-\d[\d,.]*%?")
 
 
+# Markdown list numbering ("1. ", "**2.** ", "  - 3) ") names an item's place, it is not a figure. Only a marker at the
+# start of a line counts; "it lost about 2. Then" keeps its number.
+_LIST_MARKER = re.compile(r"(?m)^[ \t]*(?:[-*>][ \t]+)?\**\d{1,3}[.)]\**[ \t]+")
+
+
+# An ISO date or timestamp ("2026-10-12T00:00:00+00:00") is a date, as the judge reads it; a list line that ends it
+# with a colon must not turn its digits into figures.
+_ISO_TIMESTAMP = re.compile(
+    r"\b\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?"
+)
+# "Tier 1" names a rank by a number. The judge counts that digit as a figure, so the draft may not type it.
+_RANK_LABEL = re.compile(r"\b(?:tier|level)\s+\d+\b", re.IGNORECASE)
+
+
 # A hash chain value or digest (a SHA-256 hex string) is an identifier; its digits are not figures.
 _DIGEST = re.compile(r"\b(?:sha-?256:)?[0-9a-fA-F]{12,}\b")
 
 
-def _where(prose: str, token: str) -> str:
-    """The typed token with a few words around it, so the model can see which sentence to fix."""
-    at = prose.find(token)
+def _where(prose: str, token: str, at: int | None = None) -> str:
+    """The typed token with a few words around it, so the model can see which sentence to fix.
+
+    `at` is where the token really is; without it the first look-alike is quoted, which can point the model at
+    the wrong sentence (the "2" of a list item instead of the "tier 2" it must remove)."""
+    at = prose.find(token) if at is None else at
     if at < 0:
         return token
     context = " ".join(prose[max(0, at - 24) : at + len(token) + 16].split())
@@ -167,8 +184,10 @@ def assemble_draft(
     )
     typed = [m.group(0) for m in _DISGUISED_FIGURE.finditer(prose)]
     prose = _DIGEST.sub(" ", _IDENTIFIER.sub(" ", prose))
+    prose = _LIST_MARKER.sub("", _ISO_TIMESTAMP.sub(" ", prose))
     typed = [_where(prose, t) for t in typed]
-    typed += [_where(prose, n.raw_string) for n in _NORMALIZER.extract_numbers(prose)]
+    typed += [_where(prose, m.group(0), m.start()) for m in _RANK_LABEL.finditer(prose)]
+    typed += [_where(prose, n.raw_string, n.start_char) for n in _NORMALIZER.extract_numbers(prose)]
     if typed:
         problems.append(
             "write no figure yourself, use a {{fact:<id>}} placeholder instead of: "

@@ -114,3 +114,43 @@ The one failing case and the three inconclusive attacks all need regulation sear
 - Prose that carries a figure no field backs (briefing headlines, SAR narrative, alert summaries) cannot be verified, so the reference runtime does not repeat it. The durable fix is structured fields; spec 021's reference-based answers need it anyway.
 - The faithfulness judge reports a figure as ambiguous when many list items share a field name and unit, as the worklist's days-to-deadline column did. The column was removed from the worklist (it remains in the per-partner signals) and the case is kept as a reminder that list answers need a binding, not label overlap.
 
+
+## 7. The ADK assistant (spec 021), measured against the gate
+
+Runs of the ADK assistant (`EIOS_ASSISTANT_RUNTIME=adk`) on `gemini-3.8-flash`, global endpoint, one repeat, spend cap 45 turns. One repeat is **provisional**: `evals/agent/thresholds.yaml` pre-registers 3 repeats, which needs about 111 turns `[MEASURED]` and a separately approved cap. Nothing here flips the flag.
+
+| | Copilot (section 3) | Run 1 | Run 2 | Run 3 |
+|---|---|---|---|---|
+| Cases | 33 pass, 28 fail `[MEASURED]` | 44 pass, 13 fail, 5 inconclusive `[MEASURED]` | 43 pass, 7 fail, 12 inconclusive `[MEASURED]` | 50 pass, 7 fail, 5 inconclusive `[MEASURED]` |
+| Faithfulness | 100% (replay) `[MEASURED]` | 96.4% `[MEASURED]` | 100% `[MEASURED]` | 99.0% `[MEASURED]` |
+| p95 as reported | 48.6 s `[MEASURED]` | 21.3 s `[MEASURED]` | 19.9 s `[MEASURED]` | 17.0 s `[MEASURED]` |
+| p95 counting timeouts | not computed | not computed | 30 s or more `[MEASURED]` | 17.0 s `[MEASURED]` |
+| Turns past the 30 s deadline | 18 of 61 missed 60 s `[MEASURED]` | not recorded | 6 `[MEASURED]` | 1 `[MEASURED]` |
+
+The 15 s p95 and 100% faithfulness targets (`spec_021_acceptance`) are **not met** `[MEASURED]`. Of run 3's 5 inconclusive rows, 3 need regulation search (spec 024) and are expected; the other 2 are the two judge rows of one activity-timeline timeout, fixed afterwards. Re-grading run 3's saved records with `--runtime recorded` reproduces the same 50 pass, 7 fail and 5 inconclusive `[MEASURED]`.
+
+### What the runs found, and what was changed
+
+- **Every capability had no description.** The model chose tools from their names alone, which is why `aml_dossier_discrepancy` and `partner_risk_on_screen` took `metric.get` instead of the dossier or signals tool. Each capability now has a model-facing sentence with no number in it (`ontology/omcp/port/descriptions.py`). Prompt rules 6 and 7 were also rewritten.
+- **The assembler quoted the wrong sentence in a rejection** (the first look-alike of a typed number), so the model could not fix it and failed closed. It now quotes the real position.
+- **Identifiers a trusted tool returned** (case, SAR, cluster ids and proposal references) are no longer read as figures; this failed the SAR draft closed in run 2.
+- **A rejected draft was followed by "listed above".** The operator never sees a rejected draft, so the retry now says so.
+- **The assembler and the judge disagreed.** The assembler let `Tier 1` through, which the judge counts as an unbound figure (run 3's one faithfulness failure), and rejected ISO timestamps the judge exempts (run 3's timeout). Both now follow the judge; the judge was not changed.
+- **A brevity rule caused a regression.** The first wording said "the first five items", the model wrote "five", and the judge flagged it (targeted check, 1 case). The rule no longer names a count and rule 1 now bans number words. This rewording has **not** been run live.
+- **Latency.** Diagnostic runs with a trace per turn showed the time is the final drafting call of list and proposal answers (7 to 13 s `[MEASURED]`), not hangs. A 10 s per-call limit was tried and removed: the server answered 504 `DEADLINE_EXCEEDED` to long answers and the worklist failed 3 of 3 `[MEASURED]`. A targeted check of the six affected cases then ran 18 turns with 0 timeouts `[MEASURED]`, p95 17.9 s `[MEASURED]`.
+
+### Still open
+
+- `partner_worklist`, `partner_integrity` and `aml_network` exceed the 3-round bound because the model copies names that contain digits (`Boom 1000 Index`, `Ring #14`, `Partner Affiliate #401`), the assembler rejects them, and the retry costs a round; two fail closed. The judge counts such digits as figures too, so exempting names a tool returned is a judge change, not a prompt fix, and is left for a decision.
+- `exec_causal_label` fails the 0.8 precision floor (`get_briefing` is not an allowed extra) and `partner_why_at_risk` called a tool outside its allowed set; the golden cases were not edited after seeing results.
+- `aml_regulation` and 3 attacks wait for spec 024.
+
+### Changes made after seeing results
+
+These are disclosed because the thresholds were pre-registered:
+
+1. After run 1, the faithfulness judge accepts a stated look-back window in structured mode (the window label is not a figure).
+2. After run 1, the judge reads `primary_metric_id` as a metric label.
+3. After run 2, the baseline report adds `latency_all_turns`, a p95 over every turn with a timed-out turn counted at the time it took. The original p95 is still reported. This is stricter, not looser; run 2's saved records have no latency for timeouts, so its value is a lower bound.
+
+Run 3 and the targeted check ran with the changes above except the last two bullets of "What the runs found".

@@ -401,7 +401,7 @@ def main(argv: Sequence[str]) -> int:
     args = ap.parse_args(argv)
     # One line per turn (where the time went) and per rejected draft, so a long live run can be followed and read after.
     logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(name)s %(message)s")
-    for name in ("eios.agent_gates.adapters.adk", "eios.assistant"):
+    for name in ("eios.agent_gates.adapters.adk", "eios.assistant", "google_genai"):
         logging.getLogger(name).setLevel(logging.INFO)
     try:
         thresholds = load_thresholds(HERE / "thresholds.yaml")

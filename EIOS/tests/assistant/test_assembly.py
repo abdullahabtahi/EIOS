@@ -184,3 +184,30 @@ def test_a_returned_identifier_cannot_hide_a_typed_figure_next_to_it() -> None:
     out = assemble_draft("Case case_aml_84920 moved 5000 dollars.", facts=FACTS, identifiers=ids)
     assert isinstance(out, Rejected)
     assert "5000" in out.problems[0]
+
+
+def test_the_feedback_quotes_the_sentence_that_holds_the_figure_not_an_earlier_look_alike() -> None:
+    draft = "1. Alpha is high.\n2. Beta is low.\nThe partner lost 2 clients this week."
+    out = assemble_draft(draft, facts=FACTS)
+    assert isinstance(out, Rejected)
+    assert "lost 2 clients" in out.problems[0]
+
+
+def test_markdown_list_numbering_is_not_a_figure_even_when_bold_or_nested() -> None:
+    draft = "**1. Alpha** is high.\n  - 2. Beta is low.\n3) Gamma holds."
+    assert isinstance(assemble_draft(draft, facts=FACTS), Assembled)
+
+
+def test_a_number_that_only_looks_like_list_numbering_mid_sentence_is_still_a_figure() -> None:
+    assert isinstance(assemble_draft("It lost about 2. Then it fell.", facts=FACTS), Rejected)
+
+
+def test_a_timestamp_in_a_list_line_is_a_date_not_a_figure() -> None:
+    draft = "Recent events:\n- 2026-10-12T00:00:00+00:00: Deposit received\n- 2026-10-13T09:30:00Z: Withdrawal asked"
+    assert isinstance(assemble_draft(draft, facts=FACTS), Assembled)
+
+
+def test_a_tier_number_is_a_figure_the_model_may_not_type() -> None:
+    out = assemble_draft("PTR-882 is a Tier 1 Super partner.", facts=FACTS)
+    assert isinstance(out, Rejected)
+    assert "Tier 1" in out.problems[0]
