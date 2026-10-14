@@ -126,6 +126,7 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
                 "steward": figure.source,
                 "source": figure.source,
                 "unit": figure.unit,
+                "raw_value": figure.value,
                 "data_origin": figure.data_origin.value,
                 "as_of": figure.as_of.isoformat(),
             }

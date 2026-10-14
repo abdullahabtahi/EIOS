@@ -144,6 +144,7 @@ def test_the_body_names_the_assistant_status_and_each_figures_provenance(
     assert body["failed_closed"] is False
     cite = body["provenance_citations"][0]
     assert cite["unit"] == "multiplier"
+    assert cite["raw_value"] == 16.0
     assert cite["data_origin"] == "fixture"
     assert cite["source"] == cite["steward"]
     assert cite["as_of"]
