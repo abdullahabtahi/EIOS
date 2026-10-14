@@ -139,5 +139,6 @@ def fail_closed_answer(problems: tuple[str, ...], origin: DataOrigin) -> Answer:
     return Answer(
         text=f"{FAIL_CLOSED_TEXT} Please rephrase the question or ask for a specific figure. (Reason: {detail})",
         data_origin=origin,
+        failed_closed=True,
         attempts=MAX_ATTEMPTS,
     )

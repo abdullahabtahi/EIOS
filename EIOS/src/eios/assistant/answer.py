@@ -35,4 +35,7 @@ class Answer(StrictModel):
     fallback_reason: str | None = None
     blocked: bool = False
     block_reason: str | None = None
+    failed_closed: bool = (
+        False  # no supportable answer after the bounded attempts; no figure is shown
+    )
     attempts: int = Field(default=1, ge=0)
