@@ -14,7 +14,7 @@
 | A0 | Dependency alignment PR: `google-adk[gcp]==2.11.0`, `fastapi>=0.133,<0.142.2`, `opentelemetry-*<=1.42.1` (`fastapi>=0.142.2` itself needs `opentelemetry>=1.44`, so both move together) | Tested in a scratch worktree, not opened: full suite shows no regression from the pins (`adk-research.md` section 3.2); waits for decision A-9 | `make check` green on the new pins |
 | A1 | ADR superseding 016, and spec 021 | Research done (`adk-research.md`); decisions A-2 to A-10 await your review; specs 021 to 028 planned, build order starts with 022 | Reviewed; `open_decisions.yaml` updated |
 | A2 | Eval set first (probe cases below plus golden questions for expected tool calls) | Done (spec 022): 22 golden cases `[MEASURED]`, 15 attacks `[MEASURED]`, deterministic judges and a port any runtime plugs into. Baseline in `agent-baseline.md`: 28 of 61 case results fail `[MEASURED]` against today's engine | Suite runs red against today's engine, as expected: met |
-| A3 | Thin slice: one ADK `LlmAgent`, 2-3 tools behind a tool port (real OMCP handlers over the existing hot state first; MCP Toolbox when the warm tier exists), reference-based answer check, honest replay | Not started | Same `/api/cockpit/copilot/query` contract; A2 suite green; bugs B1-B4 fixed |
+| A3 | Thin slice: one ADK `LlmAgent`, 2-3 tools behind a tool port (real OMCP handlers over the existing hot state first; MCP Toolbox when the warm tier exists), reference-based answer check, honest replay | Tool port done (spec 023, `eios.ontology.omcp.port`, judged in `agent-baseline.md` section 6); the ADK runtime and answer check are spec 021, not started | Same `/api/cockpit/copilot/query` contract; A2 suite green; bugs B1-B4 fixed |
 | A4 | Sub-agents, Agent Search RAG, Model Armor plugin, ADK session service on Firestore | Not started | Parity with the 24 existing conversation test files, ported not deleted |
 | A5 | Wire the browser action shelf to real stage/authorize; remove client-side fabricated fallbacks | Not started | Shelf actions hit the intent hub |
 
@@ -24,9 +24,9 @@ Sequencing (revised 2026-10-13): A0-A3 do not wait on the wider data work. They 
 
 | ID | Defect | Where | Fixed by |
 |---|---|---|---|
-| B1 | All operators share session `sess_default`; memory leaks across users | [server.py:972](../EIOS/src/eios/cockpit/server.py#L972) | A3 |
-| B2 | Browser sends `activeEntityId`, server expects `context_entity_id`; no session id sent | [copilot-command-bar.tsx](../EIOS/web-prototype/src/components/cockpit/shell/copilot-command-bar.tsx) | A3 |
-| B3 | Role is taken from the request body, not the verified operator | [server.py](../EIOS/src/eios/cockpit/server.py) | A3 |
+| B1 | All operators share session `sess_default`; memory leaks across users | [server.py](../EIOS/src/eios/cockpit/server.py) | Fixed at the endpoint by spec 023 (session per verified operator and workstation) |
+| B2 | Browser sends `activeEntityId`, server expects `context_entity_id`; no session id sent. Server now accepts both names (spec 023); the browser rename and the entity reaching the engine ride with spec 021 and 030 | [copilot-command-bar.tsx](../EIOS/web-prototype/src/components/cockpit/shell/copilot-command-bar.tsx) | A3 |
+| B3 | Role is taken from the request body, not the verified operator. The role match also never succeeded, so every query ran as executive | [server.py](../EIOS/src/eios/cockpit/server.py) | Fixed by spec 023: the verified operator is the identity, an unknown workstation is refused (422), the workstation only scopes the tools |
 | B4 | No multi-turn memory on the live path; raw query sent, resolved query unused | [copilot_engine.py](../EIOS/src/eios/conversation/copilot_engine.py) | A3 |
 | B5 | Replay path is hardcoded keyword branches with fixed entity ids | same | A3 |
 | B6 | Keyword routing, keyword adversarial blocklist, `"sec"` policy trigger | same, [rag_tools.py](../EIOS/src/eios/conversation/rag_tools.py) | A3-A4 (Model Armor) |

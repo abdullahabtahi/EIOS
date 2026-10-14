@@ -212,3 +212,28 @@ def test_forecast_is_a_labelled_projection_without_an_invented_interval(
         ToolErrorCode.DATA_UNAVAILABLE,
         ToolErrorCode.INVALID_ARGUMENTS,
     }
+
+
+def test_account_metrics_come_from_the_dossier_and_are_unavailable_without_one(
+    port: GovernedToolPort,
+) -> None:
+    aml = who("aml_investigator")
+    got = _ok(
+        port, aml, "get_metric", {"metric_id": "discrepancy_multiplier", "entity_id": "CR84920"}
+    )
+    assert got["value"] == 16.0 and got["units"]["value"] == "multiplier"
+    deposits = _ok(
+        port,
+        aml,
+        "get_metric",
+        {"metric_id": "realized_deposit_volume_30d_usd", "entity_id": "CR84920"},
+    )
+    assert deposits["value"] == 8000.0
+    code = _err(
+        port, aml, "get_metric", {"metric_id": "discrepancy_multiplier", "entity_id": "CR91204"}
+    )
+    assert code is ToolErrorCode.DATA_UNAVAILABLE
+    assert (
+        _err(port, aml, "get_metric", {"metric_id": "net_revenue_usd", "entity_id": "CR84920"})
+        is ToolErrorCode.INVALID_ARGUMENTS
+    )

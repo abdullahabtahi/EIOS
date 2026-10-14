@@ -155,3 +155,11 @@ def test_every_call_is_traced_with_tool_role_duration_and_status() -> None:
 def test_duplicate_tool_names_are_rejected() -> None:
     with pytest.raises(ValueError, match="get_x"):
         _port(_spec("get_x"), _spec("get_x"))
+
+
+def test_a_caller_supplied_tool_name_is_bounded_before_it_is_recorded() -> None:
+    log = RefusalLog()
+    nasty = "get_x\nINFO forged log line " + "x" * 500
+    _port(_spec("get_x"), log=log).call(AML, nasty, {})
+    stored = log.entries[0].tool
+    assert "\n" not in stored and len(stored) <= 64

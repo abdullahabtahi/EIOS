@@ -79,3 +79,38 @@ One run, one repeat `[MEASURED]`, 61 turns `[MEASURED]`, capped at 45 turns of s
 ## 5. What the ADK migration must beat
 
 The pre-registered thresholds are in `EIOS/evals/agent/thresholds.yaml`. The measured gaps to close: latency (48.6 s `[MEASURED]` against a 15 s `[TARGET]` p95), screen consistency (2 failures `[MEASURED]`), role scoping (5 of 15 attacks `[MEASURED]`), what-if crash (1 case `[MEASURED]`), and figures stated after a failed tool call (3 cases `[MEASURED]`).
+
+## 6. After spec 023: the governed tool port, judged through the same port
+
+**Status**: measured `[MEASURED]`, 2026-10-14. **Spec**: `specs/023-governed-tool-port/`. **Reproduce**: `PYTHONPATH=src:. python -m evals.agent.baseline --runtime toolport`, then re-grade with `--runtime recorded --records <records.jsonl>` (no model call; the runtime name is read from the records).
+
+The port (`EIOS/src/eios/ontology/omcp/port/`) is the typed, role-scoped catalogue of 28 `[MEASURED]` capabilities the assistant will use in spec 021. It is judged here through the 022 agent port with a **reference runtime** (`adapters/toolport.py`): a rule router that offers itself only the tools its workstation is given, calls them through the real port with the verified identity, and answers with figures copied from the results. It is not an agent and it makes no model call, so latency and any "how well does it choose tools" reading are not claims about spec 021. What the run does show is what the port makes answerable, what it makes impossible, and that its figures are the screen's figures.
+
+Same golden cases and attacks as sections 2 and 3, three repeats `[MEASURED]`, offline. One check was added after section 2 was recorded: the AML dossier case now compares the answer with the AML screen payload, so it is stricter than before, and the total is 62 `[MEASURED]` case results against 61 `[MEASURED]`.
+
+| Measure | Section 2 (today's copilot, replay) | Port reference runtime |
+|---|---|---|
+| Case results | 33 pass, 28 fail `[MEASURED]` | 58 pass, 1 fail, 3 inconclusive `[MEASURED]` |
+| Capabilities with a tool | 8 of 33 `[MEASURED]` | 28 of 33 `[MEASURED]` (the other 5 `[MEASURED]` are planned for specs 024 to 026) |
+| Trajectory pass | 2 of 22 `[MEASURED]` | 21 of 22 `[MEASURED]` |
+| Screen consistency | 2 disagreements `[MEASURED]` | 3 of 3 cases agree `[MEASURED]` (two partner, one AML) |
+| Attacks that succeeded | 5 of 15 `[MEASURED]` | 0 of 12 `[MEASURED]` run; 3 `[MEASURED]` inconclusive (need knowledge search, spec 024) |
+| Identity taken from the request body | 100% `[MEASURED]` | 0% `[MEASURED]` |
+| Faithfulness (figures supported) | 100% `[MEASURED]` on replay (it hid the screen contradiction) | 100% `[MEASURED]` |
+| What-if crash | 1 case `[MEASURED]` | 0 cases `[MEASURED]` |
+
+The one failing case and the three inconclusive attacks all need regulation search, which is spec 024. They are reported, not hidden. Re-grading the saved records with `--runtime recorded` reproduces the same 58 pass, 1 fail and 3 inconclusive `[MEASURED]`.
+
+### What changed in the data, and what it still is not
+
+- **Per-entity data.** A partner's signals come from the radar the partner screen renders, so partner `PTR-882` reads 0.78 `[MEASURED]` and `PTR-104` reads 0.18 `[MEASURED]`; the constants are gone. An unknown id is `NOT_FOUND`, and an account id is not a partner.
+- **Constants behind the AML and partner services.** `AMLWorkstationService` returns one dossier, one graph and one SAR whatever id it is given, and `PartnerWorkstationService` returns one referral tree and one set of deals. The port serves those only for the entity they describe and answers `DATA_UNAVAILABLE` for the rest. The accounts `CR91204` and `CR73491` therefore have alerts but no dossier yet.
+- **Absence is not health.** The client-quality scorer returns a perfect index for an empty portfolio, the SLO engine reports a met target for zero events, and the calibration check had a synthetic fallback. The port returns `DATA_UNAVAILABLE` for client quality and calibration, and `NO_DATA` for reliability, instead of a reassuring figure.
+- **Simulated verification is labelled.** Without a ledger, the chain-verification service returns a canned pass; the port marks the result `is_simulated` and `fixture`.
+- **Still fixture data.** Every result says `fixture`; the port changes who can see what and whether it agrees with the screen, not where the data comes from (spec 025).
+
+### Judge limits this run exposed
+
+- Prose that carries a figure no field backs (briefing headlines, SAR narrative, alert summaries) cannot be verified, so the reference runtime does not repeat it. The durable fix is structured fields; spec 021's reference-based answers need it anyway.
+- The faithfulness judge reports a figure as ambiguous when many list items share a field name and unit, as the worklist's days-to-deadline column did. The column was removed from the worklist (it remains in the per-partner signals) and the case is kept as a reminder that list answers need a binding, not label overlap.
+

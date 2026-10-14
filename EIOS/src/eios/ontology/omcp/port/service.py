@@ -7,6 +7,7 @@ not it exists, so the response does not reveal the catalogue. Approve and execut
 """
 
 import logging
+import re
 import time
 from collections.abc import Iterable
 from dataclasses import dataclass, field
@@ -154,10 +155,14 @@ class GovernedToolPort:
     def _refuse(
         self, principal: Principal, tool: str, code: ToolErrorCode, started: float, message: str
     ) -> CallOutcome:
+        name = _clean_name(
+            tool
+        )  # the name is caller-supplied text: bound it before it is stored or logged
         self.refusals.record(
-            Refusal(principal.uid, principal.workstation, tool, code, datetime.now(UTC))
+            Refusal(principal.uid, principal.workstation, name, code, datetime.now(UTC))
         )
-        self.traces.append(CallTrace(tool, principal.workstation, code.value, _ms(started)))
+        self.traces.append(CallTrace(name, principal.workstation, code.value, _ms(started)))
+        del self.traces[:-MAX_RECORDED]
         return CallOutcome(tool=tool, error=ToolError(code=code, message=message))
 
     def _finish(
@@ -175,6 +180,10 @@ class GovernedToolPort:
         )
         del self.traces[:-MAX_RECORDED]
         return CallOutcome(tool=spec.name, result=result, error=error)
+
+
+def _clean_name(tool: object) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]", "?", str(tool)[:64])
 
 
 def _ms(started: float) -> float:

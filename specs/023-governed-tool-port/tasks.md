@@ -48,20 +48,24 @@
 
 ## Phase 7: Judge through the agent port
 
-- [ ] T021 Tests (`tests/agent_gates/test_toolport_adapter.py`): the `toolport` runtime fills a record with identity source `verified_token`, only role-allowed calls, answers with result figures only
-- [ ] T022 `src/eios/agent_gates/adapters/toolport.py` and `--runtime toolport` in `evals/agent/baseline.py`
-- [ ] T023 Run `PYTHONPATH=src:. python -m evals.agent.baseline --runtime toolport` offline; record the result in `docs/agent-baseline.md` section 6 (before and after, same cases, thresholds unchanged); regrade saved runs with `--runtime recorded` where relevant
-- [ ] T024 Fix what the cases expose; cases that need specs 024 to 026 stay red and are reported as planned
+- [X] T021 Tests (`tests/agent_gates/test_toolport_adapter.py`): the `toolport` runtime fills a record with identity source `verified_token`, only role-allowed calls, answers with result figures only
+- [X] T022 `src/eios/agent_gates/adapters/toolport.py` and `--runtime toolport` in `evals/agent/baseline.py`
+- [X] T023 Run `PYTHONPATH=src:. python -m evals.agent.baseline --runtime toolport` offline; record the result in `docs/agent-baseline.md` section 6 (before and after, same cases, thresholds unchanged); regrade saved runs with `--runtime recorded` where relevant
+- [X] T024 Fix what the cases expose; cases that need specs 024 to 026 stay red and are reported as planned
 
 ## Phase 8: Server wiring
 
-- [ ] T025 Tests (`tests/cockpit/test_copilot_identity.py`): copilot endpoint takes identity from the verified operator, an unknown workstation is refused 422, `activeEntityId` and `context_entity_id` are both honoured
-- [ ] T026 `cockpit/server.py` `query_copilot`: `Depends(current_operator)`, principal built server side, both entity field names accepted
+- [X] T025 Tests (`tests/cockpit/test_copilot_identity.py`): copilot endpoint takes identity from the verified operator, an unknown workstation is refused 422, `activeEntityId` and `context_entity_id` are both honoured
+- [X] T026 `cockpit/server.py` `query_copilot`: `Depends(current_operator)`, principal built server side, both entity field names accepted
 
 ## Phase 9: Close
 
-- [ ] T027 `make check` green except the recorded pre-existing failures; mypy strict clean for `eios.ontology.omcp.port`
-- [ ] T028 Update this file, `docs/adk.md` status board (A3 prerequisite: port done), `docs/agent-architecture.md` section 2 (built names), memory; open one PR; merge when CI is green and the branch is current
+- [X] T027 `make check` green except the recorded pre-existing failures; mypy strict clean for `eios.ontology.omcp.port`
+- [X] T028 Update this file, `docs/adk.md` status board (A3 prerequisite: port done), `docs/agent-architecture.md` section 2 (built names), memory; open one PR; merge when CI is green and the branch is current
+
+## Outcome (2026-10-14)
+
+Port: 28 capabilities, one entry point. Judged through the 022 port: 58 pass, 1 fail, 3 inconclusive against 33 pass and 28 fail for today's copilot (`docs/agent-baseline.md` section 6). The fail and the 3 inconclusive all need knowledge search (spec 024). Changes beyond the plan: the withdrawal scorer became a pure function (`score_withdrawal`) so a read never stages an intent; `RecordedRuntime` reads its runtime name from the records so any run can be re-graded; the baseline treats a planned capability as unserved, never as a pass; the AML golden case gained a screen payload; the copilot endpoint now refuses unknown workstations (it used to run every query as executive because the role comparison never matched). Known gaps: mypy still reports the recorded pre-existing errors elsewhere; the browser field rename and the entity reaching the engine ride with specs 021 and 030.
 
 ## Deferred (reasons in plan.md)
 
