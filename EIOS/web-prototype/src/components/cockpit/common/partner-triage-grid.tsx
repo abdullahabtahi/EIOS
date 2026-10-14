@@ -227,13 +227,13 @@ export function PartnerTriageGrid({
                   ? 'text-red-700 bg-red-50 border-red-200'
                   : isHigh
                   ? 'text-amber-800 bg-amber-50 border-amber-200'
-                  : 'text-emerald-700 bg-emerald-50 border-emerald-200';
+                  : 'text-green-700 bg-green-50 border-green-200';
 
                 const tierBadgeColor =
                   partner.tier === 'TIER_1_SUPER'
                     ? 'bg-blue-50 text-blue-800 border-blue-200'
                     : partner.tier === 'TIER_2_MASTER'
-                    ? 'bg-purple-50 text-purple-800 border-purple-200'
+                    ? 'bg-blue-50 text-blue-800 border-blue-200'
                     : 'bg-slate-100 text-slate-700 border-slate-200';
 
                 return (

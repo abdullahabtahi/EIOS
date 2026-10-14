@@ -206,12 +206,12 @@ export function ExecutiveCockpitView() {
               <div key={idx} className="p-3 bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-bold font-mono text-slate-900">{item.action}</span>
-                  <span className="text-label font-mono text-emerald-800 font-bold bg-emerald-50 px-1 border border-emerald-200">
+                  <span className="text-label font-mono text-green-800 font-bold bg-green-50 px-1 border border-green-200">
                     Confidence: {item.conf}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-label font-mono">
-                  <div className="text-emerald-700 font-semibold">{item.ret}</div>
+                  <div className="text-green-700 font-semibold">{item.ret}</div>
                   <div className="text-amber-800 font-semibold">{item.risk}</div>
                 </div>
                 <div className="text-label text-slate-500 font-sans">Sensitivity: {item.sens}</div>

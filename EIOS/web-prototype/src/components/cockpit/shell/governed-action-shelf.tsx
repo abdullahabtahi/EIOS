@@ -98,7 +98,7 @@ export function GovernedActionShelf() {
             <button
               type="button"
               onClick={clearStagedActions}
-              className="text-label text-slate-500 hover:text-rose-600 font-medium transition-colors cursor-pointer"
+              className="text-label text-slate-500 hover:text-red-600 font-medium transition-colors cursor-pointer"
             >
               Clear all
             </button>
@@ -130,7 +130,7 @@ export function GovernedActionShelf() {
                       key={action.intentId}
                       data-testid={`action-card-${action.intentId}`}
                       className={`w-80 shrink-0 bg-white text-slate-900 border p-3 flex flex-col justify-between shadow-xs rounded-none ${
-                        isCommitted ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-300'
+                        isCommitted ? 'border-green-500 bg-green-50/20' : 'border-slate-300'
                       }`}
                     >
                       {/* Card Header */}

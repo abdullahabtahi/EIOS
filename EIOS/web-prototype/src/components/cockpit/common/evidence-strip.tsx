@@ -9,8 +9,8 @@ import type { EvidenceStrip } from '../state/cockpit-types';
 import { MetricProvenanceBadge } from './metric-provenance';
 
 const SEVERITY_STYLE: Record<string, string> = {
-  CRITICAL: 'bg-rose-100 text-rose-800 border-rose-200',
-  HIGH: 'bg-orange-100 text-orange-800 border-orange-200',
+  CRITICAL: 'bg-red-100 text-red-800 border-red-200',
+  HIGH: 'bg-amber-100 text-amber-800 border-amber-200',
   MEDIUM: 'bg-amber-100 text-amber-800 border-amber-200',
 };
 
@@ -20,7 +20,7 @@ export function EvidenceStripPanel({ strip }: { strip: EvidenceStrip }) {
     <section aria-label="AML Evidence KPI Strip" className="bg-white border border-slate-200 p-4 shadow-sm space-y-3">
       <div className="flex items-center justify-between border-b border-slate-100 pb-2">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-sharp text-base text-rose-600">shield_with_heart</span>
+          <span className="material-symbols-sharp text-base text-red-600">shield_with_heart</span>
           <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">{strip.title}</h3>
         </div>
         <span className={`text-label font-mono px-1.5 py-0.5 border font-bold ${severityStyle}`}>
@@ -32,7 +32,7 @@ export function EvidenceStripPanel({ strip }: { strip: EvidenceStrip }) {
         {strip.tiles.map((tile) => (
           <div key={tile.label} className="p-3 bg-slate-50 border border-slate-200" data-testid="evidence-tile">
             <span className="text-label text-slate-500 block">{tile.label}</span>
-            <div className={`text-base font-bold mt-0.5 ${tile.tone === 'alert' ? 'text-rose-700' : 'text-slate-900'}`}>
+            <div className={`text-base font-bold mt-0.5 ${tile.tone === 'alert' ? 'text-red-700' : 'text-slate-900'}`}>
               {tile.value}
             </div>
             <span className="text-label text-slate-500 block mt-0.5">{tile.caption}</span>

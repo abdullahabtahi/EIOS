@@ -101,7 +101,7 @@ export function SystemStatusDialog({
           <section aria-label="Red-line gates" className={SECTION}>
             <h3 className={`${SECTION_TITLE} justify-between`}>
               <span className="flex items-center gap-2">
-                <span className="material-symbols-sharp text-base text-emerald-600">verified</span>
+                <span className="material-symbols-sharp text-base text-green-600">verified</span>
                 Red-line gates
               </span>
               {gates.length > 0 && (
@@ -134,7 +134,7 @@ export function SystemStatusDialog({
 
           <section aria-label="Flywheel calibration" className={`${SECTION} border-b-0`}>
             <h3 className={SECTION_TITLE}>
-              <span className="material-symbols-sharp text-base text-purple-600">psychology_alt</span>
+              <span className="material-symbols-sharp text-base text-blue-600">psychology_alt</span>
               Flywheel calibration
             </h3>
             <dl className="grid grid-cols-2 gap-2 text-xs font-mono">
@@ -152,7 +152,7 @@ export function SystemStatusDialog({
               </div>
               <div className="p-2 bg-slate-50 border border-slate-200">
                 <dt className="text-label text-slate-500">Calibration drift</dt>
-                <dd className={`font-bold ${!fw ? 'text-slate-400' : fw.calibrationDriftDetected ? 'text-red-700' : 'text-emerald-700'}`}>
+                <dd className={`font-bold ${!fw ? 'text-slate-400' : fw.calibrationDriftDetected ? 'text-red-700' : 'text-green-700'}`}>
                   {!fw ? '—' : fw.calibrationDriftDetected ? 'DRIFT DETECTED' : 'NOMINAL'}
                 </dd>
               </div>

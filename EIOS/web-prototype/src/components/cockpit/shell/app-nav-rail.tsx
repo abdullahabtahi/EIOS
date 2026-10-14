@@ -17,7 +17,7 @@ import { useNavReveal } from './use-nav-reveal';
 import { getPipelineStatus, type PipelineTone } from '../state/pipeline-status';
 
 const TONE_DOT: Record<PipelineTone, string> = {
-  ok: 'bg-emerald-400',
+  ok: 'bg-green-400',
   warn: 'bg-amber-400',
   bad: 'bg-red-400',
   neutral: 'bg-slate-400',

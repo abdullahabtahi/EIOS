@@ -26,7 +26,8 @@
   --text-title: 13px;
   --text-title--line-height: 18px;
 
-  /** Cockpit semantic palette (cx-*). One name per role; consolidate near-duplicates here, not in components. */
+  /** Cockpit semantic palette (cx-*). One name per role; consolidate near-duplicates here, not in components.
+      Colour budget: slate neutrals, ONE accent (accent/info/select), ONE alert (bad), and status-only ok/warn used for text and dots, never for category tags. The -solid/-2/-strong variants are aliases kept so call sites do not break. */
   --color-cx-ink: #182026;
   --color-cx-ink-deep: #0f172a;
   --color-cx-muted: #5c7080;
@@ -42,37 +43,37 @@
   --color-cx-sub-2: #ebf1f5;
   --color-cx-wash: #f8fafc;
   --color-cx-hover: #f9fbfc;
-  --color-cx-wash-0: #fcfdfe;
+  --color-cx-wash-0: #f9fbfc;
   --color-cx-wash-2: #f1f5f9;
-  --color-cx-wash-3: #f0f2f5;
-  --color-cx-select: #e8f1f8;
+  --color-cx-wash-3: #f1f5f9;
+  --color-cx-select: #e3eef6;
   --color-cx-accent: #106ba3;
   --color-cx-accent-strong: #0e5c8a;
-  --color-cx-info-bg: #edf5fa;
-  --color-cx-info-bg-2: #f0f4fa;
-  --color-cx-info-line: #bfd3e6;
-  --color-cx-info-line-2: #c7d7ee;
-  --color-cx-info: #215db0;
-  --color-cx-info-solid: #2563eb;
-  --color-cx-info-soft: #5c98d6;
+  --color-cx-info-bg: #f0f6fa;
+  --color-cx-info-bg-2: #f0f6fa;
+  --color-cx-info-line: #c4dbea;
+  --color-cx-info-line-2: #c4dbea;
+  --color-cx-info: #106ba3;
+  --color-cx-info-solid: #106ba3;
+  --color-cx-info-soft: #5f9cc2;
   --color-cx-ok: #0d8050;
-  --color-cx-ok-solid: #0f9960;
-  --color-cx-ok-strong: #15803d;
-  --color-cx-ok-bg: #edf7ed;
-  --color-cx-ok-bg-2: #f0fdf4;
-  --color-cx-ok-line: #c3e6d0;
-  --color-cx-ok-line-2: #bbf7d0;
+  --color-cx-ok-solid: #0d8050;
+  --color-cx-ok-strong: #0b6b43;
+  --color-cx-ok-bg: #f1f7f4;
+  --color-cx-ok-bg-2: #f1f7f4;
+  --color-cx-ok-line: #bfdecf;
+  --color-cx-ok-line-2: #bfdecf;
   --color-cx-warn: #a66321;
-  --color-cx-warn-solid: #d9822b;
-  --color-cx-warn-solid-2: #d97706;
-  --color-cx-warn-bg: #faf5ec;
-  --color-cx-warn-bg-2: #fdf3d9;
-  --color-cx-warn-line: #ead8b5;
+  --color-cx-warn-solid: #b37a30;
+  --color-cx-warn-solid-2: #b37a30;
+  --color-cx-warn-bg: #faf6ef;
+  --color-cx-warn-bg-2: #faf6ef;
+  --color-cx-warn-line: #e8d3ac;
   --color-cx-bad: #a82a2a;
-  --color-cx-bad-solid: #cd4246;
-  --color-cx-bad-solid-2: #e11d48;
-  --color-cx-bad-bg: #faf0f0;
-  --color-cx-bad-line: #e8c5c5;
+  --color-cx-bad-solid: #a82a2a;
+  --color-cx-bad-solid-2: #a82a2a;
+  --color-cx-bad-bg: #faf3f3;
+  --color-cx-bad-line: #ebc9c9;
   --color-cx-studio: #080c14;
   --color-cx-studio-2: #0b1120;
   --color-cx-studio-accent: #38bdf8;
@@ -204,135 +205,211 @@
   --color-brand-accents-mckinsey-cyan: var(--brand-accents-mckinsey-cyan);
   --color-brand-accents-qb-accent: var(--brand-accents-qb-accent);
 
-  /** Red primitives (DS-Primitives) */
-  --red-50: #fef2f2ff;
-  --red-100: #fee2e2ff;
-  --red-200: #fecacaff;
-  --red-300: #fca5a5ff;
-  --red-400: #f87171ff;
-  --red-500: #ef4444ff;
-  --red-600: #dc2626ff;
-  --red-700: #b91c1cff;
-  --red-800: #991b1bff;
-  --red-900: #7f1d1dff;
-  --red-950: #450a0aff;
+  /** Collapsed hue palette. The cockpit has one accent (blue), one alert (red) and two status-only hues (green, amber).
+      Every Tailwind hue family aliases onto one of these four ramps so a stray `rose-600` or `purple-500` cannot add a colour. */
+  --color-blue-50: #f0f6fa;
+  --color-blue-100: #e3eef6;
+  --color-blue-200: #c4dbea;
+  --color-blue-300: #98bfd8;
+  --color-blue-400: #5f9cc2;
+  --color-blue-500: #2f7fb0;
+  --color-blue-600: #106ba3;
+  --color-blue-700: #0e5c8a;
+  --color-blue-800: #124a6e;
+  --color-blue-900: #153d58;
+  --color-blue-950: #0d2738;
 
-  /** Red utility colors */
-  --color-red-50: var(--red-50);
-  --color-red-100: var(--red-100);
-  --color-red-200: var(--red-200);
-  --color-red-300: var(--red-300);
-  --color-red-400: var(--red-400);
-  --color-red-500: var(--red-500);
-  --color-red-600: var(--red-600);
-  --color-red-700: var(--red-700);
-  --color-red-800: var(--red-800);
-  --color-red-900: var(--red-900);
-  --color-red-950: var(--red-950);
+  --color-sky-50: #f0f6fa;
+  --color-sky-100: #e3eef6;
+  --color-sky-200: #c4dbea;
+  --color-sky-300: #98bfd8;
+  --color-sky-400: #5f9cc2;
+  --color-sky-500: #2f7fb0;
+  --color-sky-600: #106ba3;
+  --color-sky-700: #0e5c8a;
+  --color-sky-800: #124a6e;
+  --color-sky-900: #153d58;
+  --color-sky-950: #0d2738;
 
-  /** Amber primitives (DS-Primitives) */
-  --amber-50: #fffbebff;
-  --amber-100: #fef3c7ff;
-  --amber-200: #fde68aff;
-  --amber-300: #fcd34dff;
-  --amber-400: #fbbf24ff;
-  --amber-500: #f59e0bff;
-  --amber-600: #d97706ff;
-  --amber-700: #b45309ff;
-  --amber-800: #92400eff;
-  --amber-900: #78350fff;
-  --amber-950: #431407ff;
+  --color-cyan-50: #f0f6fa;
+  --color-cyan-100: #e3eef6;
+  --color-cyan-200: #c4dbea;
+  --color-cyan-300: #98bfd8;
+  --color-cyan-400: #5f9cc2;
+  --color-cyan-500: #2f7fb0;
+  --color-cyan-600: #106ba3;
+  --color-cyan-700: #0e5c8a;
+  --color-cyan-800: #124a6e;
+  --color-cyan-900: #153d58;
+  --color-cyan-950: #0d2738;
 
-  /** Amber utility colors */
-  --color-amber-50: var(--amber-50);
-  --color-amber-100: var(--amber-100);
-  --color-amber-200: var(--amber-200);
-  --color-amber-300: var(--amber-300);
-  --color-amber-400: var(--amber-400);
-  --color-amber-500: var(--amber-500);
-  --color-amber-600: var(--amber-600);
-  --color-amber-700: var(--amber-700);
-  --color-amber-800: var(--amber-800);
-  --color-amber-900: var(--amber-900);
-  --color-amber-950: var(--amber-950);
+  --color-indigo-50: #f0f6fa;
+  --color-indigo-100: #e3eef6;
+  --color-indigo-200: #c4dbea;
+  --color-indigo-300: #98bfd8;
+  --color-indigo-400: #5f9cc2;
+  --color-indigo-500: #2f7fb0;
+  --color-indigo-600: #106ba3;
+  --color-indigo-700: #0e5c8a;
+  --color-indigo-800: #124a6e;
+  --color-indigo-900: #153d58;
+  --color-indigo-950: #0d2738;
 
-  /** Green primitives (DS-Primitives) */
-  --green-50: #f0fdf4ff;
-  --green-100: #dcfce7ff;
-  --green-200: #bbf7d0ff;
-  --green-300: #86efacff;
-  --green-400: #4ade80ff;
-  --green-500: #22c55eff;
-  --green-600: #16a34aff;
-  --green-700: #15803dff;
-  --green-800: #166534ff;
-  --green-900: #14532dff;
-  --green-950: #052e16ff;
+  --color-violet-50: #f0f6fa;
+  --color-violet-100: #e3eef6;
+  --color-violet-200: #c4dbea;
+  --color-violet-300: #98bfd8;
+  --color-violet-400: #5f9cc2;
+  --color-violet-500: #2f7fb0;
+  --color-violet-600: #106ba3;
+  --color-violet-700: #0e5c8a;
+  --color-violet-800: #124a6e;
+  --color-violet-900: #153d58;
+  --color-violet-950: #0d2738;
 
-  /** Green utility colors */
-  --color-green-50: var(--green-50);
-  --color-green-100: var(--green-100);
-  --color-green-200: var(--green-200);
-  --color-green-300: var(--green-300);
-  --color-green-400: var(--green-400);
-  --color-green-500: var(--green-500);
-  --color-green-600: var(--green-600);
-  --color-green-700: var(--green-700);
-  --color-green-800: var(--green-800);
-  --color-green-900: var(--green-900);
-  --color-green-950: var(--green-950);
+  --color-purple-50: #f0f6fa;
+  --color-purple-100: #e3eef6;
+  --color-purple-200: #c4dbea;
+  --color-purple-300: #98bfd8;
+  --color-purple-400: #5f9cc2;
+  --color-purple-500: #2f7fb0;
+  --color-purple-600: #106ba3;
+  --color-purple-700: #0e5c8a;
+  --color-purple-800: #124a6e;
+  --color-purple-900: #153d58;
+  --color-purple-950: #0d2738;
 
-  /** Cyan primitives (DS-Primitives) */
-  --cyan-50: #ecfeffff;
-  --cyan-100: #cffafeff;
-  --cyan-200: #a5f3fcff;
-  --cyan-300: #67e8f9ff;
-  --cyan-400: #22d3eeff;
-  --cyan-500: #06b6d4ff;
-  --cyan-600: #0891b2ff;
-  --cyan-700: #0e7490ff;
-  --cyan-800: #155e75ff;
-  --cyan-900: #164e63ff;
-  --cyan-950: #083344ff;
+  --color-teal-50: #f0f6fa;
+  --color-teal-100: #e3eef6;
+  --color-teal-200: #c4dbea;
+  --color-teal-300: #98bfd8;
+  --color-teal-400: #5f9cc2;
+  --color-teal-500: #2f7fb0;
+  --color-teal-600: #106ba3;
+  --color-teal-700: #0e5c8a;
+  --color-teal-800: #124a6e;
+  --color-teal-900: #153d58;
+  --color-teal-950: #0d2738;
 
-  /** Cyan utility colors */
-  --color-cyan-50: var(--cyan-50);
-  --color-cyan-100: var(--cyan-100);
-  --color-cyan-200: var(--cyan-200);
-  --color-cyan-300: var(--cyan-300);
-  --color-cyan-400: var(--cyan-400);
-  --color-cyan-500: var(--cyan-500);
-  --color-cyan-600: var(--cyan-600);
-  --color-cyan-700: var(--cyan-700);
-  --color-cyan-800: var(--cyan-800);
-  --color-cyan-900: var(--cyan-900);
-  --color-cyan-950: var(--cyan-950);
+  --color-red-50: #faf3f3;
+  --color-red-100: #f5e4e4;
+  --color-red-200: #ebc9c9;
+  --color-red-300: #dea3a3;
+  --color-red-400: #cc7070;
+  --color-red-500: #bb4747;
+  --color-red-600: #a82a2a;
+  --color-red-700: #8f2323;
+  --color-red-800: #761f1f;
+  --color-red-900: #5e1c1c;
+  --color-red-950: #350e0e;
 
-  /** Sky primitives (DS-Primitives) */
-  --sky-50: #f0f9ffff;
-  --sky-100: #e0f2feff;
-  --sky-200: #bae6fdff;
-  --sky-300: #7dd3fcff;
-  --sky-400: #38bdf8ff;
-  --sky-500: #0ea5e9ff;
-  --sky-600: #0284c7ff;
-  --sky-700: #0369a1ff;
-  --sky-800: #075985ff;
-  --sky-900: #0c4a6eff;
-  --sky-950: #082f49ff;
+  --color-rose-50: #faf3f3;
+  --color-rose-100: #f5e4e4;
+  --color-rose-200: #ebc9c9;
+  --color-rose-300: #dea3a3;
+  --color-rose-400: #cc7070;
+  --color-rose-500: #bb4747;
+  --color-rose-600: #a82a2a;
+  --color-rose-700: #8f2323;
+  --color-rose-800: #761f1f;
+  --color-rose-900: #5e1c1c;
+  --color-rose-950: #350e0e;
 
-  /** Sky utility colors */
-  --color-sky-50: var(--sky-50);
-  --color-sky-100: var(--sky-100);
-  --color-sky-200: var(--sky-200);
-  --color-sky-300: var(--sky-300);
-  --color-sky-400: var(--sky-400);
-  --color-sky-500: var(--sky-500);
-  --color-sky-600: var(--sky-600);
-  --color-sky-700: var(--sky-700);
-  --color-sky-800: var(--sky-800);
-  --color-sky-900: var(--sky-900);
-  --color-sky-950: var(--sky-950);
+  --color-pink-50: #faf3f3;
+  --color-pink-100: #f5e4e4;
+  --color-pink-200: #ebc9c9;
+  --color-pink-300: #dea3a3;
+  --color-pink-400: #cc7070;
+  --color-pink-500: #bb4747;
+  --color-pink-600: #a82a2a;
+  --color-pink-700: #8f2323;
+  --color-pink-800: #761f1f;
+  --color-pink-900: #5e1c1c;
+  --color-pink-950: #350e0e;
+
+  --color-fuchsia-50: #faf3f3;
+  --color-fuchsia-100: #f5e4e4;
+  --color-fuchsia-200: #ebc9c9;
+  --color-fuchsia-300: #dea3a3;
+  --color-fuchsia-400: #cc7070;
+  --color-fuchsia-500: #bb4747;
+  --color-fuchsia-600: #a82a2a;
+  --color-fuchsia-700: #8f2323;
+  --color-fuchsia-800: #761f1f;
+  --color-fuchsia-900: #5e1c1c;
+  --color-fuchsia-950: #350e0e;
+
+  --color-green-50: #f1f7f4;
+  --color-green-100: #e0efe7;
+  --color-green-200: #bfdecf;
+  --color-green-300: #92c6ae;
+  --color-green-400: #5ba684;
+  --color-green-500: #2a8a62;
+  --color-green-600: #0d8050;
+  --color-green-700: #0b6b43;
+  --color-green-800: #0a5538;
+  --color-green-900: #09452f;
+  --color-green-950: #04271a;
+
+  --color-emerald-50: #f1f7f4;
+  --color-emerald-100: #e0efe7;
+  --color-emerald-200: #bfdecf;
+  --color-emerald-300: #92c6ae;
+  --color-emerald-400: #5ba684;
+  --color-emerald-500: #2a8a62;
+  --color-emerald-600: #0d8050;
+  --color-emerald-700: #0b6b43;
+  --color-emerald-800: #0a5538;
+  --color-emerald-900: #09452f;
+  --color-emerald-950: #04271a;
+
+  --color-lime-50: #f1f7f4;
+  --color-lime-100: #e0efe7;
+  --color-lime-200: #bfdecf;
+  --color-lime-300: #92c6ae;
+  --color-lime-400: #5ba684;
+  --color-lime-500: #2a8a62;
+  --color-lime-600: #0d8050;
+  --color-lime-700: #0b6b43;
+  --color-lime-800: #0a5538;
+  --color-lime-900: #09452f;
+  --color-lime-950: #04271a;
+
+  --color-amber-50: #faf6ef;
+  --color-amber-100: #f4ead8;
+  --color-amber-200: #e8d3ac;
+  --color-amber-300: #d8b476;
+  --color-amber-400: #c4914a;
+  --color-amber-500: #b37a30;
+  --color-amber-600: #a66321;
+  --color-amber-700: #8a501b;
+  --color-amber-800: #704119;
+  --color-amber-900: #5a3517;
+  --color-amber-950: #301b0a;
+
+  --color-orange-50: #faf6ef;
+  --color-orange-100: #f4ead8;
+  --color-orange-200: #e8d3ac;
+  --color-orange-300: #d8b476;
+  --color-orange-400: #c4914a;
+  --color-orange-500: #b37a30;
+  --color-orange-600: #a66321;
+  --color-orange-700: #8a501b;
+  --color-orange-800: #704119;
+  --color-orange-900: #5a3517;
+  --color-orange-950: #301b0a;
+
+  --color-yellow-50: #faf6ef;
+  --color-yellow-100: #f4ead8;
+  --color-yellow-200: #e8d3ac;
+  --color-yellow-300: #d8b476;
+  --color-yellow-400: #c4914a;
+  --color-yellow-500: #b37a30;
+  --color-yellow-600: #a66321;
+  --color-yellow-700: #8a501b;
+  --color-yellow-800: #704119;
+  --color-yellow-900: #5a3517;
+  --color-yellow-950: #301b0a;
 
   /** Radius Tokens - Available as Tailwind utilities */
   --radius-round: var(--rad-round);
@@ -1030,5 +1107,15 @@
   }
   [data-cockpit-shell] :where(button:has(> .material-symbols-sharp:only-child)) {
     min-width: 24px;
+  }
+}
+
+/* Respect the operator's motion setting: stop decorative pulses and entrance animations. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-pulse,
+  .animate-spin,
+  .animate-ping,
+  .animate-bounce {
+    animation: none !important;
   }
 }

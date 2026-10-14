@@ -56,7 +56,7 @@ export function DrProofCard({ proof = DEFAULT_PROOF, onVerify }: DrProofCardProp
           </div>
         </div>
 
-        <span className="px-2 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-300 text-label font-bold">
+        <span className="px-2 py-0.5 bg-green-50 text-green-800 border border-green-300 text-label font-bold">
           STATUS: {proof.verificationStatus}
         </span>
       </div>
@@ -73,7 +73,7 @@ export function DrProofCard({ proof = DEFAULT_PROOF, onVerify }: DrProofCardProp
 
         <div className="p-2.5 bg-slate-50 border border-slate-200">
           <span className="text-label text-slate-500 block uppercase">Warm-Start Cache State</span>
-          <span className="font-bold text-emerald-700 text-label block mt-0.5">
+          <span className="font-bold text-green-700 text-label block mt-0.5">
             {proof.warmStartCacheState} (READY)
           </span>
           <span className="text-label text-slate-400 block mt-0.5">Hydration RTT: 42ms</span>
