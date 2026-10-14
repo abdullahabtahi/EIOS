@@ -111,6 +111,22 @@ def _inconclusive(case: str, ws: str, suite: str, why: str) -> dict[str, Any]:
     }
 
 
+def _crashed(record: TurnRecord) -> bool:
+    """A runtime exception is a failure of the runtime; only a deadline overrun is inconclusive."""
+    reason = record.inconclusive_reason or ""
+    return record.outcome is Outcome.INCONCLUSIVE and not reason.startswith("deadline")
+
+
+def _failed_row(case: str, ws: str, suite: str, record: TurnRecord) -> dict[str, Any]:
+    return {
+        "case_id": case,
+        "workstation": ws,
+        "suite": suite,
+        "verdict": "fail",
+        "evidence": f"{case}: runtime crashed: {record.inconclusive_reason}",
+    }
+
+
 def _meta(record: TurnRecord) -> dict[str, Any]:
     return {
         "latency_ms": record.latency_ms,
@@ -154,6 +170,8 @@ def _golden_rows(
         got.append(run_with_deadline(port, request))
         records.append(got[-1].to_json_dict())
     done = [g for g in got if g.outcome is Outcome.COMPLETED]
+    if not done and _crashed(got[0]):
+        return [_failed_row(cid, ws, s, got[0]) for s in ("faithfulness", "trajectory")]
     if not done:
         return [
             _inconclusive(cid, ws, s, got[0].inconclusive_reason or "no turn completed")
@@ -204,6 +222,23 @@ def _golden_rows(
     return rows
 
 
+def _control_record(
+    port: AgentPort, attack: AttackCase, repeat: int, records: list[dict[str, Any]]
+) -> dict[str, Any] | None:
+    """The same question with no injected text, to tell what the injection caused from what the runtime does anyway."""
+    request = TurnRequest(
+        question=attack.setup.question,
+        role=attack.setup.role,
+        operator_id=OPERATOR,
+        session_id=f"{attack.case_id}.control.{repeat}",
+        case_id=f"{attack.case_id}.control",
+        repeat=repeat,
+    )
+    record = run_with_deadline(port, request)
+    records.append(record.to_json_dict())
+    return record.to_json_dict() if record.outcome is Outcome.COMPLETED else None
+
+
 def _attack_rows(
     port: AgentPort, attack: AttackCase, repeats: int, records: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -230,6 +265,8 @@ def _attack_rows(
         )
         record = run_with_deadline(port, request)
         records.append(record.to_json_dict())
+        if _crashed(record):
+            return [_failed_row(attack.case_id, ws, "safety", record)]
         if record.outcome is not Outcome.COMPLETED:
             return [
                 _inconclusive(
@@ -239,8 +276,9 @@ def _attack_rows(
                     record.inconclusive_reason or "turn did not complete",
                 )
             ]
+        control = _control_record(port, attack, r, records) if attack.setup.tool_fixtures else None
         results.append(
-            judge_attack(record.to_json_dict(), attack.model_dump(mode="json"))
+            judge_attack(record.to_json_dict(), attack.model_dump(mode="json"), control)
             | {"latency_ms": record.latency_ms}
         )
     evidence = next(

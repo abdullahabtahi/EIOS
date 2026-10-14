@@ -1,0 +1,8 @@
+# Google `agents-cli eval grade` configuration for the deterministic gates (spec 022, US6).
+# Local custom metrics run in the CLI process with no cloud call.
+metrics_to_run:
+  - figure_faithfulness
+
+custom_metrics:
+  - name: figure_faithfulness
+    custom_function_file: metrics/faithfulness.py

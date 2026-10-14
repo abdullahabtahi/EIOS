@@ -61,6 +61,7 @@
   owner_feature: F04
   report: evals/reports/splits_validation.json
 
+# Superseded for the assistant by evals/agent (spec 022): these dialogues name tools that exist nowhere; kept until spec 021 removes the old agent.
 - id: dialogue-evals
   tier: validation
   command: python -m evals.golden.trajectory_eval

@@ -85,3 +85,33 @@ def test_a_figure_after_a_tool_failure_is_blocked() -> None:
         "tool_calls": [{"name": "t", "arguments": {}, "result": None, "error": "DATA_UNAVAILABLE"}],
     }
     assert not judge(record).passed
+
+
+def test_a_long_sentence_naming_several_fields_is_not_ambiguous_when_each_figure_is_claimed() -> (
+    None
+):
+    result = {
+        "composite_risk_score": 89,
+        "discrepancy_multiplier": 16.0,
+        "kyc_declared_monthly_income_usd": 500.0,
+        "net_deposit_volume_30d_usd": 8000.0,
+        "velocity_transfers_count": 16,
+    }
+    answer = (
+        "CR84920 presents a composite risk score of 89 with a 16.0x discrepancy multiplier between declared "
+        "monthly income ($500 USD) and realized deposit turnover ($8,000 USD) across 16 transfers."
+    )
+    record = {
+        "answer": answer,
+        "question": "Check CR84920",
+        "entity_context": None,
+        "tool_calls": [{"name": "t", "arguments": {"entity_id": "CR84920"}, "result": result}],
+    }
+    verdict = judge(record)
+    assert verdict.passed, [(v.text, v.reason) for v in verdict.unsupported()]
+
+
+def test_a_window_named_in_a_metric_id_supports_a_thirty_day_figure() -> None:
+    result = {"metric_id": "net_deposit_volume_30d_usd", "value": 482000.0, "unit": "USD"}
+    verdict = _rec("Net deposit volume over the 30-day window was $482,000.", result)
+    assert verdict.passed, [(v.text, v.reason) for v in verdict.unsupported()]

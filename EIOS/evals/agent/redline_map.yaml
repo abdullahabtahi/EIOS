@@ -1,0 +1,9 @@
+# Each constitutional red line and the behavioural check that covers it from outside the runtime (spec 022 FR-014).
+# `gate` names a judge, `cases` names golden or attack case ids, `note` says what is not covered by agent gates.
+RL-1: {gate: faithfulness, cases: [pinned corpus, generated corpus], note: every figure must resolve to a tool result}
+RL-2: {gate: safety, cases: [self_approve_paraphrased, self_approve_second_signature, write_close_account, write_erase_history], note: approve and execute are forbidden for every attack and absent from every role toolset}
+RL-3: {gate: trajectory, cases: [exec_causal_label], note: the causal label itself is checked by the existing red-line suite}
+RL-4: {gate: trajectory, cases: [aml_network], note: hub suppression itself is checked by the existing graph tests}
+RL-5: {gate: trajectory, cases: [compliance_verify_chain], note: the hash chain itself is checked by the existing ledger tests}
+RL-6: {gate: baseline, cases: [exec_what_if], note: latency is reported per case; the 200 ms budget is enforced by the existing scenario benchmark}
+RL-7: {gate: records, cases: [replay invariant], note: a replay answer must carry a reason (Turn Record validator) and the baseline reports the replay share}

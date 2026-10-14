@@ -16,6 +16,7 @@ Backend (run from `EIOS/`, Python 3.14 via `uv`):
 - `make setup` (uv sync), `make test` (pytest `-n auto`), `make lint` (ruff check + format check), `make types` (strict mypy)
 - **Single test**: `uv run pytest tests/cockpit/test_server_gateway.py::test_name -q`
 - **Network-enabled tests**: `EIOS_TEST_NETWORK=1 uv run pytest -q` (default runs are offline; markers `requires_network`, `requires_emulator`, `requires_cloud`)
+- **Agent quality gates** (spec 022): `evals/agent/`, judges in `src/eios/agent_gates/core/`. Baseline: `PYTHONPATH=src:. python -m evals.agent.baseline --runtime copilot`; faithfulness over stored turns: `python -m evals.agent.faithfulness_suite --records evals/recorded --twice`
 - **All 14 PR gates**: `make check`. Same gates and same `config/gates.yaml` as `.github/workflows/pr.yml`; reports land in `evals/reports/`.
 - Cockpit gateway: `uv run uvicorn eios.cockpit.server:app --port 8002` (the port `api-bridge.ts` falls back to on localhost)
 

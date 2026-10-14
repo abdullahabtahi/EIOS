@@ -139,7 +139,9 @@ def _describes_better(fig: Figure, rival: Fact, best: Fact) -> bool:
     return rc > bc or (rc == bc and _overlap(fig, rival) > _overlap(fig, best))
 
 
-def _labelled(fig: Figure, hits: list[Fact], facts: Sequence[Fact]) -> FigureVerdict:
+def _labelled(
+    fig: Figure, hits: list[Fact], facts: Sequence[Fact], others: Sequence[Figure]
+) -> FigureVerdict:
     """Value, unit and label agree for at least one fact; check period, then rival readings.
 
     Ambiguity fails closed: if the clause describes some OTHER field with a different value better than it
@@ -153,7 +155,12 @@ def _labelled(fig: Figure, hits: list[Fact], facts: Sequence[Fact]) -> FigureVer
     rivals = [
         f
         for f in facts
-        if not _value_matches(fig, f) and _unit_ok(fig, f) and _describes_better(fig, f, best)
+        if not _value_matches(fig, f)
+        and _unit_ok(fig, f)
+        and _describes_better(fig, f, best)
+        and not any(
+            _value_matches(o, f) for o in others
+        )  # another figure already claims this field
     ]
     if rivals:
         return _verdict(fig, False, "ambiguous", cands=[best, *rivals])
@@ -179,14 +186,16 @@ def _window_supported(fig: Figure, facts: Sequence[Fact]) -> bool:
     )
 
 
-def _judge_figure(fig: Figure, facts: Sequence[Fact]) -> FigureVerdict:
+def _judge_figure(
+    fig: Figure, facts: Sequence[Fact], others: Sequence[Figure] = ()
+) -> FigureVerdict:
     if _window_supported(fig, facts):
         return _verdict(fig, True, "window")
     value_hits = [f for f in facts if _value_matches(fig, f)]
     unit_hits = [f for f in value_hits if _unit_ok(fig, f)]
     label_hits = [f for f in unit_hits if _overlap(fig, f) > 0]
     if label_hits:
-        return _labelled(fig, label_hits, facts)
+        return _labelled(fig, label_hits, facts, [o for o in others if o is not fig])
     if value_hits and not unit_hits:
         return _verdict(fig, False, "wrong_unit", cands=value_hits)
     if unit_hits:
@@ -249,7 +258,7 @@ def judge(
     judged = (
         _judge_bound(figures, facts, bindings)
         if bindings
-        else [_judge_figure(f, facts) for f in figures]
+        else [_judge_figure(f, facts, figures) for f in figures]
     )
     verdicts = [
         FigureVerdict(s.text, s.start, s.end, "exempt", f"exempt:{s.category}") for s in exempt

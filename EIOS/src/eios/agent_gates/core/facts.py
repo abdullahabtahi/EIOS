@@ -83,7 +83,8 @@ def _make_fact(
     ]
     label_tokens = {t for part in parts for t in content_tokens(part)}
     label_tokens |= {t for label in labels for t in content_tokens(label)} | set(alias_words)
-    windows = {int(m.group(1)) for t in tokens if (m := _WINDOW.match(t))}
+    named = [*tokens, *(t for label in labels for t in raw_tokens(label))]
+    windows = {int(m.group(1)) for t in named if (m := _WINDOW.match(t))}
     return Fact(
         call_index=call_index,
         path=f"{call_index}." + ".".join(parts),
