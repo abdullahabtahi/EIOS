@@ -20,13 +20,13 @@ import { useAuth } from '@/lib/auth/auth-context';
 const ENV_LABEL = process.env.NEXT_PUBLIC_EIOS_ENV;
 
 const TONE_DOT: Record<PipelineTone, string> = {
-  ok: 'bg-emerald-400',
+  ok: 'bg-green-400',
   warn: 'bg-amber-400',
   bad: 'bg-red-400',
   neutral: 'bg-slate-400',
 };
 const TONE_TEXT: Record<PipelineTone, string> = {
-  ok: 'text-emerald-400',
+  ok: 'text-green-400',
   warn: 'text-amber-300',
   bad: 'text-red-300',
   neutral: 'text-slate-300',

@@ -69,7 +69,7 @@ export function ProposalCard({ proposal, state, onStage }: ProposalCardProps) {
           disabled={busy || staged}
           onClick={() => onStage(proposal)}
           className={`px-3 py-1.5 font-medium text-xs rounded-none transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer ${
-            staged ? 'bg-emerald-700 text-white cursor-default' : 'bg-blue-700 hover:bg-blue-800 text-white disabled:opacity-60'
+            staged ? 'bg-green-700 text-white cursor-default' : 'bg-blue-700 hover:bg-blue-800 text-white disabled:opacity-60'
           }`}
         >
           <span className="material-symbols-sharp text-sm" aria-hidden="true">

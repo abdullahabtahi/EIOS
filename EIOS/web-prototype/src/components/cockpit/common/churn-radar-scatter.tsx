@@ -6,6 +6,7 @@
  * Deals and the cohort playbook stage through the intent hub; nothing on this chart is filled in client-side.
  */
 
+import { visibleLabelIds } from './radar-labels';
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
 import { PartnerChurnItem, WhatIfCausalResponse } from '../state/cockpit-types';
@@ -196,6 +197,22 @@ export function ChurnRadarScatter() {
     const latAmNodes = displayedPartners.filter((p) => cohort?.partnerIds.includes(p.partnerId));
     const latAmCoords = latAmNodes.map((p) => getCoordinates(p, svgWidth, svgHeight));
 
+    // Label only what fits: the selected and hovered node always, then by value at risk.
+    // Overlapping labels stay hidden until the node is hovered.
+    const labelIds = visibleLabelIds(
+      displayedPartners.map((p) => {
+        const { cx, cy } = getCoordinates(p, svgWidth, svgHeight);
+        return { id: p.partnerId, cx, cy, side: p.pChurn > 0.8 ? 'end' : 'start', priority: p.valueAtRiskUsd } as const;
+      }),
+      new Set([selectedPartner.partnerId, ...(hoveredPartner ? [hoveredPartner.partnerId] : [])]),
+      [
+        { x0: midX + 10, y0: topPad + 2, x1: midX + 10 + 34 * 6.2, y1: topPad + 18 },
+        { x0: leftPad + 10, y0: topPad + 2, x1: leftPad + 10 + 26 * 6.2, y1: topPad + 18 },
+        { x0: midX + 10, y0: bottomPad - 20, x1: midX + 10 + 21 * 6.2, y1: bottomPad - 4 },
+        { x0: leftPad + 10, y0: bottomPad - 20, x1: leftPad + 10 + 18 * 6.2, y1: bottomPad - 4 },
+      ],
+    );
+
     return (
       <svg className="w-full h-full" viewBox={`0 0 ${svgWidth} ${svgHeight}`}>
         <defs>
@@ -203,8 +220,8 @@ export function ChurnRadarScatter() {
             <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(100, 116, 139, 0.08)" strokeWidth="1" />
           </pattern>
           <linearGradient id="trajectoryGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#E11D48" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#059669" stopOpacity="0.9" />
+            <stop offset="0%" stopColor="#94A3B8" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#106ba3" stopOpacity="0.9" />
           </linearGradient>
         </defs>
 
@@ -212,9 +229,9 @@ export function ChurnRadarScatter() {
         <rect width={svgWidth} height={svgHeight} fill="url(#radarGridLight)" />
 
         {/* Quadrant Shaded Zones */}
-        <rect x={midX} y={topPad} width={rightPad - midX} height={midY - topPad} fill="rgba(225, 29, 72, 0.04)" />
-        <rect x={leftPad} y={topPad} width={midX - leftPad} height={midY - topPad} fill="rgba(16, 185, 129, 0.03)" />
-        <rect x={midX} y={midY} width={rightPad - midX} height={bottomPad - midY} fill="rgba(217, 119, 6, 0.03)" />
+        <rect x={midX} y={topPad} width={rightPad - midX} height={midY - topPad} fill="rgba(168, 42, 42, 0.04)" />
+        <rect x={leftPad} y={topPad} width={midX - leftPad} height={midY - topPad} fill="rgba(100, 116, 139, 0.02)" />
+        <rect x={midX} y={midY} width={rightPad - midX} height={bottomPad - midY} fill="rgba(100, 116, 139, 0.02)" />
         <rect x={leftPad} y={midY} width={midX - leftPad} height={bottomPad - midY} fill="rgba(100, 116, 139, 0.02)" />
 
         {/* Quadrant Divider Axis Lines */}
@@ -222,13 +239,13 @@ export function ChurnRadarScatter() {
         <line x1={leftPad - 10} y1={midY} x2={rightPad + 10} y2={midY} stroke="#CBD5E1" strokeWidth="1.5" strokeDasharray="4,4" />
 
         {/* Quadrant Semantic Labels */}
-        <text x={midX + 10} y={topPad + 14} fill="#BE123C" fontSize="10" fontFamily="monospace" fontWeight="bold">
+        <text x={midX + 10} y={topPad + 14} fill="#8f2323" fontSize="10" fontFamily="monospace" fontWeight="bold">
           HIGH VALUE / CRITICAL CHURN HAZARD
         </text>
-        <text x={leftPad + 10} y={topPad + 14} fill="#047857" fontSize="10" fontFamily="monospace" fontWeight="bold">
+        <text x={leftPad + 10} y={topPad + 14} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
           HIGH VALUE / STABLE GIANTS
         </text>
-        <text x={midX + 10} y={bottomPad - 8} fill="#B45309" fontSize="10" fontFamily="monospace" fontWeight="bold">
+        <text x={midX + 10} y={bottomPad - 8} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
           LOW VALUE / HIGH CHURN
         </text>
         <text x={leftPad + 10} y={bottomPad - 8} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
@@ -236,14 +253,14 @@ export function ChurnRadarScatter() {
         </text>
 
         {/* Coordinate Axis Reference Ticks */}
-        <g fontSize="10" fontFamily="monospace" fill="#94A3B8">
-          <text x={midX} y={midY + 12} textAnchor="middle">
+        <g fontSize="10" fontFamily="monospace" fill="#64748B">
+          <text x={midX} y={bottomPad + 14} textAnchor="middle">
             {axisDimension === 'P_CHURN' ? '0.50' : axisDimension === 'VELOCITY' ? '-50%' : '90d'}
           </text>
-          <text x={leftPad} y={midY + 12} textAnchor="middle">
+          <text x={leftPad} y={bottomPad + 14} textAnchor="middle">
             {axisDimension === 'P_CHURN' ? '0.00' : axisDimension === 'VELOCITY' ? '0%' : '180d'}
           </text>
-          <text x={rightPad} y={midY + 12} textAnchor="middle">
+          <text x={rightPad} y={bottomPad + 14} textAnchor="middle">
             {axisDimension === 'P_CHURN' ? '1.00' : axisDimension === 'VELOCITY' ? '-100%' : '0d'}
           </text>
           <text x={leftPad - 6} y={topPad + 4} textAnchor="end">{compactUsd(valueScale.max)}</text>
@@ -272,12 +289,12 @@ export function ChurnRadarScatter() {
                 rx={Math.max(rx, 50)}
                 ry={Math.max(ry, 35)}
                 fill="rgba(225, 29, 72, 0.05)"
-                stroke="#E11D48"
+                stroke="#a82a2a"
                 strokeWidth="1.5"
                 strokeDasharray="4,4"
               />
-              <rect x={cx - 110} y={minY - 14} width="220" height="15" fill="#FFF1F2" stroke="#FDA4AF" strokeWidth="0.8" rx="1" />
-              <text x={cx} y={minY - 4} fill="#9F1239" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+              <rect x={cx - 110} y={minY - 14} width="220" height="15" fill="#faf3f3" stroke="#ebc9c9" strokeWidth="0.8" rx="1" />
+              <text x={cx} y={minY - 4} fill="#761f1f" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
                 {cohort ? `${cohort.region} cohort: ${cohort.partnerCount} partners, ${compactUsd(cohort.valueAtRiskUsd)} volume` : ''}
               </text>
             </g>
@@ -308,7 +325,7 @@ export function ChurnRadarScatter() {
               <polyline
                 points={`${coord30.cx},${coord30.cy} ${coord14.cx},${coord14.cy} ${currentCoord.cx},${currentCoord.cy}`}
                 fill="none"
-                stroke={isSelected ? '#2563EB' : '#94A3B8'}
+                stroke={isSelected ? '#106ba3' : '#94A3B8'}
                 strokeWidth={isSelected ? '2' : '1.2'}
                 strokeDasharray="3,3"
               />
@@ -320,13 +337,13 @@ export function ChurnRadarScatter() {
               </text>
 
               {/* T-14d Mid-Point Breadcrumb */}
-              <circle cx={coord14.cx} cy={coord14.cy} r="3" fill="#D97706" />
-              <text x={coord14.cx} y={coord14.cy - 5} fill="#D97706" fontSize="10" fontFamily="monospace" textAnchor="middle">
+              <circle cx={coord14.cx} cy={coord14.cy} r="3" fill="#475569" />
+              <text x={coord14.cx} y={coord14.cy - 5} fill="#475569" fontSize="10" fontFamily="monospace" textAnchor="middle">
                 T-14d
               </text>
 
               {/* Directional Velocity Vector Chevron */}
-              <circle cx={currentCoord.cx} cy={currentCoord.cy} r="12" fill="none" stroke="#E11D48" strokeWidth="0.8" opacity="0.4" />
+              <circle cx={currentCoord.cx} cy={currentCoord.cy} r="12" fill="none" stroke="#a82a2a" strokeWidth="0.8" opacity="0.4" />
             </g>
           );
         })}
@@ -336,8 +353,8 @@ export function ChurnRadarScatter() {
           const { cx, cy } = getCoordinates(activeFocusPartner, svgWidth, svgHeight);
           return (
             <g pointerEvents="none">
-              <line x1={cx} y1={topPad} x2={cx} y2={bottomPad + 5} stroke="#2563EB" strokeWidth="1" strokeDasharray="2,2" opacity="0.6" />
-              <line x1={leftPad - 10} y1={cy} x2={rightPad} y2={cy} stroke="#2563EB" strokeWidth="1" strokeDasharray="2,2" opacity="0.6" />
+              <line x1={cx} y1={topPad} x2={cx} y2={bottomPad + 5} stroke="#106ba3" strokeWidth="1" strokeDasharray="2,2" opacity="0.6" />
+              <line x1={leftPad - 10} y1={cy} x2={rightPad} y2={cy} stroke="#106ba3" strokeWidth="1" strokeDasharray="2,2" opacity="0.6" />
               {/* Coordinate indicator pills */}
               <rect x={cx - 32} y={bottomPad + 5} width="64" height="13" fill="#0F172A" rx="1" />
               <text x={cx} y={bottomPad + 14} fill="#FFFFFF" fontSize="10" fontFamily="monospace" textAnchor="middle">
@@ -370,9 +387,9 @@ export function ChurnRadarScatter() {
                 strokeWidth="2.5"
                 strokeDasharray="3,3"
               />
-              <circle cx={sim.simCx} cy={base.cy} r={10} fill="rgba(5, 150, 105, 0.15)" stroke="#059669" strokeWidth="1.8" />
-              <circle cx={sim.simCx} cy={base.cy} r={4} fill="#059669" />
-              <rect x={sim.simCx - 36} y={base.cy - 20} width="72" height="13" fill="#047857" rx="1" />
+              <circle cx={sim.simCx} cy={base.cy} r={10} fill="rgba(14, 92, 138, 0.15)" stroke="#0e5c8a" strokeWidth="1.8" />
+              <circle cx={sim.simCx} cy={base.cy} r={4} fill="#0e5c8a" />
+              <rect x={sim.simCx - 36} y={base.cy - 20} width="72" height="13" fill="#0e5c8a" rx="1" />
               <text x={sim.simCx} y={base.cy - 11} fill="#FFFFFF" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
                 P(sim) = {sim.simPChurn.toFixed(2)}
               </text>
@@ -399,6 +416,7 @@ export function ChurnRadarScatter() {
               }}
               data-testid={`radar-node-${p.partnerId}`}
             >
+              <title>{`${p.name} (${p.partnerId}) · P(churn) ${p.pChurn.toFixed(2)} · value at risk $${Math.round(p.valueAtRiskUsd / 1000)}K`}</title>
               {/* PELT Decay Pulse Halo */}
               {p.changePointDetected && (
                 <circle
@@ -406,7 +424,7 @@ export function ChurnRadarScatter() {
                   cy={cy}
                   r={isSelected ? 16 : 11}
                   fill="none"
-                  stroke={isCritical ? '#E11D48' : '#D97706'}
+                  stroke={isCritical ? '#a82a2a' : '#64748B'}
                   strokeWidth="1.2"
                   strokeDasharray="3,3"
                   opacity="0.75"
@@ -420,7 +438,7 @@ export function ChurnRadarScatter() {
                 cy={cy}
                 r={isSelected ? 8.5 : 6}
                 fill="#FFFFFF"
-                stroke={isSelected ? '#2563EB' : isCritical ? '#E11D48' : '#059669'}
+                stroke={isSelected ? '#106ba3' : isCritical ? '#a82a2a' : '#64748B'}
                 strokeWidth={isSelected ? 2.5 : 1.8}
                 className="transition-all duration-150"
               />
@@ -430,27 +448,39 @@ export function ChurnRadarScatter() {
                 cx={cx}
                 cy={cy}
                 r={isSelected ? 4.5 : 3}
-                fill={isSelected ? '#2563EB' : isCritical ? '#E11D48' : '#059669'}
+                fill={isSelected ? '#106ba3' : isCritical ? '#a82a2a' : '#64748B'}
               />
 
-              {/* Monospace Node Label */}
-              <text
-                x={cx + (p.pChurn > 0.8 ? -10 : 10)}
-                y={cy + 3.5}
-                fill={isSelected ? '#1D4ED8' : '#0F172A'}
-                fontSize={isSelected || isHovered ? '9.5' : '8.5'}
-                fontFamily="monospace"
-                fontWeight={isSelected || isHovered ? 'bold' : '600'}
-                textAnchor={p.pChurn > 0.8 ? 'end' : 'start'}
-                stroke="#F8FAFC"
-                strokeWidth="3"
-                paintOrder="stroke fill"
-              >
-                {p.partnerId}
-              </text>
             </g>
           );
         })}
+
+        {/* Node labels: drawn above every node so a neighbouring marker never covers one */}
+        {displayedPartners
+          .filter((p) => labelIds.has(p.partnerId))
+          .map((p) => {
+            const { cx, cy } = getCoordinates(p, svgWidth, svgHeight);
+            const isSelected = selectedPartner.partnerId === p.partnerId;
+            const isHovered = hoveredPartner?.partnerId === p.partnerId;
+            return (
+              <g key={`label-${p.partnerId}`} pointerEvents="none">
+                <text
+                    x={cx + (p.pChurn > 0.8 ? -10 : 10)}
+                    y={cy + 3.5}
+                    fill={isSelected ? '#0e5c8a' : '#0F172A'}
+                    fontSize={isSelected || isHovered ? '9.5' : '8.5'}
+                    fontFamily="monospace"
+                    fontWeight={isSelected || isHovered ? 'bold' : '600'}
+                    textAnchor={p.pChurn > 0.8 ? 'end' : 'start'}
+                    stroke="#F8FAFC"
+                    strokeWidth="3"
+                    paintOrder="stroke fill"
+                  >
+                    {p.partnerId}
+                  </text>
+              </g>
+            );
+          })}
 
         {/* Dynamic Axis Description */}
         <text x={svgWidth / 2} y={svgHeight - 10} fill="#475569" fontSize="10" fontFamily="monospace" fontWeight="600" textAnchor="middle">
@@ -496,7 +526,7 @@ export function ChurnRadarScatter() {
         {/* Studio Top Control Ribbon */}
         <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-xs shrink-0">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-sharp text-lg text-rose-600">radar</span>
+            <span className="material-symbols-sharp text-lg text-red-600">radar</span>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900">
@@ -505,7 +535,7 @@ export function ChurnRadarScatter() {
                 <span className="px-1.5 py-0.2 bg-slate-100 border border-slate-300 text-slate-700 text-label font-mono font-bold">
                   INSTITUTIONAL STUDIO GRADE
                 </span>
-                <span className="px-1.5 py-0.2 bg-emerald-50 border border-emerald-200 text-emerald-800 text-label font-mono font-bold">
+                <span className="px-1.5 py-0.2 bg-green-50 border border-green-200 text-green-800 text-label font-mono font-bold">
                   TLP:AMBER • KMS P-256
                 </span>
               </div>
@@ -531,7 +561,7 @@ export function ChurnRadarScatter() {
                 type="button"
                 onClick={() => setViewMode('COHORT')}
                 className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                  viewMode === 'COHORT' ? 'bg-rose-50 text-rose-800 border border-rose-200' : 'text-slate-500 hover:text-slate-900'
+                  viewMode === 'COHORT' ? 'bg-red-50 text-red-800 border border-red-200' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 COHORTS
@@ -553,7 +583,7 @@ export function ChurnRadarScatter() {
                 type="button"
                 onClick={() => setFilterMode('CRITICAL')}
                 className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                  filterMode === 'CRITICAL' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'text-slate-500 hover:text-slate-900'
+                  filterMode === 'CRITICAL' ? 'bg-red-50 text-red-700 border border-red-200' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 CRITICAL ({partners.filter((p) => p.pChurn >= 0.5).length})
@@ -562,7 +592,7 @@ export function ChurnRadarScatter() {
                 type="button"
                 onClick={() => setFilterMode('STABLE')}
                 className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                  filterMode === 'STABLE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:text-slate-900'
+                  filterMode === 'STABLE' ? 'bg-green-50 text-green-700 border border-green-200' : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
                 STABLE ({partners.filter((p) => p.pChurn < 0.5).length})
@@ -650,8 +680,8 @@ export function ChurnRadarScatter() {
     <div className="bg-white border border-slate-200 p-4 shadow-xs space-y-4 relative select-none">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="absolute top-3 right-3 z-30 text-xs font-mono px-3 py-1.5 shadow-md flex items-center gap-2 bg-emerald-50 border border-emerald-500 text-emerald-800 animate-in fade-in slide-in-from-top-1">
-          <span className="material-symbols-sharp text-sm text-emerald-600">verified</span>
+        <div className="absolute top-3 right-3 z-30 text-xs font-mono px-3 py-1.5 shadow-md flex items-center gap-2 bg-green-50 border border-green-500 text-green-800 animate-in fade-in slide-in-from-top-1">
+          <span className="material-symbols-sharp text-sm text-green-600">verified</span>
           <span>{toastMessage}</span>
         </div>
       )}
@@ -660,7 +690,7 @@ export function ChurnRadarScatter() {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="material-symbols-sharp text-base text-rose-600">radar</span>
+            <span className="material-symbols-sharp text-base text-red-600">radar</span>
             <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
               Partner Churn Hazard Radar: P(churn) × Value at Risk (VaR)
             </h3>
@@ -686,7 +716,7 @@ export function ChurnRadarScatter() {
               type="button"
               onClick={() => setViewMode('COHORT')}
               className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                viewMode === 'COHORT' ? 'bg-rose-50 text-rose-800 border border-rose-200' : 'text-slate-500 hover:text-slate-900'
+                viewMode === 'COHORT' ? 'bg-red-50 text-red-800 border border-red-200' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               COHORTS
@@ -708,7 +738,7 @@ export function ChurnRadarScatter() {
               type="button"
               onClick={() => setFilterMode('CRITICAL')}
               className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                filterMode === 'CRITICAL' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'text-slate-500 hover:text-slate-900'
+                filterMode === 'CRITICAL' ? 'bg-red-50 text-red-700 border border-red-200' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               CRITICAL ({partners.filter((p) => p.pChurn >= 0.5).length})
@@ -717,7 +747,7 @@ export function ChurnRadarScatter() {
               type="button"
               onClick={() => setFilterMode('STABLE')}
               className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                filterMode === 'STABLE' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:text-slate-900'
+                filterMode === 'STABLE' ? 'bg-green-50 text-green-700 border border-green-200' : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               STABLE ({partners.filter((p) => p.pChurn < 0.5).length})
@@ -790,7 +820,7 @@ export function ChurnRadarScatter() {
                   type="button"
                   disabled={cohortStaging.busy}
                   onClick={handleStageCohortBatch}
-                  className="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white font-mono font-bold text-xs rounded-xs cursor-pointer transition-colors shadow-xs shrink-0"
+                  className="px-3 py-1.5 bg-red-700 hover:bg-red-800 text-white font-mono font-bold text-xs rounded-xs cursor-pointer transition-colors shadow-xs shrink-0"
                 >
                   Stage a retention playbook for the {cohort.region} cohort
                 </button>
@@ -816,7 +846,7 @@ export function ChurnRadarScatter() {
           </div>
           <div>
             <span className="text-slate-500 text-label uppercase block">Critical At-Risk</span>
-            <span className="font-bold text-rose-700">{partners.filter((p) => p.pChurn >= 0.5).length} Partners</span>
+            <span className="font-bold text-red-700">{partners.filter((p) => p.pChurn >= 0.5).length} Partners</span>
           </div>
           <div>
             <span className="text-slate-500 text-label uppercase block">Total Portfolio VaR</span>
@@ -829,7 +859,7 @@ export function ChurnRadarScatter() {
           <span className="px-2 py-0.5 bg-white border border-slate-300 font-bold text-slate-900">
             {selectedPartner.name} ({selectedPartner.partnerId})
           </span>
-          <span className={`px-1.5 py-0.5 text-label font-bold border ${selectedPartner.pChurn >= 0.5 ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'}`}>
+          <span className={`px-1.5 py-0.5 text-label font-bold border ${selectedPartner.pChurn >= 0.5 ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}`}>
             P(churn)={(selectedPartner.pChurn * 100).toFixed(0)}%
           </span>
         </div>

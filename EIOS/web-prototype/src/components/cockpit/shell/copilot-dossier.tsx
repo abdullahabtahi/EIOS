@@ -16,6 +16,12 @@ import { FallbackReplayBadge } from '../common/fallback-replay-badge';
 import type { DossierSection, MetricProvenance } from '../state/cockpit-types';
 import { MOCK_PARTNERS } from '../state/fixtures';
 
+/** ' · 14:57 UTC' for a valid ISO timestamp, '' otherwise (never invent a time). */
+function asOfClock(iso: string | undefined): string {
+  const ms = iso ? Date.parse(iso) : Number.NaN;
+  return Number.isNaN(ms) ? '' : ` · ${new Date(ms).toISOString().slice(11, 16)} UTC`;
+}
+
 export function CopilotDossier() {
   const { state, stageAction } = useCockpit();
   const staging = useStageRequest();
@@ -68,9 +74,12 @@ export function CopilotDossier() {
           {dossier.isCachedSnapshot ? (
             <FallbackReplayBadge timestamp={dossier.asOfTimestamp} reason={dossier.replayReason} size="sm" />
           ) : (
-            <span className="text-label font-mono text-cx-ok bg-cx-ok-bg px-1.5 py-0.5 border border-cx-ok-line flex items-center gap-1 whitespace-nowrap">
+            <span
+              title="Served by the gateway, not a cached replay. Each figure carries its own verification in its popover."
+              className="text-label font-mono text-cx-ok px-1.5 py-0.5 border border-cx-line flex items-center gap-1 whitespace-nowrap"
+            >
               <span className="size-1.5 bg-cx-ok-solid inline-block" />
-              Verified Synchronized
+              Synchronized{asOfClock(dossier.asOfTimestamp)}
             </span>
           )}
         </div>
@@ -338,8 +347,8 @@ function PartnerRetentionDossierView({ dossier }: { dossier: any }) {
     >
       {/* Toast Feedback */}
       {toastMessage && (
-        <div className="absolute top-3 right-3 z-30 text-label font-mono px-3 py-1.5 shadow-md flex items-center gap-1.5 bg-emerald-50 border border-emerald-500 text-emerald-800 animate-in fade-in">
-          <span className="material-symbols-sharp text-sm text-emerald-600">verified</span>
+        <div className="absolute top-3 right-3 z-30 text-label font-mono px-3 py-1.5 shadow-md flex items-center gap-1.5 bg-green-50 border border-green-500 text-green-800 animate-in fade-in">
+          <span className="material-symbols-sharp text-sm text-green-600">verified</span>
           <span>{toastMessage}</span>
         </div>
       )}
@@ -359,14 +368,14 @@ function PartnerRetentionDossierView({ dossier }: { dossier: any }) {
           </div>
 
           <div className="flex items-center gap-1.5 flex-wrap whitespace-nowrap">
-            <span className="px-1.5 py-0.2 bg-blue-50 text-blue-800 text-label font-mono font-bold border border-blue-200 flex items-center gap-1">
-              <span className="material-symbols-sharp text-xs text-blue-600">psychology</span>
+            <span className="px-1.5 py-0.2 text-cx-ink-soft text-label font-mono border border-cx-line flex items-center gap-1">
+              <span className="material-symbols-sharp text-xs text-cx-muted">psychology</span>
               AIP Logic • Gemini 3.8 Flash (Dual-Verified)
             </span>
-            <span className="px-1.5 py-0.2 bg-slate-100 text-slate-700 text-label font-mono font-bold border border-slate-200">
+            <span className="px-1.5 py-0.2 text-cx-ink-soft text-label font-mono border border-cx-line">
               {partner.tier}
             </span>
-            <span className="text-label font-mono text-cx-ok bg-cx-ok-bg px-1.5 py-0.5 border border-cx-ok-line flex items-center gap-1 whitespace-nowrap">
+            <span className="text-label font-mono text-cx-ok px-1.5 py-0.5 border border-cx-line flex items-center gap-1 whitespace-nowrap">
               <span className="size-1.5 bg-cx-ok-solid inline-block" />
               P-256 Verified
             </span>
@@ -395,7 +404,7 @@ function PartnerRetentionDossierView({ dossier }: { dossier: any }) {
         <div className="grid grid-cols-2 gap-2 text-xs font-mono">
           <div className="p-2.5 bg-slate-50 border border-slate-200">
             <span className="text-label text-slate-500 uppercase block">Survival Hazard P(churn)</span>
-            <div className={`text-base font-bold mt-0.5 ${partner.pChurn >= 0.5 ? 'text-rose-700' : 'text-emerald-700'}`}>
+            <div className={`text-base font-bold mt-0.5 ${partner.pChurn >= 0.5 ? 'text-red-700' : 'text-green-700'}`}>
               {(partner.pChurn * 100).toFixed(1)}%
             </div>
             <span className="text-label text-slate-500 block">DoWhy SCM calibrated</span>
@@ -411,7 +420,7 @@ function PartnerRetentionDossierView({ dossier }: { dossier: any }) {
 
           <div className="p-2.5 bg-slate-50 border border-slate-200">
             <span className="text-label text-slate-500 uppercase block">Login Decay (14D)</span>
-            <div className={`text-sm font-bold mt-0.5 ${(partner.loginDecayPct ?? 0) < -20 ? 'text-rose-700' : 'text-slate-700'}`}>
+            <div className={`text-sm font-bold mt-0.5 ${(partner.loginDecayPct ?? 0) < -20 ? 'text-red-700' : 'text-slate-700'}`}>
               {partner.loginDecayPct ?? 0}%
             </div>
             <span className="text-label text-slate-500 block">PELT change-point</span>
@@ -446,17 +455,17 @@ function PartnerRetentionDossierView({ dossier }: { dossier: any }) {
 
           <div className="pt-2 border-t border-slate-200 flex flex-wrap gap-1.5 text-label font-mono">
             {partner.competitorPoaching !== 'None' && (
-              <span className="px-2 py-0.5 bg-rose-50 text-rose-800 border border-rose-200 font-semibold">
+              <span className="px-2 py-0.5 bg-cx-sub text-cx-ink-soft border border-cx-line font-semibold">
                 Poaching: {partner.competitorPoaching}
               </span>
             )}
             {(partner.supportTicketCount ?? 0) > 0 && (
-              <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 font-semibold">
+              <span className="px-2 py-0.5 bg-cx-sub text-cx-ink-soft border border-cx-line font-semibold">
                 {partner.supportTicketCount} Support Tickets
               </span>
             )}
             {partner.changePointDetected && (
-              <span className="px-2 py-0.5 bg-blue-50 text-blue-800 border border-blue-200 font-semibold">
+              <span className="px-2 py-0.5 bg-cx-sub text-cx-ink-soft border border-cx-line font-semibold">
                 Change-Point Detected
               </span>
             )}
@@ -541,7 +550,7 @@ function PartnerRetentionDossierView({ dossier }: { dossier: any }) {
             onClick={handleStageGovernedAction}
             className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white font-mono font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-xs"
           >
-            <span className="material-symbols-sharp text-sm text-emerald-400">playlist_add</span>
+            <span className="material-symbols-sharp text-sm text-green-400">playlist_add</span>
             <span>Stage Action to Governed Shelf (Cmd+Enter)</span>
           </button>
         </section>

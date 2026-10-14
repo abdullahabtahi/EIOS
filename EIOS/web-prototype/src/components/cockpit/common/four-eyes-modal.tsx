@@ -50,7 +50,7 @@ function FourEyesForm({ action, operatorId, onClose, onApproved }: FourEyesFormP
             <p className="text-label text-slate-400 mt-0.5">State-change gate</p>
           </div>
         </div>
-        <span className="px-2 py-0.5 bg-rose-950 border border-rose-500 text-rose-300 font-mono text-label font-bold">
+        <span className="px-2 py-0.5 bg-red-950 border border-red-500 text-red-300 font-mono text-label font-bold">
           {action.severity} SEVERITY
         </span>
       </div>
@@ -98,8 +98,8 @@ function FourEyesForm({ action, operatorId, onClose, onApproved }: FourEyesFormP
         </div>
 
         {authError && (
-          <div role="alert" className="p-2 bg-rose-50 border border-rose-300 text-rose-800 text-xs flex items-center gap-1.5 font-medium">
-            <span className="material-symbols-sharp text-sm text-rose-600">error</span>
+          <div role="alert" className="p-2 bg-red-50 border border-red-300 text-red-800 text-xs flex items-center gap-1.5 font-medium">
+            <span className="material-symbols-sharp text-sm text-red-600">error</span>
             {authError}
           </div>
         )}

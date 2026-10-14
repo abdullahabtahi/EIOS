@@ -241,7 +241,7 @@ export function KineticCanvas({ onCollapse }: { onCollapse?: () => void } = {}) 
               className="h-7 shrink-0 px-2 bg-cx-ink hover:bg-cx-ink-hover text-white text-label font-mono font-medium flex items-center gap-1.5 cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-cx-accent focus-visible:ring-offset-1"
               title="Submit investigator discrepancy feedback to the Active Learning Flywheel"
             >
-              <span className="material-symbols-sharp text-sm text-cx-warn-solid">psychology_alt</span>
+              <span className="material-symbols-sharp text-sm text-blue-400">psychology_alt</span>
               <span className="hidden @[700px]:inline">Flywheel Feedback</span>
             </button>
           </div>

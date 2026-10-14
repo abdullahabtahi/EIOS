@@ -13,8 +13,8 @@ import type { CopilotQueryResponse } from '../state/cockpit-types';
 type Tone = 'ok' | 'warn' | 'bad';
 
 const TONE_BOX: Record<Tone, string> = {
-  ok: 'bg-cx-ok-bg border-cx-ok-line text-cx-ok',
-  warn: 'bg-cx-warn-bg border-cx-warn-line text-cx-warn',
+  ok: 'bg-white border-cx-line text-cx-ok',
+  warn: 'bg-white border-cx-line text-cx-warn',
   bad: 'bg-cx-bad-bg border-cx-bad-line text-cx-bad',
 };
 

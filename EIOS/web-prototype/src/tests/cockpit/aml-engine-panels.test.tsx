@@ -61,7 +61,7 @@ describe('AML engine panels read the selected case, never a sample', () => {
     expect(screen.getByText('One-Screen Evidence Dossier: CR91539 (CO)')).toBeInTheDocument();
     expect(screen.getAllByTestId('evidence-tile')).toHaveLength(2);
     expect(screen.getByText('SEVERITY: CRITICAL (SCORE: 0.95)')).toBeInTheDocument();
-    expect(screen.getByText('7 accounts')).toHaveClass('text-rose-700');
+    expect(screen.getByText('7 accounts')).toHaveClass('text-red-700');
     expect(screen.queryByText(/88219|1,420,000|LatAm/)).not.toBeInTheDocument();
   });
 

@@ -144,7 +144,6 @@ export function TriageRail({ onCollapse }: { onCollapse?: () => void } = {}) {
             const isSelected = state.activeTriageItemId === item.id;
             const isCritical = item.severity === 'CRITICAL';
             const isHigh = item.severity === 'HIGH';
-            const isMedium = item.severity === 'MEDIUM';
 
             return (
               <button
@@ -165,16 +164,14 @@ export function TriageRail({ onCollapse }: { onCollapse?: () => void } = {}) {
                       isCritical
                         ? 'bg-cx-bad-bg text-cx-bad border-cx-bad-line'
                         : isHigh
-                        ? 'bg-cx-warn-bg text-cx-warn border-cx-warn-line'
-                        : isMedium
-                        ? 'bg-cx-info-bg-2 text-cx-info border-cx-info-line-2'
+                        ? 'bg-cx-sub text-cx-ink border-cx-line-strong'
                         : 'bg-cx-sub text-cx-muted border-cx-line'
                     }`}
                   >
                     {item.severity}
                   </span>
 
-                  <span className="text-label font-mono text-cx-muted tabular-nums">
+                  <span title="Priority score: higher is more urgent" className="text-label font-mono text-cx-muted tabular-nums">
                     P={(item.priorityScore ?? 0).toFixed(2)}
                   </span>
                 </div>
@@ -189,10 +186,12 @@ export function TriageRail({ onCollapse }: { onCollapse?: () => void } = {}) {
 
                 {/* Entity tag (left); lifecycle status + age relative to the data as-of time (right) */}
                 <div className="mt-2 flex items-center justify-between gap-2 text-label font-mono">
-                  <span className="text-cx-ink-soft bg-cx-sub px-1.5 py-0.5 border border-cx-line font-medium tracking-tight truncate uppercase">
-                    {item.entityId}
-                  </span>
-                  <span className="flex items-center gap-1.5 shrink-0 text-cx-muted">
+                  {!item.title.toLowerCase().includes(item.entityId.toLowerCase()) && (
+                    <span className="text-cx-ink-soft bg-cx-sub px-1.5 py-0.5 border border-cx-line font-medium tracking-tight truncate uppercase">
+                      {item.entityId}
+                    </span>
+                  )}
+                  <span className="ml-auto flex items-center gap-1.5 shrink-0 text-cx-muted">
                     {item.status !== 'OPEN' && <Chip tone={STATUS_TONE[item.status] ?? 'neutral'}>{item.status}</Chip>}
                     <span title={`Raised ${item.timestamp}`} className="tabular-nums">
                       {formatAge(item.timestamp, state.asOfTimestamp)}
