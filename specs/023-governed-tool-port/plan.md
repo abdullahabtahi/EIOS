@@ -29,7 +29,7 @@ One typed catalogue of capabilities (`eios.ontology.omcp.port`) that sits in fro
 
 **Errors.** `ToolError(code, message, retryable)` with `NOT_FOUND`, `FORBIDDEN_ROLE`, `FORBIDDEN_MARKING`, `DATA_UNAVAILABLE`, `STALE`, `TIMEOUT`, `INVALID_ARGUMENTS`. Never an empty or default value. Free text is rejected where an id is required (ids match a strict pattern).
 
-**Identity (B3).** `Principal(uid, authority, workstation)`. `authority` and `uid` come from the verified `Operator` (`cockpit/auth.py`). The workstation the operator is on is a UI choice, so it is only honoured if the operator is entitled to it: entitlement is the optional `workstations` custom claim, else a default table by authority `[ASSUMPTION]` (see Decisions). A request that names another workstation, or a question that claims a different role, changes nothing.
+**Identity (B3).** `Principal(uid, authority, workstation)`. `uid` comes from the verified `Operator` (`cockpit/auth.py`), never from the request. One rule covers everything (decided by the user): any verified operator may use any of the five workstations, and the workstation only selects which capabilities the assistant is offered. Firebase authority roles are not mapped to workstations. A question that claims a different role or operator id changes nothing. The rule lives in one function (`entitled_workstations`) so a real entitlement table can replace it later without touching callers.
 
 **Port.** `GovernedToolPort(read_models, ledger)`: `list_tools(principal)` returns the role toolset; `call()` checks the allow-list, validates arguments against the tool's input model, dispatches, validates the output against its declared model, traces `(tool, role, duration, status)`, and appends refusals to a `RefusalLog`. A latency budget per tool is declared and checked in tests.
 
@@ -47,7 +47,7 @@ One typed catalogue of capabilities (`eios.ontology.omcp.port`) that sits in fro
 
 ## Decisions (flag in the PR)
 
-1. **Workstation entitlement default table** `[ASSUMPTION]`: `analyst` gets `aml_investigator`, `partner_manager`, `data_operations`; `approver` adds `executive`; `compliance_head` gets all five. A `workstations` claim overrides it. Needs your confirmation.
+1. **One entitlement rule** (user decision): every verified operator may use every workstation. Known limit: the workstation is a client choice, so it scopes the assistant's tools but is not yet an authorization boundary between people. Revisit when real entitlements exist.
 2. **Deprecation shims (FR-016) and retiring `conversation/tools.py` (FR-017)** are deferred to spec 021: the legacy copilot keeps working untouched until the ADK runtime replaces it, so the 24 conversation test files stay green and are ported then.
 3. **Governance store separation (User Story 6)** is deferred: ADR-018 is still Proposed, and the work moves storage, not what the assistant can do.
 

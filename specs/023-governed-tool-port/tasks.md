@@ -16,8 +16,8 @@
 
 - [ ] T002 Tests for contracts: `ToolResult` envelope rejects a figure with no unit, a missing as-of or origin; `ToolError` codes; error codes stay aligned with `agent_gates.records.ToolErrorCode` (`tests/ontology/port/test_contracts.py`)
 - [ ] T003 `src/eios/ontology/omcp/port/contracts.py`: `Marking`, `DataOrigin`, `ToolResult`, `ToolError`, `ToolErrorCode`, strict id types; extend `agent_gates/records.py` `ToolErrorCode` with `FORBIDDEN_ROLE` and `INVALID_ARGUMENTS`
-- [ ] T004 [P] Tests for `Principal` (`tests/ontology/port/test_principal.py`): identity from the verified operator, workstation only if entitled, claim overrides the default table, dev anonymous operator gets the dev principal, body-supplied role cannot widen
-- [ ] T005 [P] `src/eios/ontology/omcp/port/principal.py`; `workstations` claim read in `src/eios/cockpit/auth.py` (`Operator.workstations`, default empty)
+- [ ] T004 [P] Tests for `Principal` (`tests/ontology/port/test_principal.py`): uid from the verified operator, any verified operator may use any of the five workstations, an unknown workstation is refused, dev anonymous operator gets the dev principal, a role or id claimed in text or body cannot change the principal
+- [ ] T005 [P] `src/eios/ontology/omcp/port/principal.py` with the single `entitled_workstations` rule; no change to `cockpit/auth.py`
 - [ ] T006 [P] Tests for entities (`tests/ontology/port/test_entities.py`): the three partner aliases resolve to one canonical id, unknown id is `NOT_FOUND`, conflicting alias map fails validation, free text rejected
 - [ ] T007 [P] `src/eios/ontology/omcp/port/entities.py` (alias map as data in `src/eios/ontology/omcp/port/aliases.yaml`)
 - [ ] T008 Tests for the port core (`tests/ontology/port/test_port_core.py`): role allow-list, out-of-role refused and recorded, invalid arguments typed, output validated against its model, trace record, latency budget declared for every tool, redundant identical call flagged
@@ -55,7 +55,7 @@
 
 ## Phase 8: Server wiring
 
-- [ ] T025 Tests (`tests/cockpit/test_copilot_identity.py`): copilot endpoint takes identity from the verified operator, a body role the operator is not entitled to is refused 403, `activeEntityId` and `context_entity_id` are both honoured
+- [ ] T025 Tests (`tests/cockpit/test_copilot_identity.py`): copilot endpoint takes identity from the verified operator, an unknown workstation is refused 422, `activeEntityId` and `context_entity_id` are both honoured
 - [ ] T026 `cockpit/server.py` `query_copilot`: `Depends(current_operator)`, principal built server side, both entity field names accepted
 
 ## Phase 9: Close
