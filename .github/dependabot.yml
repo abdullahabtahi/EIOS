@@ -23,6 +23,16 @@ updates:
     groups:
       python:
         patterns: ["*"]
+    # google-adk 2.11.0 caps opentelemetry-api/sdk at 1.42.1, and fastapi 0.142.0 added native
+    # OpenTelemetry and so requires opentelemetry >= 1.44. Until ADK relaxes its cap, these three
+    # stay behind latest. Remove these entries when pyproject.toml drops the matching bounds.
+    ignore:
+      - dependency-name: "fastapi"
+        versions: [">=0.142.0"]
+      - dependency-name: "opentelemetry-api"
+        versions: [">1.42.1"]
+      - dependency-name: "opentelemetry-sdk"
+        versions: [">1.42.1"]
 
   - package-ecosystem: npm
     directory: /EIOS/web-prototype
