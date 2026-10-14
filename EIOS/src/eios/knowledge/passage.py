@@ -25,6 +25,12 @@ class Passage(StrictModel):
     kind: str  # legislation | regulator_guidance | typology | international_standard
     pages: str  # "41" or "41-42": text, because a page number is a label and not a figure
     text: str = Field(min_length=1, max_length=MAX_PASSAGE_CHARS)
+    sentences: tuple[
+        str, ...
+    ] = ()  # the body sentences numbered "s1: ...", "s2: ...", for quoting a run of them
+    highlight: str = Field(
+        default="", max_length=MAX_PASSAGE_CHARS
+    )  # fallback excerpt when no run is named: a slice of `text`
 
 
 class IndexUnavailable(Exception):

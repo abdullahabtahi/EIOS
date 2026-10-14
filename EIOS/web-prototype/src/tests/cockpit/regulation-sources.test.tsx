@@ -60,7 +60,9 @@ describe('SimpleMarkdown long quotes', () => {
     const details = document.querySelector('details');
     expect(details).not.toBeNull();
     expect(details?.querySelector('summary')?.textContent).toContain('Show full passage');
-    expect(details?.textContent).toContain(long);
+    // the preview and the rest together are the passage exactly once: nothing is repeated, nothing is lost
+    const shown = (details?.textContent ?? '').replace(/…|Show full passage/g, '').replace(/\s+/g, '');
+    expect(shown).toBe(long.replace(/\s+/g, ''));
   });
 
   it('leaves a short quotation as plain text', () => {

@@ -84,6 +84,7 @@ def _turn_passages(raw: dict[str, Any]) -> dict[str, TurnPassage]:
                 pages=item["pages"],
                 text=item["text"],
                 data_origin=DataOrigin(item["data_origin"]),
+                highlight=str(item.get("highlight") or ""),
             )
         except KeyError, TypeError, ValueError:
             logger.warning("dropping an unreadable turn passage: %s", passage_id)

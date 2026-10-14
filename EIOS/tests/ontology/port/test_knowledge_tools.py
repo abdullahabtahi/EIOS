@@ -77,3 +77,23 @@ def test_other_workstations_are_not_offered_the_tool(workstation: str) -> None:
         who(workstation), "search_regulations", {"query": "reporting deadline"}
     )
     assert out.error is not None and out.error.code is ToolErrorCode.FORBIDDEN_ROLE
+
+
+def test_every_passage_carries_a_highlight_that_is_a_slice_of_its_text() -> None:
+    body = (
+        port_with(StaticIndex(ALL))
+        .call(AML, "search_regulations", {"query": "when must a suspicious report be filed"})
+        .payload()
+    )
+    for passage in body["passages"]:
+        assert passage["highlight"] and passage["highlight"] in passage["text"]
+
+
+def test_every_passage_lists_its_body_sentences_numbered_for_quoting() -> None:
+    body = (
+        port_with(StaticIndex(ALL))
+        .call(AML, "search_regulations", {"query": "when must a suspicious report be filed"})
+        .payload()
+    )
+    first = body["passages"][0]
+    assert first["sentences"] and first["sentences"][0].startswith("s1: ")

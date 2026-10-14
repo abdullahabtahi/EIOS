@@ -13,10 +13,11 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from eios.assistant.answer import Answer, FigureRef, SourceRef
+from eios.knowledge.highlight import body_sentences
 from eios.ontology.auditor.normalizer import MONTH_PATTERN, NumericTokenNormalizer
 from eios.ontology.omcp.port.contracts import DataOrigin
 
@@ -37,7 +38,8 @@ _UNIT_ECHOES = {
     "multiplier": {"x", "×", "times"},
     "x": {"x", "×", "times"},
 }
-_QUOTE = re.compile(r"\{\{quote:([^{}]*)\}\}")
+_QUOTE = re.compile(r"\{\{quote:([^{}#]*)(?:#(s\d{1,3})(?:-(s\d{1,3}))?)?\}\}")
+MAX_QUOTED_SENTENCES = 4  # a run longer than this is a page, not an answer
 _SENTINEL = "\x00"  # stands in for a quote while the draft is checked, so text from a document is never read as a placeholder
 _NORMALIZER = NumericTokenNormalizer()
 # The auditor exempts "March 15, 2026"; the day-first form "15 March 2026" is a date too, so it is exempt here.
@@ -67,6 +69,7 @@ class TurnPassage:
     pages: str
     text: str
     data_origin: DataOrigin
+    highlight: str = ""  # the sentences that answer the question; printed in the answer, the whole text stays the source
 
 
 @dataclass(frozen=True)
@@ -164,7 +167,8 @@ def _inert(text: str) -> str:
 
 def render_quote(passage: TurnPassage) -> str:
     body = "\n".join(
-        f"> {line}" if line.strip() else ">" for line in _inert(passage.text).splitlines()
+        f"> {line}" if line.strip() else ">"
+        for line in _inert(passage.highlight or passage.text).splitlines()
     )
     credit = (
         f"> — {_inert(passage.title)}, p. {_inert(passage.pages)} ({_inert(passage.jurisdiction)})"
@@ -220,8 +224,24 @@ class _Fill:
                 f"passage id '{passage_id}' was not returned by a tool in this turn"
             )
             return " "
-        self.quoted.append(passage)
+        lines = self._lines(passage, match.group(2), match.group(3))
+        if lines is None:
+            return " "
+        self.quoted.append(replace(passage, highlight="\n".join(lines)))
         return f"{_SENTINEL}{len(self.quoted) - 1}{_SENTINEL}"
+
+    def _lines(self, passage: TurnPassage, first: str | None, last: str | None) -> list[str] | None:
+        """The sentences a quote names, each exactly as the document wrote it, or the fallback excerpt when none is named."""
+        if first is None:
+            return (passage.highlight or passage.text).splitlines()
+        sentences = body_sentences(passage.text)
+        a, b = int(first[1:]), int((last or first)[1:])
+        if not 1 <= a <= b <= len(sentences) or b - a + 1 > MAX_QUOTED_SENTENCES:
+            self.problems.append(
+                f"{passage.passage_id}: quote sentences s1 to s{len(sentences)}, at most {MAX_QUOTED_SENTENCES} in a row"
+            )
+            return None
+        return sentences[a - 1 : b]
 
     def fill(self, match: re.Match[str]) -> str:
         fact_id = match.group(1).strip()

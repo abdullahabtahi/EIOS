@@ -106,8 +106,8 @@ class PortTool(BaseTool):
         raw = outcome.payload()
         if outcome.result is None:
             return raw
-        payload = expand_fact_ids(
-            raw
+        payload = _model_view(
+            expand_fact_ids(raw)
         )  # what the model sees; the facts are read from the result as the port gave it
         state = tool_context.state
         state[FACTS_KEY] = {**state.get(FACTS_KEY, {}), **_turn_facts(raw)}
@@ -181,6 +181,21 @@ def _turn_facts(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
         for _, fact_id, unit, value in _facts_of(payload)
         if unit and isinstance(value, int | float) and not isinstance(value, bool)
     }
+
+
+def _model_view(payload: dict[str, Any]) -> dict[str, Any]:
+    """A result as the model reads it. A regulation passage is shown as numbered sentences only, so the model picks the
+    sentences to quote by number and the same words are not sent twice; the whole text stays in turn state for the source."""
+    found = payload.get("passages")
+    if not isinstance(found, list):
+        return payload
+    kept = [
+        {k: v for k, v in p.items() if k not in {"text", "highlight"}}
+        if isinstance(p, dict) and p.get("sentences")
+        else p
+        for p in found
+    ]
+    return {**payload, "passages": kept}
 
 
 def _turn_passages(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:

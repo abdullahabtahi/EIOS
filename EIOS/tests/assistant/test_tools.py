@@ -237,3 +237,28 @@ def test_a_result_marked_untrusted_names_nothing_and_narrative_fields_are_not_na
 
     assert identifiers_of({"untrusted": True, "name": "Evil 99 Corp"}) == set()
     assert identifiers_of({"summary": "Revenue up 18 percent", "name": "x" * 200}) == set()
+
+
+def test_the_model_reads_numbered_sentences_while_the_whole_text_stays_in_turn_state() -> None:
+    from eios.assistant.tools import _model_view, _turn_passages
+
+    payload = {
+        "data_origin": "live",
+        "passages": [
+            {
+                "passage_id": "X.c1",
+                "text": "Whole text. Second.",
+                "highlight": "Whole text.",
+                "sentences": ["s1: Whole text.", "s2: Second."],
+            }
+        ],
+    }
+    seen = _model_view(payload)["passages"][0]
+    assert (
+        "text" not in seen and "highlight" not in seen and seen["sentences"][0] == "s1: Whole text."
+    )
+    assert _turn_passages(payload)["X.c1"]["text"] == "Whole text. Second."
+    odd = {"passages": ["injected string", {"passage_id": "Y", "text": "kept"}]}
+    assert (
+        _model_view(odd)["passages"] == odd["passages"]
+    )  # an item without sentences is shown as it is

@@ -30,15 +30,16 @@ function Quote({ lines }: { lines: string[] }) {
   const credit = lines.length > 1 && lines[lines.length - 1].startsWith('—') ? lines[lines.length - 1] : null;
   const body = credit ? lines.slice(0, -1) : lines;
   const full = body.filter((l) => l.trim()).join(' ');
+  const preview = full.slice(0, QUOTE_PREVIEW_CHARS).trimEnd();
   const text =
     full.length <= QUOTE_PREVIEW_CHARS ? (
       body.map((l, j) => <p key={j}>{l}</p>)
     ) : (
       <details>
         <summary className="cursor-pointer select-none">
-          {full.slice(0, QUOTE_PREVIEW_CHARS).trimEnd()}… <span className="text-cx-accent">Show full passage</span>
+          {preview}… <span className="text-cx-accent">Show full passage</span>
         </summary>
-        <div className="space-y-1 pt-1">{body.map((l, j) => <p key={j}>{l}</p>)}</div>
+        <p className="pt-1">{full.slice(preview.length).trimStart()}</p>
       </details>
     );
   return (

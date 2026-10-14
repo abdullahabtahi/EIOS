@@ -11,6 +11,7 @@ from enum import StrEnum
 from pydantic import Field, field_validator
 
 from eios.common.validation import StrictModel
+from eios.knowledge.highlight import body_sentences, highlight
 from eios.knowledge.passage import IndexUnavailable, Passage
 from eios.ontology.omcp.port.common import envelope
 from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode, ToolResult
@@ -51,6 +52,14 @@ class RegulationHits(ToolResult):
     note: str
 
 
+def _annotated(passage: Passage, query: str) -> Passage:
+    """The passage with its body sentences numbered and a fallback excerpt for the query."""
+    numbered = tuple(f"s{i}: {t}" for i, t in enumerate(body_sentences(passage.text), start=1))
+    return passage.model_copy(
+        update={"sentences": numbered, "highlight": highlight(passage.text, query)}
+    )
+
+
 def search_regulations(ctx: ReadModels, _who: Principal, args: RegulationArgs) -> RegulationHits:
     index = ctx.knowledge
     if index is None:
@@ -77,7 +86,7 @@ def search_regulations(ctx: ReadModels, _who: Principal, args: RegulationArgs) -
         ),
         query=args.query,
         jurisdiction=args.jurisdiction.value if args.jurisdiction else None,
-        passages=found,
+        passages=[_annotated(p, args.query) for p in found],
         note=(
             "Passages from the acquired regulatory corpus, by relevance."
             if found

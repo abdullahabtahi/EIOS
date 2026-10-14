@@ -63,3 +63,78 @@ def test_a_draft_with_a_control_character_is_rejected() -> None:
 def test_the_same_passage_quoted_twice_is_one_source() -> None:
     result = assemble("{{quote:TEST-RULE-A.c1}} and again {{quote:TEST-RULE-A.c1}}")
     assert isinstance(result, Assembled) and len(result.sources) == 1
+
+
+def test_the_answer_prints_the_highlight_and_the_source_keeps_the_whole_passage() -> None:
+    whole = TurnPassage(
+        "TEST-RULE-D.c1",
+        "TEST-RULE-D",
+        "Test rule D",
+        "MT",
+        "7-9",
+        "# Heading\n\nUnrelated background sentence. The report is due by the next working day. Page | 9FIAU",
+        DataOrigin.LIVE,
+        highlight="The report is due by the next working day.",
+    )
+    result = assemble_draft(
+        "{{quote:TEST-RULE-D.c1}}", facts={}, passages={whole.passage_id: whole}
+    )
+    assert isinstance(result, Assembled)
+    assert "> The report is due by the next working day." in result.text
+    assert "Unrelated background" not in result.text and "Page | 9" not in result.text
+    assert result.sources[0].text.startswith("# Heading")
+
+
+BODY = (
+    "# 5.4 Internal Reporting Procedures\n\n"
+    "The internal reporting procedures have to set out the steps to follow. Reports are made to the officer. "
+    "The authority expects such a report to be made by not later than the next working day. "
+    "Employees should know the officer's identity.Page | 232FIAU\n\nA later paragraph follows here with more words."
+)
+LONG = TurnPassage(
+    "TEST-RULE-E.c1", "TEST-RULE-E", "Test rule E", "MT", "232-233", BODY, DataOrigin.LIVE
+)
+
+
+def pick(fragment: str):
+    return assemble_draft(
+        f"Answer.\n\n{{{{quote:TEST-RULE-E.c1{fragment}}}}}",
+        facts={},
+        passages={LONG.passage_id: LONG},
+    )
+
+
+def test_a_named_run_of_sentences_is_printed_exactly_and_nothing_else() -> None:
+    result = pick("#s3")
+    assert isinstance(result, Assembled)
+    assert (
+        "> The authority expects such a report to be made by not later than the next working day."
+        in result.text
+    )
+    assert "internal reporting procedures" not in result.text and "Page |" not in result.text
+
+
+def test_a_range_prints_each_sentence_on_its_own_line() -> None:
+    result = pick("#s2-s3")
+    assert isinstance(result, Assembled)
+    assert "> Reports are made to the officer." in result.text
+    assert "> The authority expects such a report" in result.text
+
+
+def test_a_run_outside_the_passage_or_longer_than_four_is_rejected_with_the_valid_range() -> None:
+    for fragment in ("#s99", "#s3-s2", "#s1-s9"):
+        rejected = pick(fragment)
+        assert isinstance(rejected, Rejected) and "s1 to s" in rejected.problems[0], fragment
+
+
+def test_with_no_run_named_the_excerpt_is_the_fallback() -> None:
+    from dataclasses import replace
+
+    fallback = replace(
+        LONG,
+        highlight="The authority expects such a report to be made by not later than the next working day.",
+    )
+    result = assemble_draft(
+        "{{quote:TEST-RULE-E.c1}}", facts={}, passages={LONG.passage_id: fallback}
+    )
+    assert isinstance(result, Assembled) and "not later than the next working day" in result.text

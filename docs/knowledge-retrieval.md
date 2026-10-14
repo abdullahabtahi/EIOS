@@ -11,12 +11,15 @@ regulator beside every passage. This note records the design and how to run it. 
 - **Result** is marked untrusted. Each passage carries `passage_id`, document, title, jurisdiction, kind, `pages` (a
   label, not a figure) and the text. No passage is an answer in itself: nothing found returns an empty list and a note,
   and an index that cannot be reached is a typed `DATA_UNAVAILABLE`, never "no hits".
-- **The model never types what a rule says.** The draft shows a passage with `{{quote:<passage_id>}}`; the assembler
-  prints the text from this turn's result as a quotation with its credit line (`— Title, p. 41-42 (MT)`) and returns the
-  passage as a source for the chat. A number the model types beside it is still rejected, and a passage id that no
-  tool returned this turn is rejected. Text from a document is shown, never executed: it cannot become a placeholder.
-- **The faithfulness judge** exempts a quotation only when its text and credit line equal a passage in a tool result of
-  the same turn (`agent_gates/core/quotes.py`). An altered or invented quotation is judged like any other text.
+- **The model answers first and never types what a rule says.** It reads each passage as numbered sentences (`s1`, `s2`,
+  ...), writes one or two plain sentences that claim only what the passage says, then quotes the fewest sentences that
+  answer with `{{quote:<passage_id>#s4-s5}}`. The assembler prints exactly those sentences from this turn's result, each on
+  its own line, with a credit line (`— Title, p. 41-42 (MT)`), and returns the whole passage as a source for the chat chip.
+  A deadline, threshold or section number may appear only inside the quote: a number the model types is rejected, an id
+  or sentence range that does not exist is rejected, and document text cannot become a placeholder. With no range named,
+  a keyword-picked excerpt is the fallback.
+- **The faithfulness judge** exempts a quotation only when each of its lines is in a passage of a tool result of the same turn
+  and its credit line names that passage's title, pages and regulator (`agent_gates/core/quotes.py`). An altered or invented quotation is judged like any other text.
 
 ## Why Agent Search
 
@@ -51,16 +54,19 @@ bypass fact ids, the untrusted mark and tool-result screening. Our tool calls th
 - Query latency: median 2.3 s, worst 5.2 s `[MEASURED]` over those runs. A first version that read every result page took
   14 to 17 s `[MEASURED]`; the adapter now reads the first page only and has an 8 s deadline `[ASSUMPTION]`. One query still
   exceeded 8 s in an earlier run, so expect an occasional typed `DATA_UNAVAILABLE` rather than a hang.
-- One real assistant turn (AML investigator, live model) quoted the right FIAU passage with its source in 14.7 s
-  `[MEASURED]`, status ASSEMBLED, origin live. This is one turn, not an evaluation.
+- Real assistant turns with the live model (answer first, then the exact sentences): the reporting deadline question quoted the
+  two FIAU sentences including "not later than the next working day", the retention question quoted the five-year rule, the
+  mixer question quoted only the two relevant red flags; each took 14 to 17 s `[MEASURED]`, one hit the 30 s turn deadline
+  `[MEASURED]`. Four turns, not an evaluation.
 
 ## Limits
 
 - Page numbers are PDF page indexes, which can differ from the numbers printed on a page.
 - The relevance threshold defaults to LOW `[ASSUMPTION]`; tune it with the retrieval cases, not by feel.
 - The jurisdiction filter works on the real index (the retrieval cases use it); unit tests cover only the request shape.
-- A quotation is a whole chunk (up to about 2000 characters) and can carry page furniture such as footers and footnote marks.
-  Quoting only the relevant sentences is the next improvement.
+- The model cannot restate a number in its own sentence (it says "the time the quote gives"); letting it repeat a number that
+  appears in its own quote is a possible relaxation.
+- Sentence splitting is rule-based, so an unusual abbreviation can split a sentence in two; the whole passage is in the chip.
 - The offline agent baseline answers from labelled test passages (origin `fixture`); it shows routing and assembly, not
   retrieval quality.
 - SAR drafts do not cite a rule yet; the dossier does not pick the rule for an entity's licensing jurisdiction yet.
