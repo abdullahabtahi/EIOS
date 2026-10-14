@@ -354,7 +354,9 @@ def _port(runtime: str, live: bool, records: Path | None = None) -> AgentPort:
 def main(argv: Sequence[str]) -> int:
     ap = argparse.ArgumentParser(prog="python -m evals.agent.baseline")
     ap.add_argument(
-        "--runtime", choices=["copilot", "toolport", "adk", "always42", "recorded"], default="copilot"
+        "--runtime",
+        choices=["copilot", "toolport", "adk", "always42", "recorded"],
+        default="copilot",
     )
     ap.add_argument("--live", action="store_true")
     ap.add_argument(
