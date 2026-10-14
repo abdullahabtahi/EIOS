@@ -1,6 +1,6 @@
-"""Serve the copilot endpoint from the ADK assistant when `EIOS_ASSISTANT_RUNTIME=adk` (spec 021 FR-017).
+"""Serve the copilot endpoint from the ADK assistant unless `EIOS_ASSISTANT_RUNTIME=legacy` (spec 021 FR-017).
 
-The default stays `legacy` until the assistant has beaten the baseline through the agent gates. The response keeps the
+The default is `adk`; `legacy` stays only until the legacy copilot is deleted. The response keeps the
 shape the browser reads today and adds the structured fields (figures, proposals, steps, blocked). A model, data or
 session failure is reported as such: it is labelled and carries no invented figure.
 """
@@ -28,7 +28,7 @@ _runtime: AssistantRuntime | None = None
 
 
 def assistant_enabled(env: Mapping[str, str] | None = None) -> bool:
-    chosen = (os.environ if env is None else env).get(RUNTIME_ENV, "legacy").strip().lower()
+    chosen = (os.environ if env is None else env).get(RUNTIME_ENV, "adk").strip().lower()
     if chosen not in RUNTIMES:
         raise AssistantConfigError(
             f"{RUNTIME_ENV} must be one of {sorted(RUNTIMES)}, not '{chosen}'"

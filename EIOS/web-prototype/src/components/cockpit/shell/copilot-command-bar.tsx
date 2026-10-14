@@ -35,9 +35,8 @@ interface ConversationTurn {
 
 const PRESET_QUERIES = [
   'What can you do?',
-  'What is the LatAm spread impact across top 3 brokers?',
-  'Why did churn risk increase on partner 882?',
-  'Run DoWhy Refuter check on fee shock elasticity',
+  'What is EIOS?',
+  'Why is partner 882 at risk?',
   'Check CR84920 for AML structuring',
 ];
 
@@ -369,7 +368,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask Copilot or type institutional command (e.g. 'What is the LatAm spread impact?')..."
+                placeholder="Ask Copilot or type institutional command (e.g. 'Why is partner 882 at risk?')..."
                 className="w-full pl-10 pr-28 py-2.5 bg-white border border-slate-300 text-slate-900 text-xs font-mono placeholder:font-sans placeholder:text-slate-400 focus:outline-none focus:border-blue-600 rounded-none shadow-inner"
               />
               <button
