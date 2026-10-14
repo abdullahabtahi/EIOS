@@ -6,7 +6,7 @@
  * Deals and the cohort playbook stage through the intent hub; nothing on this chart is filled in client-side.
  */
 
-import { visibleLabelIds } from './radar-labels';
+import { spreadEdgeTies, visibleLabelIds } from './radar-labels';
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
 import { PartnerChurnItem, WhatIfCausalResponse } from '../state/cockpit-types';
@@ -16,6 +16,17 @@ import { MOCK_PARTNERS } from '../state/fixtures';
 import { type CohortSignal, fetchCohorts, partnersFromCanvas, toPartnerItem } from '../state/partner-radar';
 import { PartnerRadarInspector } from './partner-radar-inspector';
 import { useStageRequest } from './use-stage-request';
+
+const MAX_RADAR_LABELS = 12;
+const AXIS_FRACTIONS = [0, 0.25, 0.5, 0.75, 1] as const;
+/** Value-axis gridlines in the sqrt scale's own units (value = max * t^2). */
+const Y_TICKS = [0.25, 0.5, 0.75, 1] as const;
+
+function xTickLabel(axis: string, f: number): string {
+  if (axis === 'VELOCITY') return `${f === 0 ? 0 : -Math.round(f * 100)}%`;
+  if (axis === 'DAYS_TO_CHURN') return `${Math.round(180 * (1 - f))}d`;
+  return f.toFixed(2);
+}
 export { MOCK_PARTNERS };
 
 type FilterMode = 'ALL' | 'CRITICAL' | 'STABLE';
@@ -149,7 +160,7 @@ export function ChurnRadarScatter() {
     const leftPad = 55;
     const rightPad = width - 35;
     const topPad = 25;
-    const bottomPad = height - 40;
+    const bottomPad = height - 52;
     const plotWidth = rightPad - leftPad;
     const plotHeight = bottomPad - topPad;
 
@@ -161,7 +172,7 @@ export function ChurnRadarScatter() {
     }
 
     const normY = normValue(p.valueAtRiskUsd);
-    const cx = leftPad + normX * plotWidth;
+    const cx = leftPad + spreadEdgeTies(normX, p.partnerId) * plotWidth;
     const cy = bottomPad - normY * plotHeight;
     return { cx, cy, normX, normY, leftPad, rightPad, topPad, bottomPad, plotWidth, plotHeight };
   };
@@ -205,12 +216,8 @@ export function ChurnRadarScatter() {
         return { id: p.partnerId, cx, cy, side: p.pChurn > 0.8 ? 'end' : 'start', priority: p.valueAtRiskUsd } as const;
       }),
       new Set([selectedPartner.partnerId, ...(hoveredPartner ? [hoveredPartner.partnerId] : [])]),
-      [
-        { x0: midX + 10, y0: topPad + 2, x1: midX + 10 + 34 * 6.2, y1: topPad + 18 },
-        { x0: leftPad + 10, y0: topPad + 2, x1: leftPad + 10 + 26 * 6.2, y1: topPad + 18 },
-        { x0: midX + 10, y0: bottomPad - 20, x1: midX + 10 + 21 * 6.2, y1: bottomPad - 4 },
-        { x0: leftPad + 10, y0: bottomPad - 20, x1: leftPad + 10 + 18 * 6.2, y1: bottomPad - 4 },
-      ],
+      [],
+      MAX_RADAR_LABELS,
     );
 
     return (
@@ -226,7 +233,15 @@ export function ChurnRadarScatter() {
         </defs>
 
         {/* Canvas Background */}
-        <rect width={svgWidth} height={svgHeight} fill="url(#radarGridLight)" />
+        <rect width={svgWidth} height={svgHeight} fill="none" />
+        <g stroke="rgba(100, 116, 139, 0.12)" strokeWidth="1">
+          {AXIS_FRACTIONS.map((f) => (
+            <line key={`gx-${f}`} x1={leftPad + f * plotWidth} y1={topPad} x2={leftPad + f * plotWidth} y2={bottomPad} />
+          ))}
+          {Y_TICKS.map((t) => (
+            <line key={`gy-${t}`} x1={leftPad} y1={bottomPad - t * plotHeight} x2={rightPad} y2={bottomPad - t * plotHeight} />
+          ))}
+        </g>
 
         {/* Quadrant Shaded Zones */}
         <rect x={midX} y={topPad} width={rightPad - midX} height={midY - topPad} fill="rgba(168, 42, 42, 0.04)" />
@@ -239,30 +254,31 @@ export function ChurnRadarScatter() {
         <line x1={leftPad - 10} y1={midY} x2={rightPad + 10} y2={midY} stroke="#CBD5E1" strokeWidth="1.5" strokeDasharray="4,4" />
 
         {/* Quadrant Semantic Labels */}
-        <text x={midX + 10} y={topPad + 14} fill="#8f2323" fontSize="10" fontFamily="monospace" fontWeight="bold">
+        <text x={midX + 10} y={topPad - 9} fill="#8f2323" fontSize="10" fontFamily="monospace" fontWeight="bold">
           HIGH VALUE / CRITICAL CHURN HAZARD
         </text>
-        <text x={leftPad + 10} y={topPad + 14} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
+        <text x={leftPad + 10} y={topPad - 9} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
           HIGH VALUE / STABLE GIANTS
         </text>
-        <text x={midX + 10} y={bottomPad - 8} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
+        <text x={midX + 10} y={bottomPad + 29} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
           LOW VALUE / HIGH CHURN
         </text>
-        <text x={leftPad + 10} y={bottomPad - 8} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
+        <text x={leftPad + 10} y={bottomPad + 29} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
           LOW VALUE / STABLE
         </text>
 
         {/* Coordinate Axis Reference Ticks */}
         <g fontSize="10" fontFamily="monospace" fill="#64748B">
-          <text x={midX} y={bottomPad + 14} textAnchor="middle">
-            {axisDimension === 'P_CHURN' ? '0.50' : axisDimension === 'VELOCITY' ? '-50%' : '90d'}
-          </text>
-          <text x={leftPad} y={bottomPad + 14} textAnchor="middle">
-            {axisDimension === 'P_CHURN' ? '0.00' : axisDimension === 'VELOCITY' ? '0%' : '180d'}
-          </text>
-          <text x={rightPad} y={bottomPad + 14} textAnchor="middle">
-            {axisDimension === 'P_CHURN' ? '1.00' : axisDimension === 'VELOCITY' ? '-100%' : '0d'}
-          </text>
+          {AXIS_FRACTIONS.map((f) => (
+            <text key={`tx-${f}`} x={leftPad + f * plotWidth} y={bottomPad + 14} textAnchor="middle">
+              {xTickLabel(axisDimension, f)}
+            </text>
+          ))}
+          {Y_TICKS.filter((t) => Math.abs(bottomPad - t * plotHeight - valueY) > 11 && t < 1).map((t) => (
+            <text key={`ty-${t}`} x={leftPad - 6} y={bottomPad - t * plotHeight + 3} textAnchor="end">
+              {compactUsd(valueScale.max * t * t)}
+            </text>
+          ))}
           <text x={leftPad - 6} y={topPad + 4} textAnchor="end">{compactUsd(valueScale.max)}</text>
           <text x={leftPad - 6} y={valueY + 3} textAnchor="end">{compactUsd(valueScale.line)}</text>
           <text x={leftPad - 6} y={bottomPad + 2} textAnchor="end">$0</text>
@@ -302,51 +318,6 @@ export function ChurnRadarScatter() {
         })()}
 
         {/* HISTORICAL DRIFT TRAJECTORIES (Task T006) */}
-        {displayedPartners.map((p) => {
-          const isSelected = selectedPartner.partnerId === p.partnerId;
-          const isHovered = hoveredPartner?.partnerId === p.partnerId;
-          const shouldRenderTrail = (isSelected || isHovered || (showAllTrails && p.pChurn >= 0.5)) && p.historicalDrift;
-
-          if (!shouldRenderTrail || !p.historicalDrift) return null;
-
-          const currentCoord = getCoordinates(p, svgWidth, svgHeight);
-          const coord30 = {
-            cx: leftPad + p.historicalDrift.tMinus30d.pChurn * plotWidth,
-            cy: bottomPad - normValue(p.historicalDrift.tMinus30d.valueAtRiskUsd) * plotHeight,
-          };
-          const coord14 = {
-            cx: leftPad + p.historicalDrift.tMinus14d.pChurn * plotWidth,
-            cy: bottomPad - normValue(p.historicalDrift.tMinus14d.valueAtRiskUsd) * plotHeight,
-          };
-
-          return (
-            <g key={`drift-${p.partnerId}`} pointerEvents="none" className="animate-in fade-in duration-200">
-              {/* Dotted Trail Path: T-30d -> T-14d -> T-0d */}
-              <polyline
-                points={`${coord30.cx},${coord30.cy} ${coord14.cx},${coord14.cy} ${currentCoord.cx},${currentCoord.cy}`}
-                fill="none"
-                stroke={isSelected ? '#106ba3' : '#94A3B8'}
-                strokeWidth={isSelected ? '2' : '1.2'}
-                strokeDasharray="3,3"
-              />
-
-              {/* T-30d Origin Breadcrumb */}
-              <circle cx={coord30.cx} cy={coord30.cy} r="2.5" fill="#64748B" />
-              <text x={coord30.cx} y={coord30.cy - 5} fill="#64748B" fontSize="10" fontFamily="monospace" textAnchor="middle">
-                T-30d
-              </text>
-
-              {/* T-14d Mid-Point Breadcrumb */}
-              <circle cx={coord14.cx} cy={coord14.cy} r="3" fill="#475569" />
-              <text x={coord14.cx} y={coord14.cy - 5} fill="#475569" fontSize="10" fontFamily="monospace" textAnchor="middle">
-                T-14d
-              </text>
-
-              {/* Directional Velocity Vector Chevron */}
-              <circle cx={currentCoord.cx} cy={currentCoord.cy} r="12" fill="none" stroke="#a82a2a" strokeWidth="0.8" opacity="0.4" />
-            </g>
-          );
-        })}
 
         {/* Active Focus Partner Crosshair Guide Lines */}
         {activeFocusPartner && (() => {
@@ -418,7 +389,7 @@ export function ChurnRadarScatter() {
             >
               <title>{`${p.name} (${p.partnerId}) · P(churn) ${p.pChurn.toFixed(2)} · value at risk $${Math.round(p.valueAtRiskUsd / 1000)}K`}</title>
               {/* PELT Decay Pulse Halo */}
-              {p.changePointDetected && (
+              {p.changePointDetected && (isSelected || isHovered) && (
                 <circle
                   cx={cx}
                   cy={cy}
@@ -432,25 +403,83 @@ export function ChurnRadarScatter() {
                 />
               )}
 
-              {/* Node Outer Ring */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={isSelected ? 8.5 : 6}
-                fill="#FFFFFF"
-                stroke={isSelected ? '#106ba3' : isCritical ? '#a82a2a' : '#64748B'}
-                strokeWidth={isSelected ? 2.5 : 1.8}
-                className="transition-all duration-150"
+              {/* Marker: a small translucent dot so overlaps read as density; the full ring marks only the selected or hovered node */}
+              {isSelected || isHovered ? (
+                <>
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={isSelected ? 8.5 : 7}
+                    fill="#FFFFFF"
+                    stroke={isSelected ? '#106ba3' : isCritical ? '#a82a2a' : '#64748B'}
+                    strokeWidth={isSelected ? 2.5 : 1.8}
+                  />
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={isSelected ? 4.5 : 3.5}
+                    fill={isSelected ? '#106ba3' : isCritical ? '#a82a2a' : '#64748B'}
+                  />
+                </>
+              ) : (
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={3.6}
+                  fill={isCritical ? '#a82a2a' : '#64748B'}
+                  fillOpacity={0.7}
+                  stroke="#FFFFFF"
+                  strokeWidth={0.8}
+                />
+              )}
+
+            </g>
+          );
+        })}
+
+        {/* Trajectory: drawn above the nodes so the path and its T-30d / T-14d markers stay legible in a dense cluster */}
+        {displayedPartners.map((p) => {
+          const isSelected = selectedPartner.partnerId === p.partnerId;
+          const isHovered = hoveredPartner?.partnerId === p.partnerId;
+          const shouldRenderTrail = (isSelected || isHovered || (showAllTrails && p.pChurn >= 0.5)) && p.historicalDrift;
+
+          if (!shouldRenderTrail || !p.historicalDrift) return null;
+
+          const currentCoord = getCoordinates(p, svgWidth, svgHeight);
+          const coord30 = {
+            cx: leftPad + p.historicalDrift.tMinus30d.pChurn * plotWidth,
+            cy: bottomPad - normValue(p.historicalDrift.tMinus30d.valueAtRiskUsd) * plotHeight,
+          };
+          const coord14 = {
+            cx: leftPad + p.historicalDrift.tMinus14d.pChurn * plotWidth,
+            cy: bottomPad - normValue(p.historicalDrift.tMinus14d.valueAtRiskUsd) * plotHeight,
+          };
+
+          return (
+            <g key={`drift-${p.partnerId}`} pointerEvents="none" className="animate-in fade-in duration-200">
+              {/* Dotted Trail Path: T-30d -> T-14d -> T-0d */}
+              <polyline
+                points={`${coord30.cx},${coord30.cy} ${coord14.cx},${coord14.cy} ${currentCoord.cx},${currentCoord.cy}`}
+                fill="none"
+                stroke={isSelected ? '#106ba3' : '#94A3B8'}
+                strokeWidth={isSelected ? '2' : '1.2'}
+                strokeDasharray="3,3"
               />
 
-              {/* Node Inner Core */}
-              <circle
-                cx={cx}
-                cy={cy}
-                r={isSelected ? 4.5 : 3}
-                fill={isSelected ? '#106ba3' : isCritical ? '#a82a2a' : '#64748B'}
-              />
+              {/* T-30d Origin Breadcrumb */}
+              <circle cx={coord30.cx} cy={coord30.cy} r="3.5" fill="#64748B" stroke="#FFFFFF" strokeWidth="1.2" />
+              <text x={coord30.cx} y={coord30.cy - 8} fill="#475569" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle" stroke="#FFFFFF" strokeWidth="3" paintOrder="stroke fill">
+                T-30d
+              </text>
 
+              {/* T-14d Mid-Point Breadcrumb */}
+              <circle cx={coord14.cx} cy={coord14.cy} r="4" fill="#475569" stroke="#FFFFFF" strokeWidth="1.2" />
+              <text x={coord14.cx} y={coord14.cy - 8} fill="#475569" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle" stroke="#FFFFFF" strokeWidth="3" paintOrder="stroke fill">
+                T-14d
+              </text>
+
+              {/* Directional Velocity Vector Chevron */}
+              <circle cx={currentCoord.cx} cy={currentCoord.cy} r="12" fill="none" stroke="#a82a2a" strokeWidth="0.8" opacity="0.4" />
             </g>
           );
         })}
