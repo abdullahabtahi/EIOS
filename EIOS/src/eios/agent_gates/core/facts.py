@@ -15,7 +15,7 @@ from typing import Any
 
 from .text import content_tokens, raw_tokens
 
-LABEL_KEYS = ("metric_id", "metric", "name", "label", "title", "kpi")
+LABEL_KEYS = ("metric_id", "primary_metric_id", "metric", "name", "label", "title", "kpi")
 _UNIT_BY_TOKEN: tuple[tuple[str, frozenset[str]], ...] = (
     ("currency", frozenset({"usd", "eur", "gbp", "dollar", "dollars", "euro"})),
     ("percent", frozenset({"pct", "percent", "percentage"})),

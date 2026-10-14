@@ -24,7 +24,17 @@ FAIL_CLOSED_TEXT = (
     "so I am not showing any figures."
 )
 
-_PLACEHOLDER = re.compile(r"\{\{fact:([^{}]*)\}\}")
+# A placeholder prints its figure with the unit and currency sign. A model that writes the unit again right after it
+# ("{{fact:x}}x", "{{fact:x}} USD") would show "16xx" or "$8,000 USD", so a repeat of the same unit is dropped.
+_PLACEHOLDER = re.compile(
+    r"\{\{fact:([^{}]*)\}\}(?:(?P<echo>\s?(?:USD|US dollars|dollars|percent|times|x|×|%))(?![A-Za-z0-9]))?"
+)
+_UNIT_ECHOES = {
+    "USD": {"usd", "us dollars", "dollars"},
+    "percent": {"%", "percent"},
+    "multiplier": {"x", "×", "times"},
+    "x": {"x", "×", "times"},
+}
 _NORMALIZER = NumericTokenNormalizer()
 # The auditor exempts "March 15, 2026"; the day-first form "15 March 2026" is a date too, so it is exempt here.
 _DAY_FIRST_DATE = re.compile(rf"\b\d{{1,2}}\s+{MONTH_PATTERN}(?:\s+\d{{4}})?\b", re.IGNORECASE)
@@ -62,6 +72,19 @@ _IDENTIFIER = re.compile(r"\b(?!(?:USDT?|EUR|GBP|BTC|ETH)\d)[A-Z]{1,5}(?:-[A-Z]{
 # The auditor's normalizer exempts any word-hyphen-digits token, so top-10 or over-500 would pass as a name. Platform
 # identifiers start with a capital; a lowercase-led hyphen-number is a figure written as a word.
 _DISGUISED_FIGURE = re.compile(r"\b[a-z][A-Za-z]*-\d[\d,.]*%?")
+
+
+# A hash chain value or digest (a SHA-256 hex string) is an identifier; its digits are not figures.
+_DIGEST = re.compile(r"\b(?:sha-?256:)?[0-9a-fA-F]{12,}\b")
+
+
+def _where(prose: str, token: str) -> str:
+    """The typed token with a few words around it, so the model can see which sentence to fix."""
+    at = prose.find(token)
+    if at < 0:
+        return token
+    context = " ".join(prose[max(0, at - 24) : at + len(token) + 16].split())
+    return f"{token} (in '{context}')"
 
 
 def _plain(value: float) -> str:
@@ -107,10 +130,11 @@ def assemble_draft(
 
     def fill(match: re.Match[str]) -> str:
         fact_id = match.group(1).strip()
+        echo = match.group("echo") or ""
         fact = facts.get(fact_id)
         if fact is None:
             problems.append(f"fact id '{fact_id}' was not returned by a tool in this turn")
-            return ""
+            return echo
         if fact_id not in resolved:
             ref = FigureRef(
                 fact_id=fact_id,
@@ -123,7 +147,8 @@ def assemble_draft(
             )
             resolved[fact_id] = ref
             figures.append(ref)
-        return resolved[fact_id].text
+        repeated = echo.strip().lower() in _UNIT_ECHOES.get(fact.unit, set())
+        return resolved[fact_id].text + ("" if repeated else echo)
 
     text = _PLACEHOLDER.sub(fill, draft)
     if "{{" in text or "}}" in text:
@@ -131,8 +156,9 @@ def assemble_draft(
     # Numbers are searched in the draft with every placeholder removed, so a resolved figure is never mistaken for one.
     prose = _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", draft))
     typed = [m.group(0) for m in _DISGUISED_FIGURE.finditer(prose)]
-    prose = _IDENTIFIER.sub(" ", prose)
-    typed += [n.raw_string for n in _NORMALIZER.extract_numbers(prose)]
+    prose = _DIGEST.sub(" ", _IDENTIFIER.sub(" ", prose))
+    typed = [_where(prose, t) for t in typed]
+    typed += [_where(prose, n.raw_string) for n in _NORMALIZER.extract_numbers(prose)]
     if typed:
         problems.append(
             "write no figure yourself, use a {{fact:<id>}} placeholder instead of: "

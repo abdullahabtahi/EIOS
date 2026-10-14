@@ -7,7 +7,7 @@ import pytest
 from eios.assistant.assembly import FAIL_CLOSED_TEXT
 from eios.assistant.config import AssistantSettings
 from eios.assistant.runtime import TIMEOUT_TEXT, UNAVAILABLE_TEXT
-from eios.assistant.scripted_model import call, draft
+from eios.assistant.scripted_model import ScriptedLlm, call, draft
 from eios.assistant.sessions import APP_NAME, build_session_service, session_key
 from eios.ontology.omcp.port.principal import principal_for
 
@@ -152,3 +152,17 @@ def test_the_model_reads_only_the_recent_turns_while_the_thread_keeps_all() -> N
         )
     )
     assert "first question" in str(stored.events)
+
+
+def test_the_drafter_caps_thinking_and_leaves_room_for_the_answer() -> None:
+    from eios.assistant.agents import DRAFT_MAX_OUTPUT_TOKENS, DRAFT_THINKING_LEVEL, build_agent
+    from eios.ontology.omcp.port.catalogue import build_port
+    from eios.ontology.omcp.port.readmodels import ReadModels
+
+    port = build_port(ReadModels.default())
+    agent = build_agent(
+        port=port, principal=principal_for("op-1", "executive"), model=ScriptedLlm(steps=[])
+    )
+    config = agent.sub_agents[0].generate_content_config  # type: ignore[attr-defined]
+    assert config.max_output_tokens == DRAFT_MAX_OUTPUT_TOKENS
+    assert config.thinking_config.thinking_level.value == DRAFT_THINKING_LEVEL

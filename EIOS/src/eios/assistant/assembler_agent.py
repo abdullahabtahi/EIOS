@@ -101,6 +101,7 @@ class AnswerAssembler(BaseAgent):
             yield final_event(self.name, fail_closed_answer(origin))
         else:
             feedback = "; ".join(result.problems)
+            logger.info("draft %s rejected: %s", attempt, feedback[:300])
             yield Event(
                 author=self.name,
                 actions=EventActions(state_delta={ATTEMPT_KEY: attempt, FEEDBACK_KEY: feedback}),

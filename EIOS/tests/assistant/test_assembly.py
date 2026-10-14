@@ -131,3 +131,36 @@ def test_fail_closed_answer_has_no_figure_and_none_of_the_models_numbers() -> No
 )
 def test_a_number_dressed_as_an_identifier_is_still_a_typed_figure(draft: str) -> None:
     assert isinstance(_assemble(draft), Rejected), draft
+
+
+@pytest.mark.parametrize(
+    ("draft", "shown"),
+    [
+        ("It is {{fact:aml.dossier:AC-1:discrepancy_multiplier}}x the declared income.", "16x the"),
+        ("Exposure is {{fact:aml.dossier:AC-1:exposure_usd}} USD today.", "$1,234,567 today"),
+        ("Churn is {{fact:metric.get:churn@PTR-882:value}} percent.", "12.5%."),
+    ],
+)
+def test_a_unit_repeated_after_a_placeholder_is_not_shown_twice(draft: str, shown: str) -> None:
+    out = _assemble(draft)
+    assert isinstance(out, Assembled)
+    assert shown in out.text
+
+
+def test_a_word_that_only_starts_like_a_unit_is_kept() -> None:
+    out = _assemble("There are {{fact:aml.dossier:AC-1:open_alerts}} xylophone alerts.")
+    assert isinstance(out, Assembled)
+    assert "3 alerts xylophone alerts" in out.text
+
+
+def test_a_hash_chain_digest_is_an_identifier_not_a_figure() -> None:
+    digest = "a9f8e7d6b5c4a3f2e1d0b9a8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8"
+    out = _assemble(f"The chain head is {digest} and is unbroken.")
+    assert isinstance(out, Assembled)
+
+
+def test_a_typed_figure_is_reported_with_the_words_around_it() -> None:
+    out = _assemble("Net revenue is $3.82M this week.")
+    assert isinstance(out, Rejected)
+    assert "in '" in out.problems[0]
+    assert "revenue" in out.problems[0]
