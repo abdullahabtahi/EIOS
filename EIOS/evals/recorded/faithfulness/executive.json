@@ -1,0 +1,2678 @@
+[
+ {
+  "record_id": "executive_001.0",
+  "case_id": "executive_001",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $3,820,000 for the net revenue.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_002.0",
+  "case_id": "executive_002",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue is $3,820,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_003.0",
+  "case_id": "executive_003",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the net revenue stands at $3.82 million, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_004.0",
+  "case_id": "executive_004",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue is $3.82 million.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_005.0",
+  "case_id": "executive_005",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue came to about $3.8M in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_006.0",
+  "case_id": "executive_006",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the net revenue stands at about $3.8M, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_007.0",
+  "case_id": "executive_007",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $382,000,000 for the net revenue.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_008.0",
+  "case_id": "executive_008",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue is $38,200.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_009.0",
+  "case_id": "executive_009",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue is $38,200,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_010.0",
+  "case_id": "executive_010",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue came to $4,966,000 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_011.0",
+  "case_id": "executive_011",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $4,050,000 for the net revenue forecast.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_012.0",
+  "case_id": "executive_012",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue forecast is $4,050,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_013.0",
+  "case_id": "executive_013",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $4.05 million for the net revenue forecast.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_014.0",
+  "case_id": "executive_014",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the net revenue forecast stands at $4.05 million, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_015.0",
+  "case_id": "executive_015",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see about $4.0M for the net revenue forecast.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_016.0",
+  "case_id": "executive_016",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue forecast came to about $4.0M in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_017.0",
+  "case_id": "executive_017",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $405,000,000 for the net revenue forecast.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_018.0",
+  "case_id": "executive_018",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue forecast is $40,500.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_019.0",
+  "case_id": "executive_019",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue forecast came to $40,500,000 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_020.0",
+  "case_id": "executive_020",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue forecast came to $5,265,000 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_021.0",
+  "case_id": "executive_021",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue delta came to -$1,107,800 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_022.0",
+  "case_id": "executive_022",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue delta is -$1,107,800.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_023.0",
+  "case_id": "executive_023",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue delta came to a decline of $1,107,800 in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_024.0",
+  "case_id": "executive_024",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue delta is a decline of $1,107,800.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_025.0",
+  "case_id": "executive_025",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see $110,780,000 for the net revenue delta.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_026.0",
+  "case_id": "executive_026",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue delta is $11,078.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_027.0",
+  "case_id": "executive_027",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue delta is $11,078,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_028.0",
+  "case_id": "executive_028",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the net revenue delta stands at $1,440,140, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_029.0",
+  "case_id": "executive_029",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see -29% for the net revenue delta.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_030.0",
+  "case_id": "executive_030",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the net revenue delta stands at -29%, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_031.0",
+  "case_id": "executive_031",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "We see 29% lower for the net revenue delta.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_032.0",
+  "case_id": "executive_032",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue delta is 29% lower.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_033.0",
+  "case_id": "executive_033",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue delta came to 2900% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_up",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_034.0",
+  "case_id": "executive_034",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the net revenue delta stands at 0%, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:scale_down",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_035.0",
+  "case_id": "executive_035",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Right now the net revenue delta stands at 290%, per the latest check.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:dropped_decimal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_036.0",
+  "case_id": "executive_036",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "Net revenue delta came to 46% in this view.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:off_value",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_037.0",
+  "case_id": "executive_037",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue is $3,820,000 and the net revenue forecast is $4,050,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_038.0",
+  "case_id": "executive_038",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue is $3,820,000 and the net revenue forecast is $405,000,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_039.0",
+  "case_id": "executive_039",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue forecast is $4,050,000 and the net revenue delta is -$1,107,800.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_040.0",
+  "case_id": "executive_040",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue forecast is $4,050,000 and the net revenue delta is $110,780,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_041.0",
+  "case_id": "executive_041",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue delta is -$1,107,800 and the net revenue delta is -29%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "faithful:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_042.0",
+  "case_id": "executive_042",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue delta is -$1,107,800 and the net revenue delta is 2900%.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:compound",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_043.0",
+  "case_id": "executive_043",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "I looked at portfolio and nothing needs your attention beyond what the dossier shows.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "no_figures",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_044.0",
+  "case_id": "executive_044",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": {
+     "metric_id": "net_revenue_usd",
+     "value": 3820000.0,
+     "unit": "USD",
+     "forecast": {
+      "net_revenue_forecast_usd": 4050000.0,
+      "interval_95": [
+       3900000.0,
+       4200000.0
+      ]
+     },
+     "deltas": {
+      "net_revenue_delta_usd": -1107800.0,
+      "net_revenue_delta_percentage": -29.0
+     },
+     "attribution": [
+      {
+       "driver": "spread",
+       "share_pct": 62.0
+      },
+      {
+       "driver": "volume",
+       "share_pct": 38.0
+      }
+     ]
+    }
+   }
+  ],
+  "rounds": 1,
+  "answer": "The data for that is unavailable right now, so I will not give a figure.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": true,
+   "kind": "refusal",
+   "aliases": {}
+  }
+ },
+ {
+  "record_id": "executive_045.0",
+  "case_id": "executive_045",
+  "repeat": 0,
+  "runtime": "copilot",
+  "session_id": "corpus",
+  "turn_index": 1,
+  "operator_id": "tok_op_corpus",
+  "identity_source": "request_body",
+  "role": "executive",
+  "entity_context": {
+   "entity_id": "portfolio"
+  },
+  "question": "Tell me about portfolio",
+  "tool_calls": [
+   {
+    "name": "get_forecast",
+    "arguments": {
+     "entity_id": "portfolio"
+    },
+    "result": null,
+    "error": "DATA_UNAVAILABLE"
+   }
+  ],
+  "rounds": 1,
+  "answer": "The net revenue is $3,820,000.",
+  "is_replay_fallback": false,
+  "data_origin": "fixture",
+  "latency_ms": 1.0,
+  "outcome": "completed",
+  "eval": {
+   "expected_supported": false,
+   "kind": "mutant:figure_after_tool_failure",
+   "aliases": {}
+  }
+ }
+]

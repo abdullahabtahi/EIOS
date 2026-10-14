@@ -1,0 +1,147 @@
+# Regulatory knowledge corpus: provenance manifest (v1, acquired 2026-10-14).
+#
+# PDFs live in ./raw/ and are NOT committed (.gitignore). Re-fetch from `source_url` and verify `sha256`.
+# Use rule (user decision, 2026-10-14): the best-value use case that has publicly attainable data.
+# Use case: AML investigator drafts an STR/SAR and justifies a disposition with citations to the rules and
+# red-flag typologies that apply to the entity's licensing jurisdiction.
+#
+# licence_state values: `unverified` = published openly by the regulator but no reuse terms could be retrieved
+# (do not redistribute; private retrieval index and short attributed quotations only); `public_domain` = US
+# federal work. Nothing here is a legal opinion. Open item D-3: confirm reuse terms before any public deployment
+# shows more than short attributed excerpts.
+#
+# User decision 2026-10-14: this is a non-commercial prototype, so reuse terms are not a blocker; `licence_state` stays
+# `unverified` as an honest record, and the corpus is still not redistributed.
+#
+# Deriv's licensing entities below come from third-party listings (not a regulator register) and MUST be
+# verified against each regulator's public register before they are relied on: [ASSUMPTION].
+
+corpus: regulatory
+version: 1
+acquired_on: 2026-10-14
+entity_context_assumption:
+  - entity: Deriv Investments (Europe) Limited
+    regulator: MFSA (Malta); AML supervisor FIAU
+    verify_in: MFSA and FIAU public registers
+  - entity: Deriv (FX) Ltd
+    regulator: Labuan FSA (Malaysia)
+    verify_in: Labuan FSA public register
+
+documents:
+  - id: MT-FIAU-IP1
+    title: FIAU Implementing Procedures, Part I (all subject persons)
+    issuer: Financial Intelligence Analysis Unit (FIAU), Malta
+    jurisdiction: MT
+    kind: regulator_guidance
+    source_url: https://fiaumalta.org/app/uploads/2026/07/Implementing-Procedures-Part-1-1-1-2026-1.pdf
+    version_note: First issued 20 May 2011, last amended 27 April 2026 (stated on cover)
+    pages: 313
+    bytes: 3569758
+    sha256: 9d3ceff18cb2204ffe908dbb84fb05960f1c5eb11c6e3a7d9ebe2ad05d7e13e3
+    text_layer: true
+    licence_state: unverified
+    serves: [aml_investigator]
+    use: STR obligations and timing (Chapter 5), customer due diligence, risk assessment, record keeping; cited in dossiers and SAR drafts
+    status: acquired
+
+  - id: MT-PMLFTR
+    title: Prevention of Money Laundering and Funding of Terrorism Regulations (S.L. 373.01)
+    issuer: Government of Malta (legislation.mt)
+    jurisdiction: MT
+    kind: legislation
+    source_url: https://legislation.mt/eli/sl/373.1/eng/pdf
+    version_note: Consolidated text; amended by Legal Notices up to 2024 and later (stated on page 1)
+    pages: 51
+    bytes: 371404
+    sha256: bdd77e39cecd4b2c2f81a17202bbe313ed6f669fa86f3f376ea7e69b3208c707
+    text_layer: true
+    licence_state: unverified
+    serves: [aml_investigator, compliance_auditor]
+    use: Legal basis for reporting duties and the obligations the Implementing Procedures interpret
+    status: acquired
+
+  - id: LB-KRI-2025
+    title: Guidelines on AML/CFT/CPF and TFS for Labuan Key Reporting Institutions
+    issuer: Labuan Financial Services Authority (Labuan FSA), Malaysia
+    jurisdiction: LB
+    kind: regulator_guidance
+    source_url: https://www.labuanfsa.gov.my/clients/asset_120A5FB8-61B6-45E8-93F0-3F79F86455C8/contentms/img/documents/AML_CFT/Guidelines_directives/2025/Guidelines-on-AMLCFTCPF-and-TFS-for-Labuan-KRIs.pdf
+    version_note: 2025 edition (supersedes the 2022 text); effective-date section present in Part A
+    pages: 155
+    bytes: 1956411
+    sha256: adf3b5e81bd8199d434ae7692f725fd75fc0e01be7f1a39f07d0d3b22bd046ad
+    text_layer: true
+    licence_state: unverified
+    serves: [aml_investigator]
+    use: Labuan reporting duties, suspicious transaction reporting, risk-based approach, targeted financial sanctions
+    status: acquired
+
+  - id: LB-REDFLAG-DFS-2024
+    title: Guidance Note on Red Flag Indicators for Labuan Digital Financial Services
+    issuer: Labuan FSA
+    jurisdiction: LB
+    kind: typology
+    source_url: https://www.labuanfsa.gov.my/clients/asset_120A5FB8-61B6-45E8-93F0-3F79F86455C8/contentms/img/documents/AML_CFT/Guidelines_directives/2024/Guidance%20Note%20on%20Red%20Flag%20Indicators%20for%20Labuan%20Digital%20Financial%20Services_24062024.pdf
+    version_note: Dated 24 June 2024 (from the file name)
+    pages: 6
+    bytes: 119869
+    sha256: a319518eda1ab001301cc0f453a12885b8ea9980a270ceaf9b373496d79d8be3
+    text_layer: true
+    licence_state: unverified
+    serves: [aml_investigator]
+    use: Published red-flag indicators for digital financial services; explains why an alert is suspicious
+    status: acquired
+
+  - id: LB-REDFLAG-IBFC-2024
+    title: Circular on Red Flag Indicators for Labuan IBFC
+    issuer: Labuan FSA
+    jurisdiction: LB
+    kind: typology
+    source_url: https://www.labuanfsa.gov.my/clients/asset_120A5FB8-61B6-45E8-93F0-3F79F86455C8/contentms/img/documents/AML_CFT/LFSA%20Circular/2024/Circular-on-Red-Flag-Indicators-for-Labuan-IBFC.pdf
+    version_note: 2024 circular (year from the path)
+    pages: 2
+    bytes: 102736
+    sha256: 483dc7f25068d1c70eab2b2af2d4fd167a5abe4f7e51542e6901badbd7de39eb
+    text_layer: false
+    licence_state: unverified
+    serves: [aml_investigator]
+    use: Red-flag indicators for the Labuan international business and financial centre
+    status: acquired
+    note: Image-only PDF with no text layer; needs OCR at ingestion
+
+  - id: US-FINCEN-NARR-2003
+    title: Guidance on Preparing a Complete and Sufficient Suspicious Activity Report Narrative
+    issuer: Financial Crimes Enforcement Network (FinCEN), US Treasury
+    jurisdiction: US
+    kind: regulator_guidance
+    source_url: https://www.fincen.gov/sites/default/files/shared/sarnarrcompletguidfinal_112003.pdf
+    version_note: November 2003 (from the file name); dated, kept for narrative structure only
+    pages: 33
+    bytes: 199236
+    sha256: 937153099158eb92aa5dcd5c6d95967a17b4313bda19180baa908661f43c48c6
+    text_layer: true
+    licence_state: public_domain
+    serves: [aml_investigator]
+    use: Structure and completeness of a SAR narrative (who, what, when, where, why, how), with sufficient and insufficient examples; seeds the SAR draft rubric. Not a Deriv obligation
+    status: acquired
+
+  - id: FATF-REC
+    title: The FATF Recommendations (International Standards on Combating Money Laundering and the Financing of Terrorism and Proliferation)
+    issuer: Financial Action Task Force (FATF)
+    jurisdiction: INTL
+    kind: international_standard
+    source_url: https://www.fatf-gafi.org/en/publications/Fatfrecommendations/Fatf-recommendations.html
+    version_note: Current consolidated text; the PDF link on that page must be downloaded manually
+    licence_state: unverified
+    serves: [aml_investigator, executive]
+    use: Baseline standard cited by both regulators (Recommendation 20 on suspicious transaction reporting; Recommendation 10 on customer due diligence)
+    status: deferred_by_user
+    note: Scripted download returned HTTP 403 (access control) and was not worked around. User decision 2026-10-14: leave out of v1. To add later, save the PDF as raw/FATF-REC.pdf and record its sha256 here
+
+deferred:
+  - item: FATF high-risk and increased-monitoring jurisdiction lists
+    reason: A frequently updated table, better as a structured reference product (data-strategy D3) than as prose
+  - item: FIAU Part II (sector-specific) for investment services
+    reason: Not found on the FIAU Implementing Procedures page; locate before spec 024
+  - item: MFSA conduct and ESMA rules
+    reason: Mostly conduct of business, lower value for the AML investigator job; revisit for the compliance workstation

@@ -146,3 +146,6 @@ evals/reports/*
 !evals/reports/.gitkeep
 **/evals/reports/*
 !**/evals/reports/.gitkeep
+
+# Regulatory corpus: PDFs are fetched locally per manifest.yaml and never committed (reuse terms unverified)
+EIOS/data/corpus/**/raw/

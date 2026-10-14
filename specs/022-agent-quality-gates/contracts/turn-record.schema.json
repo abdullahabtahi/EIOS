@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eios/agent-gates/turn-record",
+  "title": "TurnRecord",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["record_id", "repeat", "runtime", "session_id", "turn_index", "operator_id", "identity_source", "role", "question", "tool_calls", "rounds", "answer", "is_replay_fallback", "data_origin", "latency_ms", "outcome"],
+  "properties": {
+    "record_id": {"type": "string"},
+    "case_id": {"type": ["string", "null"]},
+    "repeat": {"type": "integer", "minimum": 0},
+    "runtime": {"type": "string"},
+    "session_id": {"type": "string"},
+    "turn_index": {"type": "integer", "minimum": 1},
+    "operator_id": {"type": "string"},
+    "identity_source": {"enum": ["verified_token", "request_body", "none"]},
+    "role": {"enum": ["aml_investigator", "partner_manager", "executive", "compliance_auditor", "data_operations"]},
+    "entity_context": {"type": ["object", "null"]},
+    "question": {"type": "string"},
+    "tool_calls": {"type": "array", "items": {"$ref": "#/$defs/toolCall"}},
+    "rounds": {"type": "integer", "minimum": 0},
+    "answer": {"type": "string"},
+    "bindings": {"type": ["array", "null"], "items": {"$ref": "#/$defs/binding"}},
+    "citations": {"type": "array", "items": {"type": "string"}},
+    "is_replay_fallback": {"type": "boolean"},
+    "fallback_reason": {"type": ["string", "null"]},
+    "audit_verdict": {"type": ["string", "null"]},
+    "data_origin": {"enum": ["fixture", "live"]},
+    "latency_ms": {"type": "number", "minimum": 0},
+    "tokens_in": {"type": ["integer", "null"], "minimum": 0},
+    "tokens_out": {"type": ["integer", "null"], "minimum": 0},
+    "cost_usd": {"type": ["number", "null"], "minimum": 0},
+    "outcome": {"enum": ["completed", "inconclusive"]},
+    "inconclusive_reason": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {"if": {"properties": {"is_replay_fallback": {"const": true}}}, "then": {"required": ["fallback_reason"], "properties": {"fallback_reason": {"type": "string", "minLength": 1}}}},
+    {"if": {"properties": {"outcome": {"const": "inconclusive"}}}, "then": {"required": ["inconclusive_reason"], "properties": {"inconclusive_reason": {"type": "string", "minLength": 1}}}}
+  ],
+  "$defs": {
+    "toolCall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "arguments"],
+      "properties": {
+        "name": {"type": "string"},
+        "capability": {"type": ["string", "null"]},
+        "arguments": {"type": "object"},
+        "result": {"type": ["object", "null"]},
+        "error": {"enum": [null, "NOT_FOUND", "FORBIDDEN_MARKING", "DATA_UNAVAILABLE", "STALE", "TIMEOUT", "OTHER"]},
+        "latency_ms": {"type": "number", "minimum": 0},
+        "untrusted": {"type": "boolean"}
+      },
+      "not": {"required": ["result", "error"], "properties": {"result": {"type": "object"}, "error": {"type": "string"}}}
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["span", "fact_ref", "unit"],
+      "properties": {
+        "span": {"type": "array", "items": {"type": "integer", "minimum": 0}, "minItems": 2, "maxItems": 2},
+        "fact_ref": {"type": "object", "required": ["tool_call_index", "path"], "properties": {"tool_call_index": {"type": "integer", "minimum": 0}, "path": {"type": "string"}}},
+        "unit": {"type": "string"}
+      }
+    }
+  }
+}

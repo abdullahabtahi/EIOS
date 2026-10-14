@@ -35,12 +35,12 @@ An investigator who starts from an assembled, cited dossier instead of five syst
 |---|---|---|---|---|---|
 | M1 | Time to disposition | Median minutes from alert open to a justified disposition, same seeded cases, with and without the copilot | `[ASSUMPTION]` unmeasured; replace with a timed manual run | `[TARGET]` set after the first timed run | Timed study on seeded cases |
 | M2 | SAR draft time | Median minutes to a reviewable narrative | `[ASSUMPTION]` unmeasured | `[TARGET]` set after the first timed run | Same study |
-| M3 | Numeric faithfulness | Share of figures in an answer that resolve to a tool result field | n/a | 100% `[TARGET]` (a release blocker) | Deterministic check in CI, reported per release |
+| M3 | Numeric faithfulness | Share of figures in an answer that resolve to a tool result field | 100% `[MEASURED]` on the copilot's own replay answers, but 2 screen-consistency failures `[MEASURED]` (`agent-baseline.md`) | 100% `[TARGET]` (a release blocker) | Deterministic check in CI, reported per release |
 | M4 | Disposition agreement | Agreement with seeded labels on the sealed split, plus false-positive rate on the hard negatives | n/a | `[TARGET]` set after the first backtest; never claimed before measured | Eval harness, sealed seeds |
-| M5 | Cost and latency | p95 seconds and dollars per turn | now up to 65 s `[ASSUMPTION]` (recorded in CLAUDE.md, not re-measured) | p95 under 15 s `[TARGET]` | OpenTelemetry, load test |
+| M5 | Cost and latency | p95 seconds and dollars per turn | p95 48.6 s `[MEASURED]` on completed turns, and 18 of 61 turns `[MEASURED]` missed a 60 s deadline (`agent-baseline.md`) | p95 under 15 s `[TARGET]` | OpenTelemetry, load test |
 | M6 | Triage compression | Alerts in vs high-confidence cases out on a seeded week | n/a | `[BRIEF]` 2,000 to 50 as the stated ambition; our target set after M4 | Foundry week, eval harness |
 
-No baseline is measured. M1, M2 and M5 need a timed run or a re-measurement before any improvement is claimed.
+M3 and M5 have a measured baseline (`agent-baseline.md`, spec 022). M1 and M2 need a timed run before any improvement is claimed.
 
 ## 5. Evaluation design
 

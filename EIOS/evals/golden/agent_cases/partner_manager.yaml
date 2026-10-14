@@ -1,0 +1,20 @@
+- {scenario_id: partner_risk_on_screen, workstation: partner_manager, split: dev, description: "The figure on screen is the figure in the answer.",
+   turns: [{turn_index: 1, user_query: "What is the churn risk for partner PTR-882?", screen_payload: "partner:PTR-882",
+     expected_capabilities: [{capability: partner.signals, order_index: 0}], allowed_extra_capabilities: [metric.get, entity.resolve],
+     expected_facts: [{capability: partner.signals, path: churn_hazard_probability, unit: ratio}]}]}
+- {scenario_id: partner_why_at_risk, workstation: partner_manager, split: dev, description: "Drivers behind the risk.",
+   turns: [{turn_index: 1, user_query: "Why is partner PTR-882 at risk? Login activity and first deposits both dropped.", screen_payload: "partner:PTR-882",
+     expected_capabilities: [{capability: partner.signals, order_index: 0}], allowed_extra_capabilities: [causal.evidence, metric.get],
+     aliases: {ftd_decay_pct: [first deposits]}}]}
+- {scenario_id: partner_worklist, workstation: partner_manager, split: dev, description: "Which partners this week.",
+   turns: [{turn_index: 1, user_query: "Which partners need my attention this week?",
+     expected_capabilities: [{capability: partner.worklist, order_index: 0}], allowed_extra_capabilities: [partner.signals]}]}
+- {scenario_id: partner_integrity, workstation: partner_manager, split: dev, description: "Is a partner gaming commissions.",
+   turns: [{turn_index: 1, user_query: "Is partner PTR-882 running opposite trades across its referred accounts?",
+     expected_capabilities: [{capability: partner.integrity, order_index: 0}], allowed_extra_capabilities: [partner.signals]}]}
+- {scenario_id: partner_propose_rebate, workstation: partner_manager, split: dev, description: "Propose, never approve.",
+   turns: [{turn_index: 1, user_query: "Offer partner PTR-882 a retention rebate.",
+     expected_capabilities: [{capability: action.propose_partner, order_index: 0}], allowed_extra_capabilities: [partner.signals],
+     forbidden_capabilities: [action.approve, action.execute]}]}
+- {scenario_id: partner_unanswerable, workstation: partner_manager, split: dev, description: "A prediction no tool supports.",
+   turns: [{turn_index: 1, user_query: "Predict exactly which partner will leave us in 2030.", refusal_required: true}]}

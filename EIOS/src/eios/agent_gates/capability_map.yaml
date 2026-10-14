@@ -1,0 +1,44 @@
+# Capability ids used by golden and attack cases, with the tool each runtime serves them through.
+# `copilot` = today's copilot (src/eios/conversation/tools.py); `target` = the typed catalogue designed in
+# docs/agent-architecture.md section 2 (built in spec 023). A null tool means the runtime lacks it.
+version: 1
+capabilities:
+  - {id: metric.get, kind: evidence, copilot: get_governed_metric, target: get_metric}
+  - {id: entity.resolve, kind: evidence, copilot: null, target: resolve_entity}
+  - {id: causal.evidence, kind: evidence, copilot: null, target: get_causal_evidence}
+  - {id: calc.compare, kind: compute, copilot: null, target: compare_facts}
+  - {id: aml.alerts, kind: evidence, copilot: null, target: list_alerts}
+  - {id: aml.dossier, kind: evidence, copilot: inspect_aml_entity, target: get_aml_dossier}
+  - {id: aml.network, kind: evidence, copilot: query_graph_topology, target: get_network_evidence}
+  - {id: aml.timeline, kind: evidence, copilot: null, target: get_activity_timeline}
+  - {id: aml.withdrawal_risk, kind: evidence, copilot: null, target: check_withdrawal_risk}
+  - {id: aml.sar_draft, kind: draft, copilot: null, target: draft_sar}
+  - {id: knowledge.regulation, kind: knowledge, copilot: query_policy_search, target: search_regulations, copilot_fixture_only: true}
+  - {id: knowledge.sar_precedent, kind: knowledge, copilot: query_sar_precedents, target: null, copilot_fixture_only: true}
+  - {id: knowledge.policy, kind: knowledge, copilot: null, target: search_policy}
+  - {id: action.propose_hold, kind: propose, copilot: stage_action_intent, target: propose_hold}
+  - {id: action.propose_partner, kind: propose, copilot: null, target: propose_partner_action}
+  - {id: partner.worklist, kind: evidence, copilot: null, target: list_partner_worklist}
+  - {id: partner.signals, kind: evidence, copilot: inspect_partner_churn, target: get_partner_signals}
+  - {id: partner.integrity, kind: evidence, copilot: null, target: get_partner_integrity}
+  - {id: partner.client_quality, kind: evidence, copilot: null, target: get_client_quality}
+  - {id: partner.comms, kind: evidence, copilot: null, target: read_partner_comms}
+  - {id: exec.briefing, kind: evidence, copilot: null, target: get_briefing}
+  - {id: exec.forecast, kind: evidence, copilot: null, target: get_forecast}
+  - {id: exec.what_if, kind: compute, copilot: run_causal_what_if, target: run_what_if}
+  - {id: exec.cohort_trend, kind: evidence, copilot: null, target: get_cohort_trend, planned: "025"}
+  - {id: exec.market_context, kind: evidence, copilot: null, target: get_market_context, planned: "026"}
+  - {id: compliance.ledger, kind: evidence, copilot: null, target: get_ledger_timeline}
+  - {id: compliance.intent_status, kind: evidence, copilot: null, target: get_intent_status}
+  - {id: compliance.audit_status, kind: evidence, copilot: null, target: get_audit_status}
+  - {id: compliance.verify_chain, kind: evidence, copilot: null, target: verify_chain}
+  - {id: ops.dq_board, kind: evidence, copilot: null, target: get_dq_board}
+  - {id: ops.reliability, kind: evidence, copilot: null, target: get_reliability}
+  - {id: ops.drill_status, kind: evidence, copilot: null, target: get_drill_status}
+  - {id: ops.calibration, kind: evidence, copilot: null, target: get_calibration_status}
+roles:
+  aml_investigator: [metric.get, entity.resolve, causal.evidence, calc.compare, aml.alerts, aml.dossier, aml.network, aml.timeline, aml.withdrawal_risk, knowledge.regulation, aml.sar_draft, action.propose_hold]
+  partner_manager: [metric.get, entity.resolve, calc.compare, partner.worklist, partner.signals, partner.integrity, partner.client_quality, partner.comms, knowledge.policy, action.propose_partner]
+  executive: [metric.get, entity.resolve, causal.evidence, calc.compare, exec.briefing, exec.forecast, exec.what_if, exec.cohort_trend, exec.market_context]
+  compliance_auditor: [metric.get, compliance.ledger, compliance.intent_status, compliance.audit_status, compliance.verify_chain]
+  data_operations: [metric.get, ops.dq_board, ops.reliability, ops.drill_status, ops.calibration]

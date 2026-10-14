@@ -1,0 +1,11 @@
+- {scenario_id: exec_briefing, workstation: executive, split: dev, description: "Morning briefing.",
+   turns: [{turn_index: 1, user_query: "Give me the morning briefing.", expected_capabilities: [{capability: exec.briefing, order_index: 0}], allowed_extra_capabilities: [metric.get]}]}
+- {scenario_id: exec_net_revenue, workstation: executive, split: dev, description: "One governed number.",
+   turns: [{turn_index: 1, user_query: "What is our net revenue?", expected_capabilities: [{capability: metric.get, order_index: 0}],
+     expected_facts: [{capability: metric.get, path: value, unit: currency}]}]}
+- {scenario_id: exec_what_if, workstation: executive, split: dev, description: "Scenario through the engine.",
+   turns: [{turn_index: 1, user_query: "What happens to revenue if competitors cut spreads by 20 percent?",
+     expected_capabilities: [{capability: exec.what_if, order_index: 0}], allowed_extra_capabilities: [metric.get, causal.evidence]}]}
+- {scenario_id: exec_causal_label, workstation: executive, split: dev, description: "Correlation is labelled as correlation.",
+   turns: [{turn_index: 1, user_query: "Is the spread cut causing the partner churn?",
+     expected_capabilities: [{capability: causal.evidence, order_index: 0}], allowed_extra_capabilities: [exec.what_if, metric.get]}]}

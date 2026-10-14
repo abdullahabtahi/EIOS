@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eios/agent-gates/telemetry-event",
+  "title": "TelemetryEvent",
+  "description": "Per-turn operational record. Pseudonymous tokens only; text is a bounded, redacted excerpt. Fields carry an `x-otel` annotation naming the OpenTelemetry GenAI semantic-convention attribute they map to (conventions are in Development status; pin the version).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "ts",
+    "operator_token",
+    "session_token",
+    "runtime",
+    "role",
+    "tool_call_count",
+    "tool_names",
+    "rounds",
+    "latency_ms",
+    "is_replay_fallback",
+    "data_origin"
+  ],
+  "properties": {
+    "event_id": {
+      "type": "string"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "operator_token": {
+      "type": "string",
+      "pattern": "^tok_[A-Za-z0-9_]+$"
+    },
+    "session_token": {
+      "type": "string",
+      "pattern": "^tok_[A-Za-z0-9_]+$",
+      "x-otel": "gen_ai.conversation.id"
+    },
+    "runtime": {
+      "type": "string",
+      "x-otel": "gen_ai.agent.name"
+    },
+    "role": {
+      "type": "string"
+    },
+    "tool_call_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "tool_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-otel": "gen_ai.tool.name"
+    },
+    "rounds": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "latency_ms": {
+      "type": "number",
+      "minimum": 0
+    },
+    "tokens_in": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "x-otel": "gen_ai.usage.input_tokens"
+    },
+    "tokens_out": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "x-otel": "gen_ai.usage.output_tokens"
+    },
+    "cost_usd": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "is_replay_fallback": {
+      "type": "boolean"
+    },
+    "fallback_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "audit_verdict": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "citation_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "data_origin": {
+      "enum": [
+        "fixture",
+        "live"
+      ]
+    },
+    "question_excerpt": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "maxLength": 200
+    },
+    "case_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}
