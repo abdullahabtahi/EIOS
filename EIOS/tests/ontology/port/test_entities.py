@@ -65,3 +65,36 @@ def test_directory_is_built_from_the_screens_data() -> None:
     directory = default_directory()
     assert all(directory.resolve(p.partner_id).entity_id == p.partner_id for p in radar)
     assert isinstance(directory, EntityDirectory)
+
+
+@pytest.mark.parametrize(
+    "text", ["partner 882", "Partner 882", "882", "partner #882", "partner-882"]
+)
+def test_a_number_with_an_optional_kind_word_resolves_when_exactly_one_entity_has_it(
+    text: str,
+) -> None:
+    assert default_directory().resolve(text).entity_id == "PTR-882"
+
+
+def test_an_account_number_resolves_to_the_account() -> None:
+    assert default_directory().resolve("account 84920").entity_id == "CR84920"
+
+
+def test_a_number_nobody_has_is_not_found_never_the_nearest_entity() -> None:
+    with pytest.raises(PortError) as err:
+        default_directory().resolve("partner 999")
+    assert err.value.error.code is ToolErrorCode.NOT_FOUND
+
+
+def test_a_number_that_two_entities_share_is_not_found_rather_than_guessed() -> None:
+    directory = EntityDirectory({"PTR-100": EntityKind.PARTNER, "CR100": EntityKind.ACCOUNT}, {})
+    with pytest.raises(PortError) as err:
+        directory.resolve("100")
+    assert err.value.error.code is ToolErrorCode.NOT_FOUND
+    assert directory.resolve("partner 100").entity_id == "PTR-100"
+
+
+def test_a_kind_word_that_contradicts_the_entity_is_not_found() -> None:
+    with pytest.raises(PortError) as err:
+        default_directory().resolve("account 882")
+    assert err.value.error.code is ToolErrorCode.NOT_FOUND
