@@ -1,0 +1,4 @@
+# Known aliases to the canonical id. An alias map is data and is validated when it loads
+# (spec 023 FR-011): one alias, one canonical id; an alias never shadows a canonical id.
+partner:
+  PTR-882: [P-882, AP-1029]   # the radar's partner; older fixtures and the dossier story use the aliases

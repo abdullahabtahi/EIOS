@@ -10,18 +10,18 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Package skeleton `src/eios/ontology/omcp/port/__init__.py` and `tests/ontology/port/__init__.py`
+- [X] T001 Package skeleton `src/eios/ontology/omcp/port/__init__.py` and `tests/ontology/port/__init__.py`
 
 ## Phase 2: Foundation (blocks every story)
 
-- [ ] T002 Tests for contracts: `ToolResult` envelope rejects a figure with no unit, a missing as-of or origin; `ToolError` codes; error codes stay aligned with `agent_gates.records.ToolErrorCode` (`tests/ontology/port/test_contracts.py`)
-- [ ] T003 `src/eios/ontology/omcp/port/contracts.py`: `Marking`, `DataOrigin`, `ToolResult`, `ToolError`, `ToolErrorCode`, strict id types; extend `agent_gates/records.py` `ToolErrorCode` with `FORBIDDEN_ROLE` and `INVALID_ARGUMENTS`
-- [ ] T004 [P] Tests for `Principal` (`tests/ontology/port/test_principal.py`): uid from the verified operator, any verified operator may use any of the five workstations, an unknown workstation is refused, dev anonymous operator gets the dev principal, a role or id claimed in text or body cannot change the principal
-- [ ] T005 [P] `src/eios/ontology/omcp/port/principal.py` with the single `entitled_workstations` rule; no change to `cockpit/auth.py`
-- [ ] T006 [P] Tests for entities (`tests/ontology/port/test_entities.py`): the three partner aliases resolve to one canonical id, unknown id is `NOT_FOUND`, conflicting alias map fails validation, free text rejected
-- [ ] T007 [P] `src/eios/ontology/omcp/port/entities.py` (alias map as data in `src/eios/ontology/omcp/port/aliases.yaml`)
-- [ ] T008 Tests for the port core (`tests/ontology/port/test_port_core.py`): role allow-list, out-of-role refused and recorded, invalid arguments typed, output validated against its model, trace record, latency budget declared for every tool, redundant identical call flagged
-- [ ] T009 `src/eios/ontology/omcp/port/registry.py` (capability spec and decorator) and `service.py` (`GovernedToolPort`, `RefusalLog`)
+- [X] T002 Tests for contracts: `ToolResult` envelope rejects a figure with no unit, a missing as-of or origin; `ToolError` codes; error codes stay aligned with `agent_gates.records.ToolErrorCode` (`tests/ontology/port/test_contracts.py`)
+- [X] T003 `src/eios/ontology/omcp/port/contracts.py`: `Marking`, `DataOrigin`, `ToolResult`, `ToolError`, `ToolErrorCode`, strict id types; extend `agent_gates/records.py` `ToolErrorCode` with `FORBIDDEN_ROLE` and `INVALID_ARGUMENTS`
+- [X] T004 [P] Tests for `Principal` (`tests/ontology/port/test_principal.py`): uid from the verified operator, any verified operator may use any of the five workstations, an unknown workstation is refused, dev anonymous operator gets the dev principal, a role or id claimed in text or body cannot change the principal
+- [X] T005 [P] `src/eios/ontology/omcp/port/principal.py` with the single `entitled_workstations` rule; no change to `cockpit/auth.py`
+- [X] T006 [P] Tests for entities (`tests/ontology/port/test_entities.py`): the three partner aliases resolve to one canonical id, unknown id is `NOT_FOUND`, conflicting alias map fails validation, free text rejected
+- [X] T007 [P] `src/eios/ontology/omcp/port/entities.py` (alias map as data in `src/eios/ontology/omcp/port/aliases.yaml`)
+- [X] T008 Tests for the port core (`tests/ontology/port/test_port_core.py`): role allow-list, out-of-role refused and recorded, invalid arguments typed, output validated against its model, trace record, latency budget declared for every tool
+- [X] T009 `src/eios/ontology/omcp/port/registry.py` (capability spec and decorator) and `service.py` (`GovernedToolPort`, `RefusalLog`)
 
 ## Phase 3: US1 AML slice (P1)
 
