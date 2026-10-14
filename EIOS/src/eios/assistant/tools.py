@@ -8,6 +8,7 @@ Fact ids of every figure a result returned are kept in turn state, which is what
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from google.adk.tools.base_tool import BaseTool
@@ -41,7 +42,7 @@ class PortTool(BaseTool):
         )
 
     async def run_async(self, *, args: dict[str, Any], tool_context: ToolContext) -> dict[str, Any]:
-        outcome = self._port.call(self._principal, self.name, dict(args))
+        outcome = await asyncio.to_thread(self._port.call, self._principal, self.name, dict(args))
         payload = outcome.payload()
         if outcome.result is None:
             return payload
@@ -77,6 +78,7 @@ def _turn_facts(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
                 "unit": unit,
                 "as_of": payload["as_of"],
                 "data_origin": payload["data_origin"],
+                "source": payload["source"],
             }
     return facts
 

@@ -8,6 +8,9 @@ from dataclasses import dataclass
 
 LOCAL_ENVIRONMENTS = frozenset({"dev", "test"})
 DEFAULT_TURN_DEADLINE_S = 30.0  # [ASSUMPTION] bounds a turn well under the 60 s the baseline missed
+DEFAULT_HISTORY_TURNS = (
+    6  # [ASSUMPTION] earlier turns the model sees; older ones stay stored but out of context
+)
 DEFAULT_MAX_LLM_CALLS = 12  # [ASSUMPTION] tool rounds plus up to three assembly attempts
 
 
@@ -25,6 +28,7 @@ class AssistantSettings:
     response_template: str | None
     turn_deadline_s: float
     max_llm_calls: int
+    history_turns: int
 
     @property
     def local(self) -> bool:
@@ -44,4 +48,5 @@ class AssistantSettings:
                 source.get("EIOS_ASSISTANT_TURN_DEADLINE_S", DEFAULT_TURN_DEADLINE_S)
             ),
             max_llm_calls=int(source.get("EIOS_ASSISTANT_MAX_LLM_CALLS", DEFAULT_MAX_LLM_CALLS)),
+            history_turns=int(source.get("EIOS_ASSISTANT_HISTORY_TURNS", DEFAULT_HISTORY_TURNS)),
         )

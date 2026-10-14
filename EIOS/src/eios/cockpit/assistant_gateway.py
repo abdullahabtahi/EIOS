@@ -58,11 +58,13 @@ def set_runtime_for_testing(runtime: AssistantRuntime | None) -> None:
 
 
 def _auditor_status(answer: Answer) -> str:
+    """The Metric Auditor Gate does not run on this path, so this never says PASS; ASSEMBLED means every figure was
+    inserted by the system from a governed result of this turn (spec 021 FR-001)."""
     if answer.blocked:
         return "BLOCKED"
     if answer.failed_closed or answer.fallback_reason:
         return "UNAUDITED"
-    return "PASS"
+    return "ASSEMBLED"
 
 
 def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
@@ -77,13 +79,13 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
             {
                 "metric_id": figure.fact_id,
                 "formatted_value": figure.text,
-                "steward": figure.fact_id.split(":", 1)[0],
+                "steward": figure.source,
                 "as_of": figure.as_of.isoformat(),
             }
             for figure in answer.figures
         ],
         "audit_record": {
-            "passed": _auditor_status(answer) == "PASS",
+            "passed": False,  # the Metric Auditor Gate did not run; see `verification`
             "unanchored_tokens": [],
             "anchored_numbers": [figure.text for figure in answer.figures],
             "relative_tolerance": 0.0,
@@ -96,4 +98,9 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
         "steps": list(outcome.steps),
         "proposed_actions": list(answer.proposed_actions),
         "data_origin": answer.data_origin.value,
+        "verification": {
+            "method": "assembled_from_governed_results",
+            "passed": _auditor_status(answer) == "ASSEMBLED",
+            "figures": len(answer.figures),
+        },
     }

@@ -19,6 +19,7 @@ class FigureRef(StrictModel):
     unit: str
     as_of: datetime
     data_origin: DataOrigin
+    source: str
     text: str
 
 

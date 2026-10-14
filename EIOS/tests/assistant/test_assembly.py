@@ -23,7 +23,7 @@ _RAW = {
     "aml.dossier:AC-1:open_alerts": ("alerts", 3.0),
 }
 FACTS = {
-    fid: TurnFact(fid, value, unit, AS_OF, DataOrigin.FIXTURE)
+    fid: TurnFact(fid, value, unit, AS_OF, DataOrigin.FIXTURE, "fixture.source")
     for fid, (unit, value) in _RAW.items()
 }
 
@@ -110,21 +110,24 @@ def test_a_draft_with_no_figures_is_accepted_and_has_no_demo_footer_claim_of_fig
     assert out.figures == ()
 
 
-def test_fail_closed_answer_has_no_figure_and_says_why() -> None:
-    answer = fail_closed_answer(("unknown fact id",), DataOrigin.FIXTURE)
+def test_fail_closed_answer_has_no_figure_and_none_of_the_models_numbers() -> None:
+    answer = fail_closed_answer(DataOrigin.FIXTURE)
     assert answer.text.startswith(FAIL_CLOSED_TEXT)
     assert answer.figures == ()
-    assert answer.blocked is False
-    assert answer.fallback_reason is None
+    assert answer.failed_closed is True
+    assert not any(ch.isdigit() for ch in answer.text)
     assert MAX_ATTEMPTS == 3
 
 
-@pytest.mark.parametrize("ident", ["CR84920", "PTR882", "ALT-CR84920", "P-882", "AC1000001"])
-def test_entity_identifiers_are_not_figures(ident: str) -> None:
-    out = _assemble(f"Account {ident} shows {{{{fact:aml.dossier:AC-1:discrepancy_multiplier}}}}.")
-    assert isinstance(out, Assembled), ident
-
-
-def test_a_figure_next_to_an_identifier_is_still_caught() -> None:
-    out = _assemble("Account CR84920 moved 40 times.")
-    assert isinstance(out, Rejected)
+@pytest.mark.parametrize(
+    "draft",
+    [
+        "Volume was top-10 of all accounts.",
+        "Exposure is USD500000 today.",
+        "Exposure is over-500 today.",
+        "The risk_87 band applies.",
+        "It moved 3x since USDT8000 arrived.",
+    ],
+)
+def test_a_number_dressed_as_an_identifier_is_still_a_typed_figure(draft: str) -> None:
+    assert isinstance(_assemble(draft), Rejected), draft

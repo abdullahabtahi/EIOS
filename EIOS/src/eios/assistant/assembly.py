@@ -1,7 +1,8 @@
 """Assemble an answer from a model draft so that no figure the model typed can reach an operator (spec 021 FR-001..003).
 
-The draft carries `{{fact:<fact id>}}` placeholders. Each id must be one a tool returned in this very turn, and is
-resolved again through the governed port (`FactResolver`) to a value, unit and as-of. After the placeholders are
+The draft carries `{{fact:<fact id>}}` placeholders. Each id must be one a governed tool returned in this very turn;
+its value, unit and as-of are the ones that result carried (a second port call could not be made for capabilities that
+need more than an entity id, and could disagree with what the model saw). After the placeholders are
 removed, any number left in the text is a figure the model typed itself and the draft is rejected. The reasons go
 back to the model for another attempt; after `MAX_ATTEMPTS` the answer fails closed with no figure at all.
 """
@@ -38,6 +39,7 @@ class TurnFact:
     unit: str
     as_of: datetime
     data_origin: DataOrigin
+    source: str
 
 
 @dataclass(frozen=True)
@@ -51,9 +53,15 @@ class Rejected:
     problems: tuple[str, ...]
 
 
-# An entity or alert identifier (CR84920, PTR-882, ALT-CR84920) is a name, not a figure: a token that starts with a
-# letter and contains a digit. A number that starts with a digit (16x, 40) is never exempt.
-_IDENTIFIER = re.compile(r"\b[A-Za-z][A-Za-z0-9_-]*\d[A-Za-z0-9_-]*\b")
+# An entity or alert identifier (CR84920, PTR-882, ALT-CR84920, AC1000001) is a name, not a figure. Only the shapes
+# the platform issues are exempt: capital-letter prefixes with two or more digits. Currency and asset codes are not
+# identifiers, and lowercase or numeric forms (top-10, over-500, risk_87, 16x, 40) are never exempt.
+_IDENTIFIER = re.compile(r"\b(?!(?:USDT?|EUR|GBP|BTC|ETH)\d)[A-Z]{1,5}(?:-[A-Z]{1,6})?-?\d{2,}\b")
+
+
+# The auditor's normalizer exempts any word-hyphen-digits token, so top-10 or over-500 would pass as a name. Platform
+# identifiers start with a capital; a lowercase-led hyphen-number is a figure written as a word.
+_DISGUISED_FIGURE = re.compile(r"\b[a-z][A-Za-z]*-\d[\d,.]*%?")
 
 
 def _plain(value: float) -> str:
@@ -110,6 +118,7 @@ def assemble_draft(
                 unit=fact.unit,
                 as_of=fact.as_of,
                 data_origin=fact.data_origin,
+                source=fact.source,
                 text=render_figure(fact.value, fact.unit),
             )
             resolved[fact_id] = ref
@@ -120,8 +129,10 @@ def assemble_draft(
     if "{{" in text or "}}" in text:
         problems.append("a placeholder is malformed; use exactly {{fact:<fact id>}}")
     # Numbers are searched in the draft with every placeholder removed, so a resolved figure is never mistaken for one.
-    prose = _IDENTIFIER.sub(" ", _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", draft)))
-    typed = [n.raw_string for n in _NORMALIZER.extract_numbers(prose)]
+    prose = _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", draft))
+    typed = [m.group(0) for m in _DISGUISED_FIGURE.finditer(prose)]
+    prose = _IDENTIFIER.sub(" ", prose)
+    typed += [n.raw_string for n in _NORMALIZER.extract_numbers(prose)]
     if typed:
         problems.append(
             "write no figure yourself, use a {{fact:<id>}} placeholder instead of: "
@@ -133,11 +144,10 @@ def assemble_draft(
     return Assembled(text=text.strip() + _footer(shown), figures=shown)
 
 
-def fail_closed_answer(problems: tuple[str, ...], origin: DataOrigin) -> Answer:
-    """No figure, a plain explanation, and the reasons for the audit trail."""
-    detail = "; ".join(problems) if problems else "no reason recorded"
+def fail_closed_answer(origin: DataOrigin) -> Answer:
+    """No figure and a plain explanation. The reasons quote what the model typed, so they go to the log, not the operator."""
     return Answer(
-        text=f"{FAIL_CLOSED_TEXT} Please rephrase the question or ask for a specific figure. (Reason: {detail})",
+        text=f"{FAIL_CLOSED_TEXT} Please rephrase the question or ask for a specific figure.",
         data_origin=origin,
         failed_closed=True,
         attempts=MAX_ATTEMPTS,

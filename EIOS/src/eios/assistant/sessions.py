@@ -6,6 +6,7 @@ another operator's lookup finds nothing. In-memory sessions are refused outside 
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from typing import Any
 
@@ -18,10 +19,19 @@ APP_NAME = "eios-assistant"
 NO_ENTITY = "-"
 
 
+_ENTITY_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{1,31}")
+
+
+def valid_entity_id(entity_id: str | None) -> bool:
+    """An id the platform issues: bounded, no separators, no whitespace. Nothing else reaches a prompt or a session id."""
+    return not entity_id or _ENTITY_ID.fullmatch(entity_id) is not None
+
+
 def session_key(workstation: str, entity_id: str | None) -> str:
     """One thread per workstation and entity; the operator is the ADK user id, never part of this key."""
-    entity = (entity_id or "").strip() or NO_ENTITY
-    return f"{workstation}:{entity}"
+    if not valid_entity_id(entity_id):
+        raise ValueError("entity id is not a valid identifier")
+    return f"{workstation}:{entity_id or NO_ENTITY}"
 
 
 def _firestore_client(database: str) -> Any:

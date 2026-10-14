@@ -17,6 +17,7 @@ from google.adk.agents.run_config import RunConfig
 from google.adk.apps.app import App
 from google.adk.models.base_llm import BaseLlm
 from google.adk.plugins.base_plugin import BasePlugin
+from google.adk.plugins.context_filter_plugin import ContextFilterPlugin
 from google.adk.runners import Runner
 from google.adk.sessions.base_session_service import BaseSessionService
 
@@ -29,7 +30,7 @@ from eios.assistant.assembler_agent import (
 )
 from eios.assistant.config import AssistantConfigError, AssistantSettings
 from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED
-from eios.assistant.sessions import APP_NAME, session_key
+from eios.assistant.sessions import APP_NAME, session_key, valid_entity_id
 from eios.assistant.tools import FACTS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
 from eios.llm_gateway.providers.adk_types import text_of, user_message
 from eios.ontology.omcp.port.principal import Principal
@@ -98,7 +99,12 @@ class AssistantRuntime:
                 "EIOS_GEMINI_MODEL must name the model; no model id lives in source"
             )
         self._port, self._settings = port, settings
-        self._sessions, self._model, self._plugins = session_service, chosen, plugins
+        self._sessions, self._model = session_service, chosen
+        # ADK's own filter bounds what the model reads; the stored thread keeps everything.
+        self._plugins = (
+            ContextFilterPlugin(num_invocations_to_keep=settings.history_turns),
+            *plugins,
+        )
 
     async def run_turn(
         self,
@@ -108,6 +114,8 @@ class AssistantRuntime:
         entity_id: str | None = None,
         entity_context: dict[str, Any] | None = None,
     ) -> TurnOutcome:
+        if not valid_entity_id(entity_id):
+            raise ValueError("entity id is not a valid identifier")
         started = time.perf_counter()
         try:
             outcome = await asyncio.wait_for(

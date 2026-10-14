@@ -7,6 +7,7 @@ the drafter through turn state; an accepted one, or the third rejection, ends th
 
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncGenerator
 from datetime import datetime
 from typing import Any
@@ -32,6 +33,7 @@ DRAFT_KEY = "temp:draft"
 ATTEMPT_KEY = "temp:assembly_attempts"
 FEEDBACK_KEY = "temp:assembly_feedback"
 ANSWER_METADATA_KEY = "answer"
+logger = logging.getLogger(__name__)
 
 
 def _origin(values: list[str]) -> DataOrigin:
@@ -42,6 +44,17 @@ def _origin(values: list[str]) -> DataOrigin:
     )
 
 
+def _turn_facts(raw: dict[str, Any]) -> dict[str, TurnFact]:
+    """The facts of this turn; one that cannot be read is dropped, so it is simply "not returned" and cannot be shown."""
+    facts: dict[str, TurnFact] = {}
+    for fact_id, item in raw.items():
+        try:
+            facts[fact_id] = _turn_fact(fact_id, item)
+        except KeyError, TypeError, ValueError:
+            logger.warning("dropping an unreadable turn fact: %s", fact_id)
+    return facts
+
+
 def _turn_fact(fact_id: str, raw: dict[str, Any]) -> TurnFact:
     return TurnFact(
         fact_id=fact_id,
@@ -49,6 +62,7 @@ def _turn_fact(fact_id: str, raw: dict[str, Any]) -> TurnFact:
         unit=raw["unit"],
         as_of=datetime.fromisoformat(raw["as_of"]),
         data_origin=DataOrigin(raw["data_origin"]),
+        source=raw["source"],
     )
 
 
@@ -68,7 +82,7 @@ class AnswerAssembler(BaseAgent):
         origin = _origin(list(state.get(ORIGINS_KEY, [])))
         result = assemble_draft(
             str(state.get(DRAFT_KEY, "")),
-            facts={fid: _turn_fact(fid, raw) for fid, raw in state.get(FACTS_KEY, {}).items()},
+            facts=_turn_facts(state.get(FACTS_KEY, {})),
         )
         if isinstance(result, Assembled):
             answer = Answer(
@@ -81,7 +95,10 @@ class AnswerAssembler(BaseAgent):
             )
             yield final_event(self.name, answer)
         elif attempt >= MAX_ATTEMPTS:
-            yield final_event(self.name, fail_closed_answer(result.problems, origin))
+            logger.warning(
+                "answer failed closed after %s attempts: %s", attempt, "; ".join(result.problems)
+            )
+            yield final_event(self.name, fail_closed_answer(origin))
         else:
             feedback = "; ".join(result.problems)
             yield Event(

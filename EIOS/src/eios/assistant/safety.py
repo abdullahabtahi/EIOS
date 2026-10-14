@@ -11,7 +11,6 @@ from __future__ import annotations
 from typing import Any
 
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.agents.invocation_context import InvocationContext
 from google.adk.integrations.model_armor import ModelArmorConfig, ModelArmorPlugin
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
@@ -22,33 +21,26 @@ from eios.assistant.config import AssistantConfigError, AssistantSettings
 INPUT_BLOCKED = "I can't help with that request."
 OUTPUT_BLOCKED = "I can't share that answer. Please rephrase the question."
 BLOCKED_METADATA_KEY = "model_armor_blocked"
+SCREENED_KEY = "temp:input_screened"
 
 
 class ScreenOncePerTurn(ModelArmorPlugin):
     """ADK's plugin screens the latest user text before every model call: tool rounds and retries would screen the
-    same question again and spend the turn's latency budget. Only a pass is remembered, so a block or a failure of
-    the screening service still blocks.
+    same question again and spend the turn's latency budget. A pass is remembered in the turn's own state (so nothing
+    outlives the turn), and only a pass: a block or a failure of the screening service still blocks.
     """
-
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(**kwargs)
-        self._passed: set[str] = set()
 
     async def before_model_callback(
         self, *, callback_context: CallbackContext, llm_request: LlmRequest
     ) -> LlmResponse | None:
-        turn = callback_context.invocation_id
-        if turn in self._passed:
+        if callback_context.state.get(SCREENED_KEY):
             return None
         blocked = await super().before_model_callback(
             callback_context=callback_context, llm_request=llm_request
         )
         if blocked is None:
-            self._passed.add(turn)
+            callback_context.state[SCREENED_KEY] = True
         return blocked
-
-    async def after_run_callback(self, *, invocation_context: InvocationContext) -> None:
-        self._passed.discard(invocation_context.invocation_id)
 
 
 def build_safety_plugins(
