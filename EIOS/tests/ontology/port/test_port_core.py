@@ -25,7 +25,7 @@ class _Out(ToolResult):
     score: int
 
 
-def _ok(_ctx: object, args: _Args) -> _Out:
+def _ok(_ctx: object, _who: object, args: _Args) -> _Out:
     return _Out(
         capability="aml.dossier",
         entity_id=args.entity_id,
@@ -37,11 +37,11 @@ def _ok(_ctx: object, args: _Args) -> _Out:
     )
 
 
-def _missing(_ctx: object, args: _Args) -> _Out:
+def _missing(_ctx: object, _who: object, args: _Args) -> _Out:
     raise PortError(ToolErrorCode.NOT_FOUND, f"no entity {args.entity_id}")
 
 
-def _wrong_type(_ctx: object, args: _Args) -> ToolResult:
+def _wrong_type(_ctx: object, _who: object, args: _Args) -> ToolResult:
     return ToolResult(
         capability="aml.dossier",
         entity_id=None,
@@ -124,9 +124,9 @@ def test_output_must_match_the_declared_contract() -> None:
 def test_a_marking_the_workstation_lacks_is_forbidden_and_the_handler_never_runs() -> None:
     ran: list[int] = []
 
-    def spy(ctx: object, args: _Args) -> _Out:
+    def spy(ctx: object, who: object, args: _Args) -> _Out:
         ran.append(1)
-        return _ok(ctx, args)
+        return _ok(ctx, who, args)
 
     spec = _spec(
         "get_x",

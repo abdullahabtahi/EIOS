@@ -1,5 +1,5 @@
 - {scenario_id: aml_dossier_discrepancy, workstation: aml_investigator, split: dev, description: "One alert, the headline discrepancy.",
-   turns: [{turn_index: 1, user_query: "What is the turnover discrepancy for account CR84920?",
+   turns: [{turn_index: 1, user_query: "What is the turnover discrepancy for account CR84920?", screen_payload: "aml:CR84920",
      expected_capabilities: [{capability: aml.dossier, order_index: 0}], allowed_extra_capabilities: [metric.get],
      forbidden_capabilities: [action.approve, action.execute],
      expected_facts: [{capability: aml.dossier, path: discrepancy_multiplier, unit: multiplier}]}]}

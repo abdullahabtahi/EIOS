@@ -131,7 +131,7 @@ class GovernedToolPort:
                 ),
             )
         try:
-            result = spec.handler(self._context, args)
+            result = spec.handler(self._context, principal, args)
         except PortError as exc:
             return self._finish(principal, spec, started, error=exc.error)
         if not isinstance(result, spec.result_model):

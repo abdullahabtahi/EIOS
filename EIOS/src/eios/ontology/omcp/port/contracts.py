@@ -52,23 +52,24 @@ ENVELOPE_FIELDS = frozenset(
 )
 
 
-def figure_paths(value: Any, prefix: str = "") -> set[str]:
-    """Dotted paths of every numeric leaf (bool is not a figure); list items are written `name[]`."""
-    if isinstance(value, bool):
-        return set()
-    if isinstance(value, int | float):
-        return {prefix}
+def leaf_paths(value: Any, prefix: str = "") -> dict[str, bool]:
+    """Dotted path of every non-null leaf mapped to whether it is a figure (bool is not a figure).
+
+    List items are written `name[]`, so one unit covers every item of a list.
+    """
+    if value is None:
+        return {}
     if isinstance(value, dict):
-        out: set[str] = set()
+        out: dict[str, bool] = {}
         for key, child in value.items():
-            out |= figure_paths(child, f"{prefix}.{key}" if prefix else str(key))
+            out |= leaf_paths(child, f"{prefix}.{key}" if prefix else str(key))
         return out
     if isinstance(value, list | tuple):
-        out = set()
+        out = {}
         for child in value:
-            out |= figure_paths(child, f"{prefix}[]")
+            out |= leaf_paths(child, f"{prefix}[]")
         return out
-    return set()
+    return {prefix: isinstance(value, int | float) and not isinstance(value, bool)}
 
 
 class ToolResult(StrictModel):
@@ -88,19 +89,23 @@ class ToolResult(StrictModel):
             raise ValueError("as_of must be timezone-aware")
         return value
 
-    def domain_figures(self) -> set[str]:
+    def domain_leaves(self) -> dict[str, bool]:
         body = {k: v for k, v in self.model_dump().items() if k not in ENVELOPE_FIELDS}
         body.pop("fact_ids", None)
-        return figure_paths(body)
+        return leaf_paths(body)
 
     @model_validator(mode="after")
     def _every_figure_has_a_unit(self) -> Self:
-        figures = self.domain_figures()
+        leaves = self.domain_leaves()
+        figures = {path for path, is_figure in leaves.items() if is_figure}
         declared = set(self.units)
         if figures - declared:
             raise ValueError(f"figures without a unit: {sorted(figures - declared)}")
-        if declared - figures:
-            raise ValueError(f"units for fields that are not figures: {sorted(declared - figures)}")
+        text_fields = {path for path, is_figure in leaves.items() if not is_figure}
+        if declared & text_fields:
+            raise ValueError(
+                f"units for fields that are not figures: {sorted(declared & text_fields)}"
+            )
         return self
 
     @computed_field  # type: ignore[prop-decorator]

@@ -7,7 +7,7 @@ from typing import Any
 from eios.common.validation import StrictModel
 from eios.ontology.config import SecurityMarking
 from eios.ontology.omcp.port.contracts import ToolResult
-from eios.ontology.omcp.port.principal import Workstation
+from eios.ontology.omcp.port.principal import Principal, Workstation
 
 KINDS = frozenset({"evidence", "compute", "draft", "propose", "knowledge"})
 
@@ -20,7 +20,7 @@ class ToolSpec:
     workstations: tuple[Workstation, ...]
     args_model: type[StrictModel]
     result_model: type[ToolResult]
-    handler: Callable[[Any, Any], ToolResult]
+    handler: Callable[[Any, Principal, Any], ToolResult]
     budget_ms: float
     markings: tuple[SecurityMarking, ...] = ()
     description: str = ""
