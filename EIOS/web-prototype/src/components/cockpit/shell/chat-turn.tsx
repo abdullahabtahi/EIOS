@@ -3,7 +3,7 @@
 /** One exchange in the chat thread: the question, then what the assistant answered, and the entity dividers between. */
 
 import * as React from 'react';
-import type { AssistantProposal, CopilotQueryResponse } from '../state/cockpit-types';
+import type { AssistantProposal, CopilotQueryResponse, MetricProvenance } from '../state/cockpit-types';
 import { MetricProvenanceBadge } from '../common/metric-provenance';
 import { SimpleMarkdown } from '../common/simple-markdown';
 import { AnswerStatusBanner } from './copilot-status';
@@ -28,6 +28,29 @@ export interface ChatDivider {
 }
 
 export type ChatItem = ChatTurn | ChatDivider;
+
+const INLINE_FIGURES = 4;
+
+/** The sentences already carry the figures; the badges are the proof. A long list folds them away until asked. */
+function FigureBadges({ figures }: { figures: MetricProvenance[] }) {
+  const badges = (
+    <div className="flex flex-wrap gap-2">
+      {figures.map((m) => (
+        <div key={m.metricId} className="flex flex-col gap-0.5">
+          <span className="text-label text-slate-500 capitalize">{m.name}</span>
+          <MetricProvenanceBadge metric={m} displayMode="badge" />
+        </div>
+      ))}
+    </div>
+  );
+  if (figures.length <= INLINE_FIGURES) return <div className="pt-2 border-t border-slate-100">{badges}</div>;
+  return (
+    <details className="pt-2 border-t border-slate-100">
+      <summary className="text-label text-slate-500 cursor-pointer select-none">Sources for {figures.length} figures</summary>
+      <div className="pt-2">{badges}</div>
+    </details>
+  );
+}
 
 export function ChatDividerView({ divider }: { divider: ChatDivider }) {
   return (
@@ -70,16 +93,7 @@ export function ChatTurnView({ turn, proposalStates, onStage, onShowInDossier }:
             className="text-xs leading-relaxed text-slate-800 font-sans"
           />
 
-          {figures.length > 0 && (
-            <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-2">
-              {figures.map((m) => (
-                <div key={m.metricId} className="flex flex-col gap-0.5">
-                  <span className="text-label text-slate-500 capitalize">{m.name}</span>
-                  <MetricProvenanceBadge metric={m} displayMode="badge" />
-                </div>
-              ))}
-            </div>
-          )}
+          {figures.length > 0 && <FigureBadges figures={figures} />}
 
           {(response.proposals ?? []).map((proposal) => (
             <ProposalCard

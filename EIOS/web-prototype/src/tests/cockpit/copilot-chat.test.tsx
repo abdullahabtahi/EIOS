@@ -179,4 +179,32 @@ describe('the chat view', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Show in dossier/i }));
     expect(screen.getByRole('tab', { name: 'Dossier' })).toHaveAttribute('aria-selected', 'true');
   });
+
+  it('folds the badges of a long list behind a disclosure, but shows a few figures directly', async () => {
+    const figure = (i: number) => ({
+      metricId: `alerts[${i}].risk_score`,
+      name: 'risk score',
+      rawValue: i,
+      formattedValue: `${80 + i}`,
+      unit: 'score',
+      semanticDefinitionVersion: '',
+      asOfTimestamp: '2026-10-14T03:57:10+00:00',
+      originEngine: 'port.alerts',
+      stewardRole: 'port.alerts',
+      citation: '[ILLUSTRATIVE]',
+      isCached: false,
+      dataOrigin: 'fixture',
+    });
+    mockBackend(ok({ ...answer('Many alerts.'), citedMetrics: [0, 1, 2, 3, 4, 5].map(figure) }));
+    await renderColumn();
+    fireEvent.click(screen.getByRole('tab', { name: /Chat/ }));
+    send('alerts');
+    const summary = await screen.findByText('Sources for 6 figures');
+    expect(summary.closest('details')).not.toHaveAttribute('open');
+
+    mockBackend(ok({ ...answer('Few alerts.'), citedMetrics: [0, 1].map(figure) }));
+    send('one more');
+    await screen.findByText('Few alerts.');
+    expect(screen.queryByText('Sources for 2 figures')).not.toBeInTheDocument();
+  });
 });
