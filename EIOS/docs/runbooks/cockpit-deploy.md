@@ -47,6 +47,20 @@ There is no replay of past answers for free-text questions (decision of 2026-10-
 labelled replay. The runtime's service account needs `roles/aiplatform.user` and Firestore access to `eios-state`, plus
 `roles/modelarmor.user` once the templates exist.
 
+## Model Armor templates (dev sandbox first)
+The templates are a Terraform module, `infra/modules/model_armor`, applied on its own in the dev sandbox project through
+`infra/sandboxes/model-armor` (its own state prefix; the full `envs/dev` skeleton is not touched). Filters: Responsible-AI
+categories and malicious links on both templates, prompt injection and jailbreak on the prompt template, all at medium
+confidence and blocking. Sensitive Data Protection is off on purpose: answers carry ids, names and amounts.
+
+1. `cd EIOS/infra/sandboxes/model-armor`; copy `terraform.tfvars.example` to `terraform.tfvars` and fill the project id.
+2. `terraform init -backend-config=bucket=eios-tfstate-eios-hackathon`, then `terraform plan` and read it. **Applying needs the user's say-so.**
+3. After an apply, run the gateway locally with `EIOS_MODEL_ARMOR_PROMPT_TEMPLATE` and `EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE` set to the two
+   outputs, `GOOGLE_CLOUD_QUOTA_PROJECT` set to the sandbox project, and `GOOGLE_GENAI_USE_ENTERPRISE=true`. Measure the added latency, send an
+   obvious injection, and read the matches in Cloud Logging before choosing thresholds for prod-like.
+4. prod-like reuses the same module, adds `roles/modelarmor.user` for the `eios_api` identity, sets the two variables on the Cloud Run
+   service, and needs its own plan, approval and deploy.
+
 ## Known exceptions
 - **Guardrails off** (`enforce_guardrails = false`) in eios-hackathon-prod: the deploying identity lacks
   `orgpolicy.policyAdmin`. Re-enable once granted. [ASSUMPTION: hackathon project]
