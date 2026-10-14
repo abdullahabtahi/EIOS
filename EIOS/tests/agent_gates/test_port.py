@@ -50,3 +50,8 @@ def test_request_defaults_are_safe() -> None:
     request = _request()
     assert request.tool_fixtures == {}
     assert request.repeat == 0
+
+
+def test_a_deadline_overrun_record_carries_the_deadline_as_its_latency() -> None:
+    record = run_with_deadline(_Slow(), _request(0.1))
+    assert record.latency_ms == 100.0  # a timeout is a slow turn, not a free one

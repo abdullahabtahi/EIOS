@@ -25,7 +25,7 @@ from eios.assistant.assembly import (
     assemble_draft,
     fail_closed_answer,
 )
-from eios.assistant.tools import FACTS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
+from eios.assistant.tools import FACTS_KEY, IDENTIFIERS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
 from eios.llm_gateway.providers.adk_types import Content, Part
 from eios.ontology.omcp.port.contracts import DataOrigin
 
@@ -83,6 +83,7 @@ class AnswerAssembler(BaseAgent):
         result = assemble_draft(
             str(state.get(DRAFT_KEY, "")),
             facts=_turn_facts(state.get(FACTS_KEY, {})),
+            identifiers=frozenset(state.get(IDENTIFIERS_KEY, [])),
         )
         if isinstance(result, Assembled):
             answer = Answer(

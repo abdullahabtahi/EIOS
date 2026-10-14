@@ -20,6 +20,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import logging
+import os
 import time
 from datetime import UTC, datetime
 from typing import Any
@@ -76,9 +77,11 @@ _LOG = logging.getLogger("eios.cockpit.server")
 
 copilot_engine = CopilotEngine()
 
+API_VERSION = "0.19.0"
+
 app = FastAPI(
     title="EIOS Cockpit Presentation Gateway",
-    version="0.1.0",
+    version=API_VERSION,
     description="Institutional Operator Cockpit API Gateway powering EIOS high-density operational cockpit",
 )
 
@@ -93,6 +96,10 @@ app.add_middleware(
 # Global Service Singletons
 session_mgr = SessionManager()
 governance = build_governance_runtime()
+# Seed demo intents once on startup for local / dev / test environments
+if os.getenv("EIOS_ENVIRONMENT", "dev") in {"dev", "test"}:
+    governance.seed_demo_intents()
+
 action_shelf = governance.shelf
 presenter = CockpitShellPresenter(session_manager=session_mgr, action_shelf=action_shelf)
 executive_svc = ExecutiveCockpitService()
@@ -110,19 +117,56 @@ class SimulateRequest(BaseModel):
     magnitude_pct: float = 25.0
 
 
+class WhatIfSimulationResponse(BaseModel):
+    shock_param: str = Field(..., description="Causal shock parameter identifier")
+    magnitude_pct: float = Field(..., description="Shock magnitude percentage")
+    latency_ms: float = Field(..., description="Simulation latency in milliseconds")
+    projected_changes: dict[str, float] = Field(..., description="Projected KPI impact deltas")
+    attribution_waterfall: list[dict[str, Any]] = Field(..., description="Attribution breakdown")
+    attribution_sum_pct: float = Field(..., description="Attribution sum percentage")
+    confidence_interval: list[float] = Field(..., description="Lower and upper bounds")
+
+
 class StageActionRequest(BaseModel):
-    action_type: str
-    target_entity_id: str
-    severity: str = "HIGH"
-    initiator_officer_id: str = "OFFICER_CHENG_772"
-    requires_four_eyes: bool = True
-    metadata: dict[str, Any] = Field(default_factory=dict)
+    action_type: str = Field(..., description="Canonical action type name")
+    target_entity_id: str = Field(..., description="Target business entity ID")
+    severity: str = Field(default="HIGH", description="Severity classification")
+    initiator_officer_id: str | None = Field(
+        default=None, description="Optional officer identifier for dev/test staging"
+    )
+    requires_four_eyes: bool = Field(
+        default=True, description="Whether action requires dual approval"
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Action parameters and context"
+    )
+
+
+class StageActionResponse(BaseModel):
+    status: str = Field(default="STAGED", description="Action lifecycle status")
+    card: dict[str, Any] = Field(
+        ..., description="Governed action card contract conforming to UI spec"
+    )
+    total_staged: int = Field(..., description="Total active staged actions count")
 
 
 class AuthorizeActionRequest(BaseModel):
-    intent_id: str
-    authorizer_id: str
-    second_eye_token: str | None = None
+    intent_id: str = Field(..., description="Target action intent ID")
+    authorizer_id: str = Field(..., description="Authorizing officer ID")
+    second_eye_token: str | None = Field(
+        default=None, description="Optional second-eye verification token"
+    )
+
+
+class AuthorizeActionResponse(BaseModel):
+    status: str = Field(
+        ...,
+        description="Action lifecycle transition outcome (PENDING_SECOND_EYE, COMMITTED, APPROVED)",
+    )
+    card: dict[str, Any] = Field(..., description="Updated governed action card contract")
+    committed_timestamp: str = Field(
+        ..., description="Approval/commit timestamp in ISO 8601 UTC format"
+    )
 
 
 class CopilotQueryRequest(BaseModel):
@@ -138,12 +182,58 @@ class CopilotQueryRequest(BaseModel):
 
 
 class FlywheelFeedbackRequest(BaseModel):
-    case_id: str
-    feedback_type: str = "SAR_NARRATIVE_EDIT"
-    original_text: str
-    revised_text: str
-    annotator_id: str = "INVESTIGATOR_ALICE"
-    false_positive: bool = False
+    case_id: str = Field(..., description="Investigation case reference")
+    feedback_type: str = Field(
+        default="SAR_NARRATIVE_EDIT", description="Annotation or revision type"
+    )
+    original_text: str = Field(..., description="Original model-generated text")
+    revised_text: str = Field(..., description="Operator-revised ground truth text")
+    annotator_id: str | None = Field(default=None, description="Annotator identifier")
+    false_positive: bool = Field(default=False, description="Whether alert was a false positive")
+    propensity_score: float | None = Field(
+        default=None, ge=0.0, le=1.0, description="Propensity score at decision time"
+    )
+
+
+class FlywheelFeedbackResponse(BaseModel):
+    status: str = Field(default="RECORDED", description="Feedback recording status")
+    decision_id: str = Field(..., description="Decision identifier in outcomes ledger")
+    provenance_hash: str = Field(..., description="Cryptographic SHA-256 provenance hash")
+    total_flywheel_records: int = Field(..., description="Total feedback records count in ledger")
+    timestamp: str = Field(..., description="Feedback receipt timestamp")
+
+
+class AuditVerifyResponse(BaseModel):
+    status: str = Field(..., description="Continuity verification outcome: VALID or TAMPERED")
+    total_records: int = Field(..., description="Total records walked in hash chain")
+    last_hash: str = Field(..., description="Head SHA-256 block hash")
+    genesis_hash: str = Field(..., description="Genesis SHA-256 block hash")
+    tampered_sequence_id: int | None = Field(
+        default=None, description="Sequence ID of corrupted block if tampered"
+    )
+    failure_reason: str | None = Field(
+        default=None, description="Detailed failure diagnosis if invalid"
+    )
+    worm_checkpoints_verified: int = Field(
+        ..., description="Count of validated WORM signed checkpoints"
+    )
+    worm_mode: str = Field(..., description="WORM mode: SIGNED_CHECKPOINTS or NO_CHECKPOINTS")
+    audit_duration_ms: float = Field(
+        ..., description="Wall-clock audit traversal latency in milliseconds"
+    )
+    verified_at: str = Field(..., description="Audit run timestamp")
+
+
+class CockpitHealthResponse(BaseModel):
+    status: str = Field(default="UP", description="Gateway health status")
+    version: str = Field(..., description="API runtime version")
+    service: str = Field(..., description="Service identifier")
+    engine: str = Field(..., description="Underlying presentation engine")
+    design_system: str = Field(..., description="Design system token standard")
+    security_standard: str = Field(..., description="Cryptographic security standard")
+    sse_enabled: bool = Field(default=True, description="Whether Server-Sent Events are enabled")
+    cors_configured: bool = Field(default=True, description="Whether CORS is explicitly secured")
+    timestamp: str = Field(..., description="ISO 8601 UTC timestamp")
 
 
 # Workstation payloads are assembled from in-process fixtures, not from the ingestion pipeline, so the
@@ -178,6 +268,8 @@ def _card_to_ui_contract_dict(
     if sev not in ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"]:
         sev = "HIGH"
 
+    initiator = card.first_approver_id or (token.requester_agent_id if token else "SYSTEM")
+
     return {
         "intent_id": card.intent_id,
         "action_type": card.action_type,
@@ -191,20 +283,20 @@ def _card_to_ui_contract_dict(
             "verified": card.kms_signature_verified,
         },
         "requires_four_eyes": card.requires_four_eyes,
-        "initiator_officer_id": card.first_approver_id or "OFFICER_CHENG_772",
+        "initiator_officer_id": initiator,
         "second_officer_id": card.second_approver_id,
     }
 
 
 def _ensure_default_staged_cards() -> None:
+    """Explicit hook to seed demo intents once across all instances (create-if-absent)."""
     governance.seed_demo_intents()
 
 
 def _build_contract_state(role_str: str, operator_id: str | None = None) -> dict[str, Any]:  # noqa: PLR0915
-    """Compiles the full CockpitUiContract JSON structure for a role."""
+    """Compiles the full CockpitUiContract JSON structure for a role (read-only, side-effect free)."""
     norm_role = role_str.lower().strip()
     now_iso = _get_utc_now()
-    _ensure_default_staged_cards()
 
     if norm_role in ("executive", "ceo", "cro"):
         role_enum = "executive"
@@ -770,7 +862,7 @@ def _build_contract_state(role_str: str, operator_id: str | None = None) -> dict
             "last_auditor_status": "PASS",
         },
         "flywheel_status": {
-            "total_feedback_events": len(outcomes_ledger._records),
+            "total_feedback_events": outcomes_ledger.count(),
             "uncalibrated_discrepancies": 2,
             "calibration_drift_detected": False,
         },
@@ -856,18 +948,20 @@ router = APIRouter(tags=["Cockpit Presentation"], dependencies=[Depends(current_
 
 
 # Endpoints
-@public_router.get(HEALTH_PATH)
-@public_router.get(API_HEALTH_PATH)
-def get_health() -> dict[str, Any]:
-    return {
-        "status": "UP",
-        "version": "0.1.0",
-        "engine": "EIOS Presentation Engine",
-        "design_system": "EIOS Sovereign Design Tokens (Light Mode)",
-        "security_standard": "Google Cloud KMS ECDSA P-256",
-        "sse_enabled": True,
-        "timestamp": _get_utc_now(),
-    }
+@public_router.get(HEALTH_PATH, response_model=CockpitHealthResponse)
+@public_router.get(API_HEALTH_PATH, response_model=CockpitHealthResponse)
+def get_health() -> CockpitHealthResponse:
+    return CockpitHealthResponse(
+        status="UP",
+        version=API_VERSION,
+        service="EIOS Presentation Engine",
+        engine="EIOS Presentation Engine",
+        design_system="EIOS Sovereign Design Tokens (Light Mode)",
+        security_standard="Google Cloud KMS ECDSA P-256",
+        sse_enabled=True,
+        cors_configured=True,
+        timestamp=_get_utc_now(),
+    )
 
 
 @router.get(WORKSTATIONS_PATH)
@@ -885,14 +979,14 @@ def get_workstation_state(
         ) from exc
 
 
-@router.post(SIMULATE_PATH)
-def simulate_what_if_shock(req: SimulateRequest) -> dict[str, Any]:
+@router.post(SIMULATE_PATH, response_model=WhatIfSimulationResponse)
+def simulate_what_if_shock(req: SimulateRequest) -> WhatIfSimulationResponse:
     """Parametric propagation across structural causal model equations."""
     result = executive_svc.simulate_what_if_shock(
         shock_param=req.shock_param,
         magnitude_pct=req.magnitude_pct,
     )
-    return result
+    return WhatIfSimulationResponse(**result)
 
 
 # The cockpit and the cards contract use some names the ontology spells differently.
@@ -916,19 +1010,20 @@ def _resolve_parameters(
     return params
 
 
-@router.post(STAGE_ACTION_PATH)
+@router.post(STAGE_ACTION_PATH, response_model=StageActionResponse)
 def stage_governed_action(
     req: StageActionRequest,
     operator: Operator | None = Depends(require_roles(STAGE_ROLES)),  # noqa: B008
-) -> dict[str, Any]:
+) -> StageActionResponse:
     """Propose an action through the intent hub: validated, KMS-signed, nonce-registered and ledgered."""
     action_type = _ACTION_ALIASES.get(req.action_type, req.action_type)
+    requester = operator.uid if operator else (req.initiator_officer_id or "DEV_OPERATOR")
     try:
         token = governance.hub.propose_action(
             action_type=action_type,
             parameters=_resolve_parameters(action_type, req.target_entity_id, req.metadata),
             evidence_refs=["ev_user_staged"],
-            requester_agent_id=operator.uid if operator else req.initiator_officer_id,
+            requester_agent_id=requester,
             policy_tags=["STAGED_VIA_COCKPIT"],
             require_dual_approval=req.requires_four_eyes,
         )
@@ -937,18 +1032,18 @@ def stage_governed_action(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
         ) from exc
     card = action_shelf.present_card(token)
-    return {
-        "status": "STAGED",
-        "card": _card_to_ui_contract_dict(card, token),
-        "total_staged": len(action_shelf.list_cards()),
-    }
+    return StageActionResponse(
+        status="STAGED",
+        card=_card_to_ui_contract_dict(card, token),
+        total_staged=len(action_shelf.list_cards()),
+    )
 
 
-@router.post(AUTHORIZE_ACTION_PATH)
+@router.post(AUTHORIZE_ACTION_PATH, response_model=AuthorizeActionResponse)
 def authorize_governed_action(
     req: AuthorizeActionRequest,
     operator: Operator | None = Depends(require_roles(APPROVE_ROLES)),  # noqa: B008
-) -> dict[str, Any]:
+) -> AuthorizeActionResponse:
     """Record a Four-Eyes approval; commit the action once every required approval is in."""
     try:
         card = action_shelf.submit_approval(
@@ -976,11 +1071,11 @@ def authorize_governed_action(
         outcome = "APPROVED"
     else:
         outcome = "PENDING_SECOND_EYE"
-    return {
-        "status": outcome,
-        "card": _card_to_ui_contract_dict(final_card, token),
-        "committed_timestamp": _get_utc_now(),
-    }
+    return AuthorizeActionResponse(
+        status=outcome,
+        card=_card_to_ui_contract_dict(final_card, token),
+        committed_timestamp=_get_utc_now(),
+    )
 
 
 @router.post(COPILOT_QUERY_PATH)
@@ -1054,13 +1149,15 @@ async def query_copilot(
     }
 
 
-@router.post(FLYWHEEL_FEEDBACK_PATH)
+@router.post(FLYWHEEL_FEEDBACK_PATH, response_model=FlywheelFeedbackResponse)
 def submit_flywheel_feedback(
     req: FlywheelFeedbackRequest, operator: Operator | None = Depends(current_operator)
-) -> dict[str, Any]:
+) -> FlywheelFeedbackResponse:
     """Records operator annotation/revision into closed-loop Decision Outcomes Ledger."""
     decision_id = f"dec_{int(time.time() * 1000)}"
     now = datetime.now(UTC)
+    propensity = req.propensity_score if req.propensity_score is not None else 0.92
+    annotator = operator.uid if operator else (req.annotator_id or "OPERATOR_FEEDBACK")
     record = DecisionOutcomeRecord(
         decision_id=decision_id,
         intent_id=f"intent_{req.case_id}",
@@ -1069,9 +1166,9 @@ def submit_flywheel_feedback(
         action_type=req.feedback_type,
         entity_type="InvestigationCase",
         entity_id=req.case_id,
-        propensity_score=0.92,
+        propensity_score=propensity,
         treatment_assigned=not req.false_positive,
-        covariates={"annotator": operator.uid if operator else req.annotator_id},
+        covariates={"annotator": annotator},
         predicted_impact_30d=0.0,
         predicted_impact_60d=0.0,
         predicted_impact_90d=0.0,
@@ -1079,33 +1176,33 @@ def submit_flywheel_feedback(
     )
     outcomes_ledger.append_decision(record)
 
-    return {
-        "status": "RECORDED",
-        "decision_id": decision_id,
-        "provenance_hash": record.provenance_hash,
-        "total_flywheel_records": len(outcomes_ledger._records),
-        "timestamp": _get_utc_now(),
-    }
+    return FlywheelFeedbackResponse(
+        status="RECORDED",
+        decision_id=decision_id,
+        provenance_hash=record.provenance_hash,
+        total_flywheel_records=outcomes_ledger.count(),
+        timestamp=_get_utc_now(),
+    )
 
 
-@router.get(AUDIT_VERIFY_PATH)
-def verify_ledger_continuity() -> dict[str, Any]:
+@router.get(AUDIT_VERIFY_PATH, response_model=AuditVerifyResponse)
+def verify_ledger_continuity() -> AuditVerifyResponse:
     """Walk the real decision ledger: sequence continuity, SHA-256 hash chain and signed checkpoints."""
     report = ContinuousAuditWalker(governance.sequencer, governance.worm).verify_ledger()
     checkpoints = governance.worm.get_checkpoints()
-    return {
-        "status": "VALID" if report.is_valid else "TAMPERED",
-        "total_records": report.total_entries,
-        "last_hash": report.head_hash,
-        "genesis_hash": report.genesis_hash,
-        "tampered_sequence_id": report.tampered_sequence_id,
-        "failure_reason": report.failure_reason,
-        "worm_checkpoints_verified": report.worm_checkpoints_verified,
+    return AuditVerifyResponse(
+        status="VALID" if report.is_valid else "TAMPERED",
+        total_records=report.total_entries,
+        last_hash=report.head_hash,
+        genesis_hash=report.genesis_hash,
+        tampered_sequence_id=report.tampered_sequence_id,
+        failure_reason=report.failure_reason,
+        worm_checkpoints_verified=report.worm_checkpoints_verified,
         # Checkpoints are signed at the application level; no bucket retention lock is claimed here.
-        "worm_mode": "SIGNED_CHECKPOINTS" if checkpoints else "NO_CHECKPOINTS",
-        "audit_duration_ms": report.audit_duration_ms,
-        "verified_at": _get_utc_now(),
-    }
+        worm_mode="SIGNED_CHECKPOINTS" if checkpoints else "NO_CHECKPOINTS",
+        audit_duration_ms=report.audit_duration_ms,
+        verified_at=_get_utc_now(),
+    )
 
 
 app.include_router(public_router)

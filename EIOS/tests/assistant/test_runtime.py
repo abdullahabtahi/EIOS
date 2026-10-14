@@ -43,6 +43,8 @@ def test_a_typed_figure_is_sent_back_and_the_second_draft_is_shown() -> None:
     assert "16x" in out.answer.text
     retry_instruction = str(llm.seen[-1].config.system_instruction)
     assert "rejected" in retry_instruction
+    # The ids of this turn's results are still valid after a rejection, so the model must not re-call its tools.
+    assert "still valid" in retry_instruction
 
 
 def test_three_bad_drafts_fail_closed_with_no_figure() -> None:
@@ -166,3 +168,16 @@ def test_the_drafter_caps_thinking_and_leaves_room_for_the_answer() -> None:
     config = agent.sub_agents[0].generate_content_config  # type: ignore[attr-defined]
     assert config.max_output_tokens == DRAFT_MAX_OUTPUT_TOKENS
     assert config.thinking_config.thinking_level.value == DRAFT_THINKING_LEVEL
+
+
+def test_a_timed_out_turn_still_reports_what_it_did() -> None:
+    settings = AssistantSettings.from_env(
+        {"EIOS_ENVIRONMENT": "test", "EIOS_ASSISTANT_TURN_DEADLINE_S": "1.0"}
+    )
+    runtime, llm = make_runtime([DOSSIER, draft(f"It is {FIGURE}.")], settings=settings)
+    llm.delay_s = 0.6
+    out = _turn(runtime)
+    assert out.status == "timeout"
+    assert [t.name for t in out.tool_calls] == ["get_aml_dossier"]
+    assert out.model_calls == 1
+    assert out.latency_ms >= 1000

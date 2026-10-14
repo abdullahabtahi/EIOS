@@ -4,8 +4,14 @@ from pathlib import Path
 
 import pytest
 
-from eios.agent_gates.report import build_report, compare_reports, render_markdown
-from evals.agent.baseline import SpendCapError, ThresholdsError, check_spend_cap, load_thresholds
+from eios.agent_gates.report import build_report, compare_reports, latency_summary, render_markdown
+from evals.agent.baseline import (
+    SpendCapError,
+    ThresholdsError,
+    check_spend_cap,
+    load_thresholds,
+    select_cases,
+)
 
 
 def _result(
@@ -73,3 +79,45 @@ def test_a_live_run_over_the_spend_cap_stops_before_it_starts() -> None:
         check_spend_cap(turns=100, repeats=3, live=True, cap_turns=50)
     check_spend_cap(turns=100, repeats=3, live=False, cap_turns=50)
     check_spend_cap(turns=10, repeats=3, live=True, cap_turns=50)
+
+
+def _turn(
+    latency: float, outcome: str = "completed", reason: str | None = None
+) -> dict[str, object]:
+    return {"outcome": outcome, "latency_ms": latency, "inconclusive_reason": reason}
+
+
+def test_p95_over_every_turn_counts_timeouts_at_the_time_they_took() -> None:
+    turns = [_turn(1000.0 + i) for i in range(18)]
+    turns += [_turn(30000.0, "inconclusive", "deadline of 30.0s exceeded")] * 2
+    summary = latency_summary(turns)
+    assert summary["turns"] == 20
+    assert summary["timed_out"] == 2
+    assert summary["p95_ms"] == 30000.0
+
+
+def test_a_capability_gap_is_not_a_slow_turn() -> None:
+    turns = [_turn(1000.0), _turn(0.0, "inconclusive", "capability_missing: knowledge.regulation")]
+    summary = latency_summary(turns)
+    assert summary["turns"] == 1
+    assert summary["timed_out"] == 0
+
+
+def test_no_turns_means_not_measured() -> None:
+    assert latency_summary([])["p95_ms"] is None
+
+
+def test_only_selects_golden_scenarios_and_attacks_by_id_and_refuses_an_unknown_id() -> None:
+    from pathlib import Path
+
+    from eios.agent_gates.cases import load_attack_cases, load_golden_cases
+
+    root = Path(__file__).resolve().parents[2] / "evals" / "golden"
+    golden, attacks = load_golden_cases(root / "agent_cases"), load_attack_cases(root / "attacks")
+    some_golden, some_attack = golden[0].scenario_id, attacks[0].case_id
+    picked_g, picked_a = select_cases(golden, attacks, [some_golden, some_attack])
+    assert [c.scenario_id for c in picked_g] == [some_golden]
+    assert [a.case_id for a in picked_a] == [some_attack]
+    assert select_cases(golden, attacks, None) == (golden, attacks)
+    with pytest.raises(ValueError, match="no_such_case"):
+        select_cases(golden, attacks, ["no_such_case"])

@@ -10,6 +10,7 @@ committed before any run (pre-registration). A case the runtime cannot serve is 
 
 import argparse
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -35,7 +36,12 @@ from eios.agent_gates.core.safety import judge_attack, pass_all
 from eios.agent_gates.core.trajectory import judge_turn
 from eios.agent_gates.port import AgentPort, TurnRequest, run_with_deadline
 from eios.agent_gates.records import Outcome, TurnRecord
-from eios.agent_gates.report import build_report, compare_reports, render_markdown
+from eios.agent_gates.report import (
+    build_report,
+    compare_reports,
+    latency_summary,
+    render_markdown,
+)
 from evals.agent.screen_payloads import load_payload
 
 HERE = Path(__file__).resolve().parent
@@ -315,7 +321,9 @@ def run_baseline(
         "git_sha": _git_sha(),
         "live": not getattr(port, "offline", True),
     }
-    return build_report(port.runtime_name, rows, meta), records
+    report = build_report(port.runtime_name, rows, meta)
+    report["latency_all_turns"] = latency_summary(records)
+    return report, records
 
 
 def _git_sha() -> str:
@@ -351,6 +359,28 @@ def _port(runtime: str, live: bool, records: Path | None = None) -> AgentPort:
     return AlwaysAnswerStandin("42")
 
 
+def select_cases(
+    golden: list[GoldenCase], attacks: list[AttackCase], only: Sequence[str] | None
+) -> tuple[list[GoldenCase], list[AttackCase]]:
+    """The cases named by `--only` (a golden scenario id or an attack case id), or all of them."""
+    if not only:
+        return golden, attacks
+    wanted = {name.removesuffix(_turn_suffix(name)) for name in only}
+    known = {c.scenario_id for c in golden} | {a.case_id for a in attacks}
+    if unknown := sorted(wanted - known):
+        raise ValueError(f"unknown case id: {', '.join(unknown)}")
+    return (
+        [c for c in golden if c.scenario_id in wanted],
+        [a for a in attacks if a.case_id in wanted],
+    )
+
+
+def _turn_suffix(name: str) -> str:
+    """`.t1` on a turn id such as `aml_withdrawal_risk.t1`, so the ids a report prints can be pasted back."""
+    head, _, tail = name.rpartition(".")
+    return f".{tail}" if head and tail.startswith("t") and tail[1:].isdigit() else ""
+
+
 def main(argv: Sequence[str]) -> int:
     ap = argparse.ArgumentParser(prog="python -m evals.agent.baseline")
     ap.add_argument(
@@ -365,17 +395,27 @@ def main(argv: Sequence[str]) -> int:
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--out", type=Path, default=Path("evals/reports/agent_baseline"))
     ap.add_argument("--compare", type=Path)
+    ap.add_argument(
+        "--only", help="comma-separated golden scenario ids or attack case ids; default is all"
+    )
     args = ap.parse_args(argv)
+    # One line per turn (where the time went) and per rejected draft, so a long live run can be followed and read after.
+    logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(name)s %(message)s")
+    for name in ("eios.agent_gates.adapters.adk", "eios.assistant"):
+        logging.getLogger(name).setLevel(logging.INFO)
     try:
         thresholds = load_thresholds(HERE / "thresholds.yaml")
         golden, attacks = (
             load_golden_cases(GOLDEN / "agent_cases"),
             load_attack_cases(GOLDEN / "attacks"),
         )
+        golden, attacks = select_cases(
+            golden, attacks, [x.strip() for x in args.only.split(",")] if args.only else None
+        )
         turns = sum(len(c.turns) for c in golden) + len(attacks)
         cap = os.getenv("EIOS_AGENT_EVAL_MAX_TURNS")
         check_spend_cap(turns, args.repeats, args.live, int(cap) if cap else None)
-    except (ThresholdsError, SpendCapError) as exc:
+    except (ThresholdsError, SpendCapError, ValueError) as exc:
         print(f"refused: {exc}", file=sys.stderr)
         return 2
     report, records = run_baseline(

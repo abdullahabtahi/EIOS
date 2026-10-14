@@ -51,3 +51,11 @@ def test_a_question_outside_the_workstation_yields_no_data() -> None:
         _request("What is the discrepancy on this account?", Role.PARTNER_MANAGER)
     )
     assert not any(c.capability == "aml.dossier" and c.result for c in record.tool_calls)
+
+
+def test_a_timed_out_turn_keeps_its_latency_rounds_and_tool_calls(monkeypatch) -> None:
+    monkeypatch.setenv("EIOS_ASSISTANT_TURN_DEADLINE_S", "0.0001")
+    record = AdkRuntime(offline=True).run_turn(_request("What is the discrepancy on this account?"))
+    assert record.outcome is Outcome.INCONCLUSIVE
+    assert record.inconclusive_reason and record.inconclusive_reason.startswith("deadline")
+    assert record.latency_ms > 0

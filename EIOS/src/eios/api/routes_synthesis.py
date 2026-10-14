@@ -65,12 +65,24 @@ def get_causal_dag() -> dict[str, Any]:
 @router.get(STREAM_PATH, response_class=EventSourceResponse)
 async def stream_synthesis_briefing() -> AsyncIterable[ServerSentEvent]:
     """Streams live executive briefing updates via native Server-Sent Events."""
-    for i in range(3):
-        briefing_data = get_morning_briefing()
+    try:
+        for i in range(3):
+            briefing_data = get_morning_briefing()
+            yield ServerSentEvent(
+                data=briefing_data,
+                event="briefing_update",
+                id=f"briefing_{int(datetime.now(UTC).timestamp() * 1000)}_{i}",
+            )
+            await asyncio.sleep(0.5)
+        yield ServerSentEvent(data={"status": "STREAM_ACTIVE"}, event="heartbeat")
         yield ServerSentEvent(
-            data=briefing_data,
-            event="briefing_update",
-            id=f"briefing_{int(datetime.now(UTC).timestamp() * 1000)}_{i}",
+            data={"status": "STREAM_COMPLETE", "reason": "BATCH_END"},
+            event="stream_end",
+            id=f"briefing_end_{int(datetime.now(UTC).timestamp() * 1000)}",
         )
-        await asyncio.sleep(0.5)
-    yield ServerSentEvent(data={"status": "STREAM_ACTIVE"}, event="heartbeat")
+    except Exception as exc:
+        yield ServerSentEvent(
+            data={"status": "STREAM_ERROR", "detail": str(exc)},
+            event="error",
+            id=f"briefing_err_{int(datetime.now(UTC).timestamp() * 1000)}",
+        )

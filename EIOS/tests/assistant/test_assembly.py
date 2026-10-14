@@ -164,3 +164,23 @@ def test_a_typed_figure_is_reported_with_the_words_around_it() -> None:
     assert isinstance(out, Rejected)
     assert "in '" in out.problems[0]
     assert "revenue" in out.problems[0]
+
+
+def test_an_identifier_a_tool_returned_this_turn_is_a_name_not_a_figure() -> None:
+    draft = "SAR sar_20261014_CR84920 covers case case_aml_84920 (cluster tok_id_cluster_a1b2c3d4e5f60718)."
+    ids = frozenset({"sar_20261014_CR84920", "case_aml_84920", "tok_id_cluster_a1b2c3d4e5f60718"})
+    assert isinstance(assemble_draft(draft, facts=FACTS, identifiers=ids), Assembled)
+    assert isinstance(assemble_draft(draft, facts=FACTS), Rejected)
+
+
+def test_a_figure_dressed_as_an_identifier_is_still_a_figure_unless_a_tool_returned_it() -> None:
+    ids = frozenset({"case_aml_84920"})
+    out = assemble_draft("The account scored risk_87 and top-10.", facts=FACTS, identifiers=ids)
+    assert isinstance(out, Rejected)
+
+
+def test_a_returned_identifier_cannot_hide_a_typed_figure_next_to_it() -> None:
+    ids = frozenset({"case_aml_84920"})
+    out = assemble_draft("Case case_aml_84920 moved 5000 dollars.", facts=FACTS, identifiers=ids)
+    assert isinstance(out, Rejected)
+    assert "5000" in out.problems[0]
