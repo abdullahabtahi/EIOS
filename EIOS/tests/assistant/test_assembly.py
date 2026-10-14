@@ -151,3 +151,16 @@ def test_a_word_that_only_starts_like_a_unit_is_kept() -> None:
     out = _assemble("There are {{fact:aml.dossier:AC-1:open_alerts}} xylophone alerts.")
     assert isinstance(out, Assembled)
     assert "3 alerts xylophone alerts" in out.text
+
+
+def test_a_hash_chain_digest_is_an_identifier_not_a_figure() -> None:
+    digest = "a9f8e7d6b5c4a3f2e1d0b9a8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b0c9d8"
+    out = _assemble(f"The chain head is {digest} and is unbroken.")
+    assert isinstance(out, Assembled)
+
+
+def test_a_typed_figure_is_reported_with_the_words_around_it() -> None:
+    out = _assemble("Net revenue is $3.82M this week.")
+    assert isinstance(out, Rejected)
+    assert "in '" in out.problems[0]
+    assert "revenue" in out.problems[0]

@@ -225,7 +225,12 @@ def _judge_bound(
             (b for b in bindings if fig.start < b["span"][1] and b["span"][0] < fig.end), None
         )
         if bound is None:
-            out.append(_verdict(fig, False, "unbound"))
+            # A look-back window a field name states ("30-day" for `..._30d_...`) is never bound to a value.
+            out.append(
+                _verdict(fig, True, "window")
+                if _window_supported(fig, facts)
+                else _verdict(fig, False, "unbound")
+            )
             continue
         fact = _fact_for(bound["fact_ref"], facts)
         ok = fact is not None and _value_matches(fig, fact) and _unit_ok(fig, fact)

@@ -74,6 +74,19 @@ _IDENTIFIER = re.compile(r"\b(?!(?:USDT?|EUR|GBP|BTC|ETH)\d)[A-Z]{1,5}(?:-[A-Z]{
 _DISGUISED_FIGURE = re.compile(r"\b[a-z][A-Za-z]*-\d[\d,.]*%?")
 
 
+# A hash chain value or digest (a SHA-256 hex string) is an identifier; its digits are not figures.
+_DIGEST = re.compile(r"\b(?:sha-?256:)?[0-9a-fA-F]{12,}\b")
+
+
+def _where(prose: str, token: str) -> str:
+    """The typed token with a few words around it, so the model can see which sentence to fix."""
+    at = prose.find(token)
+    if at < 0:
+        return token
+    context = " ".join(prose[max(0, at - 24) : at + len(token) + 16].split())
+    return f"{token} (in '{context}')"
+
+
 def _plain(value: float) -> str:
     return f"{int(value):,}" if value == int(value) else f"{value:,}"
 
@@ -143,8 +156,9 @@ def assemble_draft(
     # Numbers are searched in the draft with every placeholder removed, so a resolved figure is never mistaken for one.
     prose = _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", draft))
     typed = [m.group(0) for m in _DISGUISED_FIGURE.finditer(prose)]
-    prose = _IDENTIFIER.sub(" ", prose)
-    typed += [n.raw_string for n in _NORMALIZER.extract_numbers(prose)]
+    prose = _DIGEST.sub(" ", _IDENTIFIER.sub(" ", prose))
+    typed = [_where(prose, t) for t in typed]
+    typed += [_where(prose, n.raw_string) for n in _NORMALIZER.extract_numbers(prose)]
     if typed:
         problems.append(
             "write no figure yourself, use a {{fact:<id>}} placeholder instead of: "

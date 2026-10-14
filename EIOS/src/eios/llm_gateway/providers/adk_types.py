@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from google.adk.models.google_llm import Gemini
 from google.genai import types as _types
 
 Content = _types.Content
@@ -39,3 +40,15 @@ def generation_config(
     return _types.GenerateContentConfig(
         temperature=temperature, max_output_tokens=max_output_tokens, **extra
     )
+
+
+# ADK retries a model call twice by default; a quota error (429) on the shared project needs longer backoff.
+# [ASSUMPTION] attempts and delays, to be tuned on the live run.
+_RETRY = _types.HttpRetryOptions(
+    attempts=5, initial_delay=2.0, max_delay=30.0, exp_base=2.0, jitter=1.0
+)
+
+
+def retrying_gemini(model_id: str) -> Gemini:
+    """ADK's own Gemini model with its native retry policy (429, 5xx), instead of a hand-written retry loop."""
+    return Gemini(model=model_id, retry_options=_RETRY)
