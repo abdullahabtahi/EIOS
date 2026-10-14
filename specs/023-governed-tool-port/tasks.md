@@ -1,0 +1,68 @@
+# Tasks: Governed Tool Port
+
+**Input**: [spec.md](spec.md), [plan.md](plan.md). Paths are relative to `EIOS/` unless they start with `docs/` or `specs/`.
+
+**Tests first**: each "Tests" task is written and seen failing before the task after it. 80% coverage on new code.
+
+## Format: `- [ ] T### [P?] [US#?] Description with file path`
+
+---
+
+## Phase 1: Setup
+
+- [ ] T001 Package skeleton `src/eios/ontology/omcp/port/__init__.py` and `tests/ontology/port/__init__.py`
+
+## Phase 2: Foundation (blocks every story)
+
+- [ ] T002 Tests for contracts: `ToolResult` envelope rejects a figure with no unit, a missing as-of or origin; `ToolError` codes; error codes stay aligned with `agent_gates.records.ToolErrorCode` (`tests/ontology/port/test_contracts.py`)
+- [ ] T003 `src/eios/ontology/omcp/port/contracts.py`: `Marking`, `DataOrigin`, `ToolResult`, `ToolError`, `ToolErrorCode`, strict id types; extend `agent_gates/records.py` `ToolErrorCode` with `FORBIDDEN_ROLE` and `INVALID_ARGUMENTS`
+- [ ] T004 [P] Tests for `Principal` (`tests/ontology/port/test_principal.py`): identity from the verified operator, workstation only if entitled, claim overrides the default table, dev anonymous operator gets the dev principal, body-supplied role cannot widen
+- [ ] T005 [P] `src/eios/ontology/omcp/port/principal.py`; `workstations` claim read in `src/eios/cockpit/auth.py` (`Operator.workstations`, default empty)
+- [ ] T006 [P] Tests for entities (`tests/ontology/port/test_entities.py`): the three partner aliases resolve to one canonical id, unknown id is `NOT_FOUND`, conflicting alias map fails validation, free text rejected
+- [ ] T007 [P] `src/eios/ontology/omcp/port/entities.py` (alias map as data in `src/eios/ontology/omcp/port/aliases.yaml`)
+- [ ] T008 Tests for the port core (`tests/ontology/port/test_port_core.py`): role allow-list, out-of-role refused and recorded, invalid arguments typed, output validated against its model, trace record, latency budget declared for every tool, redundant identical call flagged
+- [ ] T009 `src/eios/ontology/omcp/port/registry.py` (capability spec and decorator) and `service.py` (`GovernedToolPort`, `RefusalLog`)
+
+## Phase 3: US1 AML slice (P1)
+
+- [ ] T010 [US1] Tests (`tests/ontology/port/test_aml_tools.py`): dossier fields and units, discrepancy 16.0 equals the workstation payload, unknown id `NOT_FOUND`, known-without-dossier `DATA_UNAVAILABLE`, alerts ranked, network flags hub suppression, timeline ordered, withdrawal risk, SAR draft sections reference facts
+- [ ] T011 [US1] `port/aml_tools.py`: `list_alerts`, `get_aml_dossier`, `get_network_evidence`, `get_activity_timeline`, `check_withdrawal_risk`, `draft_sar`
+- [ ] T012 [P] [US1] Add `aml:CR84920` to `evals/agent/screen_payloads.py` (read from `AMLWorkstationService`) and the case that uses it
+
+## Phase 4: US2 Safe by construction (P1)
+
+- [ ] T013 [US2] Tests (`tests/ontology/port/test_safety.py`): for every role, no tool approves or executes (walk the registry); every out-of-role call is refused and recorded; the capability map roles equal the port roles; untrusted text is flagged, structured first, bounded; a marking the role lacks gives `FORBIDDEN_MARKING` and no restricted field
+- [ ] T014 [US2] Enforce markings per tool in `service.py`; `port/untrusted.py` wrapper
+
+## Phase 5: US3 Partner slice (P2)
+
+- [ ] T015 [US3] Tests (`tests/ontology/port/test_partner_tools.py`): signals equal the radar payload for the golden partner (0.78, login decay), aliases resolve, no default partner, worklist ranked, integrity states observed facts only, comms untrusted, proposals carry label, cost, effect range, approver, no action constant
+- [ ] T016 [US3] `port/partner_tools.py`: `list_partner_worklist`, `get_partner_signals`, `get_partner_integrity`, `get_client_quality`, `read_partner_comms`
+- [ ] T017 [US3] `port/proposals.py`: `propose_hold`, `propose_partner_action`, closed action-kind enum with labels
+
+## Phase 6: US4 Executive, compliance and operations (P2)
+
+- [ ] T018 [US4] Tests (`tests/ontology/port/test_executive_tools.py`): `compare_facts` difference, ratio, percentage with cited inputs and unit rules, mismatched units rejected; what-if attribution sums to 100.0, labelled simulation; causal label verified versus correlation only; metric returns unit and definition
+- [ ] T019 [US4] `port/shared_tools.py` (`get_metric`, `resolve_entity`, `get_causal_evidence`, `compare_facts`) and `port/executive_tools.py` (`get_briefing`, `get_forecast`, `run_what_if`)
+- [ ] T020 [P] [US4] Tests and `port/compliance_tools.py` + `port/ops_tools.py`: ledger timeline, intent status, audit status, verify chain; DQ board, reliability, drill status, calibration (`tests/ontology/port/test_compliance_ops_tools.py`)
+
+## Phase 7: Judge through the agent port
+
+- [ ] T021 Tests (`tests/agent_gates/test_toolport_adapter.py`): the `toolport` runtime fills a record with identity source `verified_token`, only role-allowed calls, answers with result figures only
+- [ ] T022 `src/eios/agent_gates/adapters/toolport.py` and `--runtime toolport` in `evals/agent/baseline.py`
+- [ ] T023 Run `PYTHONPATH=src:. python -m evals.agent.baseline --runtime toolport` offline; record the result in `docs/agent-baseline.md` section 6 (before and after, same cases, thresholds unchanged); regrade saved runs with `--runtime recorded` where relevant
+- [ ] T024 Fix what the cases expose; cases that need specs 024 to 026 stay red and are reported as planned
+
+## Phase 8: Server wiring
+
+- [ ] T025 Tests (`tests/cockpit/test_copilot_identity.py`): copilot endpoint takes identity from the verified operator, a body role the operator is not entitled to is refused 403, `activeEntityId` and `context_entity_id` are both honoured
+- [ ] T026 `cockpit/server.py` `query_copilot`: `Depends(current_operator)`, principal built server side, both entity field names accepted
+
+## Phase 9: Close
+
+- [ ] T027 `make check` green except the recorded pre-existing failures; mypy strict clean for `eios.ontology.omcp.port`
+- [ ] T028 Update this file, `docs/adk.md` status board (A3 prerequisite: port done), `docs/agent-architecture.md` section 2 (built names), memory; open one PR; merge when CI is green and the branch is current
+
+## Deferred (reasons in plan.md)
+
+User Story 5 deprecation shims and retiring `conversation/tools.py` (spec 021), User Story 6 governance store separation (ADR-018 Proposed), knowledge capabilities (spec 024), `get_cohort_trend` (025), `get_market_context` (026), browser field rename (spec 030).
