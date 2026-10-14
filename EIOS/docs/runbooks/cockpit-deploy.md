@@ -66,12 +66,12 @@ confidence and blocking. Sensitive Data Protection is off on purpose: answers ca
 5. prod-like reuses the same module, adds `roles/modelarmor.user` for the `eios_api` identity, sets the two variables on the Cloud Run
    service, and needs its own plan, approval and deploy.
 
-### Dev sandbox measurement (2026-10-14, from a laptop, `us-central1` templates)
-- Applied: the API and the two templates (3 resources). No false positive on 27 golden questions `[MEASURED]`; no screening failure; no block on 6 real assistant answers `[MEASURED]`.
-- Latency of one screening call from a laptop over the internet: median about 430 ms and p95 about 790 ms after a 2 s cold first call `[MEASURED]`. The pre-registered budget of 400 ms at p95 `[ASSUMPTION]` is **not met from here**; the number that matters is from Cloud Run in the same region and has not been measured. A screened turn took about 1 to 1.5 s longer than an unscreened one `[MEASURED]`.
-- Attack questions: 1 of 15 blocked on the prompt side `[MEASURED]`. Model Armor is a content-safety filter, not our access control: write attempts, impersonation, stage-then-approve and cross-scope requests are stopped by the tool port (role scoping, no approve or execute tool) and judged by the spec 022 attack gates.
-- Cold start: the first screened turn after a restart took about 12 s `[MEASURED]` because the service connection is opened lazily. The app now warms it in the background at startup (`assistant_gateway.warm_up`); the first turn then took about 6 s `[MEASURED]`.
-- Open: re-run `screening_probe` from inside `us-central1` before choosing prod-like thresholds; decide whether Sensitive Data Protection is wanted after reading real traffic.
+### Dev sandbox measurement (2026-10-14; the numbers are in PR #51)
+- Applied: the API and the two templates. No false positive on the golden questions, no screening failure, and no block on real assistant answers.
+- Latency was measured from a laptop over the internet, which misses the budget of 400 ms at p95 `[ASSUMPTION]`. The figure that matters is from Cloud Run in the same region and has not been measured: re-run `screening_probe` from inside `us-central1` before choosing prod-like thresholds.
+- Attacks: Model Armor blocked one of the attack questions. It is a content-safety filter, not our access control: write attempts, impersonation, stage-then-approve and cross-scope requests are stopped by the tool port (role scoping, no approve or execute tool) and judged by the spec 022 attack gates.
+- Cold start: the first screened turn after a restart was about twice as slow because the service connection opens lazily. The app now warms it in the background at startup (`assistant_gateway.warm_up`), and the first turn is then a normal turn.
+- Open: whether Sensitive Data Protection is wanted, after reading real traffic.
 
 ## Known exceptions
 - **Guardrails off** (`enforce_guardrails = false`) in eios-hackathon-prod: the deploying identity lacks
