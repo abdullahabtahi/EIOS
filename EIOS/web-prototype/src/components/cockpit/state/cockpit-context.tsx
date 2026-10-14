@@ -96,7 +96,7 @@ export type CockpitAction =
   | { type: 'SET_SHELF_EXPANDED'; payload: boolean }
   | { type: 'OPEN_FOUR_EYES_MODAL'; payload: ActionIntentCard }
   | { type: 'CLOSE_FOUR_EYES_MODAL' }
-  | { type: 'ACTION_AUTHORIZED'; payload: { actionId: string; signedReceipt: string; secondOfficerId: string; rationale?: string } }
+  | { type: 'ACTION_UPDATED'; payload: ActionIntentCard }
   | { type: 'SET_WHAT_IF_PARAMS'; payload: Partial<WhatIfShockParameters> }
   | { type: 'RESET_WHAT_IF_PARAMS' }
   | { type: 'SET_COPILOT_COMMAND_OPEN'; payload: boolean }
@@ -380,33 +380,12 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
       };
     }
 
-    case 'ACTION_AUTHORIZED': {
-      const { actionId, signedReceipt, secondOfficerId, rationale } = action.payload;
+    case 'ACTION_UPDATED': {
+      // The card is the backend's own: its lifecycle state, approvers and signature replace the staged one as given.
       return {
         ...state,
         fourEyesPendingAction: null,
-        stagedActions: state.stagedActions.map((a) => {
-          if (a.intentId === actionId) {
-            return {
-              ...a,
-              lifecycleState: 'COMMITTED',
-              fourEyesRecord: {
-                initiatorOfficerId: a.fourEyesRecord?.initiatorOfficerId ?? state.operator.officerId,
-                initiatorTimestamp: a.fourEyesRecord?.initiatorTimestamp ?? a.stagedTimestamp,
-                secondOfficerId,
-                secondOfficerTimestamp: new Date().toISOString(),
-                approvalRationale: rationale ?? 'Dually verified and authorized via Cloud KMS ECDSA P-256',
-                idpClaimValidation: true,
-              },
-              kmsSignatureBadge: {
-                ...a.kmsSignatureBadge,
-                signatureDigest: signedReceipt || a.kmsSignatureBadge.signatureDigest,
-                verified: true,
-              },
-            };
-          }
-          return a;
-        }),
+        stagedActions: state.stagedActions.map((a) => (a.intentId === action.payload.intentId ? action.payload : a)),
       };
     }
 
@@ -488,7 +467,8 @@ interface CockpitContextValue {
   clearStagedActions: () => void;
   openFourEyesModal: (action: ActionIntentCard) => void;
   closeFourEyesModal: () => void;
-  authorizeAction: (actionId: string, secondOfficerId: string, signedReceipt: string, rationale?: string) => void;
+  /** Replace a staged card with the one the backend returned after an approval. */
+  applyBackendCard: (card: ActionIntentCard) => void;
   setWhatIfParams: (params: Partial<WhatIfShockParameters>) => void;
   resetWhatIfParams: () => void;
   setCopilotCommandOpen: (open: boolean) => void;
@@ -634,11 +614,8 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLOSE_FOUR_EYES_MODAL' });
   }, []);
 
-  const authorizeAction = useCallback((actionId: string, secondOfficerId: string, signedReceipt: string, rationale?: string) => {
-    dispatch({
-      type: 'ACTION_AUTHORIZED',
-      payload: { actionId, secondOfficerId, signedReceipt, rationale },
-    });
+  const applyBackendCard = useCallback((card: ActionIntentCard) => {
+    dispatch({ type: 'ACTION_UPDATED', payload: card });
   }, []);
 
   const setWhatIfParams = useCallback((params: Partial<WhatIfShockParameters>) => {
@@ -680,7 +657,7 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
       clearStagedActions,
       openFourEyesModal,
       closeFourEyesModal,
-      authorizeAction,
+      applyBackendCard,
       setWhatIfParams,
       resetWhatIfParams,
       setCopilotCommandOpen,
@@ -701,7 +678,7 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
       clearStagedActions,
       openFourEyesModal,
       closeFourEyesModal,
-      authorizeAction,
+      applyBackendCard,
       setWhatIfParams,
       resetWhatIfParams,
       setCopilotCommandOpen,

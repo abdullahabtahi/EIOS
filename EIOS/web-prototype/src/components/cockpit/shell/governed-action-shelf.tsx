@@ -13,6 +13,7 @@ import { useCockpit } from '../state/cockpit-context';
 import { ActionIntentCard } from '../state/cockpit-types';
 import { FourEyesApprovalModal } from '../common/four-eyes-modal';
 import { Chip } from '../ui/chip';
+import { authorizeIntent, GovernedActionError } from '@/lib/actions/governed-actions';
 
 export function GovernedActionShelf() {
   const {
@@ -21,19 +22,23 @@ export function GovernedActionShelf() {
     unstageAction,
     clearStagedActions,
     openFourEyesModal,
-    authorizeAction,
+    applyBackendCard,
   } = useCockpit();
 
   const { stagedActions, governedActionShelfExpanded } = state;
 
-  const handleSingleAuthorize = (action: ActionIntentCard) => {
-    const signedReceipt = `RECEIPT_SINGLE_${action.intentId.slice(0, 8)}_${Date.now()}`;
-    authorizeAction(
-      action.intentId,
-      state.operator.officerId,
-      signedReceipt,
-      'Authorized via Level 3 Executive Single Officer Signature'
-    );
+  const [authorizeError, setAuthorizeError] = React.useState<{ intentId: string; message: string } | null>(null);
+
+  // The backend records the approval and returns the card; nothing is shown as committed until it says so.
+  const handleSingleAuthorize = async (action: ActionIntentCard) => {
+    setAuthorizeError(null);
+    try {
+      const { card } = await authorizeIntent(action.intentId, state.operator.officerId);
+      applyBackendCard(card);
+    } catch (err) {
+      const message = err instanceof GovernedActionError ? err.message : 'Authorization failed. Nothing was authorized.';
+      setAuthorizeError({ intentId: action.intentId, message });
+    }
   };
 
   const expiredCount = stagedActions.filter((a) => a.lifecycleState === 'EXPIRED').length;
@@ -178,6 +183,15 @@ export function GovernedActionShelf() {
                               : 'PENDING COMMIT'}
                           </span>
                         </div>
+
+                        {authorizeError?.intentId === action.intentId && (
+                          <div
+                            role="alert"
+                            className="p-2 bg-cx-bad-bg border border-cx-bad-line text-cx-bad text-label font-mono"
+                          >
+                            {authorizeError.message}
+                          </div>
+                        )}
 
                         {/* Two-Phase Buttons */}
                         <div className="flex items-center gap-2 pt-1">

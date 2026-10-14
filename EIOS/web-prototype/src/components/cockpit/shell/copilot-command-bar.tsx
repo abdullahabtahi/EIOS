@@ -10,8 +10,12 @@
 
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
-import { CopilotQueryResponse, ActionIntentCard } from '../state/cockpit-types';
+import { CopilotQueryResponse, ActionIntentCard, AssistantProposal } from '../state/cockpit-types';
 import { MetricProvenanceBadge } from '../common/metric-provenance';
+import { CopilotWorking } from './copilot-working';
+import { AnswerStatusBanner, FigureSources, LegacyAuditBanner } from './copilot-status';
+import { ProposalCard, ProposalState } from './copilot-proposals';
+import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { authFetch } from '@/lib/auth/token';
 
@@ -67,6 +71,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
   const [query, setQuery] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [history, setHistory] = React.useState<ConversationTurn[]>([]);
+  const [proposalStates, setProposalStates] = React.useState<Record<string, ProposalState>>({});
   const scrollEndRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
@@ -141,6 +146,22 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
     );
   };
 
+  const handleStageProposal = async (turnId: string, proposal: AssistantProposal) => {
+    const key = `${turnId}:${proposal.proposalRef}`;
+    setProposalStates((prev) => ({ ...prev, [key]: { phase: 'staging' } }));
+    try {
+      const card = await stageProposal(proposal.stageRequest);
+      stageAction(card); // the shelf shows the card the backend made, signed and ledgered by the intent hub
+      setProposalStates((prev) => ({
+        ...prev,
+        [key]: { phase: 'staged', intentId: card.intentId, lifecycleState: card.lifecycleState },
+      }));
+    } catch (err) {
+      const message = err instanceof GovernedActionError ? err.message : 'Staging failed. Nothing was staged.';
+      setProposalStates((prev) => ({ ...prev, [key]: { phase: 'error', message } }));
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => setCopilotCommandOpen(open)}>
       <DialogContent size="lg" className="rounded-none border border-slate-300 bg-white shadow-2xl p-0 overflow-hidden flex flex-col max-h-[85vh]">
@@ -149,7 +170,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
           <div className="flex items-center gap-2">
             <span className="material-symbols-sharp text-blue-400 text-lg">psychology</span>
             <DialogTitle className="text-sm font-bold font-mono tracking-wide text-white uppercase">
-              Copilot Command Bar & Auditor Gate
+              Copilot Command Bar
             </DialogTitle>
             <span className="hidden md:inline-block px-1.5 py-0.5 bg-blue-900/60 border border-blue-700 text-blue-300 text-label font-mono">
               GOVERNED COPILOT
@@ -212,10 +233,6 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
             </div>
           ) : (
             history.map((turn) => {
-              const auditPassed = Boolean(turn.response?.auditorResult?.auditPassed);
-              const anchoredCount = turn.response?.auditorResult?.anchoredNumbers?.length ?? 0;
-              const untraceableCount = turn.response?.auditorResult?.untraceableNumbers?.length ?? 0;
-              const toolTracesCount = turn.response?.auditorResult?.toolTracesCount ?? (auditPassed ? 1 : 0);
               const isActionStaged = Boolean(turn.stagedActionId);
 
               return (
@@ -230,12 +247,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
 
                   {/* Assistant Response State */}
                   {turn.isLoading ? (
-                    <div className="p-4 bg-slate-50 border border-slate-200 flex items-center gap-3 text-xs font-mono text-slate-600 animate-pulse">
-                      <span className="material-symbols-sharp text-blue-600 animate-spin text-base">
-                        progress_activity
-                      </span>
-                      <span>Reasoning across OMCP tools & Metric Auditor Gate...</span>
-                    </div>
+                    <CopilotWorking />
                   ) : turn.error ? (
                     <div
                       role="alert"
@@ -258,56 +270,10 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                           </div>
                         </div>
                       )}
-                      {/* Metric Auditor Gate Status Banner */}
-                      {auditPassed ? (
-                        anchoredCount > 0 ? (
-                          <div className="p-2.5 bg-cx-ok-bg border border-cx-ok-line text-cx-ok flex items-center justify-between text-xs font-mono">
-                            <div className="flex items-center gap-2">
-                              <span className="material-symbols-sharp text-base">verified</span>
-                              <div>
-                                <span className="font-bold tracking-tight">METRIC AUDITOR GATE: AUDIT PASSED</span>
-                                <div className="text-label opacity-90">
-                                  Anchored {anchoredCount} numbers against semantic tool traces.
-                                </div>
-                              </div>
-                            </div>
-                            <span className="px-2 py-0.5 bg-white/80 border border-current text-label font-bold">
-                              {toolTracesCount} Tool Traces Verified
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="p-2.5 bg-cx-ok-bg-2 border border-cx-ok-line-2 text-cx-ok-strong flex items-center justify-between text-xs font-mono">
-                            <div className="flex items-center gap-2">
-                              <span className="material-symbols-sharp text-base">verified_user</span>
-                              <div>
-                                <span className="font-bold tracking-tight">SYSTEM GUIDANCE: QUALITATIVE PROVENANCE VERIFIED</span>
-                                <div className="text-label opacity-90">
-                                  Principle I & III: Zero unanchored claims. Institutional capability explanation.
-                                </div>
-                              </div>
-                            </div>
-                            <span className="px-2 py-0.5 bg-white/80 border border-current text-label font-bold">
-                              Qualitative Pass
-                            </span>
-                          </div>
-                        )
+                      {turn.response.assistantStatus ? (
+                        <AnswerStatusBanner response={turn.response} />
                       ) : (
-                        <div className="p-2.5 bg-cx-bad-bg border border-cx-bad-line text-cx-bad flex items-center justify-between text-xs font-mono">
-                          <div className="flex items-center gap-2">
-                            <span className="material-symbols-sharp text-base">gpp_bad</span>
-                            <div>
-                              <span className="font-bold tracking-tight">METRIC AUDITOR GATE: BLOCKED</span>
-                              <div className="text-label opacity-90">
-                                {untraceableCount > 0
-                                  ? `Flagged ${untraceableCount} unanchored hallucinated numbers.`
-                                  : 'Unauthorized operation or speculative inquiry blocked.'}
-                              </div>
-                            </div>
-                          </div>
-                          <span className="px-2 py-0.5 bg-white/80 border border-current text-label font-bold">
-                            Policy Blocked
-                          </span>
-                        </div>
+                        <LegacyAuditBanner response={turn.response} />
                       )}
 
                       {/* Natural Language Narrative Synthesis */}
@@ -315,11 +281,19 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                         {turn.response.responseMarkdown}
                       </div>
 
+                      {turn.response.steps && turn.response.assistantStatus === 'ASSEMBLED' && turn.response.steps.length > 0 && (
+                        <div className="text-label font-mono text-slate-500">
+                          Governed tools used: {turn.response.steps.join(', ')}
+                        </div>
+                      )}
+
                       {/* Cited Provenance Badges */}
                       {(turn.response.citedMetrics ?? []).length > 0 && (
                         <div className="pt-2 border-t border-slate-100 space-y-1.5">
                           <div className="text-label font-mono uppercase tracking-wider text-slate-500">
-                            Anchored Semantic Metrics (Principle I Provenance):
+                            {turn.response.assistantStatus
+                              ? 'Figures from governed data:'
+                              : 'Anchored Semantic Metrics (Principle I Provenance):'}
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {(turn.response.citedMetrics ?? []).map((m) => (
@@ -328,6 +302,17 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                           </div>
                         </div>
                       )}
+
+                      <FigureSources response={turn.response} />
+
+                      {(turn.response.proposals ?? []).map((proposal) => (
+                        <ProposalCard
+                          key={proposal.proposalRef}
+                          proposal={proposal}
+                          state={proposalStates[`${turn.id}:${proposal.proposalRef}`] ?? { phase: 'idle' }}
+                          onStage={(p) => handleStageProposal(turn.id, p)}
+                        />
+                      ))}
 
                       {/* Suggested Action Staging Card */}
                       {turn.response.suggestedAction && (
@@ -395,7 +380,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                 {isSubmitting ? (
                   <>
                     <span className="material-symbols-sharp text-xs animate-spin">progress_activity</span>
-                    Auditing...
+                    Working…
                   </>
                 ) : (
                   'Submit Query'

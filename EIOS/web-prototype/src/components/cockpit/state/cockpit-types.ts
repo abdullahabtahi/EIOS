@@ -73,6 +73,9 @@ export interface TriageItem {
   metricsSummary: Record<string, number | string>;
 }
 
+/** Where a figure came from. Absent means the backend did not say, which is never shown as live. */
+export type DataOrigin = 'live' | 'fixture';
+
 export interface MetricProvenance {
   metricId: string;
   name: string;
@@ -85,6 +88,8 @@ export interface MetricProvenance {
   stewardRole: string; // e.g. "VP Finance", "Lead AML Officer"
   citation: ProvenanceCitation;
   isCached: boolean;
+  /** Set by the backend for each figure of an assistant answer; absent for legacy citations. */
+  dataOrigin?: DataOrigin;
 }
 
 export interface DossierSection {
@@ -364,6 +369,41 @@ export interface AuditorGateResult {
   toolTracesCount: number;
 }
 
+/**
+ * What the ADK assistant says about its own answer. ASSEMBLED: every figure was filled in by the system from a
+ * governed result of this turn (the Metric Auditor did not run). BLOCKED: screening stopped it. FAILED_CLOSED: it
+ * could not support an answer and shows no figure. UNAVAILABLE: the model or data failed. Absent for the legacy copilot.
+ */
+export type AssistantStatus = 'ASSEMBLED' | 'BLOCKED' | 'FAILED_CLOSED' | 'UNAVAILABLE';
+
+/** The request the stage endpoint takes, built by the backend so the browser never invents a vocabulary. */
+export interface StageRequest {
+  action_type: string;
+  target_entity_id: string;
+  severity: string;
+  requires_four_eyes: boolean;
+  metadata: Record<string, unknown>;
+}
+
+/** A draft the assistant proposes. It is never signed, staged or approved until a human stages it. */
+export interface AssistantProposal {
+  proposalRef: string;
+  kind: string;
+  label: string;
+  offer: string;
+  estimatedCostUsd: number;
+  expectedEffectLow: number;
+  expectedEffectHigh: number;
+  expectedEffectBasis: string;
+  approvalRequirement: string;
+  signed: false;
+  staged: false;
+  dataOrigin?: DataOrigin;
+  source: string;
+  asOf: string;
+  stageRequest: StageRequest;
+}
+
 export interface CopilotQueryResponse {
   queryId: string;
   naturalLanguageQuery: string;
@@ -371,6 +411,13 @@ export interface CopilotQueryResponse {
   citedMetrics: MetricProvenance[];
   suggestedAction?: ActionIntentCard;
   auditorResult: AuditorGateResult;
+  assistantStatus?: AssistantStatus;
+  blocked?: boolean;
+  blockReason?: string;
+  dataOrigin?: DataOrigin;
+  steps?: string[];
+  proposals?: AssistantProposal[];
+  turnLatencyMs?: number;
   /** True when the answer is a deterministic replay, not a live model turn. Set by the backend, never inferred. */
   isReplayFallback?: boolean;
   fallbackReason?: string;
