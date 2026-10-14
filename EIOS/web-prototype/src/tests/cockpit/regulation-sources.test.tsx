@@ -52,6 +52,23 @@ describe('SourceChips', () => {
   });
 });
 
+describe('SimpleMarkdown long quotes', () => {
+  it('collapses a long passage to a preview, keeps the credit line visible and opens to the whole text', () => {
+    const long = 'A subject person shall report. '.repeat(40).trim();
+    render(<SimpleMarkdown source={`> ${long}\n> — Doc, p. 3 (MT)`} />);
+    expect(screen.getByText('— Doc, p. 3 (MT)')).toBeInTheDocument();
+    const details = document.querySelector('details');
+    expect(details).not.toBeNull();
+    expect(details?.querySelector('summary')?.textContent).toContain('Show full passage');
+    expect(details?.textContent).toContain(long);
+  });
+
+  it('leaves a short quotation as plain text', () => {
+    render(<SimpleMarkdown source={'> Short rule.\n> — Doc, p. 1 (MT)'} />);
+    expect(document.querySelector('details')).toBeNull();
+  });
+});
+
 describe('SimpleMarkdown quotes', () => {
   it('renders "> " lines as one quotation and never as a link', () => {
     render(<SimpleMarkdown source={'The guidance says:\n\n> A rule [click](http://x.invalid).\n> — Doc, p. 3 (MT)\n\nDone.'} />);

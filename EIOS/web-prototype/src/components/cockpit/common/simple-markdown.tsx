@@ -23,6 +23,32 @@ function inline(text: string): React.ReactNode[] {
   });
 }
 
+/** A quotation longer than this opens collapsed to a preview; the credit line below it always stays visible. */
+const QUOTE_PREVIEW_CHARS = 320;
+
+function Quote({ lines }: { lines: string[] }) {
+  const credit = lines.length > 1 && lines[lines.length - 1].startsWith('—') ? lines[lines.length - 1] : null;
+  const body = credit ? lines.slice(0, -1) : lines;
+  const full = body.filter((l) => l.trim()).join(' ');
+  const text =
+    full.length <= QUOTE_PREVIEW_CHARS ? (
+      body.map((l, j) => <p key={j}>{l}</p>)
+    ) : (
+      <details>
+        <summary className="cursor-pointer select-none">
+          {full.slice(0, QUOTE_PREVIEW_CHARS).trimEnd()}… <span className="text-cx-accent">Show full passage</span>
+        </summary>
+        <div className="space-y-1 pt-1">{body.map((l, j) => <p key={j}>{l}</p>)}</div>
+      </details>
+    );
+  return (
+    <blockquote className="border-l-2 border-cx-line pl-3 text-cx-muted space-y-1">
+      {text}
+      {credit && <p className="text-label">{credit}</p>}
+    </blockquote>
+  );
+}
+
 const BULLET = /^\s*[-*]\s+(.*)$/;
 const NUMBERED = /^\s*\d{1,3}[.)]\s+(.*)$/;
 const QUOTE = /^\s*>\s?(.*)$/;
@@ -60,11 +86,7 @@ export function SimpleMarkdown({ source, className = '' }: { source: string; cla
           );
         }
         if (block.kind === 'quote') {
-          return (
-            <blockquote key={i} className="border-l-2 border-cx-line pl-3 text-cx-muted">
-              {block.lines.map((l, j) => <p key={j}>{l}</p>)}
-            </blockquote>
-          );
+          return <Quote key={i} lines={block.lines} />;
         }
         if (block.kind === 'ol') {
           return (
