@@ -10,7 +10,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from google.adk.tools import BaseTool, ToolContext
+from google.adk.tools.base_tool import BaseTool
+from google.adk.tools.tool_context import ToolContext
 
 from eios.llm_gateway.providers.adk_types import FunctionDeclaration
 from eios.ontology.omcp.port.principal import Principal
@@ -22,7 +23,7 @@ FACT_IDS_KEY = "temp:fact_ids"
 SOURCES_KEY = "temp:sources"
 ORIGINS_KEY = "temp:data_origins"
 PROPOSALS_KEY = "temp:proposals"
-_PROPOSAL_KIND = "proposal"
+_PROPOSAL_KIND = "propose"
 
 
 class PortTool(BaseTool):

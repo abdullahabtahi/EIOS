@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from eios.assistant.tools import FACT_IDS_KEY, build_toolset
+from eios.assistant.tools import FACT_IDS_KEY, PROPOSALS_KEY, build_toolset
 from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.principal import Workstation, principal_for
 from eios.ontology.omcp.port.service import GovernedToolPort
@@ -85,3 +85,13 @@ def test_the_facts_of_two_calls_accumulate_in_one_turn(port: GovernedToolPort) -
     first = set(ctx.state[FACT_IDS_KEY])
     _run(tools["list_alerts"], {}, ctx)
     assert first <= set(ctx.state[FACT_IDS_KEY])
+
+
+def test_a_proposal_is_kept_for_the_answer_and_stages_nothing(port: GovernedToolPort) -> None:
+    tools = {t.name: t for t in build_toolset(port, principal_for("op-1", "aml_investigator"))}
+    ctx = _context()
+    payload = _run(tools["propose_hold"], {"entity_id": "CR84920"}, ctx)
+    if "error" in payload:  # an unproposable entity is a typed refusal, never a record
+        assert not ctx.state.get(PROPOSALS_KEY)
+    else:
+        assert ctx.state[PROPOSALS_KEY] == [payload]
