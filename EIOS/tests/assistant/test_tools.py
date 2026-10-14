@@ -212,3 +212,28 @@ def test_a_retention_proposal_carries_the_playbook_and_budget(port: GovernedTool
         "budget": 4500.0,
     }
     assert request["requires_four_eyes"] is True  # this deal is over the fast-path budget
+
+
+def test_names_a_trusted_result_returned_are_not_figures_even_with_digits_in_them() -> None:
+    from eios.assistant.tools import identifiers_of
+
+    payload = {
+        "untrusted": False,
+        "partners": [
+            {"partner_id": "PTR-339", "name": "Medellin P2P Payment Ring"},
+            {"partner_id": "PTR-520", "primary_root_cause": "Rebate Dispute on Volatility 100"},
+        ],
+    }
+    found = identifiers_of(payload)
+    assert {"Medellin P2P Payment Ring", "PTR-339", "PTR-520"} <= found
+    assert "Rebate Dispute on Volatility 100" in found
+    assert "Volatility 100" in found  # the product name on its own, as a model would write it
+    assert "P2P" in found
+    assert "100" not in found and "2" not in found  # a bare number is never a name
+
+
+def test_a_result_marked_untrusted_names_nothing_and_narrative_fields_are_not_names() -> None:
+    from eios.assistant.tools import identifiers_of
+
+    assert identifiers_of({"untrusted": True, "name": "Evil 99 Corp"}) == set()
+    assert identifiers_of({"summary": "Revenue up 18 percent", "name": "x" * 200}) == set()

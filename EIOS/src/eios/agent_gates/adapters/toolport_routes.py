@@ -113,7 +113,7 @@ ROUTES: tuple[Route, ...] = (
         ("get_partner_signals", _part),
         unless=r"2030|predict",
     ),
-    _r(r"which partners|attention|worklist", ("list_partner_worklist", _none)),
+    _r(r"which partners|attention|worklist|ecosystem", ("list_partner_worklist", _none)),
     _r(r"morning briefing|briefing", ("get_briefing", _none)),
     _r(r"forecast", ("get_forecast", _forecast)),
     _r(r"what happens|what if|cut", ("run_what_if", _what_if)),

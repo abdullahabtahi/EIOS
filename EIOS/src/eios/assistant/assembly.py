@@ -128,10 +128,7 @@ def _footer(figures: tuple[FigureRef, ...]) -> str:
     as_of = stamps[0].strftime("%Y-%m-%d %H:%M UTC")
     if len(stamps) > 1:
         as_of = f"{as_of} to {stamps[-1].strftime('%Y-%m-%d %H:%M UTC')}"
-    origin = (
-        "Demo data (fixture), " if any(f.data_origin is DataOrigin.FIXTURE for f in figures) else ""
-    )
-    return f"\n\n_{origin}as of {as_of}._"
+    return f"\n\n_as of {as_of}._"
 
 
 def _without_identifiers(prose: str, identifiers: frozenset[str]) -> str:

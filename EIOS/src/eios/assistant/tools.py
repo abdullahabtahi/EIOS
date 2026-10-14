@@ -35,21 +35,55 @@ _IDENTIFIER_FIELD = re.compile(r"(?:^id|_id|_key|_ref)$")
 _IDENTIFIER_VALUE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:\-]{2,79}$")
 
 
-def identifiers_of(payload: dict[str, Any]) -> set[str]:
-    """The identifier strings a trusted result names in its own id and key fields.
+# Short labels a trusted result names things with. Their wording is the platform's, so a digit inside one ("P2P",
+# "Volatility 100") belongs to the name. Narrative fields are never in this list.
+_NAME_FIELD = re.compile(r"^(?:name|title|label|primary_root_cause)$")
+_MAX_NAME = 80
+_DIGIT_WORD = re.compile(r"\d")
 
-    Only a result's top-level `*_id` and `*_key` fields count, and never a result marked untrusted, so free text (a
-    narrative, an injected sentence) cannot smuggle a number past the assembler as if it were a name.
+
+def _name_phrases(value: str) -> set[str]:
+    """The name, and the parts of it a model would write on their own: "P2P", "Volatility 100"."""
+    words = value.split()
+    found = {value}
+    for i, word in enumerate(words):
+        if not _DIGIT_WORD.search(word):
+            continue
+        if re.search(r"[A-Za-z]", word):
+            found.add(word.strip(".,;:()"))
+        elif i > 0:
+            found.add(f"{words[i - 1]} {word.strip('.,;:()')}")
+    return found
+
+
+def _walk(node: Any) -> Iterator[tuple[str, str]]:
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if isinstance(value, str):
+                yield key, value
+            else:
+                yield from _walk(value)
+    elif isinstance(node, list):
+        for item in node:
+            yield from _walk(item)
+
+
+def identifiers_of(payload: dict[str, Any]) -> set[str]:
+    """The names and identifier strings a trusted result returns in its own id, key and name fields.
+
+    Only `*_id`, `*_key`, `*_ref`, `name`, `title`, `label` and `primary_root_cause` fields count (in a nested row as
+    well as at the top), and never a result marked untrusted, so free text (a narrative, an injected sentence)
+    cannot smuggle a number past the assembler as if it were a name. A bare number is never a name.
     """
     if payload.get("untrusted"):
         return set()
-    return {
-        value
-        for key, value in payload.items()
-        if _IDENTIFIER_FIELD.search(key)
-        and isinstance(value, str)
-        and _IDENTIFIER_VALUE.match(value)
-    }
+    found: set[str] = set()
+    for key, value in _walk(payload):
+        if _IDENTIFIER_FIELD.search(key) and _IDENTIFIER_VALUE.match(value):
+            found.add(value)
+        elif _NAME_FIELD.match(key) and 0 < len(value) <= _MAX_NAME:
+            found |= {n for n in _name_phrases(value) if not n.replace(" ", "").isdigit()}
+    return found
 
 
 class PortTool(BaseTool):
