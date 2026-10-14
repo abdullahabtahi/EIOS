@@ -43,3 +43,29 @@ def test_a_window_the_field_name_does_not_state_still_fails() -> None:
     result = judge(_record("realized_volume_usd"))
     assert not result.passed
     assert [v.reason for v in result.verdicts if v.verdict == "unsupported"] == ["unbound"]
+
+
+def test_a_window_named_by_a_primary_metric_id_label_is_a_stated_window() -> None:
+    record = {
+        "answer": "Realized 30-day volume: $1,240,000",
+        "question": "q",
+        "entity_context": None,
+        "tool_calls": [
+            {
+                "name": "get_briefing",
+                "arguments": {},
+                "result": {
+                    "primary_metric_id": "realized_volume_30d_usd",
+                    "observed_value": 1240000.0,
+                },
+            }
+        ],
+        "bindings": [
+            {
+                "span": [24, 34],
+                "fact_ref": {"tool_call_index": 0, "path": "observed_value"},
+                "unit": "USD",
+            }
+        ],
+    }
+    assert judge(record).passed
