@@ -5,7 +5,6 @@ import { backendUnavailable, callBackend, relayError } from '@/lib/server/backen
 import {
   assistantStatusOf,
   dataOriginOf,
-  normalizeActionCard,
   normalizeCitedMetric,
   normalizeProposal,
 } from '@/lib/server/normalize';
@@ -14,13 +13,9 @@ import {
 const COPILOT_TIMEOUT_MS = 90_000;
 
 /**
- * Relay the backend's copilot answer. Every trust field comes from the backend: the audit verdict, the
- * anchored numbers, the tool-trace count, the replay flag and the signature on a suggested action.
- * A missing or UNAUDITED audit is a failed audit.
- *
- * The ADK assistant does not run the Metric Auditor: it fills every figure in from a governed result and says so
- * in `assistant_status`. Such an answer is still not an audit pass (that is never claimed), but it is not a failed
- * audit either, so the browser reads `assistantStatus` and not `auditorResult`.
+ * Relay the backend's assistant answer. Every trust field comes from the backend: the status, each figure's source
+ * and origin, and the proposals with the request that stages them. The assistant does not run the Metric Auditor, so
+ * nothing here ever claims an audit pass. An answer without a readable status is refused, never guessed.
  */
 export async function POST(req: NextRequest) {
   let body: Record<string, unknown> = {};
@@ -45,45 +40,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ detail: 'EIOS backend returned an unreadable copilot response' }, { status: 502 });
   }
 
-  const audit = data.audit_record ?? {};
-  const auditPassed = data.auditor_status === 'PASS' && audit.passed === true;
-  const anchored: (number | string)[] = Array.isArray(audit.anchored_numbers) ? audit.anchored_numbers : [];
-  const untraceable: (number | string)[] = Array.isArray(audit.unanchored_tokens) ? audit.unanchored_tokens : [];
-
   const rawCitations: Record<string, unknown>[] = Array.isArray(data.provenance_citations) ? data.provenance_citations : [];
   const assistantStatus = assistantStatusOf(data.assistant_status);
+  if (!assistantStatus) {
+    return NextResponse.json({ detail: 'EIOS backend returned an answer with no readable status' }, { status: 502 });
+  }
   const rawProposals: Record<string, unknown>[] = Array.isArray(data.proposals) ? data.proposals : [];
-  const rawAction = data.suggested_action;
-  const suggestedAction = rawAction ? normalizeActionCard(rawAction) : undefined;
 
   const normalized: CopilotQueryResponse = {
     queryId: data.queryId ?? `qry_${Date.now()}`,
     naturalLanguageQuery: data.query || query,
     responseMarkdown: data.response ?? '',
     citedMetrics: rawCitations.map(normalizeCitedMetric),
-    auditorResult: {
-      auditPassed,
-      extractedNumbers: [...anchored, ...untraceable],
-      anchoredNumbers: anchored,
-      untraceableNumbers: untraceable,
-      toolTracesCount: Number(data.tool_trace_count ?? 0),
-      rejectionReason: auditPassed || assistantStatus
-        ? undefined
-        : untraceable.length > 0
-          ? 'Ungrounded metric tokens detected without semantic tool trace.'
-          : 'No passing Metric Auditor verdict accompanied this answer.',
-    },
-    suggestedAction: suggestedAction?.intentId ? suggestedAction : undefined,
     assistantStatus,
-    blocked: assistantStatus ? data.blocked === true : undefined,
+    blocked: data.blocked === true,
     blockReason: typeof data.block_reason === 'string' ? data.block_reason : undefined,
     dataOrigin: dataOriginOf(data.data_origin),
-    steps: Array.isArray(data.steps) ? data.steps.filter((s: unknown): s is string => typeof s === 'string') : undefined,
-    proposals: assistantStatus
-      ? rawProposals.map(normalizeProposal).filter((p): p is NonNullable<typeof p> => p !== undefined)
-      : undefined,
+    steps: Array.isArray(data.steps) ? data.steps.filter((s: unknown): s is string => typeof s === 'string') : [],
+    proposals: rawProposals.map(normalizeProposal).filter((p): p is NonNullable<typeof p> => p !== undefined),
     turnLatencyMs: typeof data.turn_latency_ms === 'number' ? data.turn_latency_ms : undefined,
-    isReplayFallback: data.is_replay_fallback === true,
     fallbackReason: typeof data.fallback_reason === 'string' ? data.fallback_reason : undefined,
     timestamp: data.timestamp ?? new Date().toISOString(),
   };

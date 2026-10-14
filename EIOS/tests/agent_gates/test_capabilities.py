@@ -37,9 +37,3 @@ def test_every_role_capability_exists_and_toolsets_stay_small() -> None:
     for role, caps in cmap.roles.items():
         assert set(caps) <= set(cmap.capabilities), role
         assert len(caps) <= 12, f"{role} has {len(caps)} capabilities"
-
-
-def test_the_copilots_own_tool_table_has_no_approve_or_execute_tool() -> None:
-    from eios.conversation.copilot_engine import TOOL_MAP
-
-    assert not (set(TOOL_MAP) & FORBIDDEN_AGENT_TOOLS)

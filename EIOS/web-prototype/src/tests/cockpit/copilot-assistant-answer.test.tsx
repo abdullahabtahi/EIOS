@@ -35,7 +35,6 @@ const assembled = (overrides: Record<string, unknown> = {}) => ({
   naturalLanguageQuery: 'q',
   responseMarkdown: 'The discrepancy multiplier is 16x.',
   citedMetrics: [figure],
-  auditorResult: { auditPassed: false, extractedNumbers: ['16x'], anchoredNumbers: ['16x'], untraceableNumbers: [], toolTracesCount: 1 },
   assistantStatus: 'ASSEMBLED',
   dataOrigin: 'fixture',
   steps: ['get_aml_dossier'],

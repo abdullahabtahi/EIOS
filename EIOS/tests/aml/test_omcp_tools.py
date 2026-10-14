@@ -1,13 +1,10 @@
-"""Unit and integration tests for AML OMCP tools and SentinelAMLSpecialist (T041, T042).
+"""Unit and integration tests for AML OMCP tools (T041, T042).
 
 Authoritative References:
 - specs/010-client-aml/spec.md (User Story 6, SC-006, SC-007)
 - .specify/memory/constitution.md (Principles I, II, VII, VIII)
 """
 
-from langchain_core.messages import HumanMessage
-
-from eios.conversation.specialists.aml import SentinelAMLSpecialist
 from eios.ingestion.hot_state import HotStateEngine
 from eios.ontology.omcp.server import OMCPServer
 
@@ -84,42 +81,3 @@ def test_omcp_aml_tool_handlers() -> None:
     assert action["action_type"] == "HoldWithdrawal"
     assert action["status"] == "PENDING"
     assert len(action["signature"]) > 0
-
-
-def test_sentinel_aml_specialist_with_server() -> None:
-    """Verify SentinelAMLSpecialist grounds reasoning in OMCP server output."""
-    hot_state = HotStateEngine()
-    server = OMCPServer(hot_state=hot_state)
-    specialist = SentinelAMLSpecialist(omcp_server=server)
-
-    state = {
-        "messages": [
-            HumanMessage(content="Assess account C-AML-ROUNDTRIP-01 for laundering risk.")
-        ],
-        "reflection_cycles": 0,
-    }
-
-    result = specialist.invoke(state)
-    assert len(result["messages"]) == 1
-    content = result["messages"][0].content
-    assert "C-AML-ROUNDTRIP-01" in content
-    assert "Composite AML risk score" in content
-    assert result["next_agent"] == "supervisor"
-    assert result["reflection_cycles"] == 1
-
-
-def test_sentinel_aml_specialist_replay_fallback() -> None:
-    """Verify SentinelAMLSpecialist emits [REPLAY] badge under server outage (Principle VIII)."""
-    specialist = SentinelAMLSpecialist(omcp_server=None)
-
-    state = {
-        "messages": [HumanMessage(content="Check withdrawal risk for C-AML-999.")],
-        "reflection_cycles": 0,
-    }
-
-    result = specialist.invoke(state)
-    assert len(result["messages"]) == 1
-    content = result["messages"][0].content
-    assert "[REPLAY]" in content
-    assert "31 CFR 1010" in content
-    assert result["extracted_evidence"][0]["is_replay"] is True

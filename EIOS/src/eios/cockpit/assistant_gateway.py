@@ -1,39 +1,26 @@
-"""Serve the copilot endpoint from the ADK assistant unless `EIOS_ASSISTANT_RUNTIME=legacy` (spec 021 FR-017).
+"""Serve the copilot endpoint from the ADK assistant (spec 021 FR-017).
 
-The default is `adk`; `legacy` stays only until the legacy copilot is deleted. The response keeps the
+The ADK assistant is the only runtime. The response keeps the
 shape the browser reads today and adds the structured fields (figures, proposals, steps, blocked). A model, data or
 session failure is reported as such: it is labelled and carries no invented figure.
 """
 
 from __future__ import annotations
 
-import os
 import threading
 from collections.abc import Mapping
 from typing import Any
 
 from eios.assistant.answer import Answer
-from eios.assistant.config import AssistantConfigError, AssistantSettings
+from eios.assistant.config import AssistantSettings
 from eios.assistant.runtime import AssistantRuntime, TurnOutcome
 from eios.assistant.safety import build_safety_plugins
 from eios.assistant.sessions import build_session_service
 from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.readmodels import ReadModels
 
-RUNTIME_ENV = "EIOS_ASSISTANT_RUNTIME"
-RUNTIMES = frozenset({"legacy", "adk"})
-
 _lock = threading.Lock()
 _runtime: AssistantRuntime | None = None
-
-
-def assistant_enabled(env: Mapping[str, str] | None = None) -> bool:
-    chosen = (os.environ if env is None else env).get(RUNTIME_ENV, "adk").strip().lower()
-    if chosen not in RUNTIMES:
-        raise AssistantConfigError(
-            f"{RUNTIME_ENV} must be one of {sorted(RUNTIMES)}, not '{chosen}'"
-        )
-    return chosen == "adk"
 
 
 def get_runtime() -> AssistantRuntime:

@@ -8,7 +8,6 @@ Wraps the Cockpit Presentation Engine and underlying services:
 - ComplianceExplorerService
 - DataPlatformOperationsService
 - GovernedActionShelf
-- MetricAuditorGate
 - DecisionOutcomesLedger
 
 Serves full contract-compliant JSON payloads adhering to
@@ -36,7 +35,6 @@ from eios.assistant.config import AssistantConfigError
 from eios.assistant.sessions import valid_entity_id
 from eios.cockpit.aml import AMLWorkstationService
 from eios.cockpit.assistant_gateway import (
-    assistant_enabled,
     get_runtime,
 )
 from eios.cockpit.assistant_gateway import response_body as assistant_response_body
@@ -56,8 +54,6 @@ from eios.cockpit.operations import DataPlatformOperationsService
 from eios.cockpit.partner import PartnerWorkstationService
 from eios.cockpit.session import SessionManager
 from eios.cockpit.shell import CockpitShellPresenter
-from eios.conversation.copilot_engine import CopilotEngine
-from eios.conversation.models import OperatorRole as EngineOperatorRole
 from eios.flywheel.ledger import DecisionOutcomeRecord, DecisionOutcomesLedger
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
@@ -69,13 +65,11 @@ from eios.ontology.actions.intent_hub import (
 from eios.ontology.actions.models import (
     ActionIntentToken,
 )
-from eios.ontology.auditor.gate import MetricAuditorGate
 from eios.ontology.omcp.port.contracts import PortError
 from eios.ontology.omcp.port.principal import principal_for
 
 _LOG = logging.getLogger("eios.cockpit.server")
 
-copilot_engine = CopilotEngine()
 
 API_VERSION = "0.19.0"
 
@@ -107,7 +101,6 @@ aml_svc = AMLWorkstationService()
 partner_svc = PartnerWorkstationService()
 compliance_svc = ComplianceExplorerService()
 operations_svc = DataPlatformOperationsService()
-auditor_gate = MetricAuditorGate(relative_tolerance=0.01)
 outcomes_ledger = DecisionOutcomesLedger()
 
 
@@ -1095,58 +1088,19 @@ async def query_copilot(
     if not valid_entity_id(req.context_entity_id):
         raise HTTPException(status_code=422, detail="activeEntityId is not a valid identifier")
     try:
-        use_assistant = assistant_enabled()
-        runtime = await run_in_threadpool(get_runtime) if use_assistant else None
+        runtime = await run_in_threadpool(get_runtime)
     except AssistantConfigError as exc:
         logging.getLogger(__name__).error("assistant is not configured: %s", exc)
         raise HTTPException(status_code=503, detail="offline") from exc
-    if runtime is not None:
-        outcome = await runtime.run_turn(
-            principal=principal, question=req.query, entity_id=req.context_entity_id
-        )
-        if outcome.status != "ok":  # an outage is offline, never a 200 that looks like an answer
-            return JSONResponse(  # type: ignore[return-value]
-                status_code=503,
-                content={"detail": "offline", **assistant_response_body(req.query, outcome)},
-            )
-        return assistant_response_body(req.query, outcome)
-
-    response_model = await run_in_threadpool(
-        copilot_engine.process_query,
-        query=req.query,
-        role=EngineOperatorRole(principal.workstation.value),
-        session_id=f"sess_{principal.uid}_{principal.workstation.value}",
+    outcome = await runtime.run_turn(
+        principal=principal, question=req.query, entity_id=req.context_entity_id
     )
-
-    audit = response_model.audit_record
-    audit_passed = audit is not None and audit.passed and response_model.auditor_status == "PASS"
-    return {
-        "query": req.query,
-        "response": response_model.response_markdown,
-        "auditor_status": response_model.auditor_status or "UNAUDITED",
-        "is_replay_fallback": response_model.is_replay_fallback,
-        "fallback_reason": response_model.fallback_reason,
-        "provenance_citations": [
-            {
-                "metric_id": c.citation_id,
-                "formatted_value": c.label,
-                "steward": c.source_engine,
-                "as_of": c.as_of.isoformat(),
-            }
-            for c in response_model.provenance_citations
-        ],
-        "audit_record": {
-            "passed": audit_passed,
-            "unanchored_tokens": list(audit.unanchored_tokens) if audit else [],
-            "anchored_numbers": list(audit.verified_numerical_anchors) if audit else [],
-            "relative_tolerance": audit.relative_tolerance
-            if audit
-            else auditor_gate.relative_tolerance,
-        },
-        "tool_trace_count": response_model.tool_trace_count,
-        "suggested_action": response_model.staged_recommendation,
-        "turn_latency_ms": response_model.turn_latency_ms,
-    }
+    if outcome.status != "ok":  # an outage is offline, never a 200 that looks like an answer
+        return JSONResponse(  # type: ignore[return-value]
+            status_code=503,
+            content={"detail": "offline", **assistant_response_body(req.query, outcome)},
+        )
+    return assistant_response_body(req.query, outcome)
 
 
 @router.post(FLYWHEEL_FEEDBACK_PATH, response_model=FlywheelFeedbackResponse)

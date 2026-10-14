@@ -1,12 +1,7 @@
-"""Integration tests for Canonical OMCP Governance Tools & Conversational Auditor Specialist (US6 / FR-013, FR-014, T034)."""
+"""Integration tests for Canonical OMCP Governance Tools (US6 / FR-013, FR-014, T034)."""
 
 import pytest
-from langchain_core.messages import HumanMessage
 
-from eios.conversation.graph import create_conversational_graph
-from eios.conversation.models import SpecialistDomain
-from eios.conversation.router import SupervisoryRouter
-from eios.conversation.specialists.governance import GovernanceAuditorSpecialist
 from eios.ontology.omcp.server import OMCPServer
 
 
@@ -118,62 +113,3 @@ def test_omcp_governance_tool_audit_and_hash_chain(omcp_server):
     chain_res = omcp_server.call_tool("verify_hash_chain", {}, caller_role="ComplianceAuditor")
     assert chain_res["is_valid"] is True
     assert chain_res["integrity_score"] == 1.0
-
-
-def test_governance_auditor_specialist_live_and_replay(omcp_server):
-    """Verify GovernanceAuditorSpecialist live OMCP resolution and deterministic [REPLAY] fallback."""
-    specialist = GovernanceAuditorSpecialist(omcp_server=omcp_server)
-    assert specialist.domain == SpecialistDomain.GOVERNANCE
-    assert "get_ledger_audit_status" in specialist.allowed_tools
-
-    # Live query resolution
-    live_res = specialist.handle_query("What is the current health of the action ledger?")
-    assert live_res["is_fallback"] is False
-    assert "Cryptographic Ledger Audit Report: Status=HEALTHY" in live_res["content"]
-    assert "Integrity Score: 100.0%" in live_res["content"]
-    assert "Four-Eyes" in live_res["content"]
-
-    # Simulated LLM outage replay fallback
-    replay_res = specialist.handle_query("What is the audit status?", simulate_llm_outage=True)
-    assert replay_res["is_fallback"] is True
-    assert "[REPLAY]" in replay_res["content"]
-    assert "Integrity score: 1.00 (100%)" in replay_res["content"]
-
-
-def test_supervisory_router_routing():
-    """Verify SupervisoryRouter routes governance queries to GOVERNANCE domain."""
-    router = SupervisoryRouter()
-
-    dec_1 = router.route_query("Please audit the ledger hash chain for tampering")
-    assert dec_1.route == SpecialistDomain.GOVERNANCE
-    assert dec_1.confidence >= 0.95
-
-    dec_2 = router.route_query("Check Four-Eyes approvals on action intent #42")
-    assert dec_2.route == SpecialistDomain.GOVERNANCE
-
-    dec_3 = router.route_query("Investigate mule syndicate laundering")
-    assert dec_3.route == SpecialistDomain.SENTINEL_AML
-
-
-def test_langgraph_governance_node_execution(omcp_server):
-    """Verify conversational LangGraph supervisor routes and executes governance node."""
-    from unittest.mock import MagicMock
-
-    gateway = MagicMock()
-    auditor = MagicMock()
-    graph = create_conversational_graph(gateway=gateway, auditor=auditor)
-
-    initial_state = {
-        "messages": [HumanMessage(content="Show me the action ledger audit status")],
-        "next_agent": "supervisor",
-        "reflection_cycles": 0,
-        "extracted_evidence": [],
-        "staged_actions": [],
-        "final_response": "",
-        "omcp_server": omcp_server,
-    }
-
-    result = graph.invoke(initial_state)
-    assert result["reflection_cycles"] >= 1
-    assert "final_response" in result
-    assert "Ledger" in result["final_response"] or "Cryptographic" in result["final_response"]

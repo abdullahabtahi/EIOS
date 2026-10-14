@@ -1,11 +1,8 @@
-"""Unit tests for GenAI Emerging Pattern Discovery and Conversational Specialist (T032 / US6)."""
+"""Unit tests for GenAI Emerging Pattern Discovery (T032 / US6)."""
 
 from eios.churn.models import DisengagementTheme, SignalFamily
 from eios.churn.pattern_discovery import PatternDiscoverySpecialist
 from eios.churn.sanitizer import PIISanitizer
-from eios.conversation.specialists.churn import ChurnRadarSpecialist
-from eios.ingestion.hot_state import HotStateEngine
-from eios.ontology.omcp.server import OMCPServer
 
 
 def test_pii_sanitization():
@@ -75,38 +72,3 @@ def test_replay_fallback_when_offline():
     assert len(themes) >= 1
     assert "[REPLAY]" in themes[0].plain_language_summary
     assert themes[0].confidence_score > 0.0
-
-
-def test_conversational_churn_radar_specialist(seeded_hot_state: HotStateEngine):
-    """Verify ChurnRadarSpecialist integrates with OMCP tools and generates verified narrative."""
-    from datetime import date
-
-    from eios.churn.pipeline import ChurnRadarPipeline
-
-    # Score partners first
-    pipeline = ChurnRadarPipeline(hot_state=seeded_hot_state)
-    pipeline.run_daily_scoring(as_of_date=date.today())
-
-    omcp_server = OMCPServer(hot_state=seeded_hot_state)
-    specialist = ChurnRadarSpecialist(omcp_server=omcp_server)
-
-    state = {
-        "messages": [
-            type(
-                "Msg",
-                (),
-                {"content": "What is the churn risk and priority for partner P-CHURN-DRIFT?"},
-            )()
-        ],
-        "reflection_cycles": 0,
-    }
-
-    result = specialist.invoke(state)
-    assert "messages" in result
-    response_msg = result["messages"][0].content
-
-    assert "P-CHURN-DRIFT" in response_msg
-    assert "HIGH" in response_msg
-    assert "citations" in result
-    assert any("DP" in cit for cit in result["citations"])
-    assert result.get("auditor_passed") is True

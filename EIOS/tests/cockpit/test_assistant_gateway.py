@@ -25,7 +25,6 @@ BODY = {
 
 @pytest.fixture
 def client(monkeypatch: pytest.MonkeyPatch) -> Iterator[TestClient]:
-    monkeypatch.setenv(assistant_gateway.RUNTIME_ENV, "adk")
     server.app.dependency_overrides[current_operator] = lambda: Operator(
         uid="uid-42", email=None, role="analyst"
     )
@@ -115,11 +114,6 @@ def test_an_unconfigured_deployed_assistant_is_offline_not_a_guess(
     response = client.post(PATH, json=BODY)
     assert response.status_code == 503
     assert response.json()["detail"] == "offline"
-
-
-def test_the_default_is_the_adk_assistant(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv(assistant_gateway.RUNTIME_ENV, raising=False)
-    assert assistant_gateway.assistant_enabled() is True
 
 
 def _ask(client: TestClient, steps: list, role: str, entity: str, question: str) -> dict:
