@@ -27,39 +27,43 @@ class ParquetWarmStartLoader:
         self.engine = engine
         self.base_dir = Path(base_dir)
 
+    def _snapshot_glob(self, product: DataProductEnum) -> str | None:
+        """Parquet files to rehydrate a product from, or None.
+
+        Exported batches (`lakehouse/<product>/date=*/`) are the durable snapshot of what this platform
+        ingested, so they win. The foundry baseline (`raw/<product>/`) seeds a product only when nothing was
+        exported yet; loading both would count the same events twice.
+        """
+        exported = self.base_dir / "lakehouse" / product.value
+        if any(exported.glob("date=*/*.parquet")):
+            return str(exported / "date=*" / "*.parquet")
+        baseline = self.base_dir / "raw" / product.value
+        if any(baseline.glob("*.parquet")):
+            return str(baseline / "*.parquet")
+        return None
+
     def load_all(self) -> WarmStartSummary:
-        """Scan all product subdirectories in base_dir/raw and load Parquet files."""
+        """Rehydrate every product that has a Parquet snapshot or foundry baseline under base_dir."""
         start_time = time.perf_counter()
         total_rows = 0
         products_loaded = []
-        raw_dir = self.base_dir / "raw"
-
-        if not raw_dir.exists():
-            duration_ms = (time.perf_counter() - start_time) * 1000.0
-            return WarmStartSummary(0, duration_ms, [])
 
         cursor = self.engine.get_cursor()
 
         for product in DataProductEnum:
-            prod_dir = raw_dir / product.value
-            if not prod_dir.exists():
+            glob_pattern = self._snapshot_glob(product)
+            if glob_pattern is None:
                 continue
-
-            parquet_files = list(prod_dir.glob("*.parquet"))
-            if not parquet_files:
-                continue
-
-            glob_pattern = str(prod_dir / "*.parquet")
             try:
-                # Vectorized DuckDB Parquet read with column name alignment
+                # Vectorized read with column-name alignment; the `date=` folder is a layout detail, not a column
                 cursor.execute(
-                    f"INSERT INTO {product.value} BY NAME SELECT * FROM read_parquet(?)",  # noqa: S608
+                    f"INSERT INTO {product.value} BY NAME SELECT * FROM read_parquet(?, hive_partitioning = false)",  # noqa: S608
                     [glob_pattern],
                 )
                 count = cursor.execute(f"SELECT count(*) FROM {product.value}").fetchone()[0]  # noqa: S608
                 total_rows += count
                 products_loaded.append(product.value)
-                logger.info(f"Loaded {count} rows for {product.value} from Parquet lakehouse.")
+                logger.info(f"Loaded {count} rows for {product.value} from {glob_pattern}.")
             except Exception as e:
                 logger.warning(f"Failed to load Parquet files for {product.value}: {e}")
 
