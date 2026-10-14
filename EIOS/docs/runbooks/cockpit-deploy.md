@@ -53,12 +53,17 @@ The templates are a Terraform module, `infra/modules/model_armor`, applied on it
 categories and malicious links on both templates, prompt injection and jailbreak on the prompt template, all at medium
 confidence and blocking. Sensitive Data Protection is off on purpose: answers carry ids, names and amounts.
 
-1. `cd EIOS/infra/sandboxes/model-armor`; copy `terraform.tfvars.example` to `terraform.tfvars` and fill the project id.
+1. `cd EIOS/infra/sandboxes/model-armor`; pass the project id on the command line (`-var project_id=<id>`) rather than a tfvars file, which the infra policy gate flags when it holds a real id.
 2. `terraform init -backend-config=bucket=eios-tfstate-eios-hackathon`, then `terraform plan` and read it. **Applying needs the user's say-so.**
-3. After an apply, run the gateway locally with `EIOS_MODEL_ARMOR_PROMPT_TEMPLATE` and `EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE` set to the two
+3. After an apply, measure before choosing thresholds, with no model call:
+   `PYTHONPATH=src:. uv run python -m evals.agent.screening_probe --template <prompt template name> --out <report.json>`.
+   It screens every golden question (a block is a false positive) and every attack question, and times each call. Pass criteria are
+   fixed in `evals/agent/screening_probe.py` before the run. Attacks that arrive inside a tool result are not screened by the plugin
+   (the tool port marks such text untrusted), so a missed attack there is information, not a failure.
+4. Then run the gateway locally with `EIOS_MODEL_ARMOR_PROMPT_TEMPLATE` and `EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE` set to the two
    outputs, `GOOGLE_CLOUD_QUOTA_PROJECT` set to the sandbox project, and `GOOGLE_GENAI_USE_ENTERPRISE=true`. Measure the added latency, send an
    obvious injection, and read the matches in Cloud Logging before choosing thresholds for prod-like.
-4. prod-like reuses the same module, adds `roles/modelarmor.user` for the `eios_api` identity, sets the two variables on the Cloud Run
+5. prod-like reuses the same module, adds `roles/modelarmor.user` for the `eios_api` identity, sets the two variables on the Cloud Run
    service, and needs its own plan, approval and deploy.
 
 ## Known exceptions
