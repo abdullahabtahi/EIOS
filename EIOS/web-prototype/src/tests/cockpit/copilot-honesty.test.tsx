@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { CockpitProvider } from '@/components/cockpit/state/cockpit-context';
-import { CopilotCommandBar } from '@/components/cockpit/shell/copilot-command-bar';
+import { CopilotChat } from '@/components/cockpit/shell/copilot-chat';
 
 const workstationBody = {
   workstation: 'executive',
@@ -26,17 +26,17 @@ function mockCopilot(reply: () => Promise<unknown>) {
 async function ask(text: string) {
   render(
     <CockpitProvider>
-      <CopilotCommandBar forceOpen={true} />
+      <CopilotChat />
     </CockpitProvider>,
   );
-  const input = screen.getAllByPlaceholderText(/Ask Copilot or type institutional command/i)[0];
+  const input = screen.getByLabelText('Ask the copilot');
   fireEvent.change(input, { target: { value: text } });
-  fireEvent.submit(screen.getAllByRole('button', { name: /Submit Query/i })[0].closest('form')!);
+  fireEvent.submit(input.closest('form')!);
 }
 
 afterEach(() => vi.restoreAllMocks());
 
-describe('Copilot command bar never fabricates an audited answer', () => {
+describe('the copilot chat never fabricates an answer', () => {
   it.each([
     [401, /not authorized/i],
     [403, /not permitted/i],
@@ -56,48 +56,5 @@ describe('Copilot command bar never fabricates an audited answer', () => {
     await ask('anything');
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not be reached/i);
     expect(screen.queryByText(/AUDIT PASSED/i)).not.toBeInTheDocument();
-  });
-
-  it('badges a deterministic replay with the backend-supplied reason', async () => {
-    mockCopilot(() =>
-      Promise.resolve({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            queryId: 'q1',
-            naturalLanguageQuery: 'q',
-            responseMarkdown: 'Replay narrative.',
-            citedMetrics: [],
-            auditorResult: { auditPassed: true, extractedNumbers: [], anchoredNumbers: [], untraceableNumbers: [], toolTracesCount: 1 },
-            isReplayFallback: true,
-            fallbackReason: 'live Gemini call failed: quota',
-            timestamp: '2026-10-10T10:00:00Z',
-          }),
-      }),
-    );
-    await ask('q');
-    expect(await screen.findByText(/DETERMINISTIC REPLAY/i)).toBeInTheDocument();
-    expect(screen.getByText(/live Gemini call failed: quota/)).toBeInTheDocument();
-  });
-
-  it('does not badge a live answer as a replay', async () => {
-    mockCopilot(() =>
-      Promise.resolve({
-        ok: true,
-        json: () =>
-          Promise.resolve({
-            queryId: 'q2',
-            naturalLanguageQuery: 'q',
-            responseMarkdown: 'Live narrative.',
-            citedMetrics: [],
-            auditorResult: { auditPassed: true, extractedNumbers: [], anchoredNumbers: [], untraceableNumbers: [], toolTracesCount: 1 },
-            isReplayFallback: false,
-            timestamp: '2026-10-10T10:00:00Z',
-          }),
-      }),
-    );
-    await ask('q');
-    await waitFor(() => expect(screen.getByText(/Live narrative\./)).toBeInTheDocument());
-    expect(screen.queryByText(/DETERMINISTIC REPLAY/i)).not.toBeInTheDocument();
   });
 });

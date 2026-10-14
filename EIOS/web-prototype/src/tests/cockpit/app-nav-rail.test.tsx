@@ -13,7 +13,7 @@ function Probe() {
   return (
     <>
       <span data-testid="active-role">{state.activeRole}</span>
-      <span data-testid="command-open">{String(state.copilotCommandOpen)}</span>
+      <span data-testid="command-open">{state.dossierView}</span>
       <button type="button" data-testid="force-outage" onClick={() => toggleSimulatedOutage(true)} />
     </>
   );
@@ -194,10 +194,10 @@ describe('AppNavRail: content', () => {
     expect(within(rail()).getByTestId('nav-pipeline-status')).toHaveTextContent(/Replay/);
   });
 
-  it('Command Bar works straight from the collapsed strip', () => {
+  it('Ask copilot works straight from the collapsed strip', () => {
     renderRail();
-    fireEvent.click(within(rail()).getByRole('button', { name: /Command Bar/ }));
-    expect(screen.getByTestId('command-open')).toHaveTextContent('true');
+    fireEvent.click(within(rail()).getByRole('button', { name: /Ask copilot/ }));
+    expect(screen.getByTestId('command-open')).toHaveTextContent('chat');
   });
 
   it('Keyboard Shortcuts works straight from the collapsed strip', () => {

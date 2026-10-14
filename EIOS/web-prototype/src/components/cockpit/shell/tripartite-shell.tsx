@@ -9,7 +9,7 @@
  * - Center: Copilot Operational Dossier (fluid w-[420px] xl:w-[480px] 2xl:w-[540px])
  * - Right: Kinetic Canvas (Flexible min-w-[440px], collapsible)
  * - Bottom: Governed Action Shelf (Two-Phase Commit)
- * - Omnipresent: Copilot Command Bar (Cmd+K) & Keyboard Shortcuts Palette (?)
+ * - Chat in the dossier column (Cmd+K) & Keyboard Shortcuts Palette (?)
  * Strict Sovereign Light Mode design system.
  */
 
@@ -23,10 +23,9 @@ const DOSSIER_DEFAULT_PX = 460;
 const DOSSIER_MIN_PX = 320;
 const DOSSIER_MAX_PX = 720;
 import { TriageRail } from './triage-rail';
-import { CopilotDossier } from './copilot-dossier';
+import { DossierColumn } from './dossier-column';
 import { KineticCanvas } from './kinetic-canvas';
 import { GovernedActionShelf } from './governed-action-shelf';
-import { CopilotCommandBar } from './copilot-command-bar';
 import { KeyboardShortcutsModal } from '../common/keyboard-shortcuts-modal';
 import { useCockpit } from '../state/cockpit-context';
 import { useForensicUrlSync } from '../state/use-forensic-url-sync';
@@ -135,7 +134,7 @@ export function TripartiteShell({
 
           {/* Center Copilot Dossier: user-resizable, width remembered */}
           <div style={{ width: dossierWidth }} className="shrink min-w-[300px] h-full flex">
-            <CopilotDossier />
+            <DossierColumn />
           </div>
           <PaneResizer
             label="Resize dossier"
@@ -172,9 +171,6 @@ export function TripartiteShell({
         {/* Governed Action Shelf (Pinned Bottom) */}
         <GovernedActionShelf />
       </div>
-
-      {/* Omnipresent Cmd+K Copilot Dialog */}
-      <CopilotCommandBar />
 
       {/* Power-User Keyboard Shortcuts Modal (?) */}
       <KeyboardShortcutsModal

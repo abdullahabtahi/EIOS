@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
 import { CockpitProvider } from '@/components/cockpit/state/cockpit-context';
-import { CopilotCommandBar } from '@/components/cockpit/shell/copilot-command-bar';
+import { CopilotChat } from '@/components/cockpit/shell/copilot-chat';
 
 const workstationBody = {
   workstation: 'executive',
@@ -85,17 +85,17 @@ const reply = (body: unknown, status = 200) => () => Promise.resolve({ ok: statu
 async function ask(text = 'What is the discrepancy?') {
   render(
     <CockpitProvider>
-      <CopilotCommandBar forceOpen={true} />
+      <CopilotChat />
     </CockpitProvider>,
   );
-  const input = screen.getAllByPlaceholderText(/Ask Copilot or type institutional command/i)[0];
+  const input = screen.getByLabelText('Ask the copilot');
   fireEvent.change(input, { target: { value: text } });
-  fireEvent.submit(screen.getAllByRole('button', { name: /Submit Query/i })[0].closest('form')!);
+  fireEvent.submit(input.closest('form')!);
 }
 
 afterEach(() => vi.restoreAllMocks());
 
-describe('an ADK assistant answer in the command bar', () => {
+describe('an ADK assistant answer in the chat', () => {
   it('shows a clean answer with its figures and no status banner, DEMO chip or audit claim', async () => {
     mockBackend(reply(assembled()));
     await ask();

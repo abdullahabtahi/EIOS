@@ -39,7 +39,7 @@ export function HeaderNav({
   onOpenShortcuts?: () => void;
 } = {}) {
   const { status: authStatus, operator: authOperator, signOutOperator } = useAuth();
-  const { state, setRole, setCopilotCommandOpen } = useCockpit();
+  const { state, setRole, openChat } = useCockpit();
   const pipeline = getPipelineStatus(state);
   const [statusOpen, setStatusOpen] = React.useState(false);
 
@@ -99,12 +99,12 @@ export function HeaderNav({
           {/* Omnipresent Copilot Trigger (Cmd+K) */}
           <button
             type="button"
-            onClick={() => setCopilotCommandOpen(true)}
+            onClick={openChat}
             className="flex items-center gap-2 px-2.5 py-1 bg-white/5 hover:bg-white/10 border border-white/15 text-slate-100 text-xs font-medium rounded-none transition-colors cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-chrome-accent"
-            title="Open Copilot Command Bar (Cmd+K)"
+            title="Ask the copilot (Cmd+K)"
           >
             <span className="material-symbols-sharp text-sm text-chrome-accent">terminal</span>
-            <span className="hidden md:inline text-label font-mono">Command Bar</span>
+            <span className="hidden md:inline text-label font-mono">Ask</span>
             <kbd className={KBD}>⌘K</kbd>
           </button>
 
