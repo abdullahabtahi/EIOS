@@ -109,7 +109,7 @@ ROUTES: tuple[Route, ...] = (
     _r(r"integrity|opposite trad", ("get_partner_integrity", _part)),
     _r(r"offer|rebate", ("get_partner_signals", _part), ("propose_partner_action", _cheapest_deal)),
     _r(
-        r"churn|at risk|leave|hazard|details",
+        r"churn|at risk|leave|hazard|details|what should i do",
         ("get_partner_signals", _part),
         unless=r"2030|predict",
     ),

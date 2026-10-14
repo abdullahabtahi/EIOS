@@ -42,20 +42,26 @@ def test_the_response_keeps_the_shape_the_browser_reads(client: TestClient) -> N
     for key in (
         "query",
         "response",
-        "auditor_status",
-        "is_replay_fallback",
+        "assistant_status",
         "fallback_reason",
         "provenance_citations",
-        "audit_record",
-        "tool_trace_count",
-        "suggested_action",
         "turn_latency_ms",
+        "steps",
+        "proposals",
     ):
         assert key in body, key
     assert (
-        body["auditor_status"] == "ASSEMBLED"
+        body["assistant_status"] == "ASSEMBLED"
     )  # the Metric Auditor did not run; it is never claimed
-    assert body["audit_record"]["passed"] is False
+    for retired in (
+        "auditor_status",
+        "audit_record",
+        "tool_trace_count",
+        "suggested_action",
+        "is_replay_fallback",
+        "proposed_actions",
+    ):
+        assert retired not in body, retired  # legacy copilot fields, gone with the legacy copilot
     assert body["verification"] == {
         "method": "assembled_from_governed_results",
         "passed": True,
@@ -95,7 +101,7 @@ def test_a_model_outage_is_offline_with_a_label_and_no_figure(client: TestClient
     body = response.json()
     assert response.status_code == 503
     assert body["detail"] == "offline"
-    assert body["auditor_status"] == "UNAUDITED"
+    assert body["assistant_status"] == "UNAVAILABLE"
     assert body["fallback_reason"]
     assert body["provenance_citations"] == []
 

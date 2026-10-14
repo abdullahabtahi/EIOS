@@ -22,3 +22,6 @@
    turns: [{turn_index: 1, user_query: "Give me a brief on how the partner ecosystem is doing right now.",
      expected_capabilities: [{capability: partner.worklist, order_index: 0}], allowed_extra_capabilities: [partner.signals],
      expected_facts: [{capability: partner.worklist, path: "partners[0].expected_loss_usd", unit: USD}]}]}
+- {scenario_id: partner_open_ended, workstation: partner_manager, split: dev, description: "A broad question about one partner uses its signals alone, not every tool.",
+   turns: [{turn_index: 1, user_query: "What should I do about partner PTR-882?", screen_payload: "partner:PTR-882",
+     expected_capabilities: [{capability: partner.signals, order_index: 0}], min_precision: 1.0, max_rounds: 2}]}

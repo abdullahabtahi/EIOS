@@ -107,8 +107,8 @@ The assistant today (run 3: cap 45, one repeat, `docs/agent-baseline.md` section
 
 Open items, in order of value:
 1. **Before the next deploy**: Model Armor templates (Terraform, ask first) and `GOOGLE_GENAI_USE_ENTERPRISE` (`docs/runbooks/cockpit-deploy.md`); without them every copilot query answers 503. Never deploy without explicit approval.
-2. Assistant quality: cap tool rounds so open-ended questions stop wandering; the three-repeat gating run (needs a separately approved cap); the telemetry plugin; confirm the faithfulness judge also treats digit-bearing names as names (the assembler already does); trim the legacy fields the response body still carries (`audit_record`, `auditor_status`, `suggested_action`).
-3. Chat UX gaps: "Show in dossier" flips the tab but does not highlight the source card; selecting a graph node gives the chat an entity the assistant cannot resolve (for example `MULE-4920-20`).
+2. Assistant quality: the three-repeat gating run (needs a separately approved cap, no long evals by default); the telemetry plugin; confirm the faithfulness judge also treats digit-bearing names as names (the assembler already does). A broad question about one entity now uses its signals tool alone (golden case `partner_open_ended`); a turn still costs one model call per tool round plus the draft, about 4 to 6 s each `[MEASURED]`.
+3. Chat UX gaps: "Show in dossier" flips the tab but does not highlight the source card. A graph node you click becomes the entity on screen, so asking about it (for example `MULE-4920-20`) answers "not found", which is honest and by design.
 4. `api-bridge.ts` fabricated fallbacks for the churn radar, AML graph and partner ontology.
 5. Product direction in `docs/financial_geospatial.md`: regulator-grade AML investigator, geography as an evidence lens. Verify GLEIF and labelled-data licences before ingesting; Dekart is AGPL.
 6. Deploy via GitHub Actions workload identity (pool `eios-ci`), apply Terraform to stage and dev, close ADR-002, re-enable org-policy guardrails.

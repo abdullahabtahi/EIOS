@@ -45,7 +45,7 @@ def set_runtime_for_testing(runtime: AssistantRuntime | None) -> None:
 
 
 def assistant_status(answer: Answer) -> str:
-    """What the operator should be told about this answer, apart from the legacy auditor vocabulary.
+    """What the operator should be told about this answer.
 
     ASSEMBLED: every figure was filled in by the system from a governed result of this turn.
     BLOCKED: screening stopped the question or the answer (`block_reason` says which).
@@ -86,25 +86,13 @@ def _proposal_view(raw: Mapping[str, Any]) -> dict[str, Any]:
     return {name: raw[name] for name in _PROPOSAL_FIELDS if name in raw}
 
 
-def _auditor_status(answer: Answer) -> str:
-    """The Metric Auditor Gate does not run on this path, so this never says PASS; ASSEMBLED means every figure was
-    inserted by the system from a governed result of this turn (spec 021 FR-001)."""
-    if answer.blocked:
-        return "BLOCKED"
-    if answer.failed_closed or answer.fallback_reason:
-        return "UNAUDITED"
-    return "ASSEMBLED"
-
-
 def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
     answer = outcome.answer
     return {
         "query": query,
         "response": answer.text,
-        "auditor_status": _auditor_status(answer),
         "assistant_status": assistant_status(answer),
         "failed_closed": answer.failed_closed,
-        "is_replay_fallback": answer.is_replay_fallback,
         "fallback_reason": answer.fallback_reason,
         "provenance_citations": [
             {
@@ -119,24 +107,15 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
             }
             for figure in answer.figures
         ],
-        "audit_record": {
-            "passed": False,  # the Metric Auditor Gate did not run; see `verification`
-            "unanchored_tokens": [],
-            "anchored_numbers": [figure.text for figure in answer.figures],
-            "relative_tolerance": 0.0,
-        },
-        "tool_trace_count": len(outcome.tool_calls),
-        "suggested_action": answer.proposed_actions[0] if answer.proposed_actions else None,
         "turn_latency_ms": outcome.latency_ms,
         "blocked": answer.blocked,
         "block_reason": answer.block_reason,
         "steps": list(outcome.steps),
-        "proposed_actions": list(answer.proposed_actions),
         "proposals": [_proposal_view(p) for p in answer.proposed_actions],
         "data_origin": answer.data_origin.value,
         "verification": {
             "method": "assembled_from_governed_results",
-            "passed": _auditor_status(answer) == "ASSEMBLED",
+            "passed": assistant_status(answer) == "ASSEMBLED",
             "figures": len(answer.figures),
         },
     }
