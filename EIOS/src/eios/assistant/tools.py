@@ -18,6 +18,7 @@ from google.adk.tools.tool_context import ToolContext
 
 from eios.llm_gateway.providers.adk_types import FunctionDeclaration
 from eios.ontology.omcp.port.principal import Principal
+from eios.ontology.omcp.port.proposals import Proposal, stage_request
 from eios.ontology.omcp.port.registry import ToolSpec
 from eios.ontology.omcp.port.service import GovernedToolPort
 
@@ -30,7 +31,7 @@ IDENTIFIERS_KEY = (
     "temp:identifiers"  # names a trusted result returned (case, SAR, cluster ids): not figures
 )
 _PROPOSAL_KIND = "propose"
-_IDENTIFIER_FIELD = re.compile(r"(?:^id|_id|_key)$")
+_IDENTIFIER_FIELD = re.compile(r"(?:^id|_id|_key|_ref)$")
 _IDENTIFIER_VALUE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:\-]{2,79}$")
 
 
@@ -78,8 +79,9 @@ class PortTool(BaseTool):
         state[SOURCES_KEY] = [*state.get(SOURCES_KEY, []), payload["source"]]
         state[ORIGINS_KEY] = [*state.get(ORIGINS_KEY, []), payload["data_origin"]]
         state[IDENTIFIERS_KEY] = sorted({*state.get(IDENTIFIERS_KEY, []), *identifiers_of(raw)})
-        if self._spec.kind == _PROPOSAL_KIND:
-            state[PROPOSALS_KEY] = [*state.get(PROPOSALS_KEY, []), payload]
+        if self._spec.kind == _PROPOSAL_KIND and isinstance(outcome.result, Proposal):
+            kept = {**payload, "stage_request": stage_request(outcome.result, args)}
+            state[PROPOSALS_KEY] = [*state.get(PROPOSALS_KEY, []), kept]
         return payload
 
 

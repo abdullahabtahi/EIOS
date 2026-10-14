@@ -96,7 +96,10 @@ def test_a_proposal_is_kept_for_the_answer_and_stages_nothing(port: GovernedTool
     if "error" in payload:  # an unproposable entity is a typed refusal, never a record
         assert not ctx.state.get(PROPOSALS_KEY)
     else:
-        assert ctx.state[PROPOSALS_KEY] == [payload]
+        assert [
+            {k: v for k, v in p.items() if k != "stage_request"} for p in ctx.state[PROPOSALS_KEY]
+        ] == [payload]
+        assert "stage_request" not in payload  # the model never sees hub vocabulary
 
 
 def test_a_list_result_names_one_fact_per_item_and_each_can_be_shown(
@@ -173,3 +176,39 @@ def test_the_sar_tool_says_the_dossier_comes_first() -> None:
     from eios.ontology.omcp.port.descriptions import DESCRIPTIONS
 
     assert "get_aml_dossier" in DESCRIPTIONS["aml.sar_draft"]
+
+
+def test_a_proposal_reference_is_a_name_the_operator_may_be_told() -> None:
+    from eios.assistant.tools import identifiers_of
+
+    assert identifiers_of({"proposal_ref": "prop-23f928c1d5"}) == {"prop-23f928c1d5"}
+
+
+def test_a_hold_proposal_carries_the_exact_request_a_human_stages(port: GovernedToolPort) -> None:
+    tools = {t.name: t for t in build_toolset(port, principal_for("op-1", "aml_investigator"))}
+    ctx = _context()
+    _run(tools["propose_hold"], {"entity_id": "CR84920"}, ctx)
+    request = ctx.state[PROPOSALS_KEY][0]["stage_request"]
+    assert request["action_type"] == "HoldWithdrawal"
+    assert request["target_entity_id"] == "CR84920"
+    assert request["requires_four_eyes"] is True
+    assert request["metadata"]["txn_id"] == "W-84920-1"  # the withdrawal, not the account id
+    assert request["metadata"]["reason"]
+
+
+def test_a_retention_proposal_carries_the_playbook_and_budget(port: GovernedToolPort) -> None:
+    tools = {t.name: t for t in build_toolset(port, principal_for("op-1", "partner_manager"))}
+    ctx = _context()
+    _run(
+        tools["propose_partner_action"],
+        {"entity_id": "PTR-882", "playbook_id": "pb_master_tier_upgrade"},
+        ctx,
+    )
+    request = ctx.state[PROPOSALS_KEY][0]["stage_request"]
+    assert request["action_type"] == "LaunchRetentionPlaybook"
+    assert request["metadata"] == {
+        "partner_ids": ["PTR-882"],
+        "playbook_id": "pb_master_tier_upgrade",
+        "budget": 4500.0,
+    }
+    assert request["requires_four_eyes"] is True  # this deal is over the fast-path budget

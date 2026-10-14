@@ -98,6 +98,130 @@ describe('copilot proxy', () => {
     expect(body.suggestedAction.kmsSignatureBadge.signatureDigest).toBe('');
   });
 
+  describe('an ADK assistant answer', () => {
+    const adk = (overrides: Record<string, unknown> = {}) =>
+      upstream({
+        auditor_status: 'ASSEMBLED',
+        assistant_status: 'ASSEMBLED',
+        failed_closed: false,
+        blocked: false,
+        block_reason: null,
+        data_origin: 'fixture',
+        steps: ['get_aml_dossier'],
+        turn_latency_ms: 4200,
+        audit_record: { passed: false, unanchored_tokens: [], anchored_numbers: ['16x'], relative_tolerance: 0 },
+        provenance_citations: [
+          {
+            metric_id: 'aml.dossier:CR84920:discrepancy_multiplier',
+            formatted_value: '16x',
+            raw_value: 16,
+            unit: 'multiplier',
+            data_origin: 'fixture',
+            source: 'cockpit.aml.get_entity_dossier',
+            steward: 'cockpit.aml.get_entity_dossier',
+            as_of: '2026-10-14T03:57:10+00:00',
+          },
+        ],
+        proposals: [],
+        ...overrides,
+      });
+
+    it('is carried as an assembled answer, not as a failed audit', async () => {
+      fetchMock.mockResolvedValue(json(adk()));
+      const body = await (await post()).json();
+      expect(body.assistantStatus).toBe('ASSEMBLED');
+      expect(body.auditorResult.auditPassed).toBe(false); // the Metric Auditor did not run, and is never claimed
+      expect(body.auditorResult.rejectionReason).toBeUndefined();
+      expect(body.dataOrigin).toBe('fixture');
+      expect(body.steps).toEqual(['get_aml_dossier']);
+    });
+
+    it('keeps each figure with its unit, value, source, as-of and data origin', async () => {
+      fetchMock.mockResolvedValue(json(adk()));
+      const [metric] = (await (await post()).json()).citedMetrics;
+      expect(metric.formattedValue).toBe('16x');
+      expect(metric.rawValue).toBe(16);
+      expect(metric.unit).toBe('multiplier');
+      expect(metric.dataOrigin).toBe('fixture');
+      expect(metric.originEngine).toBe('cockpit.aml.get_entity_dossier');
+      expect(metric.asOfTimestamp).toBe('2026-10-14T03:57:10+00:00');
+    });
+
+    it('labels a figure live only when the backend says so', async () => {
+      fetchMock.mockResolvedValue(json(adk({ provenance_citations: [{ metric_id: 'x', formatted_value: '1', data_origin: 'weird' }] })));
+      expect((await (await post()).json()).citedMetrics[0].dataOrigin).toBeUndefined();
+    });
+
+    it('says blocked, with the reason, and fails closed on an unknown status', async () => {
+      fetchMock.mockResolvedValue(json(adk({ assistant_status: 'BLOCKED', blocked: true, block_reason: 'input', provenance_citations: [] })));
+      const blocked = await (await post()).json();
+      expect(blocked.assistantStatus).toBe('BLOCKED');
+      expect(blocked.blockReason).toBe('input');
+
+      fetchMock.mockResolvedValue(json(adk({ assistant_status: 'SOMETHING_NEW' })));
+      expect((await (await post()).json()).assistantStatus).toBeUndefined();
+    });
+
+    it('carries a fail-closed answer with no figures', async () => {
+      fetchMock.mockResolvedValue(json(adk({ assistant_status: 'FAILED_CLOSED', failed_closed: true, provenance_citations: [] })));
+      const body = await (await post()).json();
+      expect(body.assistantStatus).toBe('FAILED_CLOSED');
+      expect(body.citedMetrics).toEqual([]);
+    });
+
+    it('carries a proposal with the backend-built stage request, unsigned and not staged', async () => {
+      const stageRequest = {
+        action_type: 'HoldWithdrawal',
+        target_entity_id: 'CR84920',
+        severity: 'HIGH',
+        requires_four_eyes: true,
+        metadata: { txn_id: 'W-84920-1', reason: 'Held for review' },
+      };
+      fetchMock.mockResolvedValue(
+        json(
+          adk({
+            proposals: [
+              {
+                proposal_ref: 'prop-1',
+                kind: 'hold_withdrawal',
+                label: 'Hold a pending withdrawal for review',
+                offer: 'Hold withdrawal W-84920-1',
+                estimated_cost_usd: 0,
+                expected_effect_low: 7800,
+                expected_effect_high: 7800,
+                expected_effect_basis: 'The full pending withdrawal stays',
+                approval_requirement: 'Dual approval',
+                signed: false,
+                staged: false,
+                data_origin: 'fixture',
+                source: 'port.aml_fixtures',
+                as_of: '2026-10-14T03:57:10+00:00',
+                stage_request: stageRequest,
+              },
+            ],
+          }),
+        ),
+      );
+      const [proposal] = (await (await post()).json()).proposals;
+      expect(proposal.proposalRef).toBe('prop-1');
+      expect(proposal.stageRequest).toEqual(stageRequest);
+      expect(proposal.signed).toBe(false);
+      expect(proposal.staged).toBe(false);
+    });
+
+    it('drops a proposal that carries no stage request: it cannot be acted on', async () => {
+      fetchMock.mockResolvedValue(json(adk({ proposals: [{ proposal_ref: 'prop-2', kind: 'hold_withdrawal' }] })));
+      expect((await (await post()).json()).proposals).toEqual([]);
+    });
+
+    it('relays the offline 503 body so the UI can say the assistant is unavailable', async () => {
+      fetchMock.mockResolvedValue(json({ detail: 'offline', fallback_reason: 'RuntimeError' }, 503));
+      const res = await post();
+      expect(res.status).toBe(503);
+      expect((await res.json()).detail).toBe('offline');
+    });
+  });
+
   it.each([401, 403, 422, 500])('relays a backend %i instead of fabricating an answer', async (status) => {
     fetchMock.mockResolvedValue(json({ detail: 'nope' }, status));
     const res = await post();

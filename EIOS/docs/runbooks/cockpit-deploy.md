@@ -24,6 +24,28 @@ the hash-chained decision ledger in Firestore (database `eios-state`).
 3. Put the two image digests in `terraform.tfvars` (`cockpit_api_image`, `cockpit_web_image`) and `terraform apply`.
 4. Smoke test: sign in as each operator; stage, approve twice (two distinct approvers), verify the ledger.
 
+## ADK assistant (flag `EIOS_ASSISTANT_RUNTIME`)
+The cockpit's copilot endpoint is served by one of two runtimes. `legacy` (default) is the old copilot. `adk` is the ADK
+assistant (`src/eios/assistant/`, ADR-019). Nothing in this section is applied by Terraform yet; set these on the
+`eios-api` Cloud Run service only when the rollout gate has passed (`evals/agent/thresholds.yaml`, `docs/agent-baseline.md`).
+
+| Variable | Value | Notes |
+|---|---|---|
+| `EIOS_ASSISTANT_RUNTIME` | `legacy` or `adk` | Per environment. **Kill switch: set it back to `legacy`** and redeploy the revision; no code change. Any other value makes the endpoint answer 503 `offline`. |
+| `GOOGLE_GENAI_USE_ENTERPRISE` | `true` | Makes the model client use Vertex AI with the service identity instead of an API key. |
+| `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION` | project id, `global` | The current model generation is served from the `global` endpoint only. |
+| `EIOS_GEMINI_MODEL` | model id | Lives in tfvars/config only (ADR-002). |
+| `EIOS_PERSISTENCE`, `EIOS_FIRESTORE_DATABASE` | `firestore`, `eios-state` | Conversation sessions. Outside dev/test the service refuses to start without them: an in-memory thread would not survive a revision or be shared across instances. |
+| `EIOS_MODEL_ARMOR_PROMPT_TEMPLATE`, `EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE` | full template resource names | Both or neither. Outside dev/test the service refuses to start without both. The templates do not exist yet: they need Terraform, which is not written until approved. If screening fails the turn is blocked, never passed through. |
+| `EIOS_ASSISTANT_TURN_DEADLINE_S` | default 30 `[ASSUMPTION]` | A turn past this returns a labelled timeout, not a guess. |
+| `EIOS_ASSISTANT_MAX_LLM_CALLS` | default 12 `[ASSUMPTION]` | Tool rounds plus up to three assembly attempts. |
+| `EIOS_ASSISTANT_HISTORY_TURNS` | default 6 `[ASSUMPTION]` | Earlier turns the model reads; the stored thread keeps all of them. |
+
+Behaviour on a model outage is a plain 503 `offline` with no answer body; the browser says the assistant is unavailable.
+There is no replay of past answers for free-text questions (decision of 2026-10-14); workstation screens keep their own
+labelled replay. The runtime's service account needs `roles/aiplatform.user` and Firestore access to `eios-state`, plus
+`roles/modelarmor.user` once the templates exist.
+
 ## Known exceptions
 - **Guardrails off** (`enforce_guardrails = false`) in eios-hackathon-prod: the deploying identity lacks
   `orgpolicy.policyAdmin`. Re-enable once granted. [ASSUMPTION: hackathon project]

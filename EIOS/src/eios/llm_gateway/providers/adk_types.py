@@ -15,6 +15,7 @@ Content = _types.Content
 Part = _types.Part
 GenerateContentConfig = _types.GenerateContentConfig
 FunctionDeclaration = _types.FunctionDeclaration
+HttpRetryOptions = _types.HttpRetryOptions
 Schema = _types.Schema
 
 
@@ -30,7 +31,11 @@ def text_of(content: _types.Content | None) -> str:
 
 
 def generation_config(
-    *, temperature: float, max_output_tokens: int, thinking_level: str | None = None, **extra: Any
+    *,
+    temperature: float,
+    max_output_tokens: int,
+    thinking_level: str | None = None,
+    **extra: Any,
 ) -> _types.GenerateContentConfig:
     """Generation settings. Gemini 3.x counts thinking tokens against `max_output_tokens`, so callers cap
     the thinking level and leave room for the answer (a 256-token limit with LOW thinking was measured
@@ -42,13 +47,7 @@ def generation_config(
     )
 
 
-# ADK retries a model call twice by default; a quota error (429) on the shared project needs longer backoff.
-# [ASSUMPTION] attempts and delays, to be tuned on the live run.
-_RETRY = _types.HttpRetryOptions(
-    attempts=5, initial_delay=2.0, max_delay=30.0, exp_base=2.0, jitter=1.0
-)
-
-
-def retrying_gemini(model_id: str) -> Gemini:
-    """ADK's own Gemini model with its native retry policy (429, 5xx), instead of a hand-written retry loop."""
-    return Gemini(model=model_id, retry_options=_RETRY)
+def retrying_gemini(model_id: str, retry: _types.HttpRetryOptions) -> Gemini:
+    """ADK's own Gemini model with its native retry policy (429, 5xx, a request that timed out), instead of a
+    hand-written retry loop. The caller states the policy because it must fit inside the turn's deadline."""
+    return Gemini(model=model_id, retry_options=retry)
