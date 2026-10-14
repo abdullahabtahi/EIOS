@@ -29,6 +29,18 @@ export function GovernedActionShelf() {
 
   const [authorizeError, setAuthorizeError] = React.useState<{ intentId: string; message: string } | null>(null);
 
+  // Staging from the chat happens out of sight of the shelf, so it flashes when a new action lands.
+  const [flash, setFlash] = React.useState(false);
+  const stagedCount = React.useRef(stagedActions.length);
+  React.useEffect(() => {
+    const grew = stagedActions.length > stagedCount.current;
+    stagedCount.current = stagedActions.length;
+    if (!grew) return;
+    setFlash(true);
+    const t = setTimeout(() => setFlash(false), 1600);
+    return () => clearTimeout(t);
+  }, [stagedActions.length]);
+
   // The backend records the approval and returns the card; nothing is shown as committed until it says so.
   const handleSingleAuthorize = async (action: ActionIntentCard) => {
     setAuthorizeError(null);
@@ -49,7 +61,10 @@ export function GovernedActionShelf() {
       <section
         aria-label="Governed Action Shelf"
         title="Two-phase commit: nothing executes without a signed, dual-approved intent"
-        className="relative w-full bg-white border-t border-slate-300 text-slate-900 z-40 shrink-0"
+        data-flash={flash || undefined}
+        className={`relative w-full bg-white border-t text-slate-900 z-40 shrink-0 transition-colors duration-500 ${
+          flash ? 'border-cx-accent bg-cx-info-bg' : 'border-slate-300'
+        }`}
       >
         {/* Slim status bar: always visible, ~36px */}
         <div className="h-9 px-4 bg-slate-50 flex items-center justify-between gap-3">

@@ -96,7 +96,7 @@ function RailFooter({ onCommandBar, onShortcuts }: { onCommandBar: () => void; o
           <Icon icon="terminal" size="sm" className="text-chrome-accent" />
         </span>
         <span className={`${LABEL} flex items-center`}>
-          <span className="flex-1">Command Bar</span>
+          <span className="flex-1">Ask copilot</span>
           <kbd className={KBD}>⌘K</kbd>
         </span>
       </button>
@@ -144,7 +144,7 @@ function RailFooter({ onCommandBar, onShortcuts }: { onCommandBar: () => void; o
 }
 
 export function AppNavRail({ onOpenShortcuts }: { onOpenShortcuts?: () => void } = {}) {
-  const { setCopilotCommandOpen } = useCockpit();
+  const { openChat } = useCockpit();
   const { open, openNow, closeNow, toggle, scheduleOpen, scheduleClose, cancelScheduled } = useNavReveal();
   const rootRef = React.useRef<HTMLDivElement>(null);
   const pointerInside = React.useRef(false);
@@ -233,7 +233,7 @@ export function AppNavRail({ onOpenShortcuts }: { onOpenShortcuts?: () => void }
 
         <RailFooter
           onCommandBar={() => {
-            setCopilotCommandOpen(true);
+            openChat();
             closeNow();
           }}
           onShortcuts={

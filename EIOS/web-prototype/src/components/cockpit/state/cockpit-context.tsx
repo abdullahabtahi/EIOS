@@ -68,8 +68,10 @@ export interface CockpitState {
   // What-If Simulation Engine
   whatIfParams: WhatIfShockParameters;
 
-  // Modals & Omnipresent Command Bar
-  copilotCommandOpen: boolean;
+  // Which view the dossier column shows, and whether an answer arrived while it showed the dossier
+  dossierView: 'dossier' | 'chat';
+  chatUnread: boolean;
+  chatFocusTick: number; // bumped each time the chat is opened, so its input takes focus
 
   // Infrastructure Telemetry & Outage State
   isLiveConnected: boolean;
@@ -99,7 +101,9 @@ export type CockpitAction =
   | { type: 'ACTION_UPDATED'; payload: ActionIntentCard }
   | { type: 'SET_WHAT_IF_PARAMS'; payload: Partial<WhatIfShockParameters> }
   | { type: 'RESET_WHAT_IF_PARAMS' }
-  | { type: 'SET_COPILOT_COMMAND_OPEN'; payload: boolean }
+  | { type: 'OPEN_CHAT' }
+  | { type: 'SHOW_DOSSIER' }
+  | { type: 'MARK_CHAT_UNREAD' }
   | { type: 'TOGGLE_SIMULATED_OUTAGE'; payload?: boolean }
   | { type: 'SELECT_ENTITY'; payload: string };
 
@@ -131,7 +135,9 @@ const initialState: CockpitState = {
   governedActionShelfExpanded: false,
   fourEyesPendingAction: null,
   whatIfParams: initialWhatIfParams,
-  copilotCommandOpen: false,
+  dossierView: 'dossier',
+  chatUnread: false,
+  chatFocusTick: 0,
   isLiveConnected: true,
   isCachedFallback: false,
   dataOrigin: initialData.dataOrigin ?? 'fixture',
@@ -406,11 +412,16 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
       };
     }
 
-    case 'SET_COPILOT_COMMAND_OPEN': {
-      return {
-        ...state,
-        copilotCommandOpen: action.payload,
-      };
+    case 'OPEN_CHAT': {
+      return { ...state, dossierView: 'chat', chatUnread: false, chatFocusTick: state.chatFocusTick + 1 };
+    }
+
+    case 'SHOW_DOSSIER': {
+      return { ...state, dossierView: 'dossier' };
+    }
+
+    case 'MARK_CHAT_UNREAD': {
+      return state.dossierView === 'dossier' ? { ...state, chatUnread: true } : state;
     }
 
     case 'TOGGLE_SIMULATED_OUTAGE': {
@@ -471,7 +482,9 @@ interface CockpitContextValue {
   applyBackendCard: (card: ActionIntentCard) => void;
   setWhatIfParams: (params: Partial<WhatIfShockParameters>) => void;
   resetWhatIfParams: () => void;
-  setCopilotCommandOpen: (open: boolean) => void;
+  openChat: () => void;
+  showDossier: () => void;
+  markChatUnread: () => void;
   toggleSimulatedOutage: (enabled?: boolean) => void;
   setShelfExpanded: (expanded: boolean) => void;
   refreshWorkstation: () => Promise<void>;
@@ -537,20 +550,18 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
     fetchWorkstation(state.activeRole, state.isSimulatedOutage);
   }, [state.activeRole, state.isSimulatedOutage, fetchWorkstation]);
 
-  // Global Keyboard Shortcuts (Cmd+K for Copilot Command Bar, Esc to close)
+  // Global shortcut: Cmd/Ctrl+K opens the chat in the dossier column and focuses its input
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
-        dispatch({ type: 'SET_COPILOT_COMMAND_OPEN', payload: !state.copilotCommandOpen });
-      } else if (e.key === 'Escape' && state.copilotCommandOpen) {
-        dispatch({ type: 'SET_COPILOT_COMMAND_OPEN', payload: false });
+        dispatch({ type: 'OPEN_CHAT' });
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [state.copilotCommandOpen]);
+  }, []);
 
   // Filtered triage items memoization
   const filteredTriageItems = useMemo(() => {
@@ -626,9 +637,9 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'RESET_WHAT_IF_PARAMS' });
   }, []);
 
-  const setCopilotCommandOpen = useCallback((open: boolean) => {
-    dispatch({ type: 'SET_COPILOT_COMMAND_OPEN', payload: open });
-  }, []);
+  const openChat = useCallback(() => dispatch({ type: 'OPEN_CHAT' }), []);
+  const showDossier = useCallback(() => dispatch({ type: 'SHOW_DOSSIER' }), []);
+  const markChatUnread = useCallback(() => dispatch({ type: 'MARK_CHAT_UNREAD' }), []);
 
   const toggleSimulatedOutage = useCallback((enabled?: boolean) => {
     dispatch({ type: 'TOGGLE_SIMULATED_OUTAGE', payload: enabled });
@@ -660,7 +671,9 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
       applyBackendCard,
       setWhatIfParams,
       resetWhatIfParams,
-      setCopilotCommandOpen,
+      openChat,
+      showDossier,
+      markChatUnread,
       toggleSimulatedOutage,
       setShelfExpanded,
       refreshWorkstation,
@@ -681,7 +694,9 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
       applyBackendCard,
       setWhatIfParams,
       resetWhatIfParams,
-      setCopilotCommandOpen,
+      openChat,
+      showDossier,
+      markChatUnread,
       toggleSimulatedOutage,
       setShelfExpanded,
       refreshWorkstation,
