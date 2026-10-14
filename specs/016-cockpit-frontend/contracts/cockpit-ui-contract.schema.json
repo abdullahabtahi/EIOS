@@ -96,7 +96,7 @@
                     "steward_role": { "type": "string" },
                     "citation": {
                       "type": "string",
-                      "enum": ["[BRIEF]", "[ASSUMPTION]", "[ILLUSTRATIVE]", "[TARGET]", "[SPIKE]"]
+                      "enum": ["[BRIEF]", "[ASSUMPTION]", "[ILLUSTRATIVE]", "[TARGET]", "[SPIKE]", "[COMPUTED]"]
                     }
                   },
                   "additionalProperties": true

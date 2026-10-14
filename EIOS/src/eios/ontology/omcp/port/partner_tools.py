@@ -8,7 +8,6 @@ from eios.ontology.config import SecurityMarking
 from eios.ontology.omcp.port.common import envelope
 from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode, ToolResult
 from eios.ontology.omcp.port.entities import EntityKind
-from eios.ontology.omcp.port.partner_fixtures import MESSAGES, STORY_PARTNER
 from eios.ontology.omcp.port.principal import Principal, Workstation
 from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.registry import Handler, ToolSpec
@@ -78,6 +77,7 @@ def list_partner_worklist(ctx: ReadModels, _who: Principal, args: WorklistArgs) 
                 "partners[].expected_loss_usd": "USD",
             },
             COMMERCIAL,
+            origin=ctx.partner_origin,
         ),
         partners=ranked,
     )
@@ -122,7 +122,7 @@ def get_partner_signals(ctx: ReadModels, _who: Principal, args: PartnerArgs) -> 
             )
             for d in ctx.partner.get_retention_playbooks(partner)
         ]
-        if partner == STORY_PARTNER
+        if ctx.partner.has_detail(partner)
         else []
     )
     return PartnerSignals(
@@ -141,6 +141,7 @@ def get_partner_signals(ctx: ReadModels, _who: Principal, args: PartnerArgs) -> 
                 "retention_deals[].projected_retention_uplift_pct": "percent",
             },
             COMMERCIAL,
+            origin=ctx.partner_origin,
         ),
         name=p.name or p.partner_id,
         tier=p.tier,
@@ -167,6 +168,9 @@ class RingObservation(StrictModel):
     unearned_commission_liability_usd: float
 
 
+_RING_FIELDS = tuple(RingObservation.model_fields)
+
+
 class PartnerIntegrity(ToolResult):
     statement: str
     referred_client_count: int
@@ -176,7 +180,7 @@ class PartnerIntegrity(ToolResult):
 
 def get_partner_integrity(ctx: ReadModels, _who: Principal, args: PartnerArgs) -> PartnerIntegrity:
     partner = _partner(ctx, args.entity_id)
-    if partner != STORY_PARTNER:
+    if not ctx.partner.has_detail(partner):
         raise PortError(
             ToolErrorCode.DATA_UNAVAILABLE,
             f"no integrity evidence is loaded for {partner}; "
@@ -196,11 +200,15 @@ def get_partner_integrity(ctx: ReadModels, _who: Principal, args: PartnerArgs) -
                 "rings[].unearned_commission_liability_usd": "USD",
             },
             COMMERCIAL,
+            origin=ctx.partner_origin,
         ),
         statement="Observed patterns only; they are not a finding about the partner's intent.",
         referred_client_count=tree["referred_client_count"],
         active_sub_affiliates_count=tree["active_sub_affiliates_count"],
-        rings=[RingObservation(**r) for r in tree["detected_abusive_rings"]],
+        rings=[
+            RingObservation(**{k: r[k] for k in _RING_FIELDS})
+            for r in tree["detected_abusive_rings"]
+        ],
     )
 
 
@@ -244,7 +252,7 @@ class PartnerComms(ToolResult):
 
 def read_partner_comms(ctx: ReadModels, _who: Principal, args: PartnerArgs) -> PartnerComms:
     partner = _partner(ctx, args.entity_id)
-    found = MESSAGES.get(partner)
+    found = ctx.partner.get_messages(partner)
     if not found:
         raise PortError(
             ToolErrorCode.DATA_UNAVAILABLE, f"no partner messages are loaded for {partner}"
@@ -257,10 +265,11 @@ def read_partner_comms(ctx: ReadModels, _who: Principal, args: PartnerArgs) -> P
             ctx,
             "partner.comms",
             partner,
-            "port.partner_fixtures.MESSAGES",
+            "partner.messages",
             {"topic_counts[].count": "messages"},
             COMMERCIAL,
             untrusted=True,
+            origin=ctx.partner_origin,
         ),
         topic_counts=[TopicCount(topic=t, count=c) for t, c in sorted(counts.items())],
         messages=[

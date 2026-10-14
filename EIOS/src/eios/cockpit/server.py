@@ -34,6 +34,8 @@ from starlette.responses import JSONResponse
 from eios.assistant.config import AssistantConfigError
 from eios.assistant.sessions import valid_entity_id
 from eios.cockpit import aml_engine_view as aml_view
+from eios.cockpit import compliance_view
+from eios.cockpit import partner_engine_view as partner_view
 from eios.cockpit.aml_engine_view import default_entity
 from eios.cockpit.assistant_gateway import (
     get_runtime,
@@ -47,12 +49,13 @@ from eios.cockpit.auth import (
     current_operator,
     require_roles,
 )
-from eios.cockpit.governance_runtime import build_governance_runtime
 from eios.cockpit.governance_shelf import GovernedActionCard
 from eios.cockpit.session import SessionManager
 from eios.cockpit.shell import CockpitShellPresenter
 from eios.dataplane.aml_service import EngineAMLService, UnknownAccountError
-from eios.dataplane.plane import engine_service, read_models
+from eios.dataplane.partner_service import EnginePartnerService
+from eios.dataplane.plane import engine_service, partner_engine_service, read_models
+from eios.dataplane.plane import governance as plane_governance
 from eios.flywheel.ledger import DecisionOutcomeRecord
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
@@ -88,7 +91,7 @@ app.add_middleware(
 
 # Global Service Singletons
 session_mgr = SessionManager()
-governance = build_governance_runtime()
+governance = plane_governance()
 # Seed demo intents once on startup for local / dev / test environments
 if os.getenv("EIOS_ENVIRONMENT", "dev") in {"dev", "test"}:
     governance.seed_demo_intents()
@@ -236,6 +239,19 @@ class CockpitHealthResponse(BaseModel):
 FIXTURE_DATA_BADGE = "[ILLUSTRATIVE]"
 ENGINE_DATA_BADGE = "[ENGINE]"  # computed by the engines over the seeded world, not hand-written
 AML_ROLES = ("aml_investigator", "aml", "compliance_aml")
+PARTNER_ROLES = ("partner_manager", "partner", "growth")
+LIVE_DATA_BADGE = "[LIVE]"  # read from the running governance ledger
+
+
+def _data_badge(role_enum: str) -> str:
+    """Where this workstation's numbers come from: engines over the seeded worlds, the live ledger, or fixtures."""
+    if role_enum == "aml_investigator" and engine_service() is not None:
+        return ENGINE_DATA_BADGE
+    if role_enum == "partner_manager" and partner_engine_service() is not None:
+        return ENGINE_DATA_BADGE
+    if role_enum == "compliance_auditor" and compliance_svc.sequencer is not None:
+        return LIVE_DATA_BADGE
+    return FIXTURE_DATA_BADGE
 
 
 def _get_utc_now() -> str:
@@ -496,7 +512,20 @@ def _build_contract_state(  # noqa: PLR0915
             },
         }
 
-    elif norm_role in ("partner_manager", "partner", "growth"):
+    elif norm_role in PARTNER_ROLES and partner_engine_service() is not None:
+        role_enum = "partner_manager"
+        psvc = cast(EnginePartnerService, partner_engine_service())
+        chosen = (
+            entity_id
+            if entity_id and psvc.has_detail(entity_id)
+            else partner_view.default_partner(psvc)
+        )
+        case = partner_view.case_payload(psvc, chosen)
+        triage_items = partner_view.triage_items(psvc, now_iso)
+        active_dossier = case["active_dossier"]
+        kinetic_canvas = case["kinetic_canvas"]
+
+    elif norm_role in PARTNER_ROLES:
         role_enum = "partner_manager"
         radar = partner_svc.get_churn_radar_scatter()
         playbooks = partner_svc.get_retention_playbooks("AP-1029")
@@ -588,69 +617,9 @@ def _build_contract_state(  # noqa: PLR0915
 
     elif norm_role in ("compliance_auditor", "compliance", "audit"):
         role_enum = "compliance_auditor"
-        timeline = compliance_svc.get_ledger_timeline(start_seq=1, limit=10)
-        worm_proofs = compliance_svc.get_worm_compliance_proofs()
-        primary_worm = (
-            worm_proofs[0]
-            if worm_proofs
-            else {
-                "checkpoint_id": "WORM-CKPT-20261009-001",
-                "retention_expiration": "2033-10-09T00:00:00+00:00",
-                "compliance_lock_mode": "COMPLIANCE",
-            }
+        triage_items, active_dossier, kinetic_canvas = compliance_view.workstation(
+            compliance_svc, now_iso
         )
-
-        triage_items = [
-            {
-                "id": f"item_seq_{e['ledger_seq']}",
-                "title": f"Ledger #{e['ledger_seq']} {e['event_type']}",
-                "subtitle": f"Actor: {e['actor_id']} | Hash: {e['current_hash'][:12]}...",
-                "entity_id": f"SEQ-{e['ledger_seq']}",
-                "priority_score": 0.5,
-                "severity": "INFO",
-                "status": "RESOLVED",
-                "timestamp": e["timestamp"],
-            }
-            for e in timeline
-        ]
-
-        active_dossier = {
-            "dossier_id": "dos_compliance_timeline",
-            "entity_id": "LEDGER-WORM",
-            "headline": "Cryptographic Decision Ledger & WORM Proof Explorer",
-            "executive_summary": "Monotonic SHA-256 hash-chain verified. Cloud Storage WORM compliance lock active.",
-            "sections": [
-                {
-                    "section_id": "sec_worm",
-                    "title": "WORM Retention Lock Proof",
-                    "narrative_text": f"GCS bucket object held under WORM compliance retention until {primary_worm.get('retention_expiration')}. Root hash anchor matches Cloud KMS ECDSA attestation.",
-                    "citations": ["worm_checkpoint_id"],
-                    "metrics": [
-                        {
-                            "metric_id": "worm_retention_days",
-                            "formatted_value": "2,555 Days Locked",
-                            "raw_value": 2555,
-                            "semantic_definition_version": "v1.0",
-                            "as_of_timestamp": now_iso,
-                            "origin_engine": "WORMComplianceService",
-                            "steward_role": "ComplianceAuditor",
-                            "citation": "[BRIEF]",
-                        }
-                    ],
-                }
-            ],
-            "as_of_timestamp": now_iso,
-            "is_cached_snapshot": False,
-        }
-
-        kinetic_canvas = {
-            "canvas_type": "LEDGER_TIMELINE",
-            "payload": {
-                "timeline": timeline,
-                "worm_proof": primary_worm,
-                "chain_valid": True,
-            },
-        }
 
     else:  # data_operations / platform_ops
         role_enum = "data_operations"
@@ -865,9 +834,7 @@ def _build_contract_state(  # noqa: PLR0915
         },
         "fallback_state": {
             "is_active": False,
-            "badge_label": ENGINE_DATA_BADGE
-            if role_enum == "aml_investigator" and engine_service() is not None
-            else FIXTURE_DATA_BADGE,
+            "badge_label": _data_badge(role_enum),
             "cached_timestamp": None,
             "outage_reason": None,
         },
@@ -954,10 +921,12 @@ WORKSTATIONS_PATH = "/api/cockpit/workstations/{role}"
 SIMULATE_PATH = "/api/cockpit/simulate"
 STAGE_ACTION_PATH = "/api/cockpit/actions/stage"
 AUTHORIZE_ACTION_PATH = "/api/cockpit/actions/authorize"
+PARTNER_CASE_PATH = "/api/cockpit/partners/{entity_id}"
 AML_CASE_PATH = "/api/cockpit/aml/cases/{entity_id}"
 COPILOT_QUERY_PATH = "/api/cockpit/copilot/query"
 FLYWHEEL_FEEDBACK_PATH = "/api/cockpit/flywheel/feedback"
 AUDIT_VERIFY_PATH = "/api/cockpit/audit/verify"
+COMPLIANCE_LEDGER_PATH = "/api/cockpit/compliance/ledger"
 
 public_router = APIRouter(tags=["Cockpit Presentation"])
 router = APIRouter(tags=["Cockpit Presentation"], dependencies=[Depends(current_operator)])
@@ -1017,6 +986,17 @@ def get_aml_case(entity_id: str) -> dict[str, Any]:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="no such account"
         ) from exc
+
+
+@router.get(PARTNER_CASE_PATH)
+def get_partner_case(entity_id: str) -> dict[str, Any]:
+    """One partner's computed dossier, radar and referral tree, for the selection a browser just made."""
+    psvc = partner_engine_service()
+    if psvc is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="no engine plane")
+    if not valid_entity_id(entity_id) or not psvc.has_detail(entity_id.upper()):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="no such partner")
+    return partner_view.case_payload(psvc, entity_id.upper())
 
 
 @router.post(SIMULATE_PATH, response_model=WhatIfSimulationResponse)
@@ -1204,6 +1184,12 @@ def verify_ledger_continuity() -> AuditVerifyResponse:
         audit_duration_ms=report.audit_duration_ms,
         verified_at=_get_utc_now(),
     )
+
+
+@router.get(COMPLIANCE_LEDGER_PATH)
+def compliance_ledger() -> dict[str, Any]:
+    """The decision ledger as the auditor reads it: entries, sign-offs, signed checkpoints and an audit walk."""
+    return compliance_view.ledger_payload(compliance_svc)
 
 
 app.include_router(public_router)

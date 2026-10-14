@@ -61,7 +61,7 @@ describe('Spec-Driven Workstation Tabs and Forensic URL Deserialization', () => 
 
     // Verify Partner Workstation elements render
     await waitFor(() => {
-      expect(screen.getByText(/Ontology Entity • Partner/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Partner Churn Hazard Radar/i)[0]).toBeInTheDocument();
       expect(screen.getAllByText(/Gemini 3.8 Flash/i)[0]).toBeInTheDocument();
     });
 

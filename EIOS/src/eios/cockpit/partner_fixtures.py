@@ -5,22 +5,13 @@ given. These sets say which partners that content is true for, so a deal or a ri
 another partner. Messages are fixture text standing in for the partner communications feed (spec 025).
 """
 
-from dataclasses import dataclass
 from datetime import UTC, datetime
+
+from eios.cockpit.partner_readmodel import PartnerMessage
 
 STORY_PARTNER = (
     "PTR-882"  # the partner the referral tree, deals and messages describe (alias AP-1029)
 )
-
-
-@dataclass(frozen=True)
-class PartnerMessage:
-    message_id: str
-    channel: str
-    sentiment: str
-    topic: str
-    received_at: datetime
-    text: str
 
 
 MESSAGES: dict[str, list[PartnerMessage]] = {

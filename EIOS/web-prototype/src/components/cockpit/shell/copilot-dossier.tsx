@@ -38,7 +38,8 @@ export function CopilotDossier() {
     );
   }
 
-  if (dossier.role === 'partner_manager' || state.activeRole === 'partner_manager') {
+  // The fixture plane's partner panel is sample content; an engine-computed partner dossier renders like any other.
+  if ((dossier.role === 'partner_manager' || state.activeRole === 'partner_manager') && state.dataOrigin !== 'engine') {
     return <PartnerRetentionDossierView dossier={dossier} />;
   }
 

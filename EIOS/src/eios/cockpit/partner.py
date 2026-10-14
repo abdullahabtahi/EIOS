@@ -8,12 +8,15 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field
 
 from eios.cockpit.provenance import ProvenanceMetadata, ProvenanceResolver
 from eios.cockpit.schemas import validate_contract
+
+if TYPE_CHECKING:
+    from eios.cockpit.partner_readmodel import PartnerMessage
 
 
 class PartnerQuadrant(str, Enum):
@@ -40,6 +43,27 @@ class PartnerChurnItem(BaseModel):
     historical_drift: dict[str, Any] | None = None
     empirical_win_rate: float | None = 0.785
     primary_driver: str | None = "OPERATIONAL_CASHIER"
+    # Computed on the engine plane only (spec 032); the fixture plane leaves them unset.
+    change_point_flag: bool | None = None
+    support_ticket_count: int | None = None
+    cashier_latency_sla_hours: float | None = None
+    competitor_poaching: str | None = None
+    mirror_trade_correlation: float | None = None
+    extracted_commission_usd: float | None = None
+    projected_lift_pct: float | None = None
+    net_margin_recovery_usd: float | None = None
+
+
+_ENGINE_FIELDS = {
+    "change_point_flag",
+    "support_ticket_count",
+    "cashier_latency_sla_hours",
+    "competitor_poaching",
+    "mirror_trade_correlation",
+    "extracted_commission_usd",
+    "projected_lift_pct",
+    "net_margin_recovery_usd",
+}
 
 
 class ChurnRadarScatter(BaseModel):
@@ -67,6 +91,11 @@ class ChurnRadarScatter(BaseModel):
                     "empirical_win_rate": p.empirical_win_rate,
                     "primary_driver": p.primary_driver,
                     "provenance": p.provenance.to_contract_dict(),
+                    **{
+                        k: v
+                        for k, v in p.model_dump(include=_ENGINE_FIELDS).items()
+                        if v is not None
+                    },
                 }
                 for p in self.partners
             ],
@@ -491,6 +520,17 @@ class PartnerWorkstationService:
         ]
 
         return ChurnRadarScatter(as_of=now, partners=partners)
+
+    def has_detail(self, partner_id: str) -> bool:
+        """The fixtures hold deals, rings and messages for the story partner only."""
+        from eios.cockpit.partner_fixtures import STORY_PARTNER
+
+        return partner_id == STORY_PARTNER
+
+    def get_messages(self, partner_id: str) -> list[PartnerMessage]:
+        from eios.cockpit.partner_fixtures import MESSAGES
+
+        return list(MESSAGES.get(partner_id, []))
 
     def get_partner_referral_tree(self, partner_id: str = "AP-1029") -> dict[str, Any]:
         """Returns referral hierarchy and opposite-trading ring detection."""

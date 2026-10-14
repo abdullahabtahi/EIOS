@@ -51,6 +51,18 @@ def test_the_engine_plane_builds_once_and_serves_every_account_it_holds(
     some = engine.account_ids()[500]
     assert models.directory.resolve(some).entity_id == some
     assert plane.read_models() is models
+    # The partner plane is engine-backed too, and the two worlds are linked through referrals.
+    partner = plane.partner_engine_service()
+    assert (
+        partner is not None
+        and models.partner is partner
+        and models.partner_origin is DataOrigin.ENGINE
+    )
+    assert models.compliance.sequencer is plane.governance().sequencer
+    ring_partner = engine.snapshot.world.clients.set_index("client_id").loc["CR84920", "partner_id"]
+    tree = partner.get_partner_referral_tree(ring_partner)
+    assert tree["referred_client_count"] > 0
+    assert any("CR84920" == x["entity_id"] or x["referred_members"] for x in tree["aml_exposure"])
 
 
 def test_world_partners_are_the_radar_partners(monkeypatch: pytest.MonkeyPatch) -> None:

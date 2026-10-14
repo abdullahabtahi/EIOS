@@ -239,8 +239,9 @@ export interface PartnerChurnItem {
   valueAtRiskUsd: number;
   daysToChurn: number;
   changePointDetected: boolean;
-  mirrorTradeCorrelation: number; // 0.00 to 1.00
-  extractedCommissionUsd: number;
+  /** Highest opposite-trading pair confidence across the partner's network (0..1); absent when not computed. */
+  mirrorTradeCorrelation?: number;
+  extractedCommissionUsd?: number;
   region?: string;
   cohort?: string;
   loginDecayPct?: number;
@@ -265,13 +266,16 @@ export interface WhatIfCausalResponse {
   evaluator_model: string;
   evaluated_at: string;
   query_prompt: string;
-  projected_retention_lift_pct: number;
-  confidence_interval_95: [number, number];
-  estimated_deal_cost_usd: number;
-  projected_net_margin_usd: number;
-  verdict: 'OPTIMAL_FRONTIER_APPROVED' | 'MARGIN_DILUTIVE_WARNING' | 'APPROVED_WITH_VP_APPROVAL' | string;
+  /** Relative drop in the scored hazard; null when no playbook applies. */
+  projected_retention_lift_pct: number | null;
+  /** The hazard model gives a point projection; no interval is claimed. */
+  confidence_interval_95: [number, number] | null;
+  estimated_deal_cost_usd: number | null;
+  projected_net_margin_usd: number | null;
+  verdict: 'NET_POSITIVE' | 'MARGIN_DILUTIVE' | 'NO_PLAYBOOK' | string;
   governed_decision_rationale: string;
-  causal_refuter_p_value: number;
+  /** Null: a hazard-model projection is not a causal estimate (RL-3). */
+  causal_refuter_p_value: number | null;
 }
 
 export interface CohortBatchProposal {
@@ -357,6 +361,58 @@ export interface LedgerAuditRecord {
   timestamp: string;
   wormLocked: boolean;
   chainVerificationStatus: 'VALID' | 'TAMPERED';
+}
+
+/** One decision-ledger entry as the auditor reads it (spec 032). */
+export interface LedgerRow {
+  ledgerSeq: number;
+  eventType: string;
+  entityId: string;
+  actorId: string;
+  previousHash: string;
+  recordHash: string;
+  timestamp: string;
+  anchored: boolean;
+}
+
+export interface SignOff {
+  officerId: string;
+  role: string;
+  approvedAt: string;
+}
+
+/** An intent and the human sign-offs it has so far; a pending intent has none. */
+export interface IntentSignOffs {
+  intentId: string;
+  actionType: string;
+  targetEntityId: string;
+  severity: string;
+  status: string;
+  requiresDualApproval: boolean;
+  first: SignOff | null;
+  second: SignOff | null;
+}
+
+export interface SignedCheckpoint {
+  checkpointId: string;
+  chainHeadSeq: number;
+  rootHash: string;
+  retentionExpiration: string;
+}
+
+export interface ChainVerification {
+  entriesVerified: number;
+  unbroken: boolean;
+  headHash: string;
+  anchorsMatched: number;
+}
+
+export interface ComplianceLedger {
+  entries: LedgerRow[];
+  approvals: IntentSignOffs[];
+  checkpoints: SignedCheckpoint[];
+  verification: ChainVerification;
+  isSimulated: boolean;
 }
 
 export interface SloHealthItem {

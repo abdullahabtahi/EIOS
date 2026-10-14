@@ -79,14 +79,18 @@ def get_ledger_timeline(ctx: ReadModels, _who: Principal, args: LedgerArgs) -> L
 # --- get_intent_status -----------------------------------------------------------------------------------
 
 
+def _role(approver: dict[str, str] | None) -> str | None:
+    return approver["role"] if approver else None
+
+
 class IntentStatus(ToolResult):
     intent_id: str
     action_type: str
     target_entity_id: str
     severity: str
     status: str
-    first_approver_role: str
-    second_approver_role: str
+    first_approver_role: str | None
+    second_approver_role: str | None
     execution_receipt_id: str | None
 
 
@@ -111,8 +115,8 @@ def get_intent_status(ctx: ReadModels, _who: Principal, args: IntentArgs) -> Int
         target_entity_id=r["target_entity_id"],
         severity=r["severity"],
         status=r["status"],
-        first_approver_role=r["first_approver"]["role"],
-        second_approver_role=r["second_approver"]["role"],
+        first_approver_role=_role(r["first_approver"]),
+        second_approver_role=_role(r["second_approver"]),
         execution_receipt_id=r["execution_receipt_id"],
     )
 

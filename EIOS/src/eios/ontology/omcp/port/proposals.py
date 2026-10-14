@@ -15,7 +15,6 @@ from eios.ontology.config import SecurityMarking
 from eios.ontology.omcp.port.common import envelope
 from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode, ToolResult
 from eios.ontology.omcp.port.entities import EntityKind
-from eios.ontology.omcp.port.partner_fixtures import STORY_PARTNER
 from eios.ontology.omcp.port.principal import Principal, Workstation
 from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.registry import ToolSpec
@@ -120,7 +119,7 @@ def _ref(kind: ProposalKind, entity_id: str, key: str) -> str:
 
 def propose_partner_action(ctx: ReadModels, _who: Principal, args: ProposeDealArgs) -> Proposal:
     partner = ctx.directory.resolve(args.entity_id, EntityKind.PARTNER).entity_id
-    if partner != STORY_PARTNER:
+    if not ctx.partner.has_detail(partner):
         raise PortError(
             ToolErrorCode.DATA_UNAVAILABLE, f"no retention deals are defined for {partner} yet"
         )
@@ -149,6 +148,7 @@ def propose_partner_action(ctx: ReadModels, _who: Principal, args: ProposeDealAr
                 "expected_effect_high": "percent",
             },
             (SecurityMarking.PARTNER_COMMERCIAL,),
+            origin=ctx.partner_origin,
         ),
         proposal_ref=_ref(ProposalKind.RETENTION_DEAL, partner, deal.playbook_id),
         kind=ProposalKind.RETENTION_DEAL,
