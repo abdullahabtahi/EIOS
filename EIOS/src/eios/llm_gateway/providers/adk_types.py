@@ -29,8 +29,13 @@ def text_of(content: _types.Content | None) -> str:
 
 
 def generation_config(
-    *, temperature: float, max_output_tokens: int, **extra: Any
+    *, temperature: float, max_output_tokens: int, thinking_level: str | None = None, **extra: Any
 ) -> _types.GenerateContentConfig:
+    """Generation settings. Gemini 3.x counts thinking tokens against `max_output_tokens`, so callers cap
+    the thinking level and leave room for the answer (a 256-token limit with LOW thinking was measured
+    to leave 42 characters of text)."""
+    if thinking_level is not None:
+        extra["thinking_config"] = _types.ThinkingConfig(thinking_level=thinking_level)  # type: ignore[arg-type]
     return _types.GenerateContentConfig(
         temperature=temperature, max_output_tokens=max_output_tokens, **extra
     )

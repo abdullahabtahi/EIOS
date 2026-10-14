@@ -22,6 +22,11 @@ from eios.llm_gateway.providers.adk_types import generation_config
 from eios.ontology.omcp.port.principal import Principal, Workstation
 from eios.ontology.omcp.port.service import GovernedToolPort
 
+# Gemini 3.x thinking counts against the output limit; LOW is the lowest level the model accepts (MINIMAL is
+# rejected with 400). Output limit leaves room for the draft after thinking. [ASSUMPTION] to be tuned on the live run.
+DRAFT_THINKING_LEVEL = "LOW"
+DRAFT_MAX_OUTPUT_TOKENS = 8192
+
 TITLES: dict[Workstation, str] = {
     Workstation.AML_INVESTIGATOR: "AML investigator",
     Workstation.PARTNER_MANAGER: "partner manager",
@@ -70,7 +75,9 @@ def build_agent(*, port: GovernedToolPort, principal: Principal, model: str | Ba
         instruction=instruction_for(workstation),
         tools=list(build_toolset(port, principal)),
         output_key=DRAFT_KEY,
-        generate_content_config=generation_config(temperature=0.2, max_output_tokens=2048),
+        generate_content_config=generation_config(
+            temperature=0.2, max_output_tokens=DRAFT_MAX_OUTPUT_TOKENS, thinking_level=DRAFT_THINKING_LEVEL
+        ),
     )
     assembler = AnswerAssembler(name="assembler")
     return LoopAgent(
