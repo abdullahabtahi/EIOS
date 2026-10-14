@@ -14,6 +14,7 @@ import yaml
 from eios.cockpit.aml import AMLWorkstationService
 from eios.cockpit.aml_readmodel import AmlReadModel
 from eios.cockpit.partner import PartnerWorkstationService
+from eios.cockpit.partner_readmodel import PartnerReadModel
 from eios.common.validation import StrictModel
 from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode
 
@@ -94,7 +95,7 @@ class EntityDirectory:
         return Entity(entity_id=matches[0][0], kind=matches[0][1])
 
 
-def build_directory(aml: AmlReadModel, partner: PartnerWorkstationService) -> EntityDirectory:
+def build_directory(aml: AmlReadModel, partner: PartnerReadModel) -> EntityDirectory:
     """Every partner on the radar and every account the AML read model holds, by canonical id."""
     canonical: dict[str, EntityKind] = {
         p.partner_id: EntityKind.PARTNER for p in partner.get_churn_radar_scatter().partners

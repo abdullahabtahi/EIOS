@@ -7,10 +7,12 @@ from collections.abc import AsyncIterable
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
-from eios.dataplane.plane import read_models
+from eios.dataplane import partner_views
+from eios.dataplane.partner_service import UnknownPartnerError
+from eios.dataplane.plane import partner_engine_service, read_models
 
 router = APIRouter(tags=["Partner Fraud"])
 partner_svc = read_models().partner
@@ -23,6 +25,17 @@ STREAM_PATH = "/api/v1/fraud/stream"
 @router.get(TREE_PATH)
 def get_fraud_tree(partner_id: str = Query(default="AP-1029")) -> dict[str, Any]:
     """Returns the 3-layer sub-affiliate directed tree with clawback exposure and churn metrics."""
+    if partner_engine_service() is not None:
+        try:
+            tree = partner_svc.get_partner_referral_tree(partner_id=partner_id)
+        except UnknownPartnerError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="no such partner"
+            ) from exc
+        tree["total_clawback_exposure_usd"] = round(
+            sum(r["unearned_commission_liability_usd"] for r in tree["detected_abusive_rings"]), 2
+        )
+        return tree
     tree = partner_svc.get_partner_referral_tree(partner_id=partner_id)
     # Enrich with clawback exposure calculation
     total_clawback = sum(
@@ -38,6 +51,9 @@ def get_fraud_tree(partner_id: str = Query(default="AP-1029")) -> dict[str, Any]
 @router.get(PAIRS_PATH)
 def get_mirror_trading_pairs() -> dict[str, Any]:
     """Returns detected mirror-trading and opposite-order matching pairs across accounts."""
+    engine = partner_engine_service()
+    if engine is not None:
+        return partner_views.pairs(engine)
     now = datetime.now(UTC).isoformat()
     return {
         "as_of": now,

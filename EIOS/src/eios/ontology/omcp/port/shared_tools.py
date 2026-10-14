@@ -119,11 +119,14 @@ def get_metric(ctx: ReadModels, who: Principal, args: MetricArgs) -> MetricValue
 
 
 def _metric_origin(ctx: ReadModels, args: MetricArgs) -> DataOrigin:
-    """AML-derived metrics take the AML plane's origin; everything else is fixture until its plane lands."""
-    aml_metrics = (MetricId.DISCREPANCY, MetricId.DEPOSIT_VOLUME)
-    return (
-        ctx.aml_origin if args.metric_id in aml_metrics and args.entity_id else DataOrigin.FIXTURE
-    )
+    """Per-entity metrics take their plane's origin; everything else is fixture until its plane lands."""
+    if not args.entity_id:
+        return DataOrigin.FIXTURE
+    if args.metric_id in (MetricId.DISCREPANCY, MetricId.DEPOSIT_VOLUME):
+        return ctx.aml_origin
+    if args.metric_id in (MetricId.PARTNER_VOLUME, MetricId.CHURN_HAZARD):
+        return ctx.partner_origin
+    return DataOrigin.FIXTURE
 
 
 def _entity_value(ctx: ReadModels, metric: MetricId, entity: str) -> tuple[float, str]:

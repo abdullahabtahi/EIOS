@@ -10,7 +10,13 @@ CITATION = "[COMPUTED]"
 
 
 def metric(
-    metric_id: str, formatted: str, raw: float, as_of: str, *, engine_name: str = ENGINE_NAME
+    metric_id: str,
+    formatted: str,
+    raw: float,
+    as_of: str,
+    *,
+    engine_name: str = ENGINE_NAME,
+    steward: str = STEWARD,
 ) -> dict[str, Any]:
     return {
         "metric_id": metric_id,
@@ -19,6 +25,6 @@ def metric(
         "semantic_definition_version": "v1.2",
         "as_of_timestamp": as_of,
         "origin_engine": engine_name,
-        "steward_role": STEWARD,
+        "steward_role": steward,
         "citation": CITATION,
     }

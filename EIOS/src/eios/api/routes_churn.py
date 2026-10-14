@@ -7,11 +7,13 @@ from collections.abc import AsyncIterable
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel
 
-from eios.dataplane.plane import read_models
+from eios.dataplane import partner_views
+from eios.dataplane.partner_service import EnginePartnerService, UnknownPartnerError
+from eios.dataplane.plane import partner_engine_service, read_models
 from eios.llm_gateway.providers.gemini_client import DEFAULT_MODEL, GeminiClientManager
 
 router = APIRouter(tags=["Partner Churn"])
@@ -24,6 +26,14 @@ STREAM_PATH = "/api/v1/churn/stream"
 ONTOLOGY_PARTNER_PATH = "/api/v1/churn/partner/{partner_id}/ontology"
 BATTLECARDS_PATH = "/api/v1/churn/partner/{partner_id}/battlecards"
 WHAT_IF_PATH = "/api/v1/churn/partner/{partner_id}/what-if"
+
+
+def _engine() -> EnginePartnerService | None:
+    return partner_engine_service()
+
+
+def _no_partner(partner_id: str) -> HTTPException:
+    return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"no partner {partner_id}")
 
 
 @router.get(RADAR_PATH)
@@ -47,7 +57,10 @@ def get_churn_radar() -> dict[str, Any]:
 
 @router.get(COHORTS_PATH)
 def get_churn_cohorts() -> dict[str, Any]:
-    """Returns SEA cohort anomaly clusters with verified semantic provenance."""
+    """Regional cohorts whose high-risk share is significant; canned on the fixture plane."""
+    engine = _engine()
+    if engine is not None:
+        return partner_views.cohorts(engine)
     now = datetime.now(UTC).isoformat()
     return {
         "as_of": now,
@@ -110,6 +123,12 @@ class WhatIfRequest(BaseModel):
 @router.get(ONTOLOGY_PARTNER_PATH)
 def get_partner_ontology_360(partner_id: str) -> dict[str, Any]:
     """Returns canonical EIOS Ontology Object 360 representation of the Partner entity."""
+    engine = _engine()
+    if engine is not None:
+        try:
+            return partner_views.ontology_360(engine, partner_id)
+        except UnknownPartnerError as exc:
+            raise _no_partner(partner_id) from exc
     return {
         "object_type": "Partner",
         "primary_key": partner_id,
@@ -226,7 +245,13 @@ def get_partner_ontology_360(partner_id: str) -> dict[str, Any]:
 
 @router.get(BATTLECARDS_PATH)
 def get_partner_genai_battlecards(partner_id: str) -> dict[str, Any]:
-    """Generates Gemini 3.8 Flash multi-signal forensic diagnostic narrative & WhatsApp/Telegram battlecards."""
+    """Retention option cards; on the engine plane they are computed and carry no drafted messages."""
+    engine = _engine()
+    if engine is not None:
+        try:
+            return partner_views.battlecards(engine, partner_id)
+        except UnknownPartnerError as exc:
+            raise _no_partner(partner_id) from exc
     now = datetime.now(UTC).isoformat()
     return {
         "partner_id": partner_id,
@@ -294,7 +319,13 @@ def get_partner_genai_battlecards(partner_id: str) -> dict[str, Any]:
 
 @router.post(WHAT_IF_PATH)
 def simulate_partner_what_if(partner_id: str, payload: WhatIfRequest) -> dict[str, Any]:
-    """Evaluates partner retention counterfactual deal scenarios using Gemini 3.8 Flash and SCM."""
+    """A retention deal's projected effect; on the engine plane, the hazard model's counterfactual."""
+    engine = _engine()
+    if engine is not None:
+        try:
+            return partner_views.what_if(engine, partner_id, payload.proposal_prompt)
+        except UnknownPartnerError as exc:
+            raise _no_partner(partner_id) from exc
     prompt = payload.proposal_prompt
     is_rev_share = "rev" in prompt.lower() or "share" in prompt.lower()
     is_high_rebate = "2" in prompt or "3" in prompt or "high" in prompt.lower()

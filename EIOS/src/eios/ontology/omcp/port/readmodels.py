@@ -14,6 +14,7 @@ from eios.cockpit.compliance import ComplianceExplorerService
 from eios.cockpit.executive import ExecutiveCockpitService
 from eios.cockpit.operations import DataPlatformOperationsService
 from eios.cockpit.partner import PartnerWorkstationService
+from eios.cockpit.partner_readmodel import PartnerReadModel
 from eios.flywheel.diagnostics import CalibrationDiagnosticsEngine
 from eios.flywheel.ledger import DecisionOutcomesLedger
 from eios.hardening.runbooks import RunbookVerificationEngine
@@ -30,7 +31,7 @@ def _utc_now() -> datetime:
 @dataclass(frozen=True)
 class ReadModels:
     aml: AmlReadModel
-    partner: PartnerWorkstationService
+    partner: PartnerReadModel
     executive: ExecutiveCockpitService
     compliance: ComplianceExplorerService
     operations: DataPlatformOperationsService
@@ -41,6 +42,9 @@ class ReadModels:
     calibration: CalibrationDiagnosticsEngine
     clock: Callable[[], datetime] = field(default=_utc_now)
     aml_origin: DataOrigin = DataOrigin.FIXTURE  # where the AML read model's numbers come from
+    partner_origin: DataOrigin = (
+        DataOrigin.FIXTURE
+    )  # where the partner read model's numbers come from
     facts: FactResolver = field(default_factory=FactResolver)
 
     @classmethod
@@ -55,20 +59,22 @@ class ReadModels:
         clock: Callable[[], datetime] = _utc_now,
         aml_origin: DataOrigin = DataOrigin.FIXTURE,
         compliance: ComplianceExplorerService | None = None,
+        partner: PartnerReadModel | None = None,
     ) -> ReadModels:
-        """Read models over the given AML plane (and ledger, when given); everything else is built fresh."""
-        partner = PartnerWorkstationService()
+        """Read models over the given AML plane (and partner plane and ledger, when given); the rest is built fresh."""
+        partners: PartnerReadModel = partner or PartnerWorkstationService()
         return cls(
             aml=aml,
-            partner=partner,
+            partner=partners,
             executive=ExecutiveCockpitService(),
             compliance=compliance or ComplianceExplorerService(),
             operations=DataPlatformOperationsService(),
-            directory=build_directory(aml, partner),
+            directory=build_directory(aml, partners),
             slo_engine=SLOMonitoringEngine(),
             runbooks=RunbookVerificationEngine(),
             outcomes=DecisionOutcomesLedger(),
             calibration=CalibrationDiagnosticsEngine(),
             clock=clock,
             aml_origin=aml_origin,
+            partner_origin=DataOrigin.ENGINE if partner is not None else DataOrigin.FIXTURE,
         )
