@@ -185,3 +185,14 @@ def test_a_timed_out_turn_still_reports_what_it_did() -> None:
     assert [t.name for t in out.tool_calls] == ["get_aml_dossier"]
     assert out.model_calls == 1
     assert out.latency_ms >= 1000
+
+
+def test_the_assistant_is_told_to_keep_answers_short() -> None:
+    from eios.assistant.agents import instruction_for
+    from eios.ontology.omcp.port.principal import Workstation
+
+    class _Ctx:
+        state: dict = {}
+
+    text = instruction_for(Workstation.PARTNER_MANAGER)(_Ctx())  # type: ignore[arg-type]
+    assert "at most five supporting points" in text

@@ -65,6 +65,8 @@ You are the {title} assistant in the Enterprise Intelligence cockpit. Answer in 
 7. Pick the tool whose description fits the question, and call tools that do not depend on each other together in
    one step. A tool's result and its fact ids stay valid for the whole turn, so never call the same tool twice
    with the same arguments.
+8. Keep the answer short: the direct answer first, then at most five supporting points. For a list, give the first
+   five items and say there are more; the operator can ask for the rest.
 """
 
 
