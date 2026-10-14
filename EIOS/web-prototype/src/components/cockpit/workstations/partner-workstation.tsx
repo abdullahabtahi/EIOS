@@ -17,6 +17,7 @@
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
 import { MOCK_PARTNERS } from '../state/fixtures';
+import { partnersFromCanvas } from '../state/partner-radar';
 import { ChurnRadarScatter } from '../common/churn-radar-scatter';
 import { PartnerTree } from '../common/partner-tree';
 import { PartnerTriageGrid } from '../common/partner-triage-grid';
@@ -24,6 +25,11 @@ import { PartnerOntologyInspector } from './partner-ontology-inspector';
 
 export function PartnerWorkstationView() {
   const { state, selectEntity } = useCockpit();
+  // The radar the backend computed; sample partners exist only on the fixture plane.
+  const partners = React.useMemo(
+    () => partnersFromCanvas(state.canvasPayload) ?? (state.dataOrigin === 'engine' ? [] : MOCK_PARTNERS),
+    [state.canvasPayload, state.dataOrigin],
+  );
 
   return (
     <div className="space-y-6 text-slate-900 pb-10">
@@ -46,8 +52,8 @@ export function PartnerWorkstationView() {
       >
         <div className="bg-white border border-slate-200 p-4 shadow-xs">
           <PartnerTriageGrid
-            partners={MOCK_PARTNERS}
-            selectedPartnerId={state.activeEntityId || 'PTR-882'}
+            partners={partners}
+            selectedPartnerId={state.activeEntityId || partners[0]?.partnerId}
             onSelectPartner={(p) => selectEntity(p.partnerId)}
           />
         </div>

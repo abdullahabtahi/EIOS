@@ -40,9 +40,38 @@ def cohorts(svc: EnginePartnerService) -> dict[str, Any]:
                 "recommended_intervention": alert.recommended_playbook,
                 "affected_partner_ids": alert.affected_partner_ids,
                 "status": "ALERT",
+                "stage_request": _cohort_stage(svc, alert.alert_id, alert.affected_partner_ids),
             }
         )
     return {"as_of": svc.as_of.isoformat(), "cohorts": out, "test": "binomial tail, alpha 0.05"}
+
+
+def _cohort_stage(
+    svc: EnginePartnerService, cohort_id: str, members: list[str]
+) -> dict[str, Any] | None:
+    """One retention playbook across the cohort; its budget is the sum of each member's best-value deal."""
+    row_of, cf = svc.row, svc.counterfactual()
+    budget = 0.0
+    for pid in members:
+        options = playbooks_for(svc.evidence(pid))
+        if options:
+            best = max(
+                (cf.project(row_of(pid), pb) for pb in options), key=lambda p: p.net_margin_usd
+            )
+            budget += best.cost_usd
+    if not members:
+        return None
+    return {
+        "action_type": "LaunchRetentionPlaybook",
+        "target_entity_id": cohort_id,
+        "severity": "MEDIUM",
+        "requires_four_eyes": True,
+        "metadata": {
+            "partner_ids": members,
+            "playbook_id": "pb_regional_incentive",
+            "budget": round(budget, 2),
+        },
+    }
 
 
 def ontology_360(svc: EnginePartnerService, ref: str) -> dict[str, Any]:

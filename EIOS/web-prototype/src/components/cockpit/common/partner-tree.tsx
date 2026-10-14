@@ -1,270 +1,193 @@
 'use client';
 
 /**
- * 3-Tier Sub-Affiliate Tree Visualizer & Mirror Trading Ring Detection
- * Enforces Feature 009 (Sub-affiliate hierarchy tree & mirror trading rings).
- * Detects collusion loops where sub-affiliates extract unearned commissions via
- * tick-level execution alignment (>= 85%).
- * Strict Institutional Light Mode.
+ * The selected partner's referral network (spec 032): its sub-affiliates with their volume and hazard, the
+ * opposite-trading pairs the pair detector found across them, and AML cases among the partner's referrals.
+ * Read from the workstation canvas; a clawback stages through the intent hub. Nothing here is drawn from samples.
  */
 
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
-import { PartnerHierarchyNode } from '../state/cockpit-types';
+import type { StageRequest } from '../state/cockpit-types';
+import { useStageRequest } from './use-stage-request';
 
-const MOCK_TREE: PartnerHierarchyNode = {
-  partnerId: 'PTR-882',
-  name: 'Alpha FX LatAm Master (Tier 1 Super)',
-  tierLevel: 1,
-  monthlyCommissionUsd: 142390,
-  subAffiliatesCount: 14,
-  children: [
-    {
-      partnerId: 'PTR-882-SUB1',
-      name: 'Bogota Retail Affiliates (Tier 2)',
-      tierLevel: 2,
-      monthlyCommissionUsd: 64200,
-      subAffiliatesCount: 8,
-      children: [
-        {
-          partnerId: 'PTR-882-C1',
-          name: 'Signal Channel A (Tier 3)',
-          tierLevel: 3,
-          monthlyCommissionUsd: 28100,
-          subAffiliatesCount: 0,
-        },
-        {
-          partnerId: 'PTR-882-C2',
-          name: 'Signal Channel B (Tier 3)',
-          tierLevel: 3,
-          monthlyCommissionUsd: 18400,
-          subAffiliatesCount: 0,
-        },
-      ],
-    },
-    {
-      partnerId: 'PTR-882-SUB2',
-      name: 'Medellin Algo Trading Desk (Tier 2)',
-      tierLevel: 2,
-      monthlyCommissionUsd: 48900,
-      subAffiliatesCount: 4,
-    },
-  ],
-};
+/* eslint-disable @typescript-eslint/no-explicit-any */
+interface SubAffiliate {
+  id: string;
+  name: string;
+  tier?: string;
+  volume_usd?: number;
+  churn_hazard_probability?: number;
+  co_occurrence_pct?: number;
+  flagged_mirror_trading?: boolean;
+}
 
-export function PartnerTree() {
-  const { stageAction, state, selectEntity } = useCockpit();
-  const [collapsedNodes, setCollapsedNodes] = React.useState<Set<string>>(new Set());
-  const [toastMessage, setToastMessage] = React.useState<string | null>(null);
+interface Ring {
+  ring_id: string;
+  scheme: string;
+  paired_accounts: string[];
+  partners?: string[];
+  matched_timing_seconds?: number;
+  unearned_commission_liability_usd?: number;
+  co_occurrences?: number;
+  collusion_confidence?: number;
+}
 
-  const toggleCollapse = (nodeId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setCollapsedNodes((prev) => {
-      const next = new Set(prev);
-      if (next.has(nodeId)) next.delete(nodeId);
-      else next.add(nodeId);
-      return next;
-    });
+interface AmlExposure {
+  alert_id: string;
+  entity_id: string;
+  ring_size: number;
+  referred_members: number;
+  risk_score: number;
+  typology: string;
+}
+
+interface AffiliateTree {
+  master_partner_id: string;
+  name?: string;
+  tier?: string;
+  active_sub_affiliates_count?: number;
+  referred_client_count?: number;
+  sub_affiliates?: SubAffiliate[];
+  detected_abusive_rings?: Ring[];
+  aml_exposure?: AmlExposure[];
+  statement?: string;
+}
+
+const usd = (v?: number) => (v === undefined ? '—' : `$${Math.round(v).toLocaleString()}`);
+
+/** A clawback of the commission a pair earned, against the sub-affiliate that referred its first account. */
+function clawbackRequest(ring: Ring): StageRequest | null {
+  const partner = ring.partners?.[0];
+  if (!partner || !ring.unearned_commission_liability_usd) return null;
+  return {
+    action_type: 'ClawbackCommission',
+    target_entity_id: partner,
+    severity: 'HIGH',
+    requires_four_eyes: true,
+    metadata: { partner_id: partner, period: 'last 14 days', amount: ring.unearned_commission_liability_usd, evidence: ring.ring_id },
   };
+}
 
-  const handleStageClawback = () => {
-    stageAction({
-      intentId: `act_clawback_${Date.now()}`,
-      actionType: 'CLAWBACK_COMMISSION',
-      targetEntityId: 'PTR-882',
-      targetEntityType: 'PARTNER',
-      severity: 'HIGH',
-      lifecycleState: 'STAGED',
-      stagedTimestamp: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      parameters: { partnerId: 'PTR-882', clawbackAmountUsd: 142390, reason: '88% mirror trading collusion correlation' },
-      estimatedImpact: 'Clawback $142,390 USD in extracted rebates from master affiliate #882',
-      requiresFourEyes: true,
-      kmsSignatureBadge: {
-        keyId: 'projects/feios-prod/locations/global/keyRings/eios-cockpit/cryptoKeys/action-signer-p256',
-        algorithm: 'ECDSA_P256_SHA256',
-        signatureDigest: `DIGEST_SIM_${Date.now()}`,
-        verified: true,
-      },
-      fourEyesRecord: {
-        initiatorOfficerId: state.operator.officerId,
-        initiatorTimestamp: new Date().toISOString(),
-        idpClaimValidation: true,
-      },
-    });
-
-    setToastMessage('Commission Clawback intent staged for PTR-882 (KMS P-256 signed, $142,390 USD)');
-    setTimeout(() => setToastMessage(null), 4000);
-  };
-
+function RingCard({ ring }: { ring: Ring }) {
+  const staging = useStageRequest();
+  const request = clawbackRequest(ring);
   return (
-    <div className="bg-white border border-slate-200 p-4 shadow-sm space-y-4 relative">
-      {/* Toast Notification */}
-      {toastMessage && (
-        <div className="absolute top-3 right-3 z-30 text-xs font-mono px-3 py-1.5 shadow-md flex items-center gap-2 bg-emerald-50 border border-emerald-500 text-emerald-800 animate-in fade-in slide-in-from-top-1">
-          <span className="material-symbols-sharp text-sm text-emerald-600">verified</span>
-          <span>{toastMessage}</span>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-sharp text-base text-blue-600">account_tree</span>
-            <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
-              3-Tier Sub-Affiliate Hierarchy & Mirror Trading Detection
-            </h3>
-          </div>
-          <p className="text-label text-slate-500 mt-0.5">
-            Network tracing of multi-level rebate dispersion and collusion rings.
-          </p>
-        </div>
-
-        <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-300 font-mono text-label font-bold">
-          COLLUSION CORRELATION: 0.88 (&ge; 0.85 ALERT)
-        </span>
+    <div className="p-3 bg-cx-sub border border-cx-line space-y-1.5 text-xs font-mono">
+      <div className="font-bold text-cx-ink">{ring.scheme}</div>
+      <div className="text-label text-cx-muted">
+        Accounts {ring.paired_accounts.join(' and ')} under {ring.partners?.join(' and ') ?? '—'}
       </div>
-
-      {/* Mirror Trading Ring Alert Callout */}
-      <div className="p-3 bg-rose-50/80 border border-rose-300 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-        <div className="space-y-1.5 max-w-xl">
-          <div className="flex items-center gap-1.5 text-rose-800 font-bold">
-            <span className="material-symbols-sharp text-base text-rose-600">warning</span>
-            <span>Mirror Trading Ring Detected: 88.0% Timing Co-occurrence</span>
-          </div>
-          <p className="text-label text-rose-900 font-sans leading-relaxed">
-            Sub-affiliates <strong>PTR-882-C1</strong> and <strong>PTR-882-C2</strong> executed identical offset orders within 40ms of master client orders, extracting $142,390 USD in rebates.
-          </p>
-          {/* Timing Co-occurrence Progress Bar */}
-          <div className="flex items-center gap-2 pt-0.5 text-label">
-            <span className="text-slate-600 font-mono">Co-occurrence:</span>
-            <div className="w-48 h-2 bg-rose-200 rounded-none overflow-hidden relative">
-              <div className="h-full bg-rose-600" style={{ width: '88%' }} />
-              {/* 85% Threshold Line */}
-              <div className="absolute top-0 bottom-0 left-[85%] w-0.5 bg-rose-950" title="Alert Threshold (85%)" />
-            </div>
-            <span className="text-rose-700 font-bold">88.0%</span>
-            <span className="text-slate-400 text-label font-sans">(Threshold: 85.0%)</span>
-          </div>
-        </div>
-
+      <div className="text-label text-cx-muted">
+        {ring.co_occurrences ?? '—'} matched trades, median gap {ring.matched_timing_seconds?.toFixed(1) ?? '—'} s,
+        confidence {ring.collusion_confidence === undefined ? '—' : `${(ring.collusion_confidence * 100).toFixed(0)}%`},
+        commission earned {usd(ring.unearned_commission_liability_usd)}
+      </div>
+      {request && (
         <button
           type="button"
-          onClick={handleStageClawback}
-          className="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-none transition-colors cursor-pointer flex items-center gap-1.5 border border-rose-700 shadow-xs"
+          disabled={staging.busy}
+          onClick={() => void staging.stage(request)}
+          className="px-3 py-1.5 bg-cx-ink hover:bg-cx-ink-hover text-white font-semibold text-xs cursor-pointer"
         >
-          <span className="material-symbols-sharp text-sm">money_off</span>
-          <span>Stage Commission Clawback ($142.3K)</span>
+          Stage commission clawback ({usd(ring.unearned_commission_liability_usd)})
         </button>
-      </div>
-
-      {/* 3-Tier Tree Visualizer */}
-      <div className="p-3 bg-cx-wash border border-slate-200 space-y-2 text-xs font-mono">
-        {/* Tier 1 Node */}
-        <div
-          onClick={() => selectEntity(MOCK_TREE.partnerId)}
-          className="p-2.5 bg-white border border-slate-200 hover:border-blue-400 transition-colors shadow-2xs flex items-center justify-between cursor-pointer group"
-        >
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={(e) => toggleCollapse(MOCK_TREE.partnerId, e)}
-              aria-expanded={!collapsedNodes.has(MOCK_TREE.partnerId)}
-              aria-label={`${collapsedNodes.has(MOCK_TREE.partnerId) ? 'Expand' : 'Collapse'} ${MOCK_TREE.name}`}
-              className="p-0.5 hover:bg-slate-100 cursor-pointer text-slate-500"
-            >
-              <span className="material-symbols-sharp text-sm">
-                {collapsedNodes.has(MOCK_TREE.partnerId) ? 'chevron_right' : 'expand_more'}
-              </span>
-            </button>
-            <span className="size-2 rounded-full bg-blue-600 inline-block" />
-            <span className="font-bold text-slate-900 group-hover:text-blue-600">{MOCK_TREE.name}</span>
-            <span className="text-label bg-blue-50 text-blue-700 border border-blue-200 px-1.5 py-0.2 font-bold">
-              TIER 1 SUPER
-            </span>
-            <span className="text-label text-slate-400 font-mono">[{MOCK_TREE.partnerId}]</span>
-          </div>
-          <div className="text-right">
-            <span className="font-bold text-slate-900">${MOCK_TREE.monthlyCommissionUsd.toLocaleString()}/mo</span>
-            <span className="text-slate-400 text-label block">{MOCK_TREE.subAffiliatesCount} Sub-affiliates</span>
-          </div>
+      )}
+      {staging.message && (
+        <div role={staging.message.tone === 'error' ? 'alert' : 'status'} className={`text-label ${staging.message.tone === 'error' ? 'text-cx-bad' : 'text-cx-ok'}`}>
+          {staging.message.text}
         </div>
+      )}
+    </div>
+  );
+}
 
-        {/* Tier 2 & Tier 3 Children */}
-        {!collapsedNodes.has(MOCK_TREE.partnerId) && (
-          <div className="pl-6 space-y-2 border-l-2 border-slate-300 ml-3">
-            {MOCK_TREE.children?.map((child) => (
-              <div key={child.partnerId} className="space-y-1.5">
-                <div
-                  onClick={() => selectEntity(child.partnerId)}
-                  className="p-2 bg-white border border-slate-200 hover:border-slate-400 transition-colors flex items-center justify-between cursor-pointer group shadow-2xs"
-                >
-                  <div className="flex items-center gap-2">
-                    {child.children && child.children.length > 0 ? (
-                      <button
-                        type="button"
-                        onClick={(e) => toggleCollapse(child.partnerId, e)}
-                        aria-expanded={!collapsedNodes.has(child.partnerId)}
-                        aria-label={`${collapsedNodes.has(child.partnerId) ? 'Expand' : 'Collapse'} ${child.name}`}
-                        className="p-0.5 hover:bg-slate-100 cursor-pointer text-slate-500"
-                      >
-                        <span className="material-symbols-sharp text-sm">
-                          {collapsedNodes.has(child.partnerId) ? 'chevron_right' : 'expand_more'}
-                        </span>
-                      </button>
-                    ) : (
-                      <span className="w-4 inline-block" />
-                    )}
-                    <span className="size-2 rounded-full bg-slate-600 inline-block" />
-                    <span className="font-medium text-slate-900 group-hover:text-blue-600">{child.name}</span>
-                    <span className="text-label bg-slate-100 text-slate-700 px-1 py-0.2 border border-slate-200">
-                      TIER 2
-                    </span>
-                    <span className="text-label text-slate-400">[{child.partnerId}]</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-bold text-slate-800">${child.monthlyCommissionUsd.toLocaleString()}/mo</span>
-                    {child.subAffiliatesCount ? (
-                      <span className="text-slate-400 text-label block">{child.subAffiliatesCount} downlines</span>
-                    ) : null}
-                  </div>
-                </div>
+function SubAffiliateRow({ sub, onOpen }: { sub: SubAffiliate; onOpen: (id: string) => void }) {
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onOpen(sub.id)}
+        className="w-full p-2 bg-white border border-cx-line hover:bg-cx-sub flex flex-wrap items-center justify-between gap-2 text-left cursor-pointer"
+      >
+        <span>
+          <span className="font-bold text-cx-ink">{sub.name}</span> <span className="text-label text-cx-muted">[{sub.id}]</span>
+          {sub.flagged_mirror_trading && <span className="ml-2 text-label font-bold text-cx-bad">opposite-trading pair</span>}
+        </span>
+        <span className="text-label text-cx-muted">
+          {usd(sub.volume_usd)} 30-day volume
+          {sub.churn_hazard_probability !== undefined && `, hazard ${(sub.churn_hazard_probability * 100).toFixed(0)}%`}
+        </span>
+      </button>
+    </li>
+  );
+}
 
-                {/* Tier 3 Sub-children */}
-                {child.children && !collapsedNodes.has(child.partnerId) && (
-                  <div className="pl-6 space-y-1.5 border-l-2 border-amber-400 ml-3">
-                    {child.children.map((subChild) => (
-                      <div
-                        key={subChild.partnerId}
-                        onClick={() => selectEntity(subChild.partnerId)}
-                        className="p-2 bg-amber-50/70 border border-amber-300/80 hover:border-amber-500 transition-colors flex items-center justify-between cursor-pointer group shadow-2xs"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="size-1.5 rounded-full bg-amber-600 inline-block" />
-                          <span className="text-label font-semibold text-slate-900 group-hover:text-amber-700">
-                            {subChild.name}
-                          </span>
-                          <span className="text-label bg-amber-200 text-amber-900 border border-amber-300 px-1.5 py-0.2 font-bold tracking-wider">
-                            RING SUSPECT
-                          </span>
-                          <span className="text-label text-slate-400">[{subChild.partnerId}]</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-label font-bold text-amber-900 block">
-                            ${subChild.monthlyCommissionUsd.toLocaleString()}/mo
-                          </span>
-                          <span className="text-label text-rose-600 font-bold block">40ms sync execution</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+export function PartnerTree() {
+  const { state, selectEntity } = useCockpit();
+  const canvas = state.canvasPayload;
+  const tree: AffiliateTree | undefined = canvas?.type === 'CHURN_RADAR' ? (canvas.data as any)?.affiliate_tree : undefined;
+
+  if (!tree) {
+    return <p className="p-4 text-xs text-cx-muted bg-white border border-cx-line">Select a partner to see its referral network.</p>;
+  }
+  const subs = tree.sub_affiliates ?? [];
+  const rings = tree.detected_abusive_rings ?? [];
+  const exposure = tree.aml_exposure ?? [];
+
+  return (
+    <div className="bg-white border border-cx-line p-4 shadow-sm space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-cx-line pb-3">
+        <div>
+          <h3 className="text-title font-sans font-semibold text-cx-ink">
+            Referral network: {tree.name ?? tree.master_partner_id} [{tree.master_partner_id}]
+          </h3>
+          <p className="text-label text-cx-muted mt-0.5">
+            {subs.length} sub-affiliates
+            {tree.active_sub_affiliates_count !== undefined && ` (${tree.active_sub_affiliates_count} active in the last two weeks)`}
+            {tree.referred_client_count !== undefined && `, ${tree.referred_client_count} referred clients`}
+          </p>
+        </div>
       </div>
+
+      <section aria-label="Opposite-trading pairs" className="space-y-2">
+        <h4 className="text-label font-bold text-cx-ink">Opposite-trading pairs</h4>
+        {rings.length === 0 ? (
+          <p className="text-label text-cx-muted">No opposite-trading pair found across this partner&apos;s network.</p>
+        ) : (
+          rings.map((r) => <RingCard key={r.ring_id} ring={r} />)
+        )}
+        {tree.statement && <p className="text-label text-cx-faint italic">{tree.statement}</p>}
+      </section>
+
+      <section aria-label="AML cases among referrals" className="space-y-1">
+        <h4 className="text-label font-bold text-cx-ink">AML cases among referred clients</h4>
+        {exposure.length === 0 ? (
+          <p className="text-label text-cx-muted">No prioritised AML case among this partner&apos;s referrals.</p>
+        ) : (
+          <ul className="space-y-1 text-label font-mono">
+            {exposure.map((x) => (
+              <li key={x.alert_id} className="p-2 bg-cx-sub border border-cx-line">
+                {x.alert_id}: {x.typology.replace(/_/g, ' ').toLowerCase()}, risk {x.risk_score}/100,
+                {' '}{x.referred_members} of {x.ring_size} accounts referred here
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section aria-label="Sub-affiliates" className="space-y-1">
+        <h4 className="text-label font-bold text-cx-ink">Sub-affiliates</h4>
+        {subs.length === 0 ? (
+          <p className="text-label text-cx-muted">This partner has no sub-affiliates.</p>
+        ) : (
+          <ul className="space-y-1 text-xs font-mono">
+            {subs.map((s) => (
+              <SubAffiliateRow key={s.id} sub={s} onOpen={selectEntity} />
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

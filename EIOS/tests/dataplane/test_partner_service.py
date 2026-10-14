@@ -113,6 +113,9 @@ def test_cards_and_cohorts_are_computed(partner_service: EnginePartnerService) -
     )
     (cohort,) = partner_views.cohorts(partner_service)["cohorts"]
     assert cohort["region"] == "SEA" and cohort["p_value"] < 0.05
+    stage = cohort["stage_request"]
+    assert stage["action_type"] == "LaunchRetentionPlaybook" and stage["metadata"]["partner_ids"]
+    assert stage["metadata"]["budget"] >= 0
     assert partner_views.pairs(partner_service)["monitored_pairs_count"] == 6
 
 

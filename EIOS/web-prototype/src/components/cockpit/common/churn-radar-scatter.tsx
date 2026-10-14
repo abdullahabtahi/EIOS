@@ -1,15 +1,9 @@
 'use client';
 
 /**
- * Partner Churn Hazard Radar Scatter Visualizer (User Story 1-5, Tasks T004-T012).
- * Tier-1 Institutional Production Grade.
- * - Co-Primary Side-by-Side Split: 2D Cartesian Churn Radar & High-Density Sortable Triage Grid.
- * - 30D/90D Historical Decay Trajectories with directional chevrons & velocity sparklines.
- * - Live Backend DoWhy SCM Causal Inference & Placebo Refuter Verification ($p \ge 0.40$).
- * - Driver-Adaptive Action Playbooks tailored to diagnosed root cause.
- * - 1-Click Cohort Batch Remediation with Cloud KMS P-256 nonces and Two-Phase Commit.
- * - Closed-Loop Experience Library (78.5% empirical win rate) & Shadow Model Brier calibration (0.082).
- * - Strict Sovereign Institutional Light Mode.
+ * Partner churn hazard radar (spec 032): 30-day hazard against 30-day referred volume for every scored partner,
+ * with the hazard path at t-30 and t-14, the cohort the cohort test found, and an inspector over computed fields.
+ * Deals and the cohort playbook stage through the intent hub; nothing on this chart is filled in client-side.
  */
 
 import * as React from 'react';
@@ -18,6 +12,9 @@ import { PartnerChurnItem, WhatIfCausalResponse } from '../state/cockpit-types';
 import { PartnerTriageGrid } from './partner-triage-grid';
 import { fetchChurnRadar, simulatePartnerWhatIf } from '../state/api-bridge';
 import { MOCK_PARTNERS } from '../state/fixtures';
+import { type CohortSignal, fetchCohorts, partnersFromCanvas, toPartnerItem } from '../state/partner-radar';
+import { PartnerRadarInspector } from './partner-radar-inspector';
+import { useStageRequest } from './use-stage-request';
 export { MOCK_PARTNERS };
 
 type FilterMode = 'ALL' | 'CRITICAL' | 'STABLE';
@@ -25,10 +22,16 @@ type AxisDimension = 'P_CHURN' | 'VELOCITY' | 'DAYS_TO_CHURN';
 type ViewMode = 'INDIVIDUAL' | 'COHORT';
 
 export function ChurnRadarScatter() {
-  const { stageAction, state, selectEntity } = useCockpit();
+  const { state, selectEntity } = useCockpit();
 
-  // Monitored partners state (initialized with offline fallback, hydrated from live backend)
-  const [partners, setPartners] = React.useState<PartnerChurnItem[]>(MOCK_PARTNERS);
+  // The radar the workstation payload carries (engine plane), refreshed from the radar endpoint. Sample partners
+  // are only for the fixture plane; an engine-backed screen never shows them.
+  const [partners, setPartners] = React.useState<PartnerChurnItem[]>(
+    () => partnersFromCanvas(state.canvasPayload) ?? (state.dataOrigin === 'engine' ? [] : MOCK_PARTNERS),
+  );
+  const [cohorts, setCohorts] = React.useState<CohortSignal[]>([]);
+  const cohort = cohorts[0] ?? null;
+  const cohortStaging = useStageRequest();
   const [isFullscreen, setIsFullscreen] = React.useState(false);
   const [inspectorOpen, setInspectorOpen] = React.useState(false);
   const [filterMode, setFilterMode] = React.useState<FilterMode>('ALL');
@@ -48,38 +51,12 @@ export function ChurnRadarScatter() {
     let isMounted = true;
 
     async function loadRadar() {
-      try {
-        const liveData = await fetchChurnRadar();
-        if (liveData?.partners?.length && isMounted) {
-          // Map backend snake_case to frontend camelCase if needed
-          const mapped: PartnerChurnItem[] = liveData.partners.map((p: any) => ({
-            partnerId: p.partner_id || p.partnerId,
-            name: p.name || p.partner_id || p.partnerId,
-            tier: p.tier || 'TIER_2_MASTER',
-            pChurn: p.churn_hazard_probability ?? p.pChurn ?? 0.5,
-            valueAtRiskUsd: p.realized_volume_30d_usd ?? p.valueAtRiskUsd ?? 100000,
-            daysToChurn: p.days_to_intervention_deadline ?? p.daysToChurn ?? 30,
-            changePointDetected: p.change_point_flag ?? p.changePointDetected ?? false,
-            mirrorTradeCorrelation: p.mirror_trade_correlation ?? p.mirrorTradeCorrelation ?? 0.5,
-            extractedCommissionUsd: p.extracted_commission_usd ?? p.extractedCommissionUsd ?? 50000,
-            region: p.region || 'LatAm Desk',
-            cohort: p.cohort || 'LatAm P2P Cashier',
-            loginDecayPct: p.login_decay_pct ?? p.loginDecayPct ?? -50,
-            referralDropWoWPct: p.ftd_decay_pct ?? p.referralDropWoWPct ?? -30,
-            cashierLatencyHours: p.cashier_latency_sla_hours ?? p.cashierLatencyHours ?? 4.0,
-            supportTicketCount: p.support_ticket_count ?? p.supportTicketCount ?? 2,
-            competitorPoaching: p.competitor_poaching ?? p.competitorPoaching ?? 'Exness',
-            primaryDriver: p.primary_driver ?? p.primaryDriver ?? 'OPERATIONAL_CASHIER',
-            projectedLiftPct: p.projected_lift_pct ?? p.projectedLiftPct ?? 74,
-            netMarginRecoveryUsd: p.net_margin_recovery_usd ?? p.netMarginRecoveryUsd ?? 38200,
-            empiricalPlaybookWinRate: p.empirical_win_rate ?? p.empiricalPlaybookWinRate ?? 0.785,
-            historicalDrift: p.historical_drift ?? p.historicalDrift,
-          }));
-          setPartners(mapped);
-        }
-      } catch (e) {
-        console.info('[Radar] Using offline fallback partners');
+      const liveData = await fetchChurnRadar();
+      if (isMounted && Array.isArray(liveData?.partners) && liveData.partners.length) {
+        setPartners(liveData.partners.map(toPartnerItem));
       }
+      const found = await fetchCohorts();
+      if (isMounted) setCohorts(found);
     }
 
     loadRadar();
@@ -98,7 +75,7 @@ export function ChurnRadarScatter() {
       );
       if (found) return found;
     }
-    return partners[0] || MOCK_PARTNERS[0];
+    return partners[0];
   }, [state.activeEntityId, partners]);
 
   const [localSelectedPartner, setLocalSelectedPartner] = React.useState<PartnerChurnItem | null>(null);
@@ -106,7 +83,7 @@ export function ChurnRadarScatter() {
 
   // Debounced live counterfactual evaluation query (250ms)
   React.useEffect(() => {
-    if (concessionSlider === 0) {
+    if (concessionSlider === 0 || !selectedPartner) {
       setWhatIfResponse(null);
       return;
     }
@@ -115,17 +92,14 @@ export function ChurnRadarScatter() {
       setIsSimulatingCausal(true);
       try {
         const prompt = `Simulate VIP Concession Deal (intensity: ${concessionSlider}%) for partner ${selectedPartner.partnerId}`;
-        const resp = await simulatePartnerWhatIf(selectedPartner.partnerId, prompt);
-        setWhatIfResponse(resp);
-      } catch (e) {
-        console.warn('What-If simulation failed:', e);
+        setWhatIfResponse(await simulatePartnerWhatIf(selectedPartner.partnerId, prompt));
       } finally {
         setIsSimulatingCausal(false);
       }
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [concessionSlider, selectedPartner.partnerId]);
+  }, [concessionSlider, selectedPartner?.partnerId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const displayedPartners = React.useMemo(() => {
     return partners.filter((p) => {
@@ -149,89 +123,25 @@ export function ChurnRadarScatter() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFullscreen]);
 
-  // Stage VIP Retention Playbook action via Two-Phase Commit
-  const handleStageRetention = (
-    partner: PartnerChurnItem = selectedPartner,
-    customActionType = 'LAUNCH_RETENTION_PLAYBOOK',
-    customTitle = 'Deploy Driver-Adaptive Retention Deal'
-  ) => {
-    const projectedVarSaved = whatIfResponse
-      ? Math.round(partner.valueAtRiskUsd * (whatIfResponse.projected_retention_lift_pct / 100))
-      : Math.round(partner.valueAtRiskUsd * (partner.projectedLiftPct ?? 74) / 100);
-
-    stageAction({
-      intentId: `act_ret_${Date.now()}`,
-      actionType: customActionType,
-      targetEntityId: partner.partnerId,
-      targetEntityType: 'PARTNER',
-      severity: 'HIGH',
-      lifecycleState: 'STAGED',
-      stagedTimestamp: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      parameters: {
-        partnerId: partner.partnerId,
-        playbook: customTitle,
-        concessionIntensity: concessionSlider || 100,
-        projectedLiftPct: whatIfResponse?.projected_retention_lift_pct ?? partner.projectedLiftPct ?? 74,
-        causalRefuterPValue: whatIfResponse?.causal_refuter_p_value ?? 0.44,
-      },
-      estimatedImpact: `Protects $${projectedVarSaved.toLocaleString()} VaR (Net Margin Lift: +$${(partner.netMarginRecoveryUsd ?? 38200).toLocaleString()} USD)`,
-      requiresFourEyes: true,
-      kmsSignatureBadge: {
-        keyId: 'projects/feios-prod/locations/global/keyRings/eios-cockpit/cryptoKeys/action-signer-p256',
-        algorithm: 'ECDSA_P256_SHA256',
-        signatureDigest: `DIGEST_SIM_${Date.now()}`,
-        verified: true,
-      },
-      fourEyesRecord: {
-        initiatorOfficerId: state.operator.officerId,
-        initiatorTimestamp: new Date().toISOString(),
-        idpClaimValidation: true,
-      },
-    });
-
-    setToastMessage(`Playbook '${customTitle}' staged for ${partner.partnerId} (Cloud KMS P-256 signed)`);
-    setTimeout(() => setToastMessage(null), 4000);
-  };
-
-  // 1-Click Batch Cohort Remediation Staging
+  // The cohort playbook the backend priced for the cohort the cohort test found, staged through the intent hub.
   const handleStageCohortBatch = () => {
-    const cohortMembers = partners.filter((p) => p.cohort === 'LatAm P2P Cashier');
-    const totalVaRSaved = cohortMembers.reduce((acc, p) => acc + p.valueAtRiskUsd, 0);
-
-    stageAction({
-      intentId: `act_cohort_batch_${Date.now()}`,
-      actionType: 'BATCH_STAGE_COHORT_REMEDIATION',
-      targetEntityId: 'COHORT_LATAM_P2P',
-      targetEntityType: 'COHORT',
-      severity: 'CRITICAL',
-      lifecycleState: 'STAGED',
-      stagedTimestamp: new Date().toISOString(),
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      parameters: {
-        cohortId: 'LatAm P2P Cashier',
-        partnerCount: cohortMembers.length,
-        partnerIds: cohortMembers.map((p) => p.partnerId),
-        remediationType: 'Dedicated VIP Direct Cashier Rails (0% commission, <15min clearing)',
-      },
-      estimatedImpact: `Atomically protects $${totalVaRSaved.toLocaleString()} USD VaR across ${cohortMembers.length} LatAm partners`,
-      requiresFourEyes: true,
-      kmsSignatureBadge: {
-        keyId: 'projects/feios-prod/locations/global/keyRings/eios-cockpit/cryptoKeys/batch-signer-p256',
-        algorithm: 'ECDSA_P256_SHA256',
-        signatureDigest: `DIGEST_BATCH_${Date.now()}`,
-        verified: true,
-      },
-      fourEyesRecord: {
-        initiatorOfficerId: state.operator.officerId,
-        initiatorTimestamp: new Date().toISOString(),
-        idpClaimValidation: true,
-      },
-    });
-
-    setToastMessage(`Atomic Cohort Remediation staged for ${cohortMembers.length} LatAm partners ($${(totalVaRSaved / 1000).toFixed(0)}K Protected)`);
-    setTimeout(() => setToastMessage(null), 4500);
+    if (cohort?.stageRequest) void cohortStaging.stage(cohort.stageRequest);
   };
+
+  // Value axis: square-root scale up to the largest volume on the chart; the divider is the backend's high-value
+  // line (the top quarter of 30-day volume), so a dot's quadrant here is the quadrant the backend assigned.
+  const valueScale = React.useMemo(() => {
+    const values = partners.flatMap((p) => [
+      p.valueAtRiskUsd,
+      p.historicalDrift?.tMinus30d.valueAtRiskUsd ?? 0,
+      p.historicalDrift?.tMinus14d.valueAtRiskUsd ?? 0,
+    ]);
+    const sorted = partners.map((p) => p.valueAtRiskUsd).sort((a, b) => a - b);
+    const line = sorted.length ? sorted[Math.floor(sorted.length * 0.75)] : 0;
+    return { max: Math.max(1, ...values), line };
+  }, [partners]);
+  const normValue = (v: number) => Math.min(1, Math.max(0, Math.sqrt(Math.max(v, 0) / valueScale.max)));
+  const compactUsd = (v: number) => (v >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : `$${Math.round(v / 1e3)}K`);
 
   // Helper to calculate SVG coordinates for partners
   const getCoordinates = (p: PartnerChurnItem, width: number, height: number) => {
@@ -244,12 +154,12 @@ export function ChurnRadarScatter() {
 
     let normX = p.pChurn;
     if (axisDimension === 'VELOCITY') {
-      normX = Math.min(1, Math.max(0, Math.abs(p.loginDecayPct ?? -50) / 100));
+      normX = Math.min(1, Math.max(0, Math.abs(Math.min(p.loginDecayPct ?? 0, 0)) / 100));
     } else if (axisDimension === 'DAYS_TO_CHURN') {
       normX = Math.max(0, Math.min(1, 1 - p.daysToChurn / 180));
     }
 
-    const normY = Math.min(1, Math.max(0, p.valueAtRiskUsd / 1700000));
+    const normY = normValue(p.valueAtRiskUsd);
     const cx = leftPad + normX * plotWidth;
     const cy = bottomPad - normY * plotHeight;
     return { cx, cy, normX, normY, leftPad, rightPad, topPad, bottomPad, plotWidth, plotHeight };
@@ -258,9 +168,9 @@ export function ChurnRadarScatter() {
   // Simulated coordinate when What-If concession slider is applied
   const getSimulatedCoordinates = (p: PartnerChurnItem, width: number, height: number) => {
     const base = getCoordinates(p, width, height);
-    const liftPct = (whatIfResponse?.projected_retention_lift_pct ?? p.projectedLiftPct ?? 74) / 100;
+    const liftPct = (whatIfResponse?.projected_retention_lift_pct ?? p.projectedLiftPct ?? 0) / 100;
     const reduction = liftPct * (concessionSlider / 100);
-    const simPChurn = Math.max(0.12, p.pChurn * (1 - reduction));
+    const simPChurn = Math.max(0, p.pChurn * (1 - reduction));
     const simNormX = simPChurn;
     const simCx = base.leftPad + simNormX * base.plotWidth;
 
@@ -274,15 +184,16 @@ export function ChurnRadarScatter() {
   // Render Core SVG Radar Canvas
   const renderSvgCanvas = () => {
     const { leftPad, rightPad, topPad, bottomPad, plotWidth, plotHeight } = getCoordinates(
-      partners[0] || MOCK_PARTNERS[0],
+      selectedPartner,
       svgWidth,
       svgHeight
     );
     const midX = leftPad + plotWidth * 0.5;
-    const midY = topPad + plotHeight * 0.5;
+    const valueY = bottomPad - normValue(valueScale.line) * plotHeight;
+    const midY = valueY;
 
-    // LatAm Cohort Cluster Bounding (PTR-882, PTR-419, PTR-339, PTR-476)
-    const latAmNodes = displayedPartners.filter((p) => p.cohort === 'LatAm P2P Cashier');
+    // The cohort the backend's cohort test found
+    const latAmNodes = displayedPartners.filter((p) => cohort?.partnerIds.includes(p.partnerId));
     const latAmCoords = latAmNodes.map((p) => getCoordinates(p, svgWidth, svgHeight));
 
     return (
@@ -335,8 +246,8 @@ export function ChurnRadarScatter() {
           <text x={rightPad} y={midY + 12} textAnchor="middle">
             {axisDimension === 'P_CHURN' ? '1.00' : axisDimension === 'VELOCITY' ? '-100%' : '0d'}
           </text>
-          <text x={leftPad - 6} y={topPad + 4} textAnchor="end">$1.7M</text>
-          <text x={leftPad - 6} y={midY + 3} textAnchor="end">$850K</text>
+          <text x={leftPad - 6} y={topPad + 4} textAnchor="end">{compactUsd(valueScale.max)}</text>
+          <text x={leftPad - 6} y={valueY + 3} textAnchor="end">{compactUsd(valueScale.line)}</text>
           <text x={leftPad - 6} y={bottomPad + 2} textAnchor="end">$0</text>
         </g>
 
@@ -367,7 +278,7 @@ export function ChurnRadarScatter() {
               />
               <rect x={cx - 110} y={minY - 14} width="220" height="15" fill="#FFF1F2" stroke="#FDA4AF" strokeWidth="0.8" rx="1" />
               <text x={cx} y={minY - 4} fill="#9F1239" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
-                LATAM COHORT: P2P CLEARING FRICTION ($1.99M VaR)
+                {cohort ? `${cohort.region} cohort: ${cohort.partnerCount} partners, ${compactUsd(cohort.valueAtRiskUsd)} volume` : ''}
               </text>
             </g>
           );
@@ -384,11 +295,11 @@ export function ChurnRadarScatter() {
           const currentCoord = getCoordinates(p, svgWidth, svgHeight);
           const coord30 = {
             cx: leftPad + p.historicalDrift.tMinus30d.pChurn * plotWidth,
-            cy: bottomPad - (p.historicalDrift.tMinus30d.valueAtRiskUsd / 1700000) * plotHeight,
+            cy: bottomPad - normValue(p.historicalDrift.tMinus30d.valueAtRiskUsd) * plotHeight,
           };
           const coord14 = {
             cx: leftPad + p.historicalDrift.tMinus14d.pChurn * plotWidth,
-            cy: bottomPad - (p.historicalDrift.tMinus14d.valueAtRiskUsd / 1700000) * plotHeight,
+            cy: bottomPad - normValue(p.historicalDrift.tMinus14d.valueAtRiskUsd) * plotHeight,
           };
 
           return (
@@ -556,269 +467,24 @@ export function ChurnRadarScatter() {
     );
   };
 
-  // Diagnostic Inspector Panel Component
-  const renderDiagnosticInspector = () => {
-    const isCritical = selectedPartner.pChurn >= 0.5;
+  // Diagnostic inspector over the selected partner's computed fields
+  const renderDiagnosticInspector = () => (
+    <PartnerRadarInspector
+      partner={selectedPartner}
+      concession={concessionSlider}
+      onConcession={setConcessionSlider}
+      simulating={isSimulatingCausal}
+      whatIf={whatIfResponse}
+    />
+  );
 
-    // Driver-Adaptive Playbook configurations based on root cause
-    const isCashier = selectedPartner.primaryDriver === 'OPERATIONAL_CASHIER' || (selectedPartner.primaryRootCause && selectedPartner.primaryRootCause.includes('Cashier'));
-    const isPoaching = selectedPartner.primaryDriver === 'COMPETITIVE_POACHING' || (selectedPartner.primaryRootCause && selectedPartner.primaryRootCause.includes('poaching'));
-    const isRebate = selectedPartner.primaryDriver === 'COMMERCIAL_REBATE' || (selectedPartner.primaryRootCause && selectedPartner.primaryRootCause.includes('Rebate'));
-
-    const adaptivePlaybook = isCashier
-      ? {
-          title: 'Whitelist Dedicated VIP P2P Cashier Rail',
-          angle: 'Operational Friction Removal (LatAm Treasury Desk)',
-          cost: '$0 USD (Operational)',
-          netMargin: `+$${(selectedPartner.netMarginRecoveryUsd ?? 38200).toLocaleString()} USD`,
-          lift: '38% - 45% Retention Lift',
-          actionType: 'WhitelistDirectCashierRail',
-          recommendedCondition: 'Zero P&L cost; resolves Bancolombia 4.8h clearing bottleneck instantly.',
-        }
-      : isPoaching
-      ? {
-          title: 'Deploy Spread Rebate Match (+1.20/lot)',
-          angle: 'Commercial Parity vs Exness / Rival Poaching',
-          cost: '$18,000 USD (90D Cap)',
-          netMargin: `+$${(selectedPartner.netMarginRecoveryUsd ?? 92000).toLocaleString()} USD`,
-          lift: '74% Retention Lift',
-          actionType: 'DeployRetentionConcession',
-          recommendedCondition: 'Requires maintaining >= 50 active monthly traders. 5.1x ROI.',
-        }
-      : isRebate
-      ? {
-          title: 'Custom Tier Spread Reconciliation Agreement',
-          angle: 'Commercial Rebate Dispute Resolution',
-          cost: '$3,500 USD (Settlement)',
-          netMargin: `+$${(selectedPartner.netMarginRecoveryUsd ?? 24500).toLocaleString()} USD`,
-          lift: '62% Retention Lift',
-          actionType: 'RebateReconciliationAgreement',
-          recommendedCondition: 'Harmonize MT5 synthetic commission tiers across introducers.',
-        }
-      : {
-          title: 'Standard Tier 1 Retention Concession',
-          angle: 'General Relationship Retention Incentive',
-          cost: '$2,500 USD',
-          netMargin: `+$${(selectedPartner.netMarginRecoveryUsd ?? 18000).toLocaleString()} USD`,
-          lift: '30% Retention Lift',
-          actionType: 'DeployRetentionVIPDeal',
-          recommendedCondition: 'Pre-approved Level-2 partner manager incentive pool.',
-        };
-
+  if (!selectedPartner) {
     return (
-      <div className="space-y-3 font-mono text-xs text-slate-800">
-        {/* Partner Identity Bar */}
-        <div className="p-3 bg-white border border-slate-200 shadow-2xs space-y-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 text-sm">{selectedPartner.name}</span>
-              <span className="text-label bg-slate-100 text-slate-800 px-1.5 py-0.5 font-bold border border-slate-200">
-                {selectedPartner.partnerId}
-              </span>
-              <span className="text-label bg-blue-50 text-blue-700 px-1.5 py-0.5 border border-blue-200 font-bold">
-                {selectedPartner.tier.replace(/_/g, ' ')}
-              </span>
-            </div>
-            <span
-              className={`text-label font-bold px-2 py-0.5 border ${
-                isCritical ? 'bg-rose-50 text-rose-800 border-rose-300' : 'bg-emerald-50 text-emerald-800 border-emerald-300'
-              }`}
-            >
-              P(churn) = {selectedPartner.pChurn.toFixed(2)}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 text-label">
-            <div className="bg-slate-50 p-1.5 border border-slate-200">
-              <span className="text-label text-slate-500 block">30D VaR</span>
-              <span className="font-bold text-slate-900">
-                ${(selectedPartner.valueAtRiskUsd / 1000).toFixed(0)}K USD
-              </span>
-            </div>
-            <div className="bg-slate-50 p-1.5 border border-slate-200">
-              <span className="text-label text-slate-500 block">Golden Window</span>
-              <span className="font-bold text-rose-700">{selectedPartner.daysToChurn} Days to Lock</span>
-            </div>
-            <div className="bg-slate-50 p-1.5 border border-slate-200">
-              <span className="text-label text-slate-500 block">Decay Acceleration</span>
-              <span className="font-bold text-red-600">
-                {selectedPartner.historicalDrift?.driftVelocityPct
-                  ? `+${selectedPartner.historicalDrift.driftVelocityPct.toFixed(0)}% WoW`
-                  : `${selectedPartner.loginDecayPct}% WoW`}
-              </span>
-            </div>
-            <div className="bg-slate-50 p-1.5 border border-slate-200">
-              <span className="text-label text-slate-500 block">Ring Collusion</span>
-              <span className="font-bold text-amber-700">
-                {(selectedPartner.mirrorTradeCorrelation * 100).toFixed(0)}% Opposite
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* 30D Velocity Sparkline & Multi-Signal Root Cause Decomposition */}
-        <div className="p-3 bg-white border border-slate-200 shadow-2xs space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-label text-slate-900 uppercase">
-              30D Engagement Velocity & Signal Decomposition
-            </span>
-            <span className="text-label text-slate-500">PELT Change-Point Flagged</span>
-          </div>
-
-          {/* Simple Inline SVG Sparkline */}
-          <div className="h-10 w-full bg-slate-50 border border-slate-200 flex items-center px-2">
-            <svg className="w-full h-8" viewBox="0 0 300 30" preserveAspectRatio="none">
-              <path
-                d="M 0 5 L 50 8 L 100 6 L 150 14 L 200 22 L 250 26 L 300 28"
-                fill="none"
-                stroke="#E11D48"
-                strokeWidth="2"
-              />
-              <circle cx="150" cy="14" r="3" fill="#D97706" />
-              <circle cx="300" cy="28" r="3.5" fill="#E11D48" />
-            </svg>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 text-label pt-1">
-            <div className="p-1.5 bg-rose-50/50 border border-rose-100">
-              <span className="text-label text-slate-500 block">Operational Bottleneck</span>
-              <span className="text-slate-800 font-semibold">
-                Cashier Latency: {selectedPartner.cashierLatencyHours ?? 4.8}h (Bancolombia)
-              </span>
-            </div>
-            <div className="p-1.5 bg-amber-50/50 border border-amber-100">
-              <span className="text-label text-slate-500 block">Competitive Aggression</span>
-              <span className="text-slate-800 font-semibold truncate block" title={selectedPartner.competitorPoaching}>
-                {selectedPartner.competitorPoaching ?? 'Exness Rival Promo'}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* LIVE SCM COUNTERFACTUAL WHAT-IF SIMULATOR (Task T008, T009) */}
-        <div className="p-3 bg-white border border-slate-200 shadow-2xs space-y-2.5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-bold text-label text-slate-900 uppercase">
-                Backend Causal SCM Simulator (DoWhy Inference)
-              </span>
-            </div>
-            {isSimulatingCausal && (
-              <span className="text-label text-blue-600 animate-pulse font-mono">Evaluating SCM...</span>
-            )}
-          </div>
-
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-label">
-              <span className="text-slate-600">Retention Concession Intensity:</span>
-              <span className="font-bold text-slate-900">{concessionSlider}% Intensity</span>
-            </div>
-            <input
-              type="range"
-              min="0"
-              max="100"
-              step="5"
-              value={concessionSlider}
-              onChange={(e) => setConcessionSlider(Number(e.target.value))}
-              className="w-full accent-blue-600 cursor-pointer h-1.5 bg-slate-200 rounded-sm"
-              aria-label="Concession Intensity Slider"
-            />
-          </div>
-
-          {whatIfResponse ? (
-            <div className="p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-1.5 text-label animate-in fade-in">
-              <div className="flex items-center justify-between">
-                <span className="font-bold">Projected Retention Lift:</span>
-                <span className="font-mono font-bold text-emerald-800">
-                  +{whatIfResponse.projected_retention_lift_pct}% [CI: {whatIfResponse.confidence_interval_95?.[0]}% - {whatIfResponse.confidence_interval_95?.[1]}%]
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-600">DoWhy Placebo Refuter:</span>
-                <span className="font-mono font-bold text-blue-800">
-                  Passed (p = {whatIfResponse.causal_refuter_p_value.toFixed(2)} ≥ 0.40)
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-slate-600">Projected Net Margin Lift:</span>
-                <span className="font-mono font-bold text-emerald-800">
-                  +${whatIfResponse.projected_net_margin_usd.toLocaleString()} USD
-                </span>
-              </div>
-              <div className="text-label text-slate-600 pt-1 border-t border-emerald-200 italic">
-                {whatIfResponse.governed_decision_rationale}
-              </div>
-            </div>
-          ) : (
-            <div className="text-label text-slate-500 italic p-2 bg-slate-50 border border-slate-200">
-              Drag slider to run real-time DoWhy causal graph counterfactual inference against Gemini 3.8 Flash.
-            </div>
-          )}
-        </div>
-
-        {/* DRIVER-ADAPTIVE GOVERNED ACTION HERO CARD (Task T010) */}
-        <div className="p-3 bg-white border border-slate-200 shadow-2xs space-y-2.5">
-          <div className="flex items-center justify-between">
-            <span className="font-bold text-label text-slate-900 uppercase">
-              Recommended Driver-Adaptive Playbook
-            </span>
-            <span className="text-label bg-blue-50 text-blue-700 px-1.5 py-0.5 font-bold border border-blue-200">
-              KMS P-256 Governed
-            </span>
-          </div>
-
-          <div className="p-2.5 bg-slate-50 border border-slate-200 space-y-2">
-            <div>
-              <div className="font-bold text-slate-900 text-[12px]">{adaptivePlaybook.title}</div>
-              <div className="text-label text-slate-500">{adaptivePlaybook.angle}</div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-label font-mono">
-              <div>
-                <span className="text-slate-500 block">P&L Deal Cost:</span>
-                <span className="font-bold text-slate-800">{adaptivePlaybook.cost}</span>
-              </div>
-              <div>
-                <span className="text-slate-500 block">Net Margin ROI:</span>
-                <span className="font-bold text-emerald-700">{adaptivePlaybook.netMargin}</span>
-              </div>
-            </div>
-
-            <p className="text-label text-slate-600">{adaptivePlaybook.recommendedCondition}</p>
-
-            <button
-              type="button"
-              onClick={() => handleStageRetention(selectedPartner, adaptivePlaybook.actionType, adaptivePlaybook.title)}
-              className="w-full py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-mono font-bold text-xs rounded-xs cursor-pointer transition-colors shadow-xs flex items-center justify-center gap-1.5"
-            >
-              <span>Stage Governed Action</span>
-              <span className="text-label text-blue-200">({selectedPartner.partnerId})</span>
-            </button>
-          </div>
-        </div>
-
-        {/* CLOSED-LOOP EXPERIENCE LIBRARY & MODEL CALIBRATION (Task T012) */}
-        <div className="p-3 bg-white border border-slate-200 shadow-2xs space-y-2 text-label">
-          <span className="font-bold text-label text-slate-900 uppercase block">
-            Experience Library & Active Learning Telemetry
-          </span>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-600">Empirical Playbook Win Rate:</span>
-            <span className="font-bold text-emerald-700 font-mono">
-              {((selectedPartner.empiricalPlaybookWinRate ?? 0.785) * 100).toFixed(1)}% (11/14 Retained)
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-slate-600">Shadow Model Brier Calibration:</span>
-            <span className="font-bold text-blue-700 font-mono">
-              0.082 (Well Calibrated, &lt; 0.10)
-            </span>
-          </div>
-        </div>
-      </div>
+      <p className="p-4 text-xs text-cx-muted bg-white border border-cx-line">
+        No partners are scored yet. The radar fills when the partner engine has run.
+      </p>
     );
-  };
+  }
 
   // FULLSCREEN STUDIO VIEW (Institutional Analytical Studio)
   if (isFullscreen) {
@@ -1101,22 +767,38 @@ export function ChurnRadarScatter() {
       {/* Cohort Systemic Risk Banner with 1-Click Batch Remediation (Task T011) */}
       {viewMode === 'COHORT' && (
         <div className="p-3 bg-amber-50 border border-amber-300 text-amber-900 text-xs font-mono flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-start gap-2">
-            <span className="material-symbols-sharp text-base text-amber-600 shrink-0 mt-0.5">warning</span>
-            <div>
-              <strong className="block">Systemic Regional Risk Detected: 4 LatAm Partners Decaying Simultaneously</strong>
-              <span className="text-label text-amber-800">
-                Root cause is local DP2P Cashier clearing friction in Colombia (4.8h avg). Staging dedicated VIP rails protects the entire $1.99M cohort.
-              </span>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={handleStageCohortBatch}
-            className="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white font-mono font-bold text-xs rounded-xs cursor-pointer transition-colors shadow-xs shrink-0"
-          >
-            1-Click Batch Stage LatAm VIP Cashier Rails
-          </button>
+          {cohort ? (
+            <>
+              <div className="flex items-start gap-2">
+                <span className="material-symbols-sharp text-base text-amber-600 shrink-0 mt-0.5">warning</span>
+                <div>
+                  <strong className="block">
+                    {cohort.region}: {cohort.partnerCount} partners at high risk together (binomial test p = {cohort.pValue.toFixed(4)})
+                  </strong>
+                  <span className="text-label text-amber-800">
+                    {compactUsd(cohort.valueAtRiskUsd)} of 30-day volume. {cohort.primaryDriver}.
+                  </span>
+                  {cohortStaging.message && (
+                    <span role={cohortStaging.message.tone === 'error' ? 'alert' : 'status'} className="block text-label mt-1">
+                      {cohortStaging.message.text}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {cohort.stageRequest && (
+                <button
+                  type="button"
+                  disabled={cohortStaging.busy}
+                  onClick={handleStageCohortBatch}
+                  className="px-3 py-1.5 bg-rose-700 hover:bg-rose-800 text-white font-mono font-bold text-xs rounded-xs cursor-pointer transition-colors shadow-xs shrink-0"
+                >
+                  Stage a retention playbook for the {cohort.region} cohort
+                </button>
+              )}
+            </>
+          ) : (
+            <span>No regional cohort is significant at this as-of.</span>
+          )}
         </div>
       )}
 

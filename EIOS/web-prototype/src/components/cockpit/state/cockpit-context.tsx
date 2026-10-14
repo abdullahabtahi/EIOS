@@ -126,9 +126,15 @@ function extrasOf(source: CaseExtras | undefined): CaseExtras {
   };
 }
 
-/** True when the AML workstation shows engine-computed cases, so selections are fetched, not looked up locally. */
+/** Where a workstation fetches one selected entity's computed case on the engine plane (spec 031, spec 032). */
+const CASE_ROUTES: Partial<Record<PersonaRole, { path: string; noun: string }>> = {
+  aml_investigator: { path: '/api/cockpit/aml/cases/', noun: 'account' },
+  partner_manager: { path: '/api/cockpit/partners/', noun: 'partner' },
+};
+
+/** True when the workstation shows engine-computed cases, so selections are fetched, not looked up locally. */
 function isEngineCaseView(state: CockpitState): boolean {
-  return state.dataOrigin === 'engine' && state.activeRole === 'aml_investigator';
+  return state.dataOrigin === 'engine' && CASE_ROUTES[state.activeRole] !== undefined;
 }
 
 const initialWhatIfParams: WhatIfShockParameters = {
@@ -618,24 +624,25 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
     fetchWorkstation(state.activeRole, state.isSimulatedOutage);
   }, [state.activeRole, state.isSimulatedOutage, fetchWorkstation]);
 
-  // Engine-backed AML: opening a case fetches that account's computed dossier and network (latest wins).
+  // Engine-backed workstations: opening a case fetches that entity's computed dossier and canvas (latest wins).
   const caseSeq = useRef(0);
   useEffect(() => {
     const entityId = state.activeEntityId;
-    if (state.dataOrigin !== 'engine' || state.activeRole !== 'aml_investigator' || !entityId) return;
+    const route = CASE_ROUTES[state.activeRole];
+    if (state.dataOrigin !== 'engine' || !route || !entityId) return;
     if (state.caseStatus !== 'loading') return;
     const seq = ++caseSeq.current;
     const controller = new AbortController();
     (async () => {
       try {
-        const res = await authFetch(`/api/cockpit/aml/cases/${encodeURIComponent(entityId)}`, {
+        const res = await authFetch(`${route.path}${encodeURIComponent(entityId)}`, {
           method: 'GET',
           headers: { Accept: 'application/json' },
           signal: controller.signal,
         });
         if (seq !== caseSeq.current) return;
         if (!res.ok) {
-          const message = res.status === 404 ? `No account record for ${entityId}` : `The case could not be loaded (${res.status})`;
+          const message = res.status === 404 ? `No ${route.noun} record for ${entityId}` : `The case could not be loaded (${res.status})`;
           dispatch({ type: 'CASE_FAILED', payload: { entityId, message } });
           return;
         }
