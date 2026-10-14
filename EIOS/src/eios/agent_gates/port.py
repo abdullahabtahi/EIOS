@@ -14,6 +14,7 @@ from eios.agent_gates.records import (
     IdentitySource,
     Outcome,
     Role,
+    ToolCall,
     TurnRecord,
 )
 from eios.common.validation import StrictModel
@@ -27,7 +28,7 @@ class TurnRequest(StrictModel):
     turn_index: int = Field(default=1, ge=1)
     case_id: str | None = None
     entity_context: dict[str, Any] | None = None
-    # Capability name to canned result, applied where the runtime dispatches tools (injection and failure cases).
+    # Capability to fields overlaid on the real tool result (injected text keeps the result's shape).
     tool_fixtures: dict[str, dict[str, Any]] = Field(default_factory=dict)
     repeat: int = Field(default=0, ge=0)
     deadline_s: float = Field(default=60.0, gt=0)
@@ -76,3 +77,34 @@ def run_with_deadline(port: AgentPort, request: TurnRequest) -> TurnRecord:
     finally:
         pool.shutdown(wait=False, cancel_futures=True)
     return inconclusive_record(request, port.runtime_name, reason)
+
+
+def completed_record(
+    request: TurnRequest,
+    runtime: str,
+    answer: str,
+    tool_calls: list[ToolCall] | None = None,
+    **fields: Any,
+) -> TurnRecord:
+    """A completed record with safe defaults; adapters override what their runtime really reports."""
+    base: dict[str, Any] = {
+        "record_id": f"{request.case_id or request.session_id}.{request.repeat}",
+        "case_id": request.case_id,
+        "repeat": request.repeat,
+        "runtime": runtime,
+        "session_id": request.session_id,
+        "turn_index": request.turn_index,
+        "operator_id": request.operator_id,
+        "identity_source": IdentitySource.NONE,
+        "role": request.role,
+        "entity_context": request.entity_context,
+        "question": request.question,
+        "tool_calls": tool_calls or [],
+        "rounds": 1,
+        "answer": answer,
+        "is_replay_fallback": False,
+        "data_origin": DataOrigin.FIXTURE,
+        "latency_ms": 0.0,
+        "outcome": Outcome.COMPLETED,
+    }
+    return TurnRecord.model_validate(base | fields)

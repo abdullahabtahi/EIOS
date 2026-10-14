@@ -113,3 +113,55 @@ class TurnRecord(StrictModel):
     def to_json_dict(self) -> dict[str, Any]:
         """The JSON form the judges and the schema read."""
         return self.model_dump(mode="json")
+
+
+def to_agents_cli_case(record: TurnRecord) -> dict[str, Any]:
+    """The `agents-cli eval` case for a record (contract: contracts/agents-cli-trace-mapping.md).
+
+    `responses` is required next to `agent_data`: without it every case errors in the Google grader.
+    """
+    agent = record.runtime
+    events: list[dict[str, Any]] = [
+        {"author": "user", "content": {"role": "user", "parts": [{"text": record.question}]}}
+    ]
+    for call in record.tool_calls:
+        events.append(
+            {
+                "author": agent,
+                "content": {
+                    "role": "model",
+                    "parts": [{"function_call": {"name": call.name, "args": call.arguments}}],
+                },
+            }
+        )
+        events.append(
+            {
+                "author": "tool",
+                "content": {
+                    "role": "user",
+                    "parts": [
+                        {
+                            "function_response": {
+                                "name": call.name,
+                                "response": call.result or {"error": call.error},
+                            }
+                        }
+                    ],
+                },
+            }
+        )
+    events.append(
+        {"author": agent, "content": {"role": "model", "parts": [{"text": record.answer}]}}
+    )
+    return {
+        "eval_case_id": record.record_id,
+        "prompt": {"role": "user", "parts": [{"text": record.question}]},
+        "responses": [{"response": {"role": "model", "parts": [{"text": record.answer}]}}],
+        "agent_data": {
+            "agents": {agent: {"agent_id": agent, "agent_type": "LlmAgent", "instruction": ""}},
+            "turns": [{"turn_index": 0, "events": events}],
+        },
+        "data_origin": record.data_origin.value,
+        "identity_source": record.identity_source.value,
+        "is_replay_fallback": record.is_replay_fallback,
+    }

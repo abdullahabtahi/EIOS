@@ -89,6 +89,9 @@ class GoldenTurn(StrictModel):
     trajectory_match: TrajectoryMatch = TrajectoryMatch.ANY_ORDER
     min_precision: float = Field(default=0.8, ge=0, le=1)
     data_origin_expected: DataOrigin | None = None
+    screen_payload: str | None = (
+        None  # e.g. `partner:PTR-882`: the workstation payload the answer must agree with
+    )
 
 
 class GoldenCase(StrictModel):
@@ -127,6 +130,9 @@ class AttackCase(StrictModel):
     owasp: OwaspCategory
     setup: AttackSetup
     canary: str | None = None
+    follow_markers: list[str] = Field(
+        default_factory=list
+    )  # text whose presence shows an injected order was obeyed
     must_not: list[str] = Field(min_length=1)
     repeats: int = Field(default=3, ge=1)
 
@@ -149,40 +155,42 @@ def _reject_ground_truth(path: Path, visible: Any) -> None:
         raise CaseError(f"{path.name}: ground truth ('{hit}') appears in an agent-visible field")
 
 
-def _load_yaml(path: Path) -> dict[str, Any]:
+def _load_yaml(path: Path) -> list[dict[str, Any]]:
+    """A file holds one case (a mapping) or a list of cases."""
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
         raise CaseError(f"{path.name}: not valid YAML: {exc}") from exc
-    if not isinstance(data, dict):
-        raise CaseError(f"{path.name}: expected a mapping at the top level")
-    return data
+    items = data if isinstance(data, list) else [data]
+    if not items or not all(isinstance(i, dict) for i in items):
+        raise CaseError(f"{path.name}: expected a case mapping or a list of case mappings")
+    return items
 
 
 def load_golden_cases(directory: Path) -> list[GoldenCase]:
     """Load every `*.yaml` under `directory` (recursively); any invalid file raises `CaseError`."""
     cases: list[GoldenCase] = []
     for path in sorted(directory.rglob("*.yaml")):
-        data = _load_yaml(path)
-        visible = [
-            [(t.get("user_query"), t.get("aliases")) for t in data.get("turns", [])],
-            data.get("description"),
-        ]
-        _reject_ground_truth(path, visible)
-        try:
-            cases.append(GoldenCase.model_validate(data))
-        except ValidationError as exc:
-            raise CaseError(f"{path.name}: {exc}") from exc
+        for data in _load_yaml(path):
+            visible = [
+                [(t.get("user_query"), t.get("aliases")) for t in data.get("turns", [])],
+                data.get("description"),
+            ]
+            _reject_ground_truth(path, visible)
+            try:
+                cases.append(GoldenCase.model_validate(data))
+            except ValidationError as exc:
+                raise CaseError(f"{path.name}: {exc}") from exc
     return cases
 
 
 def load_attack_cases(directory: Path) -> list[AttackCase]:
     attacks: list[AttackCase] = []
     for path in sorted(directory.rglob("*.yaml")):
-        data = _load_yaml(path)
-        _reject_ground_truth(path, [data.get("setup"), data.get("canary")])
-        try:
-            attacks.append(AttackCase.model_validate(data))
-        except ValidationError as exc:
-            raise CaseError(f"{path.name}: {exc}") from exc
+        for data in _load_yaml(path):
+            _reject_ground_truth(path, [data.get("setup"), data.get("canary")])
+            try:
+                attacks.append(AttackCase.model_validate(data))
+            except ValidationError as exc:
+                raise CaseError(f"{path.name}: {exc}") from exc
     return attacks

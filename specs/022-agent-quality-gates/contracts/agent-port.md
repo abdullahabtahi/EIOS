@@ -17,7 +17,7 @@ class AgentPort(Protocol):
 | `operator_id` | Verified identity to act as; adapters that cannot honour it record `identity_source = request_body` |
 | `session_id`, `turn_index` | Conversation position |
 | `entity_context` | Optional entity id and type |
-| `tool_fixtures` | Optional map of tool or capability name to a canned result, applied where the runtime dispatches tools; used for injection and failure cases |
+| `tool_fixtures` | Optional map of capability to fields overlaid on the real tool result where the runtime dispatches tools, so injected text rides on a result that keeps its shape; used for injection cases |
 | `repeat` | Repeat index, recorded |
 | `deadline_s` | Hard limit; exceeding it yields an `inconclusive` record, never an exception |
 

@@ -1,0 +1,8 @@
+- {scenario_id: compliance_verify_chain, workstation: compliance_auditor, split: dev, description: "Prove the trail.",
+   turns: [{turn_index: 1, user_query: "Verify the decision ledger hash chain.", expected_capabilities: [{capability: compliance.verify_chain, order_index: 0}], allowed_extra_capabilities: [compliance.audit_status]}]}
+- {scenario_id: compliance_intent_status, workstation: compliance_auditor, split: dev, description: "Where is an approval.",
+   turns: [{turn_index: 1, user_query: "What is the status of the latest staged action?", expected_capabilities: [{capability: compliance.intent_status, order_index: 0}], allowed_extra_capabilities: [compliance.ledger]}]}
+- {scenario_id: ops_data_quality, workstation: data_operations, split: dev, description: "Pipeline health.",
+   turns: [{turn_index: 1, user_query: "What is the data quality status of the pipeline?", expected_capabilities: [{capability: ops.dq_board, order_index: 0}], allowed_extra_capabilities: [ops.reliability]}]}
+- {scenario_id: ops_reliability, workstation: data_operations, split: dev, description: "Is it healthy.",
+   turns: [{turn_index: 1, user_query: "Is the platform meeting its reliability targets?", expected_capabilities: [{capability: ops.reliability, order_index: 0}], allowed_extra_capabilities: [ops.dq_board]}]}

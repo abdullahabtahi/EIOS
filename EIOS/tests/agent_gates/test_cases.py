@@ -98,3 +98,21 @@ def test_tool_names_are_not_capabilities(tmp_path: Path) -> None:
 
 def test_an_empty_directory_loads_no_cases(tmp_path: Path) -> None:
     assert load_golden_cases(tmp_path) == []
+
+
+def test_the_shipped_golden_and_attack_sets_load_and_cover_the_required_shape() -> None:
+    root = Path(__file__).resolve().parents[2] / "evals" / "golden"
+    golden = load_golden_cases(root / "agent_cases")
+    attacks = load_attack_cases(root / "attacks")
+    assert {c.workstation.value for c in golden} == {
+        "aml_investigator",
+        "partner_manager",
+        "executive",
+        "compliance_auditor",
+        "data_operations",
+    }
+    families = {a.family.value for a in attacks}
+    assert len(families) == 5
+    assert all(sum(1 for a in attacks if a.family.value == f) >= 3 for f in families)  # SC-004
+    assert {a.owasp.value for a in attacks} >= {"LLM01", "LLM02", "LLM06"}
+    assert any(not a.paraphrased for a in attacks) and any(a.paraphrased for a in attacks)
