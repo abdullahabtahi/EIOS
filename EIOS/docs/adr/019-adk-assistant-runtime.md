@@ -10,7 +10,7 @@ Proposed
 
 ## Context
 
-The copilot is a hand-written tool loop (`conversation/copilot_engine.py`) beside a keyword-routed LangGraph mesh (`conversation/graph.py`, ADR-016) that is a stub. The measured baseline (`docs/agent-baseline.md`) shows 28 of 61 golden and attack cases failing offline `[MEASURED]`, p95 48.6 s live `[MEASURED]`, no role scoping, and answers that contradict the workstation screen. Spec 023 now provides one typed, role-scoped tool port (`eios.ontology.omcp.port`) and spec 022 the gates that judge any runtime through one agent port.
+The copilot is a hand-written tool loop (`conversation/copilot_engine.py`) beside a keyword-routed LangGraph mesh (`conversation/graph.py`, ADR-016) that is a stub. The measured baseline (`docs/agent-baseline.md`) records failing golden and attack cases, a live turn time well above the target, no role scoping, and answers that contradict the workstation screen. Spec 023 now provides one typed, role-scoped tool port (`eios.ontology.omcp.port`) and spec 022 the gates that judge any runtime through one agent port.
 
 The pieces the runtime needs (sessions with durable per-user history, input and output screening, a bounded loop agent, a runner with a call bound and plugins for telemetry) exist as supported parts of Google's Agent Development Kit 2.11.0, pinned in PR #40.
 

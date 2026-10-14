@@ -1,11 +1,13 @@
 """The copilot endpoint served by the ADK assistant keeps its shape and its honesty (spec 021 FR-006, FR-017)."""
 
+import asyncio
 from collections.abc import Iterator
 
 import pytest
 from fastapi.testclient import TestClient
 
 from eios.assistant.scripted_model import call, draft
+from eios.assistant.sessions import APP_NAME, session_key
 from eios.cockpit import assistant_gateway, server
 from eios.cockpit.auth import Operator, current_operator
 from tests.assistant.conftest import make_runtime
@@ -63,14 +65,11 @@ def test_the_identity_is_the_verified_operator_not_the_request(client: TestClien
     assistant_gateway.set_runtime_for_testing(runtime)
     client.post(PATH, json={**BODY, "operator_id": "mallory", "uid": "mallory"})
     sessions = runtime._sessions  # the thread belongs to the verified uid only
-    import asyncio
-
-    from eios.assistant.sessions import APP_NAME, session_key
-
     key = session_key("aml_investigator", "CR84920")
-    get = lambda uid: asyncio.run(
-        sessions.get_session(app_name=APP_NAME, user_id=uid, session_id=key)
-    )  # noqa: E731
+
+    def get(uid: str) -> object:
+        return asyncio.run(sessions.get_session(app_name=APP_NAME, user_id=uid, session_id=key))
+
     assert get("uid-42") is not None
     assert get("mallory") is None
 
