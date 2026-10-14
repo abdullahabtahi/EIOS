@@ -5,11 +5,6 @@ from pydantic import Field
 from eios.aml.withdrawal_sentinel import WithdrawalSentinel, score_withdrawal
 from eios.common.validation import StrictModel
 from eios.ontology.config import SecurityMarking
-from eios.ontology.omcp.port.aml_fixtures import (
-    DOSSIER_ENTITY,
-    PENDING_WITHDRAWALS,
-    timeline_for,
-)
 from eios.ontology.omcp.port.common import envelope
 from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode, ToolResult
 from eios.ontology.omcp.port.entities import EntityKind
@@ -37,7 +32,7 @@ def _account(ctx: ReadModels, raw: str) -> str:
 
 def _dossier_account(ctx: ReadModels, raw: str, what: str) -> str:
     entity_id = _account(ctx, raw)
-    if entity_id != DOSSIER_ENTITY:
+    if not ctx.aml.supports_detail(entity_id):
         raise PortError(
             ToolErrorCode.DATA_UNAVAILABLE, f"no {what} is available for {entity_id} yet"
         )
@@ -76,6 +71,7 @@ def list_alerts(ctx: ReadModels, _who: Principal, args: AlertsArgs) -> AlertList
                 "alerts[].age_hours": "hours",
             },
             PRIVATE,
+            origin=ctx.aml_origin,
         ),
         alerts=[AlertItem(**a) for a in ranked],
     )
@@ -118,6 +114,7 @@ def get_aml_dossier(ctx: ReadModels, _who: Principal, args: AccountArgs) -> AmlD
                 "syndicate_ring_size": "accounts",
             },
             PRIVATE,
+            origin=ctx.aml_origin,
         ),
         case_id=d.case_id,
         identity_cluster_key=d.identity_cluster_key,
@@ -192,6 +189,7 @@ def get_network_evidence(ctx: ReadModels, _who: Principal, args: AccountArgs) ->
                 "hub_suppressed_count": "count",
             },
             PRIVATE,
+            origin=ctx.aml_origin,
         ),
         graph_id=g.graph_id,
         nodes=nodes,
@@ -226,16 +224,16 @@ class ActivityTimeline(ToolResult):
 
 def get_activity_timeline(ctx: ReadModels, _who: Principal, args: AccountArgs) -> ActivityTimeline:
     entity_id = _dossier_account(ctx, args.entity_id, "activity timeline")
-    kyc = ctx.aml.get_entity_dossier(entity_id).kyc.kyc_approval_timestamp
-    events = timeline_for(entity_id, kyc) or []
+    events = ctx.aml.get_activity_timeline(entity_id) or []
     return ActivityTimeline(
         **envelope(
             ctx,
             "aml.timeline",
             entity_id,
-            "cockpit.aml + port.aml_fixtures",
+            f"{_SVC}.get_activity_timeline",
             {"events[].event_amount_usd": "USD"},
             PRIVATE,
+            origin=ctx.aml_origin,
         ),
         events=[
             TimelineItem(
@@ -260,21 +258,14 @@ class WithdrawalRisk(ToolResult):
 
 def check_withdrawal_risk(ctx: ReadModels, _who: Principal, args: AccountArgs) -> WithdrawalRisk:
     entity_id = _account(ctx, args.entity_id)
-    pending = PENDING_WITHDRAWALS.get(entity_id)
+    pending = ctx.aml.get_pending_withdrawal(entity_id)
     if pending is None:
         raise PortError(ToolErrorCode.NOT_FOUND, f"no pending withdrawal for {entity_id}")
-    alert = next(
-        (
-            a
-            for a in ctx.aml.get_triage_queue(min_score=0, limit=100)
-            if a["entity_id"] == entity_id
-        ),
-        None,
-    )
-    if alert is None:
+    alert_score = ctx.aml.get_alert_score(entity_id)
+    if alert_score is None:
         raise PortError(ToolErrorCode.DATA_UNAVAILABLE, f"no alert score for {entity_id}")
     score = score_withdrawal(
-        alert["risk_score"] / 100.0,
+        alert_score / 100.0,
         pending.hours_since_deposit,
         pending.market_risk_pct,
         pending.hours_since_kyc,
@@ -293,6 +284,7 @@ def check_withdrawal_risk(ctx: ReadModels, _who: Principal, args: AccountArgs) -
                 "hold_threshold": "ratio",
             },
             PRIVATE,
+            origin=ctx.aml_origin,
         ),
         withdrawal_id=pending.withdrawal_id,
         withdrawal_amount_usd=pending.amount_usd,
@@ -327,7 +319,15 @@ def draft_sar(ctx: ReadModels, who: Principal, args: AccountArgs) -> SarDraft:
     sar = ctx.aml.compose_sar_draft(entity_id=entity_id, investigator_id=who.uid)
     cited = [f"aml.dossier:{entity_id}:{m}" for m in sar.cited_metric_ids if m in _CITED]
     return SarDraft(
-        **envelope(ctx, "aml.sar_draft", entity_id, f"{_SVC}.compose_sar_draft", {}, PRIVATE),
+        **envelope(
+            ctx,
+            "aml.sar_draft",
+            entity_id,
+            f"{_SVC}.compose_sar_draft",
+            {},
+            PRIVATE,
+            origin=ctx.aml_origin,
+        ),
         sar_id=sar.sar_id,
         case_id=sar.case_id,
         regulator_template_id=sar.regulator_template_id,

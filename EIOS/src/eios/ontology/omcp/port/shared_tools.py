@@ -7,9 +7,14 @@ from pydantic import Field
 
 from eios.common.validation import StrictModel
 from eios.ontology.config import SecurityMarking
-from eios.ontology.omcp.port.aml_fixtures import DOSSIER_ENTITY
 from eios.ontology.omcp.port.common import envelope, require_clearance
-from eios.ontology.omcp.port.contracts import DataOrigin, PortError, ToolErrorCode, ToolResult
+from eios.ontology.omcp.port.contracts import (
+    DataOrigin,
+    PortError,
+    ToolErrorCode,
+    ToolResult,
+    weakest,
+)
 from eios.ontology.omcp.port.entities import EntityKind
 from eios.ontology.omcp.port.principal import Principal, Workstation
 from eios.ontology.omcp.port.readmodels import ReadModels
@@ -96,12 +101,28 @@ def get_metric(ctx: ReadModels, who: Principal, args: MetricArgs) -> MetricValue
         value, source = _entity_value(ctx, args.metric_id, entity)
     prov = ctx.executive.provenance_resolver.resolve(args.metric_id.value, as_of=ctx.clock())
     return MetricValue(
-        **envelope(ctx, "metric.get", entity, source, {"value": unit}, markings),
+        **envelope(
+            ctx,
+            "metric.get",
+            entity,
+            source,
+            {"value": unit},
+            markings,
+            origin=_metric_origin(ctx, args),
+        ),
         metric_id=args.metric_id.value,
         value=value,
         definition_version=prov.definition_version,
         owner_role=prov.owner_role,
         formula_summary=prov.formula_summary,
+    )
+
+
+def _metric_origin(ctx: ReadModels, args: MetricArgs) -> DataOrigin:
+    """AML-derived metrics take the AML plane's origin; everything else is fixture until its plane lands."""
+    aml_metrics = (MetricId.DISCREPANCY, MetricId.DEPOSIT_VOLUME)
+    return (
+        ctx.aml_origin if args.metric_id in aml_metrics and args.entity_id else DataOrigin.FIXTURE
     )
 
 
@@ -116,7 +137,7 @@ def _entity_value(ctx: ReadModels, metric: MetricId, entity: str) -> tuple[float
             else "churn_hazard_probability"
         )
         return float(getattr(item, field)), "cockpit.partner.get_churn_radar_scatter"
-    if entity != DOSSIER_ENTITY:
+    if not ctx.aml.supports_detail(entity):
         raise PortError(
             ToolErrorCode.DATA_UNAVAILABLE, f"{metric.value} is not available for {entity} yet"
         )
@@ -269,11 +290,7 @@ def compare_facts(ctx: ReadModels, who: Principal, args: CompareArgs) -> Compari
         ctx.facts.resolve(who, args.right_fact_id),
     )
     result, unit = _compute(args.operation, left.value, right.value, left.unit, right.unit)
-    origin = (
-        DataOrigin.LIVE
-        if DataOrigin.FIXTURE not in (left.data_origin, right.data_origin)
-        else DataOrigin.FIXTURE
-    )
+    origin = weakest((left.data_origin, right.data_origin))
     base: dict[str, Any] = envelope(
         ctx,
         "calc.compare",

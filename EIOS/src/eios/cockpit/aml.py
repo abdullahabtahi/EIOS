@@ -13,6 +13,8 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from eios.aml.case_views import PendingWithdrawal, TimelineEvent
+from eios.cockpit.aml_fixtures import DOSSIER_ENTITY, PENDING_WITHDRAWALS, timeline_for
 from eios.cockpit.provenance import ProvenanceMetadata, ProvenanceResolver
 from eios.cockpit.schemas import validate_contract
 
@@ -325,3 +327,24 @@ class AMLWorkstationService:
             created_at=now,
             investigator_id=investigator_id,
         )
+
+    def account_ids(self) -> list[str]:
+        """Every account the fixture queue names."""
+        return [a["entity_id"] for a in self.get_triage_queue(0, 100)]
+
+    def supports_detail(self, entity_id: str) -> bool:
+        """The fixture holds a dossier, graph, SAR and timeline for one account only."""
+        return entity_id == DOSSIER_ENTITY
+
+    def get_alert_score(self, entity_id: str) -> int | None:
+        found = next(
+            (a for a in self.get_triage_queue(0, 100) if a["entity_id"] == entity_id), None
+        )
+        return None if found is None else int(found["risk_score"])
+
+    def get_activity_timeline(self, entity_id: str) -> list[TimelineEvent] | None:
+        kyc = self.get_entity_dossier(entity_id).kyc.kyc_approval_timestamp
+        return timeline_for(entity_id, kyc)
+
+    def get_pending_withdrawal(self, entity_id: str) -> PendingWithdrawal | None:
+        return PENDING_WITHDRAWALS.get(entity_id)

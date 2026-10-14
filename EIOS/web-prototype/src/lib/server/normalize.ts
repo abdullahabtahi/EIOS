@@ -10,17 +10,27 @@ import type {
   ActionIntentCard,
   AssistantProposal,
   AssistantStatus,
+  CopilotDossier,
   DataOrigin,
   MetricProvenance,
+  PersonaRole,
   ProvenanceCitation,
   StageRequest,
+  WorkstationApiResponse,
 } from '@/components/cockpit/state/cockpit-types';
 
 type Raw = Record<string, any>;
 
 const text = (value: unknown, fallback = ''): string => (typeof value === 'string' ? value : fallback);
 
-const PROVENANCE_LABELS: readonly ProvenanceCitation[] = ['[BRIEF]', '[ASSUMPTION]', '[ILLUSTRATIVE]', '[TARGET]', '[SPIKE]'];
+const PROVENANCE_LABELS: readonly ProvenanceCitation[] = [
+  '[BRIEF]',
+  '[ASSUMPTION]',
+  '[ILLUSTRATIVE]',
+  '[TARGET]',
+  '[SPIKE]',
+  '[COMPUTED]',
+];
 
 /** A citation without a recognised regime label does not claim a source: it is shown as [ILLUSTRATIVE]. */
 const provenanceLabel = (value: unknown): ProvenanceCitation =>
@@ -59,7 +69,7 @@ export function normalizeActionCard(raw: Raw): ActionIntentCard {
 
 /** Live only when the backend says so; anything else the backend sends is unknown, never "live". */
 export const dataOriginOf = (value: unknown): DataOrigin | undefined =>
-  value === 'live' || value === 'fixture' ? value : undefined;
+  value === 'live' || value === 'engine' || value === 'fixture' ? value : undefined;
 
 const ASSISTANT_STATUSES: readonly AssistantStatus[] = ['ASSEMBLED', 'BLOCKED', 'FAILED_CLOSED', 'UNAVAILABLE'];
 
@@ -129,5 +139,61 @@ export function normalizeCitedMetric(raw: Raw, index: number): MetricProvenance 
     citation: provenanceLabel(raw.citation),
     isCached: false,
     dataOrigin: dataOriginOf(raw.data_origin),
+  };
+}
+
+/**
+ * A backend dossier in cockpit shape. A field the backend did not send keeps the fallback's value, so a partial
+ * payload still renders; `sections` fall back only when the backend sent none.
+ */
+export function normalizeDossier(rawDossier: Raw, role: PersonaRole, fallback: CopilotDossier): CopilotDossier {
+  const rawSections = rawDossier.sections || rawDossier.narrativeSections || [];
+  const sections =
+    Array.isArray(rawSections) && rawSections.length > 0
+      ? rawSections.map((s: Raw, idx: number) => ({
+          sectionId: s.section_id || s.sectionId || s.id || `sec_${idx}`,
+          title: s.title || `Section ${idx + 1}`,
+          narrativeText: s.narrative_text || s.narrativeText || s.narrativeMarkdown || s.narrative || '',
+          citations: s.citations || s.tags || [],
+          metrics: (s.metrics || s.citedMetrics || []).map((m: Raw) => ({
+            metricId: m.metric_id || m.metricId || 'M-UNKNOWN',
+            name: m.name || m.metric_id || m.metricId || 'Metric',
+            rawValue: m.raw_value ?? m.rawValue ?? 0,
+            formattedValue: m.formatted_value || m.formattedValue || String(m.raw_value ?? m.rawValue ?? 0),
+            unit: m.unit || '',
+            semanticDefinitionVersion: m.semantic_definition_version || m.semanticDefinitionVersion || 'v1.4',
+            asOfTimestamp: m.as_of_timestamp || m.asOfTimestamp || new Date().toISOString(),
+            originEngine: m.origin_engine || m.originEngine || 'duckdb:semantic_layer',
+            stewardRole: m.steward_role || m.stewardRole || 'Steward',
+            citation: provenanceLabel(m.citation),
+            isCached: m.is_cached ?? m.isCached ?? false,
+            dataOrigin: dataOriginOf(m.data_origin),
+          })),
+        }))
+      : fallback.sections;
+  return {
+    dossierId: rawDossier.dossier_id || rawDossier.dossierId || fallback.dossierId,
+    entityId: rawDossier.entity_id || rawDossier.entityId || fallback.entityId,
+    role,
+    headline: rawDossier.headline || fallback.headline,
+    executiveSummary: rawDossier.executive_summary || rawDossier.executiveSummary || fallback.executiveSummary,
+    sections,
+    tradeOffs: rawDossier.trade_offs || rawDossier.tradeOffs || fallback.tradeOffs,
+    sarDraft: rawDossier.sar_draft || rawDossier.sarDraft || fallback.sarDraft,
+    asOfTimestamp: rawDossier.as_of_timestamp || rawDossier.asOfTimestamp || new Date().toISOString(),
+    isCachedSnapshot: rawDossier.is_cached_snapshot ?? rawDossier.isCachedSnapshot ?? false,
+    replayReason: rawDossier.replay_reason ?? rawDossier.replayReason,
+  };
+}
+
+/** The canvas the backend chose for the selection, or the fallback's when it chose none. */
+export function normalizeCanvas(
+  rawCanvas: Raw | null | undefined,
+  fallback: WorkstationApiResponse['canvasPayload'],
+): WorkstationApiResponse['canvasPayload'] {
+  if (!rawCanvas || typeof rawCanvas !== 'object') return fallback;
+  return {
+    type: rawCanvas.canvas_type || rawCanvas.type || fallback.type,
+    data: rawCanvas.payload || rawCanvas.data || fallback.data,
   };
 }

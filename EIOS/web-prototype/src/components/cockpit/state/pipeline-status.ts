@@ -7,10 +7,10 @@
 export type PipelineTone = 'ok' | 'warn' | 'bad' | 'neutral';
 
 /** Whether the state in view came from governed data products or from in-process fixtures. */
-export type DataOrigin = 'live' | 'fixture';
+export type DataOrigin = 'live' | 'engine' | 'fixture';
 
 export interface PipelineStatus {
-  readonly label: 'Live' | 'Fixture' | 'Replay' | 'Syncing' | 'Offline';
+  readonly label: 'Live' | 'Engine' | 'Fixture' | 'Replay' | 'Syncing' | 'Offline';
   readonly tone: PipelineTone;
 }
 
@@ -27,5 +27,6 @@ export function getPipelineStatus(input: PipelineStatusInput): PipelineStatus {
   if (input.isLoading) return { label: 'Syncing', tone: 'neutral' };
   if (!input.isLiveConnected) return { label: 'Offline', tone: 'bad' };
   if (input.dataOrigin === 'fixture') return { label: 'Fixture', tone: 'warn' };
+  if (input.dataOrigin === 'engine') return { label: 'Engine', tone: 'ok' };
   return { label: 'Live', tone: 'ok' };
 }

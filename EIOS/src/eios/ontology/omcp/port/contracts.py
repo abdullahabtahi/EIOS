@@ -6,6 +6,7 @@ markings, the unit of every figure and a stable id for every figure. A figure wi
 it fails validation instead of reaching an operator.
 """
 
+from collections.abc import Iterable
 from datetime import datetime
 from enum import StrEnum
 from typing import Any, Self
@@ -17,8 +18,17 @@ from eios.ontology.config import SecurityMarking
 
 
 class DataOrigin(StrEnum):
-    FIXTURE = "fixture"
-    LIVE = "live"
+    FIXTURE = "fixture"  # hand-written payloads
+    ENGINE = "engine"  # computed by the engines over the seeded world
+    LIVE = "live"  # computed from governed data products arriving live
+
+
+_STRENGTH = {DataOrigin.FIXTURE: 0, DataOrigin.ENGINE: 1, DataOrigin.LIVE: 2}
+
+
+def weakest(origins: Iterable[DataOrigin]) -> DataOrigin:
+    """The least-computed origin among `origins`: an answer never claims more than its weakest input. None is fixture."""
+    return min(origins, key=_STRENGTH.__getitem__, default=DataOrigin.FIXTURE)
 
 
 class ToolErrorCode(StrEnum):

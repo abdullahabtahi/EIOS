@@ -28,6 +28,7 @@ class IdentitySource(StrEnum):
 
 class DataOrigin(StrEnum):
     FIXTURE = "fixture"
+    ENGINE = "engine"
     LIVE = "live"
 
 

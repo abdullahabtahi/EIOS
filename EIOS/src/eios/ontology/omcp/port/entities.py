@@ -11,6 +11,9 @@ from pathlib import Path
 
 import yaml
 
+from eios.cockpit.aml import AMLWorkstationService
+from eios.cockpit.aml_readmodel import AmlReadModel
+from eios.cockpit.partner import PartnerWorkstationService
 from eios.common.validation import StrictModel
 from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode
 
@@ -91,20 +94,17 @@ class EntityDirectory:
         return Entity(entity_id=matches[0][0], kind=matches[0][1])
 
 
-@cache
-def default_directory() -> EntityDirectory:
-    from eios.cockpit.aml import AMLWorkstationService
-    from eios.cockpit.partner import PartnerWorkstationService
-
+def build_directory(aml: AmlReadModel, partner: PartnerWorkstationService) -> EntityDirectory:
+    """Every partner on the radar and every account the AML read model holds, by canonical id."""
     canonical: dict[str, EntityKind] = {
-        p.partner_id: EntityKind.PARTNER
-        for p in PartnerWorkstationService().get_churn_radar_scatter().partners
+        p.partner_id: EntityKind.PARTNER for p in partner.get_churn_radar_scatter().partners
     }
-    canonical.update(
-        {
-            a["entity_id"]: EntityKind.ACCOUNT
-            for a in AMLWorkstationService().get_triage_queue(0, 100)
-        }
-    )
+    canonical.update({account: EntityKind.ACCOUNT for account in aml.account_ids()})
     aliases = yaml.safe_load(_ALIASES_PATH.read_text(encoding="utf-8"))["partner"]
     return EntityDirectory(canonical, aliases)
+
+
+@cache
+def default_directory() -> EntityDirectory:
+    """The directory over the fixture plane, for tests and offline runs."""
+    return build_directory(AMLWorkstationService(), PartnerWorkstationService())

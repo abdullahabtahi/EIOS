@@ -18,6 +18,15 @@ describe('getPipelineStatus (derived, never hard-coded)', () => {
     expect(getPipelineStatus({ ...base, dataOrigin: 'fixture' })).toEqual({ label: 'Fixture', tone: 'warn' });
   });
 
+  it('is Engine, and healthy, when the data is computed by the engines over the seeded world', () => {
+    expect(getPipelineStatus({ ...base, dataOrigin: 'engine' })).toEqual({ label: 'Engine', tone: 'ok' });
+  });
+
+  it('is never Live for engine data, and Replay still wins over it', () => {
+    expect(getPipelineStatus({ ...base, dataOrigin: 'engine' }).label).not.toBe('Live');
+    expect(getPipelineStatus({ ...base, dataOrigin: 'engine', isCachedFallback: true }).label).toBe('Replay');
+  });
+
   it('still reports Offline, Replay and Syncing ahead of Fixture', () => {
     const fixture = { ...base, dataOrigin: 'fixture' as const };
     expect(getPipelineStatus({ ...fixture, isLiveConnected: false })).toEqual({ label: 'Offline', tone: 'bad' });

@@ -42,15 +42,19 @@ export function MetricCitationTag({ citation }: { citation: ProvenanceCitation |
   );
 }
 
+/** Citations that name no regime: the figure stays clean and its popover says where it came from. */
+const QUIET_CITATIONS: ReadonlySet<string> = new Set(['[ILLUSTRATIVE]', '[COMPUTED]']);
+
 /** What the figure's origin is, from the backend's own word. Unknown is never shown as live. */
 function originText(metric: MetricProvenance): string {
   if (metric.dataOrigin === 'fixture') return 'Demo data (fixture)';
+  if (metric.dataOrigin === 'engine') return 'Computed by the engines';
   if (metric.dataOrigin === 'live') return 'Live data';
   return metric.isCached ? 'Cached snapshot' : 'Origin not stated';
 }
 
 function originTone(metric: MetricProvenance): string {
-  if (metric.dataOrigin === 'live') return 'text-emerald-700';
+  if (metric.dataOrigin === 'live' || metric.dataOrigin === 'engine') return 'text-emerald-700';
   if (metric.dataOrigin === 'fixture' || metric.isCached) return 'text-amber-700';
   return 'text-slate-500';
 }
@@ -91,7 +95,7 @@ export function MetricProvenanceBadge({
           <span className="text-xs text-slate-500 font-normal">{metric.unit}</span>
         )}
         {/* The figure itself stays clean; the citation type and data origin are in the popover. */}
-        {metric.citation !== '[ILLUSTRATIVE]' && <MetricCitationTag citation={metric.citation} />}
+        {!QUIET_CITATIONS.has(metric.citation) && <MetricCitationTag citation={metric.citation} />}
         {/* A tick only when the figure names where it came from. */}
         {metric.originEngine && (
           <span
@@ -116,7 +120,7 @@ export function MetricProvenanceBadge({
               Semantic Provenance
             </span>
           </div>
-          {metric.citation !== '[ILLUSTRATIVE]' && <MetricCitationTag citation={metric.citation} />}
+          {!QUIET_CITATIONS.has(metric.citation) && <MetricCitationTag citation={metric.citation} />}
         </div>
 
         {/* Metric Value & Name */}

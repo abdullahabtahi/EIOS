@@ -67,6 +67,33 @@ const FALLBACK_EDGES: GraphEdge[] = [
   { id: 'e9', source: 'CR84920', target: 'IP-CGNAT-TELCO', type: 'SHARED_IP', weight: 0.2, label: 'Telco CGNAT Gateway' },
 ];
 
+/** The graph the backend computed carries no per-node risk, so the view derives it from structure only. */
+function structuralRisk(n: any, seed: string | undefined): number {
+  if (n.node_id === seed) return 0.9;
+  if (n.is_hub_suppressed) return 0.15;
+  if (n.node_type === 'CLIENT_ACCOUNT') return 0.75;
+  if (n.node_type === 'DEVICE_FINGERPRINT') return 0.6;
+  return 0.4;
+}
+
+function replayRisk(n: any): number {
+  if (n.node_id.includes('84920')) return 0.94;
+  if (n.degree >= 8 || n.node_id.includes('RING')) return 0.88;
+  return n.node_id.includes('MULE') ? 0.72 : 0.45;
+}
+
+/** An edge says what the backend measured: a flow's volume, a timing gap in seconds. Nothing is filled in. */
+function edgeLabel(e: any, replay: boolean): string {
+  if (replay) {
+    return e.edge_type === 'RAPID_INTERNAL_TRANSFER'
+      ? `$${(e.transaction_volume_usd || 180000).toLocaleString()} transfer`
+      : e.edge_type;
+  }
+  if (typeof e.transaction_volume_usd === 'number') return `$${Math.round(e.transaction_volume_usd).toLocaleString()} flow`;
+  if (typeof e.matched_timing_seconds === 'number') return `${e.matched_timing_seconds}s apart`;
+  return String(e.edge_type).replace(/_/g, ' ').toLowerCase();
+}
+
 type LayoutMode = 'FORCE' | 'RADIAL_EGO' | 'BIPARTITE';
 
 export function TopologicalGraphCanvas() {
@@ -253,7 +280,7 @@ export function TopologicalGraphCanvas() {
   // Fetch Live Graph from FastAPI Backend
   React.useEffect(() => {
     let active = true;
-    const caseId = state.activeTriageItemId || 'case_aml_84920';
+    const caseId = state.activeEntityId || state.activeTriageItemId || 'case_aml_84920';
 
     fetchAmlGraph(caseId, suppressCgnat ? 100 : 9999)
       .then((data) => {
@@ -273,20 +300,20 @@ export function TopologicalGraphCanvas() {
           label: n.label || n.node_id,
           degree: n.degree || 1,
           isCgnatHub: (n.degree || 0) >= 100,
-          riskScore: n.node_id.includes('84920')
-            ? 0.94
-            : n.degree >= 8 || n.node_id.includes('RING')
-            ? 0.88
-            : n.node_id.includes('MULE')
-            ? 0.72
-            : 0.45,
-          details: {
-            degree: `${n.degree} connections`,
-            type: n.node_type,
-            turnover: n.node_id.includes('84920') ? '$1.42M' : `$${(n.degree * 85000).toLocaleString()}`,
-            country: n.node_id.includes('84920') ? 'Colombia / Panama' : 'LatAm Regional',
-            betweenness: Math.min(1.0, (n.degree || 1) * 0.14).toFixed(2),
-          },
+          riskScore: data.isReplay ? replayRisk(n) : structuralRisk(n, data.seed_entity_id),
+          details: data.isReplay
+            ? {
+                degree: `${n.degree} connections`,
+                type: n.node_type,
+                turnover: n.node_id.includes('84920') ? '$1.42M' : `$${(n.degree * 85000).toLocaleString()}`,
+                country: n.node_id.includes('84920') ? 'Colombia / Panama' : 'LatAm Regional',
+                betweenness: Math.min(1.0, (n.degree || 1) * 0.14).toFixed(2),
+              }
+            : {
+                degree: `${n.degree} connections`,
+                type: String(n.node_type).replace(/_/g, ' ').toLowerCase(),
+                ...(n.is_hub_suppressed ? { suppressed: `hub collapsed (${n.collapsed_node_count} accounts)` } : {}),
+              },
         }));
 
         const convertedEdges: GraphEdge[] = (data.edges || []).map((e: any, idx: number) => ({
@@ -295,10 +322,7 @@ export function TopologicalGraphCanvas() {
           target: e.target_node_id,
           type: e.edge_type,
           weight: 0.8,
-          label:
-            e.edge_type === 'RAPID_INTERNAL_TRANSFER'
-              ? `$${(e.transaction_volume_usd || 180000).toLocaleString()} transfer`
-              : e.edge_type,
+          label: edgeLabel(e, !!data.isReplay),
         }));
 
         setRawNodes(convertedNodes.length > 0 ? convertedNodes : FALLBACK_NODES);
@@ -311,7 +335,7 @@ export function TopologicalGraphCanvas() {
     return () => {
       active = false;
     };
-  }, [state.activeTriageItemId, suppressCgnat]);
+  }, [state.activeEntityId, state.activeTriageItemId, suppressCgnat]);
 
   // Synchronize Simulation Entities, Filter Geometry & Layouts
   React.useEffect(() => {

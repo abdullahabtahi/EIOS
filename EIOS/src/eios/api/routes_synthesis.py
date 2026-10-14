@@ -11,10 +11,10 @@ from fastapi import APIRouter, HTTPException, status
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel, Field
 
-from eios.cockpit.executive import ExecutiveCockpitService
+from eios.dataplane.plane import read_models
 
 router = APIRouter(tags=["SCM Synthesis"])
-exec_svc = ExecutiveCockpitService()
+exec_svc = read_models().executive
 
 WHAT_IF_PATH = "/api/v1/synthesis/what-if"
 BRIEFING_PATH = "/api/v1/synthesis/briefing"

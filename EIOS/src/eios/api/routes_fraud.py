@@ -10,10 +10,10 @@ from typing import Any
 from fastapi import APIRouter, Query
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
-from eios.cockpit.partner import PartnerWorkstationService
+from eios.dataplane.plane import read_models
 
 router = APIRouter(tags=["Partner Fraud"])
-partner_svc = PartnerWorkstationService()
+partner_svc = read_models().partner
 
 TREE_PATH = "/api/v1/fraud/tree"
 PAIRS_PATH = "/api/v1/fraud/pairs"

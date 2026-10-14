@@ -11,11 +11,11 @@ from fastapi import APIRouter
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 from pydantic import BaseModel
 
-from eios.cockpit.partner import PartnerWorkstationService
+from eios.dataplane.plane import read_models
 from eios.llm_gateway.providers.gemini_client import DEFAULT_MODEL, GeminiClientManager
 
 router = APIRouter(tags=["Partner Churn"])
-partner_svc = PartnerWorkstationService()
+partner_svc = read_models().partner
 gemini_mgr = GeminiClientManager()
 
 RADAR_PATH = "/api/v1/churn/radar"

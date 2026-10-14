@@ -29,10 +29,10 @@ from eios.agent_gates.records import (
 from eios.assistant.answer import Answer
 from eios.assistant.config import AssistantSettings
 from eios.assistant.runtime import AssistantRuntime, ToolCallTrace, TurnOutcome
+from eios.dataplane.plane import read_models
 from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.contracts import PortError
 from eios.ontology.omcp.port.principal import principal_for
-from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.service import GovernedToolPort
 
 logger = logging.getLogger(__name__)
@@ -68,7 +68,9 @@ class AdkRuntime:
 
     def __init__(self, *, offline: bool = True, model: str | BaseLlm | None = None) -> None:
         self.offline = offline
-        models = ReadModels.default()
+        models = (
+            read_models()
+        )  # the plane `EIOS_DATA_PLANE` names, so a plane is judged as the cockpit runs it
         self._port = build_port(models)
         self._settings = AssistantSettings.from_env(
             {**_live_env(), "EIOS_ENVIRONMENT": _EVAL_ENVIRONMENT}

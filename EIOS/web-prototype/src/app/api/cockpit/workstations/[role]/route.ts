@@ -6,11 +6,19 @@ import {
   TriageItem,
   CopilotDossier,
   ActionIntentCard,
+  DataOrigin,
 } from '@/components/cockpit/state/cockpit-types';
 import { getMockWorkstationState } from '@/components/cockpit/state/fixtures';
 
 import { callBackend, relayError } from '@/lib/server/backend';
-import { normalizeActionCard } from '@/lib/server/normalize';
+import { dataOriginOf, normalizeActionCard, normalizeCanvas, normalizeDossier } from '@/lib/server/normalize';
+
+/** The backend labels its own data. Anything but an explicit [LIVE] or [ENGINE] badge is treated as fixture. */
+function originOfBadge(badge: unknown): DataOrigin {
+  if (badge === '[LIVE]') return 'live';
+  if (badge === '[ENGINE]') return 'engine';
+  return 'fixture';
+}
 
 function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationApiResponse {
   const mock = getMockWorkstationState(role);
@@ -38,56 +46,14 @@ function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationAp
   }
 
   // 2. Active Dossier
-  let activeDossier: CopilotDossier = mock.activeDossier;
   const rawDossier = raw.active_dossier || raw.activeDossier;
-  if (rawDossier && typeof rawDossier === 'object') {
-    const rawSections = rawDossier.sections || rawDossier.narrativeSections || [];
-    const normalizedSections = Array.isArray(rawSections) && rawSections.length > 0
-      ? rawSections.map((s: any, idx: number) => ({
-          sectionId: s.section_id || s.sectionId || s.id || `sec_${idx}`,
-          title: s.title || `Section ${idx + 1}`,
-          narrativeText: s.narrative_text || s.narrativeText || s.narrativeMarkdown || s.narrative || '',
-          citations: s.citations || s.tags || [],
-          metrics: (s.metrics || s.citedMetrics || []).map((m: any) => ({
-            metricId: m.metric_id || m.metricId || 'M-UNKNOWN',
-            name: m.name || m.metric_id || m.metricId || 'Metric',
-            rawValue: m.raw_value ?? m.rawValue ?? 0,
-            formattedValue: m.formatted_value || m.formattedValue || String(m.raw_value ?? m.rawValue ?? 0),
-            unit: m.unit || '',
-            semanticDefinitionVersion: m.semantic_definition_version || m.semanticDefinitionVersion || 'v1.4',
-            asOfTimestamp: m.as_of_timestamp || m.asOfTimestamp || new Date().toISOString(),
-            originEngine: m.origin_engine || m.originEngine || 'duckdb:semantic_layer',
-            stewardRole: m.steward_role || m.stewardRole || 'Steward',
-            citation: m.citation || '[CITED]',
-            isCached: m.is_cached ?? m.isCached ?? false,
-          })),
-        }))
-      : mock.activeDossier.sections;
-
-    activeDossier = {
-      dossierId: rawDossier.dossier_id || rawDossier.dossierId || mock.activeDossier.dossierId,
-      entityId: rawDossier.entity_id || rawDossier.entityId || mock.activeDossier.entityId,
-      role: role,
-      headline: rawDossier.headline || mock.activeDossier.headline,
-      executiveSummary: rawDossier.executive_summary || rawDossier.executiveSummary || mock.activeDossier.executiveSummary,
-      sections: normalizedSections,
-      tradeOffs: rawDossier.trade_offs || rawDossier.tradeOffs || mock.activeDossier.tradeOffs,
-      sarDraft: rawDossier.sar_draft || rawDossier.sarDraft || mock.activeDossier.sarDraft,
-      asOfTimestamp: rawDossier.as_of_timestamp || rawDossier.asOfTimestamp || new Date().toISOString(),
-      isCachedSnapshot: rawDossier.is_cached_snapshot ?? rawDossier.isCachedSnapshot ?? false,
-      replayReason: rawDossier.replay_reason ?? rawDossier.replayReason,
-    };
-  }
+  const activeDossier: CopilotDossier =
+    rawDossier && typeof rawDossier === 'object'
+      ? normalizeDossier(rawDossier, role, mock.activeDossier)
+      : mock.activeDossier;
 
   // 3. Canvas Payload
-  let canvasPayload = mock.canvasPayload;
-  const rawCanvas = raw.kinetic_canvas || raw.canvasPayload;
-  if (rawCanvas && typeof rawCanvas === 'object') {
-    canvasPayload = {
-      type: rawCanvas.canvas_type || rawCanvas.type || mock.canvasPayload.type,
-      data: rawCanvas.payload || rawCanvas.data || mock.canvasPayload.data,
-    };
-  }
+  const canvasPayload = normalizeCanvas(raw.kinetic_canvas || raw.canvasPayload, mock.canvasPayload);
 
   // 4. Staged Action Cards: signature state comes from the backend verdict, never a default
   let stagedActionCards: ActionIntentCard[] = mock.stagedActionCards;
@@ -101,7 +67,7 @@ function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationAp
     isLiveConnected: true,
     isCachedFallback: false,
     // The backend labels its own data; anything but an explicit [LIVE] badge is treated as fixture.
-    dataOrigin: raw.fallback_state?.badge_label === '[LIVE]' ? 'live' : 'fixture',
+    dataOrigin: originOfBadge(raw.fallback_state?.badge_label),
     asOfTimestamp: raw.as_of_timestamp || raw.asOfTimestamp || new Date().toISOString(),
     session: {
       ...mock.session,
@@ -127,7 +93,9 @@ export async function GET(
   const validRole = role as PersonaRole;
 
   try {
-    const res = await callBackend(req, `/api/cockpit/workstations/${role}`, {
+    const entityId = new URL(req.url).searchParams.get('entity_id');
+    const query = entityId ? `?entity_id=${encodeURIComponent(entityId)}` : '';
+    const res = await callBackend(req, `/api/cockpit/workstations/${role}${query}`, {
       headers: { Accept: 'application/json' },
     });
     if (res && (res.status === 401 || res.status === 403)) return relayError(res);
