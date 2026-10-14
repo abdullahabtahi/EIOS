@@ -6,6 +6,8 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
+from eios.assistant.answer import Answer
+from eios.assistant.runtime import TurnOutcome
 from eios.assistant.scripted_model import call, draft
 from eios.assistant.sessions import APP_NAME, session_key
 from eios.cockpit import assistant_gateway, server
@@ -118,3 +120,96 @@ def test_an_unconfigured_deployed_assistant_is_offline_not_a_guess(
 def test_the_default_is_the_legacy_copilot(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv(assistant_gateway.RUNTIME_ENV, raising=False)
     assert assistant_gateway.assistant_enabled() is False
+
+
+def _ask(client: TestClient, steps: list, role: str, entity: str, question: str) -> dict:
+    runtime, _ = make_runtime(steps)
+    assistant_gateway.set_runtime_for_testing(runtime)
+    return client.post(
+        PATH, json={"query": question, "role": role, "activeEntityId": entity}
+    ).json()
+
+
+def test_the_body_names_the_assistant_status_and_each_figures_provenance(
+    client: TestClient,
+) -> None:
+    body = _ask(
+        client,
+        [call("get_aml_dossier", entity_id="CR84920"), draft(f"It is {FIGURE}.")],
+        "aml_investigator",
+        "CR84920",
+        "What is the discrepancy?",
+    )
+    assert body["assistant_status"] == "ASSEMBLED"
+    assert body["failed_closed"] is False
+    cite = body["provenance_citations"][0]
+    assert cite["unit"] == "multiplier"
+    assert cite["raw_value"] == 16.0
+    assert cite["data_origin"] == "fixture"
+    assert cite["source"] == cite["steward"]
+    assert cite["as_of"]
+
+
+def test_a_failed_closed_answer_says_so_explicitly(client: TestClient) -> None:
+    bad = draft("The discrepancy is 16x.")
+    body = _ask(
+        client,
+        [call("get_aml_dossier", entity_id="CR84920"), bad, bad, bad],
+        "aml_investigator",
+        "CR84920",
+        "What is the discrepancy?",
+    )
+    assert body["assistant_status"] == "FAILED_CLOSED"
+    assert body["failed_closed"] is True
+    assert body["provenance_citations"] == []
+
+
+def test_a_blocked_answer_names_the_reason() -> None:
+    outcome = TurnOutcome(Answer(text="Blocked.", blocked=True, block_reason="input"))
+    body = assistant_gateway.response_body("q", outcome)
+    assert body["assistant_status"] == "BLOCKED"
+    assert body["blocked"] is True
+    assert body["block_reason"] == "input"
+    assert body["provenance_citations"] == []
+
+
+def test_a_proposal_reaches_the_browser_as_a_stageable_request_not_an_approval(
+    client: TestClient,
+) -> None:
+    body = _ask(
+        client,
+        [
+            call("propose_hold", entity_id="CR84920"),
+            draft("I propose a hold; a second operator must approve it in the approvals area."),
+        ],
+        "aml_investigator",
+        "CR84920",
+        "Hold the withdrawal on this account",
+    )
+    [proposal] = body["proposals"]
+    assert proposal["kind"] == "hold_withdrawal"
+    assert proposal["signed"] is False
+    assert proposal["staged"] is False
+    assert proposal["stage_request"]["action_type"] == "HoldWithdrawal"
+    # The request is real: the existing stage endpoint accepts it as it is and returns a card to authorize.
+    staged = client.post("/api/cockpit/actions/stage", json=proposal["stage_request"])
+    assert staged.status_code == 200, staged.text
+    assert staged.json()["status"] == "STAGED"
+    assert staged.json()["card"]["action_type"] == "HoldWithdrawal"
+    assert staged.json()["card"]["kms_signature"]["verified"] in (True, False)
+
+
+def test_a_retention_proposal_stages_through_the_same_endpoint(client: TestClient) -> None:
+    body = _ask(
+        client,
+        [
+            call("propose_partner_action", entity_id="PTR-882", playbook_id="pb_vip_spread_deal"),
+            draft("I propose this deal; a second operator must approve it in the approvals area."),
+        ],
+        "partner_manager",
+        "PTR-882",
+        "Propose the VIP spread deal",
+    )
+    [proposal] = body["proposals"]
+    staged = client.post("/api/cockpit/actions/stage", json=proposal["stage_request"])
+    assert staged.status_code == 200, staged.text

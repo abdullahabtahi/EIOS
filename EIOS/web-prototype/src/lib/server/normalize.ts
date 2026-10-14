@@ -6,7 +6,15 @@
  * about a signature it actually carried. Nothing here invents a key id, a digest, a signer identity or
  * an identity-provider validation. Missing means empty / false, never a plausible-looking default.
  */
-import type { ActionIntentCard, MetricProvenance, ProvenanceCitation } from '@/components/cockpit/state/cockpit-types';
+import type {
+  ActionIntentCard,
+  AssistantProposal,
+  AssistantStatus,
+  DataOrigin,
+  MetricProvenance,
+  ProvenanceCitation,
+  StageRequest,
+} from '@/components/cockpit/state/cockpit-types';
 
 type Raw = Record<string, any>;
 
@@ -49,6 +57,56 @@ export function normalizeActionCard(raw: Raw): ActionIntentCard {
   };
 }
 
+/** Live only when the backend says so; anything else the backend sends is unknown, never "live". */
+export const dataOriginOf = (value: unknown): DataOrigin | undefined =>
+  value === 'live' || value === 'fixture' ? value : undefined;
+
+const ASSISTANT_STATUSES: readonly AssistantStatus[] = ['ASSEMBLED', 'BLOCKED', 'FAILED_CLOSED', 'UNAVAILABLE'];
+
+/** An unknown status is dropped, so the browser falls back to the legacy audit reading instead of guessing. */
+export const assistantStatusOf = (value: unknown): AssistantStatus | undefined =>
+  ASSISTANT_STATUSES.find((status) => status === value);
+
+const number = (value: unknown): number => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+
+function stageRequestOf(raw: unknown): StageRequest | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Raw;
+  if (typeof r.action_type !== 'string' || !r.action_type || typeof r.target_entity_id !== 'string' || !r.target_entity_id) {
+    return undefined;
+  }
+  return {
+    action_type: r.action_type,
+    target_entity_id: r.target_entity_id,
+    severity: text(r.severity, 'HIGH'),
+    requires_four_eyes: r.requires_four_eyes !== false,
+    metadata: r.metadata && typeof r.metadata === 'object' ? (r.metadata as Record<string, unknown>) : {},
+  };
+}
+
+/** Normalize one assistant proposal. A proposal without a usable stage request cannot be acted on, so it is dropped. */
+export function normalizeProposal(raw: Raw): AssistantProposal | undefined {
+  const stageRequest = stageRequestOf(raw.stage_request);
+  if (!stageRequest) return undefined;
+  return {
+    proposalRef: text(raw.proposal_ref),
+    kind: text(raw.kind),
+    label: text(raw.label),
+    offer: text(raw.offer),
+    estimatedCostUsd: number(raw.estimated_cost_usd),
+    expectedEffectLow: number(raw.expected_effect_low),
+    expectedEffectHigh: number(raw.expected_effect_high),
+    expectedEffectBasis: text(raw.expected_effect_basis),
+    approvalRequirement: text(raw.approval_requirement),
+    signed: false,
+    staged: false,
+    dataOrigin: dataOriginOf(raw.data_origin),
+    source: text(raw.source),
+    asOf: text(raw.as_of),
+    stageRequest,
+  };
+}
+
 /** Normalize the backend's copilot citation rows. The as-of is the one the engine recorded. */
 export function normalizeCitedMetric(raw: Raw, index: number): MetricProvenance {
   return {
@@ -59,9 +117,10 @@ export function normalizeCitedMetric(raw: Raw, index: number): MetricProvenance 
     unit: text(raw.unit),
     semanticDefinitionVersion: text(raw.semanticDefinitionVersion ?? raw.semantic_definition_version),
     asOfTimestamp: text(raw.asOfTimestamp ?? raw.as_of),
-    originEngine: text(raw.originEngine ?? raw.origin_engine ?? raw.steward),
+    originEngine: text(raw.originEngine ?? raw.origin_engine ?? raw.source ?? raw.steward),
     stewardRole: text(raw.stewardRole ?? raw.steward),
     citation: provenanceLabel(raw.citation),
     isCached: false,
+    dataOrigin: dataOriginOf(raw.data_origin),
   };
 }
