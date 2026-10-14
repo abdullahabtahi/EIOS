@@ -85,7 +85,7 @@ def test_timeline_is_time_ordered_and_totals_the_dossier(port: GovernedToolPort)
     got = _ok(port, "get_activity_timeline", {"entity_id": "CR84920"})
     times = [e["at"] for e in got["events"]]
     assert times == sorted(times)
-    deposits = sum(e["amount_usd"] for e in got["events"] if e["kind"] == "DEPOSIT")
+    deposits = sum(e["event_amount_usd"] for e in got["events"] if e["kind"] == "DEPOSIT")
     assert deposits == 8000.0
 
 

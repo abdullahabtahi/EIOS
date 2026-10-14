@@ -46,7 +46,6 @@ class WorklistItem(StrictModel):
     realized_volume_30d_usd: float
     expected_loss_usd: float
     primary_root_cause: str
-    days_to_intervention_deadline: int
 
 
 class Worklist(ToolResult):
@@ -62,7 +61,6 @@ def list_partner_worklist(ctx: ReadModels, _who: Principal, args: WorklistArgs) 
             realized_volume_30d_usd=p.realized_volume_30d_usd,
             expected_loss_usd=round(p.churn_hazard_probability * p.realized_volume_30d_usd, 2),
             primary_root_cause=p.primary_root_cause,
-            days_to_intervention_deadline=p.days_to_intervention_deadline,
         )
         for p in ctx.partner.get_churn_radar_scatter().partners
     ]
@@ -77,7 +75,6 @@ def list_partner_worklist(ctx: ReadModels, _who: Principal, args: WorklistArgs) 
                 "partners[].churn_hazard_probability": "ratio",
                 "partners[].realized_volume_30d_usd": "USD",
                 "partners[].expected_loss_usd": "USD",
-                "partners[].days_to_intervention_deadline": "days",
             },
             COMMERCIAL,
         ),
@@ -93,7 +90,7 @@ class RetentionDeal(StrictModel):
     title: str
     estimated_cost_usd: float
     projected_retention_uplift_pct: float
-    requires_four_eyes: bool
+    needs_second_approver: bool
 
 
 class PartnerSignals(ToolResult):
@@ -120,7 +117,7 @@ def get_partner_signals(ctx: ReadModels, _who: Principal, args: PartnerArgs) -> 
                 title=d.title,
                 estimated_cost_usd=d.estimated_cost_usd,
                 projected_retention_uplift_pct=d.projected_retention_uplift_pct,
-                requires_four_eyes=d.requires_four_eyes,
+                needs_second_approver=d.requires_four_eyes,
             )
             for d in ctx.partner.get_retention_playbooks(partner)
         ]

@@ -88,6 +88,10 @@ class GovernedToolPort:
     def spec_for_capability(self, capability: str) -> ToolSpec | None:
         return next((s for s in self._specs.values() if s.capability == capability), None)
 
+    def spec_for_capability_of(self, tool: str) -> ToolSpec:
+        """The spec of a tool the caller already holds (raises `KeyError` for an unknown tool)."""
+        return self._specs[tool]
+
     def list_tools(self, principal: Principal) -> list[ToolSpec]:
         return [s for s in self._specs.values() if principal.workstation in s.workstations]
 

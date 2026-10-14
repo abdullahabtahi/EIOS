@@ -216,7 +216,7 @@ def get_network_evidence(ctx: ReadModels, _who: Principal, args: AccountArgs) ->
 class TimelineItem(StrictModel):
     at: str
     kind: str
-    amount_usd: float | None
+    event_amount_usd: float | None
     detail: str
 
 
@@ -234,11 +234,13 @@ def get_activity_timeline(ctx: ReadModels, _who: Principal, args: AccountArgs) -
             "aml.timeline",
             entity_id,
             "cockpit.aml + port.aml_fixtures",
-            {"events[].amount_usd": "USD"},
+            {"events[].event_amount_usd": "USD"},
             PRIVATE,
         ),
         events=[
-            TimelineItem(at=e.at.isoformat(), kind=e.kind, amount_usd=e.amount_usd, detail=e.detail)
+            TimelineItem(
+                at=e.at.isoformat(), kind=e.kind, event_amount_usd=e.amount_usd, detail=e.detail
+            )
             for e in events
         ],
     )
@@ -249,7 +251,7 @@ def get_activity_timeline(ctx: ReadModels, _who: Principal, args: AccountArgs) -
 
 class WithdrawalRisk(ToolResult):
     withdrawal_id: str
-    amount_usd: float
+    withdrawal_amount_usd: float
     hours_since_deposit: float
     risk_score: float
     hold_threshold: float
@@ -285,7 +287,7 @@ def check_withdrawal_risk(ctx: ReadModels, _who: Principal, args: AccountArgs) -
             entity_id,
             "aml.withdrawal_sentinel.score_withdrawal",
             {
-                "amount_usd": "USD",
+                "withdrawal_amount_usd": "USD",
                 "hours_since_deposit": "hours",
                 "risk_score": "ratio",
                 "hold_threshold": "ratio",
@@ -293,7 +295,7 @@ def check_withdrawal_risk(ctx: ReadModels, _who: Principal, args: AccountArgs) -
             PRIVATE,
         ),
         withdrawal_id=pending.withdrawal_id,
-        amount_usd=pending.amount_usd,
+        withdrawal_amount_usd=pending.amount_usd,
         hours_since_deposit=pending.hours_since_deposit,
         risk_score=score,
         hold_threshold=threshold,

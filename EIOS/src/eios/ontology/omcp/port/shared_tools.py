@@ -47,9 +47,9 @@ def causal_label(confidence: float, placebo_p_value: float) -> tuple[str, str]:
         return VERIFIED, "placebo refuter passed with sufficient confidence"
     reasons = []
     if placebo_p_value <= MIN_PLACEBO_P:
-        reasons.append(f"placebo p-value {placebo_p_value} is not above {MIN_PLACEBO_P}")
+        reasons.append("placebo p-value is not above the required threshold")
     if confidence < MIN_CONFIDENCE:
-        reasons.append(f"confidence {confidence} is below {MIN_CONFIDENCE}")
+        reasons.append("confidence is below the required level")
     return CORRELATION, "; ".join(reasons)
 
 
@@ -168,6 +168,8 @@ class CausalEdgeOut(StrictModel):
 
 class CausalEvidence(ToolResult):
     dag_version: str
+    required_placebo_p_above: float
+    required_confidence_at_least: float
     edges: list[CausalEdgeOut]
 
 
@@ -206,9 +208,13 @@ def get_causal_evidence(ctx: ReadModels, _who: Principal, args: CausalArgs) -> C
                 "edges[].weight": "model weight",
                 "edges[].confidence": "ratio",
                 "edges[].placebo_p_value": "ratio",
+                "required_placebo_p_above": "ratio",
+                "required_confidence_at_least": "ratio",
             },
         ),
         dag_version=dag.dag_version,
+        required_placebo_p_above=MIN_PLACEBO_P,
+        required_confidence_at_least=MIN_CONFIDENCE,
         edges=edges,
     )
 

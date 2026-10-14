@@ -13,9 +13,9 @@ capabilities:
   - {id: aml.timeline, kind: evidence, copilot: null, target: get_activity_timeline}
   - {id: aml.withdrawal_risk, kind: evidence, copilot: null, target: check_withdrawal_risk}
   - {id: aml.sar_draft, kind: draft, copilot: null, target: draft_sar}
-  - {id: knowledge.regulation, kind: knowledge, copilot: query_policy_search, target: search_regulations, copilot_fixture_only: true}
+  - {id: knowledge.regulation, kind: knowledge, copilot: query_policy_search, target: search_regulations, copilot_fixture_only: true, planned: "024"}
   - {id: knowledge.sar_precedent, kind: knowledge, copilot: query_sar_precedents, target: null, copilot_fixture_only: true}
-  - {id: knowledge.policy, kind: knowledge, copilot: null, target: search_policy}
+  - {id: knowledge.policy, kind: knowledge, copilot: null, target: search_policy, planned: "024"}
   - {id: action.propose_hold, kind: propose, copilot: stage_action_intent, target: propose_hold}
   - {id: action.propose_partner, kind: propose, copilot: null, target: propose_partner_action}
   - {id: partner.worklist, kind: evidence, copilot: null, target: list_partner_worklist}

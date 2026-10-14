@@ -82,7 +82,7 @@ def propose_partner_action(ctx: ReadModels, _who: Principal, args: ProposeDealAr
     )
     uplift = deal.projected_retention_uplift_pct
     approval = (
-        "Four-eyes: a second approver is required (over the fast-path budget)"
+        "Dual approval: a second approver is required (over the fast-path budget)"
         if deal.requires_four_eyes
         else "Fast path: one approver (within the fast-path budget)"
     )
@@ -137,7 +137,7 @@ def propose_hold(ctx: ReadModels, _who: Principal, args: ProposeHoldArgs) -> Pro
         expected_effect_low=pending.amount_usd,
         expected_effect_high=pending.amount_usd,
         expected_effect_basis="The full pending withdrawal stays in the account until review",
-        approval_requirement="Four-eyes: a second approver is required",
+        approval_requirement="Dual approval: a second approver is required",
     )
 
 
