@@ -55,6 +55,18 @@ function originTone(metric: MetricProvenance): string {
   return 'text-slate-500';
 }
 
+/** One label and value; a long value (an id, a code path) wraps inside the popover instead of spilling out. */
+function PopoverRow({ label, mono = false, children }: { label: string; mono?: boolean; children: React.ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <span className="text-slate-500 shrink-0">{label}</span>
+      <span className={`min-w-0 text-right break-all text-slate-800 ${mono ? 'font-mono text-label' : 'font-medium'}`}>
+        {children}
+      </span>
+    </div>
+  );
+}
+
 export function MetricProvenanceBadge({
   metric,
   displayMode = 'inline',
@@ -78,10 +90,8 @@ export function MetricProvenanceBadge({
         {metric.unit && metric.dataOrigin === undefined && (
           <span className="text-xs text-slate-500 font-normal">{metric.unit}</span>
         )}
-        {metric.dataOrigin === 'fixture' && (
-          <span className="px-1 text-label font-mono uppercase text-cx-warn bg-cx-warn-bg border border-cx-warn-line">demo</span>
-        )}
-        <MetricCitationTag citation={metric.citation} />
+        {/* The figure itself stays clean; the citation type and data origin are in the popover. */}
+        {metric.citation !== '[ILLUSTRATIVE]' && <MetricCitationTag citation={metric.citation} />}
         {/* A tick only when the figure names where it came from. */}
         {metric.originEngine && (
           <span
@@ -106,7 +116,7 @@ export function MetricProvenanceBadge({
               Semantic Provenance
             </span>
           </div>
-          <MetricCitationTag citation={metric.citation} />
+          {metric.citation !== '[ILLUSTRATIVE]' && <MetricCitationTag citation={metric.citation} />}
         </div>
 
         {/* Metric Value & Name */}
@@ -114,53 +124,36 @@ export function MetricProvenanceBadge({
           <div className="text-xs text-slate-500 font-medium">{metric.name}</div>
           <div className="text-lg font-bold font-mono tracking-tight text-slate-900 flex items-baseline gap-1 mt-0.5">
             <span>{metric.formattedValue}</span>
-            {metric.unit && <span className="text-xs font-normal text-slate-500">{metric.unit}</span>}
+            {metric.unit && metric.dataOrigin === undefined && (
+              <span className="text-xs font-normal text-slate-500">{metric.unit}</span>
+            )}
           </div>
         </div>
 
         {/* Audit Details Grid */}
         <div className="px-3 py-2.5 space-y-2 text-xs">
-          <div className="flex items-center justify-between">
-            <span className="text-slate-500">Metric ID</span>
-            <span className="font-mono font-medium text-slate-900">{metric.metricId}</span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-slate-500">Semantic Version</span>
-            <span className="font-mono text-slate-800 bg-slate-100 px-1 py-0.5 text-label">
+          <PopoverRow label="Metric ID" mono>
+            {metric.metricId}
+          </PopoverRow>
+          {metric.semanticDefinitionVersion && (
+            <PopoverRow label="Semantic Version" mono>
               {metric.semanticDefinitionVersion}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-slate-500">Calculation Engine</span>
-            <span className="font-mono text-label text-blue-800 bg-blue-50 px-1.5 py-0.5 border border-blue-100">
+            </PopoverRow>
+          )}
+          {metric.originEngine && (
+            <PopoverRow label="Calculation Engine" mono>
               {metric.originEngine}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-slate-500">As-Of Snapshot</span>
-            <span className="font-mono text-label text-slate-700">{formattedAsOf}</span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-slate-500">Business Steward</span>
-            <span className="font-medium text-slate-800">{metric.stewardRole}</span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <span className="text-slate-500">Data origin</span>
-            <span className={`inline-flex items-center gap-1 text-label font-mono ${originTone(metric)}`}>
-              {originText(metric)}
-            </span>
-          </div>
-        </div>
-
-        {/* Deterministic Rigor / Principle I Guarantee Footer */}
-        <div className="bg-slate-50 border-t border-slate-200 px-3 py-1.5 text-label text-slate-500 flex items-center gap-1 font-mono">
-          <span className="material-symbols-sharp text-label text-slate-400">shield</span>
-          <span>Principle I: Deterministic semantic layer. Zero LLM calculation.</span>
+            </PopoverRow>
+          )}
+          <PopoverRow label="As-Of Snapshot" mono>
+            {formattedAsOf}
+          </PopoverRow>
+          {metric.stewardRole && metric.stewardRole !== metric.originEngine && (
+            <PopoverRow label="Business Steward">{metric.stewardRole}</PopoverRow>
+          )}
+          <PopoverRow label="Data origin">
+            <span className={`font-mono ${originTone(metric)}`}>{originText(metric)}</span>
+          </PopoverRow>
         </div>
       </PopoverContent>
     </Popover>

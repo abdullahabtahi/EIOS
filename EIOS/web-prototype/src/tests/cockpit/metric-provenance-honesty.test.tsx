@@ -20,10 +20,16 @@ const metric = (overrides: Partial<MetricProvenance> = {}): MetricProvenance => 
 });
 
 describe('the provenance badge claims only what the backend said', () => {
-  it('marks a fixture figure as demo data and does not repeat the unit the value already carries', () => {
+  it('keeps the figure clean (no demo or illustrative chip) and does not repeat the unit the value carries', () => {
     render(<MetricProvenanceBadge metric={metric({ dataOrigin: 'fixture' })} displayMode="badge" />);
-    expect(screen.getByText('demo')).toBeInTheDocument();
+    expect(screen.queryByText('demo')).not.toBeInTheDocument();
+    expect(screen.queryByText('[ILLUSTRATIVE]')).not.toBeInTheDocument();
     expect(screen.queryByText('multiplier')).not.toBeInTheDocument();
+  });
+
+  it('still shows other citation types on the figure', () => {
+    render(<MetricProvenanceBadge metric={metric({ citation: '[TARGET]' })} displayMode="badge" />);
+    expect(screen.getByText('[TARGET]')).toBeInTheDocument();
   });
 
   it('shows no verified tick for a figure that names no source', () => {
@@ -42,5 +48,20 @@ describe('the provenance badge claims only what the backend said', () => {
     fireEvent.click(screen.getByText('16x'));
     expect(screen.queryByText(/real-time synchronized/i)).not.toBeInTheDocument();
     expect(screen.getByText(/origin not stated/i)).toBeInTheDocument();
+  });
+
+  it('states the unit once in the popover, hides empty rows and the illustrative tag, and wraps no steward code path', () => {
+    render(
+      <MetricProvenanceBadge
+        metric={metric({ dataOrigin: 'fixture', formattedValue: '12 days', unit: 'days', semanticDefinitionVersion: '' })}
+        displayMode="badge"
+      />,
+    );
+    fireEvent.click(screen.getByText('12 days'));
+    expect(screen.queryAllByText(/^days$/)).toHaveLength(0); // the unit is part of "12 days", not repeated
+    expect(screen.queryByText('Semantic Version')).not.toBeInTheDocument();
+    expect(screen.queryByText('Business Steward')).not.toBeInTheDocument(); // same string as the engine
+    expect(screen.queryByText('[ILLUSTRATIVE]')).not.toBeInTheDocument();
+    expect(screen.getByText('Calculation Engine')).toBeInTheDocument();
   });
 });

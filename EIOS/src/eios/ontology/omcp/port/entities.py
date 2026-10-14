@@ -15,12 +15,16 @@ from eios.common.validation import StrictModel
 from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode
 
 _ID = re.compile(r"[A-Z0-9][A-Z0-9_-]{1,31}")
+_NUMBER = re.compile(r"(?:(PARTNER|ACCOUNT)[\s#-]*)?(\d{2,10})")
 _ALIASES_PATH = Path(__file__).with_name("aliases.yaml")
 
 
 class EntityKind(StrEnum):
     PARTNER = "partner"
     ACCOUNT = "account"
+
+
+_KIND_WORDS = {"PARTNER": EntityKind.PARTNER, "ACCOUNT": EntityKind.ACCOUNT}
 
 
 class Entity(StrictModel):
@@ -53,6 +57,9 @@ class EntityDirectory:
 
     def resolve(self, raw: str, kind: EntityKind | None = None) -> Entity:
         text = raw.strip().upper() if isinstance(raw, str) else ""
+        numbered = _NUMBER.fullmatch(text)
+        if numbered:
+            return self._by_number(text, numbered.group(2), numbered.group(1), kind)
         if not _ID.fullmatch(text):
             raise PortError(
                 ToolErrorCode.INVALID_ARGUMENTS, "an entity id is required, not free text"
@@ -64,6 +71,24 @@ class EntityDirectory:
                 ToolErrorCode.NOT_FOUND, f"no {kind.value if kind else 'entity'} '{text}'"
             )
         return Entity(entity_id=entity_id, kind=found)
+
+    def _by_number(
+        self, text: str, digits: str, word: str | None, kind: EntityKind | None
+    ) -> Entity:
+        """ "partner 882" or "882": the one entity whose number is that; none or several is not found."""
+        wanted = _KIND_WORDS[word] if word else kind
+        matches = [
+            (entity_id, found)
+            for entity_id, found in self._canonical.items()
+            if re.sub(r"\D", "", entity_id).lstrip("0") == digits.lstrip("0")
+            and (wanted is None or found is wanted)
+            and (kind is None or found is kind)
+        ]
+        if len(matches) != 1:
+            raise PortError(
+                ToolErrorCode.NOT_FOUND, f"no {wanted.value if wanted else 'entity'} '{text}'"
+            )
+        return Entity(entity_id=matches[0][0], kind=matches[0][1])
 
 
 @cache

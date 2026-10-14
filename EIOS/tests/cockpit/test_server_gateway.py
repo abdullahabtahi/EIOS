@@ -10,6 +10,12 @@ from fastapi.testclient import TestClient
 from eios.cockpit.server import app
 
 
+@pytest.fixture(autouse=True)
+def _legacy_copilot(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These tests cover the legacy copilot, which the ADK assistant now replaces as the default."""
+    monkeypatch.setenv("EIOS_ASSISTANT_RUNTIME", "legacy")
+
+
 @pytest.fixture
 def client():
     return TestClient(app)

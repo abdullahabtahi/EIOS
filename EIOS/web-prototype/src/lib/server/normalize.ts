@@ -107,11 +107,18 @@ export function normalizeProposal(raw: Raw): AssistantProposal | undefined {
   };
 }
 
+/** "partner.signals:PTR-723:days_to_intervention_deadline" reads "days to intervention deadline". */
+export function metricLabel(id: string): string {
+  if (!/[:._[\]]/.test(id)) return id;
+  const last = id.split(':').pop()!.split('.').pop()!;
+  return last.replace(/\[\d*\]/g, '').replace(/_(usd|pct)$/i, '').replace(/_/g, ' ').trim() || id;
+}
+
 /** Normalize the backend's copilot citation rows. The as-of is the one the engine recorded. */
 export function normalizeCitedMetric(raw: Raw, index: number): MetricProvenance {
   return {
     metricId: text(raw.metricId ?? raw.metric_id, `M-COPILOT-${index + 1}`),
-    name: text(raw.name ?? raw.metric_id, 'Canonical Metric'),
+    name: metricLabel(text(raw.name ?? raw.metric_id, 'Canonical Metric')),
     rawValue: Number(raw.rawValue ?? raw.raw_value ?? 0),
     formattedValue: text(raw.formattedValue ?? raw.formatted_value, String(raw.rawValue ?? raw.raw_value ?? '')),
     unit: text(raw.unit),

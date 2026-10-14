@@ -267,7 +267,7 @@ export const DOSSIER_AML_SYNDICATE: CopilotDossier = {
       projectedReturn: 'Prevents $845K illicit capital flight',
       projectedRisk: 'Low false-positive risk (<0.05% with CGNAT filter)',
       confidenceScore: 0.96,
-      downsideSensitivity: 'Immediate escalation to MLRO required under Principle II',
+      downsideSensitivity: 'Immediate escalation to MLRO required',
       evidenceCitations: ['realized_deposit_volume_30d_usd'],
     },
   ],

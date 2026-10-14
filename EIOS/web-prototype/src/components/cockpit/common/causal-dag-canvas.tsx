@@ -86,7 +86,7 @@ export function CausalDagCanvas() {
             </h3>
           </div>
           <p className="text-label text-slate-500 mt-0.5 font-sans">
-            Constitution Principle III: Refuter-passed causal vectors vs observational correlations.
+            Refuter-passed causal vectors vs observational correlations.
           </p>
         </div>
 

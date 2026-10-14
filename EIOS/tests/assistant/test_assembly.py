@@ -56,12 +56,12 @@ def test_units_are_rendered_beside_the_figure(fact_id: str, expected: str) -> No
     assert expected in out.text
 
 
-def test_demo_data_and_as_of_are_stated_once_not_per_figure() -> None:
+def test_as_of_is_stated_once_not_per_figure() -> None:
     out = _assemble(
         "{{fact:aml.dossier:AC-1:discrepancy_multiplier}} and {{fact:aml.dossier:AC-1:exposure_usd}}."
     )
     assert isinstance(out, Assembled)
-    assert out.text.lower().count("demo data") == 1
+    assert out.text.count("as of") == 1
     assert "2026-10-14" in out.text
 
 
@@ -211,3 +211,22 @@ def test_a_tier_number_is_a_figure_the_model_may_not_type() -> None:
     out = assemble_draft("PTR-882 is a Tier 1 Super partner.", facts=FACTS)
     assert isinstance(out, Rejected)
     assert "Tier 1" in out.problems[0]
+
+
+def test_the_footer_gives_the_as_of_time_and_does_not_label_the_data_as_demo() -> None:
+    out = _assemble("Exposure is {{fact:aml.dossier:AC-1:exposure_usd}}.")
+    assert isinstance(out, Assembled)
+    assert out.text.endswith("_as of 2026-10-14 09:30 UTC._")
+    assert "demo" not in out.text.lower() and "fixture" not in out.text.lower()
+
+
+def test_a_name_with_digits_that_a_tool_returned_is_accepted_but_a_typed_figure_is_not() -> None:
+    names = frozenset({"Medellin P2P Payment Ring", "P2P", "Volatility 100"})
+    ok = assemble_draft(
+        "Medellin P2P Payment Ring is hit by Volatility 100 trouble.", facts={}, identifiers=names
+    )
+    assert isinstance(ok, Assembled)
+    typed = assemble_draft(
+        "Medellin P2P Payment Ring lost 100 clients.", facts={}, identifiers=names
+    )
+    assert isinstance(typed, Rejected)

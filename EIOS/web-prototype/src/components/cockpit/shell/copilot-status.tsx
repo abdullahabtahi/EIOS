@@ -2,14 +2,13 @@
 
 /**
  * What the answer says about itself. The ADK assistant does not run the Metric Auditor Gate: it fills every figure
- * in from a governed result and reports one of four statuses. A legacy copilot answer has no status and keeps the
- * Metric Auditor Gate reading. Nothing here calls an answer "audit passed" unless the backend's audit did.
+ * in from a governed result and reports one of four statuses. A clean answer shows no banner; only a blocked,
+ * failed-closed or unavailable answer does. A legacy copilot answer has no status and keeps the Metric Auditor Gate
+ * reading. Nothing here calls an answer "audit passed" unless the backend's audit did.
  */
 
 import * as React from 'react';
-import type { CopilotQueryResponse, DataOrigin } from '../state/cockpit-types';
-import { Chip } from '../ui/chip';
-import { formatUtcTimestamp } from '@/lib/utils';
+import type { CopilotQueryResponse } from '../state/cockpit-types';
 
 type Tone = 'ok' | 'warn' | 'bad';
 
@@ -19,9 +18,6 @@ const TONE_BOX: Record<Tone, string> = {
   bad: 'bg-cx-bad-bg border-cx-bad-line text-cx-bad',
 };
 
-export const originLabel = (origin: DataOrigin | undefined): string | null =>
-  origin === 'fixture' ? 'Demo data' : origin === 'live' ? 'Live data' : null;
-
 interface Banner {
   tone: Tone;
   icon: string;
@@ -30,18 +26,9 @@ interface Banner {
 }
 
 function bannerOf(r: CopilotQueryResponse): Banner | null {
-  const figures = r.citedMetrics?.length ?? 0;
   switch (r.assistantStatus) {
     case 'ASSEMBLED':
-      return {
-        tone: 'ok',
-        icon: 'fact_check',
-        title: 'FIGURES FILLED FROM GOVERNED DATA',
-        detail:
-          (figures > 0
-            ? `${figures} figure${figures === 1 ? '' : 's'} inserted by the system from governed tool results of this turn. `
-            : 'This answer carries no figures. ') + 'The Metric Auditor Gate did not run on this path.',
-      };
+      return null; // a clean answer needs no banner; the figures carry their own provenance
     case 'BLOCKED':
       return {
         tone: 'bad',
@@ -74,7 +61,6 @@ function bannerOf(r: CopilotQueryResponse): Banner | null {
 export function AnswerStatusBanner({ response }: { response: CopilotQueryResponse }) {
   const banner = bannerOf(response);
   if (!banner) return null;
-  const origin = response.assistantStatus === 'ASSEMBLED' ? originLabel(response.dataOrigin) : null;
   return (
     <div className={`p-2.5 border flex items-center justify-between gap-3 text-xs font-mono ${TONE_BOX[banner.tone]}`}>
       <div className="flex items-center gap-2">
@@ -86,25 +72,7 @@ export function AnswerStatusBanner({ response }: { response: CopilotQueryRespons
           <div className="text-label opacity-90">{banner.detail}</div>
         </div>
       </div>
-      {origin && <Chip tone={response.dataOrigin === 'fixture' ? 'warn' : 'ok'}>{origin}</Chip>}
     </div>
-  );
-}
-
-/** One line per figure: what it is, where it came from and when. The popover on the badge has the rest. */
-export function FigureSources({ response }: { response: CopilotQueryResponse }) {
-  const rows = (response.citedMetrics ?? []).filter((m) => m.dataOrigin !== undefined || m.originEngine);
-  if (response.assistantStatus !== 'ASSEMBLED' || rows.length === 0) return null;
-  return (
-    <ul className="space-y-0.5 text-label font-mono text-slate-500">
-      {rows.map((m) => (
-        <li key={m.metricId} data-testid={`figure-source-${m.metricId}`}>
-          <span className="text-slate-800">{m.formattedValue}</span> · {m.originEngine} · as of{' '}
-          {formatUtcTimestamp(m.asOfTimestamp)}
-          {originLabel(m.dataOrigin) ? ` · ${originLabel(m.dataOrigin)!.toLowerCase()}` : ''}
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -138,9 +106,6 @@ export function LegacyAuditBanner({ response }: { response: CopilotQueryResponse
               <span className="material-symbols-sharp text-base">verified_user</span>
               <div>
                 <span className="font-bold tracking-tight">SYSTEM GUIDANCE: QUALITATIVE PROVENANCE VERIFIED</span>
-                <div className="text-label opacity-90">
-                  Principle I & III: Zero unanchored claims. Institutional capability explanation.
-                </div>
               </div>
             </div>
             <span className="px-2 py-0.5 bg-white/80 border border-current text-label font-bold">

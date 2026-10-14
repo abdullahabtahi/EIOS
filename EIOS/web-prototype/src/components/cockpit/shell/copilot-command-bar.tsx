@@ -13,7 +13,8 @@ import { useCockpit } from '../state/cockpit-context';
 import { CopilotQueryResponse, ActionIntentCard, AssistantProposal } from '../state/cockpit-types';
 import { MetricProvenanceBadge } from '../common/metric-provenance';
 import { CopilotWorking } from './copilot-working';
-import { AnswerStatusBanner, FigureSources, LegacyAuditBanner } from './copilot-status';
+import { SimpleMarkdown } from '../common/simple-markdown';
+import { AnswerStatusBanner, LegacyAuditBanner } from './copilot-status';
 import { ProposalCard, ProposalState } from './copilot-proposals';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -35,9 +36,8 @@ interface ConversationTurn {
 
 const PRESET_QUERIES = [
   'What can you do?',
-  'What is the LatAm spread impact across top 3 brokers?',
-  'Why did churn risk increase on partner 882?',
-  'Run DoWhy Refuter check on fee shock elasticity',
+  'What is EIOS?',
+  'Why is partner 882 at risk?',
   'Check CR84920 for AML structuring',
 ];
 
@@ -277,33 +277,28 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                       )}
 
                       {/* Natural Language Narrative Synthesis */}
-                      <div className="text-xs leading-relaxed text-slate-800 whitespace-pre-wrap font-sans">
-                        {turn.response.responseMarkdown}
-                      </div>
-
-                      {turn.response.steps && turn.response.assistantStatus === 'ASSEMBLED' && turn.response.steps.length > 0 && (
-                        <div className="text-label font-mono text-slate-500">
-                          Governed tools used: {turn.response.steps.join(', ')}
-                        </div>
-                      )}
+                      <SimpleMarkdown
+                        source={turn.response.responseMarkdown}
+                        className="text-xs leading-relaxed text-slate-800 font-sans"
+                      />
 
                       {/* Cited Provenance Badges */}
                       {(turn.response.citedMetrics ?? []).length > 0 && (
                         <div className="pt-2 border-t border-slate-100 space-y-1.5">
                           <div className="text-label font-mono uppercase tracking-wider text-slate-500">
-                            {turn.response.assistantStatus
-                              ? 'Figures from governed data:'
-                              : 'Anchored Semantic Metrics (Principle I Provenance):'}
+                            Figures from governed data:
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {(turn.response.citedMetrics ?? []).map((m) => (
-                              <MetricProvenanceBadge key={m.metricId} metric={m} displayMode="badge" />
+                              <div key={m.metricId} className="flex flex-col gap-0.5">
+                                <span className="text-label text-slate-500 capitalize">{m.name}</span>
+                                <MetricProvenanceBadge metric={m} displayMode="badge" />
+                              </div>
                             ))}
                           </div>
                         </div>
                       )}
 
-                      <FigureSources response={turn.response} />
 
                       {(turn.response.proposals ?? []).map((proposal) => (
                         <ProposalCard
@@ -369,7 +364,7 @@ export function CopilotCommandBar({ forceOpen }: CopilotCommandBarProps) {
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask Copilot or type institutional command (e.g. 'What is the LatAm spread impact?')..."
+                placeholder="Ask Copilot or type institutional command (e.g. 'Why is partner 882 at risk?')..."
                 className="w-full pl-10 pr-28 py-2.5 bg-white border border-slate-300 text-slate-900 text-xs font-mono placeholder:font-sans placeholder:text-slate-400 focus:outline-none focus:border-blue-600 rounded-none shadow-inner"
               />
               <button

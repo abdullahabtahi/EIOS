@@ -14,6 +14,12 @@ from eios.conversation.models import OperatorRole as EngineRole
 PATH = "/api/cockpit/copilot/query"
 
 
+@pytest.fixture(autouse=True)
+def _legacy_copilot(monkeypatch: pytest.MonkeyPatch) -> None:
+    """These tests cover the legacy copilot, which the ADK assistant now replaces as the default."""
+    monkeypatch.setenv("EIOS_ASSISTANT_RUNTIME", "legacy")
+
+
 @pytest.fixture
 def seen(monkeypatch: pytest.MonkeyPatch) -> list[dict[str, Any]]:
     calls: list[dict[str, Any]] = []

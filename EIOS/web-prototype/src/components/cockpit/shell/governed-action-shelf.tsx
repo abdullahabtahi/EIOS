@@ -48,7 +48,7 @@ export function GovernedActionShelf() {
     <>
       <section
         aria-label="Governed Action Shelf"
-        title="Two-phase commit: nothing executes without a signed, dual-approved intent (Principle II)"
+        title="Two-phase commit: nothing executes without a signed, dual-approved intent"
         className="relative w-full bg-white border-t border-slate-300 text-slate-900 z-40 shrink-0"
       >
         {/* Slim status bar: always visible, ~36px */}

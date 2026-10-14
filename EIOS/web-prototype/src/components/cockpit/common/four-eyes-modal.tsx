@@ -47,7 +47,7 @@ function FourEyesForm({ action, operatorId, onClose, onApproved }: FourEyesFormP
             <DialogTitle className="text-sm font-bold tracking-tight uppercase font-mono">
               Four-Eyes Authorization
             </DialogTitle>
-            <p className="text-label text-slate-400 mt-0.5">Constitution Principle II • State-change gate</p>
+            <p className="text-label text-slate-400 mt-0.5">State-change gate</p>
           </div>
         </div>
         <span className="px-2 py-0.5 bg-rose-950 border border-rose-500 text-rose-300 font-mono text-label font-bold">

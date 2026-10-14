@@ -1,0 +1,6 @@
+- {scenario_id: small_talk_greeting, workstation: executive, split: dev, description: "A greeting gets a greeting, no tool and no figure.",
+   turns: [{turn_index: 1, user_query: "hey", max_rounds: 1}]}
+- {scenario_id: small_talk_what_is_eios, workstation: partner_manager, split: dev, description: "An explanation of the product, no tool and no figure.",
+   turns: [{turn_index: 1, user_query: "what is eios?", max_rounds: 1}]}
+- {scenario_id: small_talk_capabilities, workstation: aml_investigator, split: dev, description: "What the assistant can do, no tool and no figure.",
+   turns: [{turn_index: 1, user_query: "What can you do?", max_rounds: 1}]}

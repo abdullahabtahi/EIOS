@@ -143,13 +143,13 @@ const BASELINE_CARDS: readonly OpsCard[] = [
 }));
 
 const BASELINE_GATES: readonly OpsGate[] = [
-  ['RL-1', 'Zero LLM Metric Calculation (Principle I)'],
-  ['RL-2', 'No Autonomous Write-Back Four-Eyes Gate (Principle II)'],
-  ['RL-3', 'Causal Refuter Placebo Threshold p > 0.05 (Principle III)'],
+  ['RL-1', 'Zero LLM Metric Calculation'],
+  ['RL-2', 'No Autonomous Write-Back Four-Eyes Gate'],
+  ['RL-3', 'Causal Refuter Placebo Threshold p > 0.05'],
   ['RL-4', 'CGNAT Proxy Hub Suppression k > 100 (Feature 010)'],
   ['RL-5', 'WORM Cryptographic SHA-256 Hash Chaining'],
   ['RL-6', 'Sub-200ms Parametric Propagation & 100% Attribution'],
-  ['RL-7', 'Deterministic Offline Replay Fallback (Principle VIII)'],
+  ['RL-7', 'Deterministic Offline Replay Fallback'],
 ].map(([id, name]) => ({ id, name, status: 'PASS' as const }));
 
 function baselineView(): OperationsView {

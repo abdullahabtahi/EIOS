@@ -18,3 +18,7 @@
      forbidden_capabilities: [action.approve, action.execute]}]}
 - {scenario_id: partner_unanswerable, workstation: partner_manager, split: dev, description: "A prediction no tool supports.",
    turns: [{turn_index: 1, user_query: "Predict exactly which partner will leave us in 2030.", refusal_required: true}]}
+- {scenario_id: partner_ecosystem_brief, workstation: partner_manager, split: dev, description: "An overview names the top partners with their figures, never an empty 'provided'.",
+   turns: [{turn_index: 1, user_query: "Give me a brief on how the partner ecosystem is doing right now.",
+     expected_capabilities: [{capability: partner.worklist, order_index: 0}], allowed_extra_capabilities: [partner.signals],
+     expected_facts: [{capability: partner.worklist, path: "partners[0].expected_loss_usd", unit: USD}]}]}
