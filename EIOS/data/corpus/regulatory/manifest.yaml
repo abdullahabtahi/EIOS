@@ -39,7 +39,7 @@ documents:
     bytes: 3569758
     sha256: 9d3ceff18cb2204ffe908dbb84fb05960f1c5eb11c6e3a7d9ebe2ad05d7e13e3
     text_layer: true
-    licence_state: unverified
+    licence_state: accepted_for_prototype
     serves: [aml_investigator]
     use: STR obligations and timing (Chapter 5), customer due diligence, risk assessment, record keeping; cited in dossiers and SAR drafts
     status: acquired
@@ -55,7 +55,7 @@ documents:
     bytes: 371404
     sha256: bdd77e39cecd4b2c2f81a17202bbe313ed6f669fa86f3f376ea7e69b3208c707
     text_layer: true
-    licence_state: unverified
+    licence_state: accepted_for_prototype
     serves: [aml_investigator, compliance_auditor]
     use: Legal basis for reporting duties and the obligations the Implementing Procedures interpret
     status: acquired
@@ -71,7 +71,7 @@ documents:
     bytes: 1956411
     sha256: adf3b5e81bd8199d434ae7692f725fd75fc0e01be7f1a39f07d0d3b22bd046ad
     text_layer: true
-    licence_state: unverified
+    licence_state: accepted_for_prototype
     serves: [aml_investigator]
     use: Labuan reporting duties, suspicious transaction reporting, risk-based approach, targeted financial sanctions
     status: acquired
@@ -87,7 +87,7 @@ documents:
     bytes: 119869
     sha256: a319518eda1ab001301cc0f453a12885b8ea9980a270ceaf9b373496d79d8be3
     text_layer: true
-    licence_state: unverified
+    licence_state: accepted_for_prototype
     serves: [aml_investigator]
     use: Published red-flag indicators for digital financial services; explains why an alert is suspicious
     status: acquired
@@ -103,11 +103,11 @@ documents:
     bytes: 102736
     sha256: 483dc7f25068d1c70eab2b2af2d4fd167a5abe4f7e51542e6901badbd7de39eb
     text_layer: false
-    licence_state: unverified
+    licence_state: accepted_for_prototype
     serves: [aml_investigator]
     use: Red-flag indicators for the Labuan international business and financial centre
-    status: acquired
-    note: Image-only PDF with no text layer; needs OCR at ingestion
+    status: dropped_by_user
+    note: "Dropped from v1 by the user (2026-10-15): two pages, image-only. Re-acquire with status acquired to add it back; the layout parser OCRs scans."
 
   - id: US-FINCEN-NARR-2003
     title: Guidance on Preparing a Complete and Sufficient Suspicious Activity Report Narrative
@@ -132,11 +132,11 @@ documents:
     kind: international_standard
     source_url: https://www.fatf-gafi.org/en/publications/Fatfrecommendations/Fatf-recommendations.html
     version_note: Current consolidated text; the PDF link on that page must be downloaded manually
-    licence_state: unverified
+    licence_state: accepted_for_prototype
     serves: [aml_investigator, executive]
     use: Baseline standard cited by both regulators (Recommendation 20 on suspicious transaction reporting; Recommendation 10 on customer due diligence)
     status: deferred_by_user
-    note: Scripted download returned HTTP 403 (access control) and was not worked around. User decision 2026-10-14: leave out of v1. To add later, save the PDF as raw/FATF-REC.pdf and record its sha256 here
+    note: "Scripted download returned HTTP 403 (access control) and was not worked around. User decision 2026-10-14: leave out of v1. To add later, save the PDF as raw/FATF-REC.pdf and record its sha256 here"
 
 deferred:
   - item: FATF high-risk and increased-monitoring jurisdiction lists

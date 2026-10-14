@@ -16,6 +16,7 @@ _PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*(?:percent|%)", re.IGNORECASE)
 
 @dataclass
 class Found:
+    question: str
     account: str | None
     partner: str | None
     percent: float | None
@@ -38,6 +39,7 @@ def extract(question: str, context: dict[str, Any] | None) -> Found:
     percent = _PERCENT.search(question)
     on_screen = (context or {}).get("entity_id")
     return Found(
+        question=question,
         account=account.group(0)
         if account
         else (on_screen if str(on_screen).upper().startswith("CR") else None),
@@ -58,6 +60,21 @@ def _part(f: Found) -> dict[str, Any] | None:
 
 def _none(_f: Found) -> dict[str, Any]:
     return {}
+
+
+_JURISDICTIONS = (
+    ("MT", re.compile(r"malta|maltese|\bfiau\b|pmlftr", re.IGNORECASE)),
+    ("LB", re.compile(r"labuan", re.IGNORECASE)),
+)
+
+
+def _regulation(f: Found) -> dict[str, Any]:
+    """The question as the search query, narrowed to a regulator only when the question names one."""
+    args: dict[str, Any] = {"query": f.question}
+    for code, pattern in _JURISDICTIONS:
+        if pattern.search(f.question):
+            args["jurisdiction"] = code
+    return args
 
 
 def _cheapest_deal(f: Found) -> dict[str, Any] | None:
@@ -119,6 +136,10 @@ ROUTES: tuple[Route, ...] = (
     _r(r"what happens|what if|cut", ("run_what_if", _what_if)),
     _r(r"causing|causal|\bcause\b", ("get_causal_evidence", _none)),
     _r(r"net revenue", ("get_metric", _revenue)),
+    _r(
+        r"regulat|guideline|circular|\bfiau\b|labuan|red.?flag|filing threshold",
+        ("search_regulations", _regulation),
+    ),
     _r(r"hash chain|verify", ("verify_chain", _none)),
     _r(r"staged action|intent", ("get_intent_status", _none)),
     _r(r"ledger", ("get_ledger_timeline", _none), unless=r"verify|hash chain"),

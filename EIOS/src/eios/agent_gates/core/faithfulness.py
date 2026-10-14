@@ -3,7 +3,8 @@
 ALGORITHM (research R-2). A deterministic, claim-level check; no model is called.
 
 1. Mask text that is not a claim about the data (`exempt.py`): dates, versions, legal citations, period
-   labels, grounded identifiers, structure counts, list markers. An identifier nothing produced is reported
+   labels, grounded identifiers, structure counts, list markers, and a quoted passage of a regulation that a tool
+   result of the turn contains word for word (`quotes.py`). An identifier nothing produced is reported
    as unsupported (`ungrounded_identifier`), so an invented account number cannot hide behind its digits.
 2. Extract every remaining figure (`figures.py`): value in base units, unit family, period, the precision it
    states, and the words around it.
@@ -35,6 +36,7 @@ from typing import Any
 from .exempt import find_exempt
 from .facts import Fact, flatten_facts
 from .figures import Figure, extract_figures
+from .quotes import verified_quotes
 from .text import DERIVED_WORDS
 
 _COMPATIBLE = {
@@ -256,7 +258,8 @@ def judge(
     """Judge the answer in a Turn Record (its JSON form) against the tool results it received."""
     answer = str(record.get("answer", ""))
     exempt, ungrounded = find_exempt(answer, _grounded_identifiers(record))
-    masked = [(s.start, s.end) for s in exempt + ungrounded]
+    quotes = verified_quotes(answer, record.get("tool_calls", []))
+    masked = [(s.start, s.end) for s in exempt + ungrounded] + quotes
     facts = flatten_facts(record.get("tool_calls", []), aliases)
     figures = extract_figures(answer, masked)
     bindings = record.get("bindings")
@@ -267,6 +270,10 @@ def judge(
     )
     verdicts = [
         FigureVerdict(s.text, s.start, s.end, "exempt", f"exempt:{s.category}") for s in exempt
+    ]
+    verdicts += [
+        FigureVerdict(answer[a:b].strip(), a, b, "exempt", "exempt:verified_quote")
+        for a, b in quotes
     ]
     verdicts += [
         FigureVerdict(s.text, s.start, s.end, "unsupported", "ungrounded_identifier")

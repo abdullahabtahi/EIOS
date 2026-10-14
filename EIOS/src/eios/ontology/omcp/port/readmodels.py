@@ -18,6 +18,7 @@ from eios.cockpit.partner_readmodel import PartnerReadModel
 from eios.flywheel.diagnostics import CalibrationDiagnosticsEngine
 from eios.flywheel.ledger import DecisionOutcomesLedger
 from eios.hardening.runbooks import RunbookVerificationEngine
+from eios.knowledge.passage import RegulationIndex
 from eios.observability.slo_engine import SLOMonitoringEngine
 from eios.ontology.omcp.port.contracts import DataOrigin
 from eios.ontology.omcp.port.entities import EntityDirectory, build_directory
@@ -46,6 +47,9 @@ class ReadModels:
         DataOrigin.FIXTURE
     )  # where the partner read model's numbers come from
     facts: FactResolver = field(default_factory=FactResolver)
+    knowledge: RegulationIndex | None = (
+        None  # the regulatory corpus; None until an index is configured
+    )
 
     @classmethod
     def default(cls) -> ReadModels:
@@ -60,6 +64,7 @@ class ReadModels:
         aml_origin: DataOrigin = DataOrigin.FIXTURE,
         compliance: ComplianceExplorerService | None = None,
         partner: PartnerReadModel | None = None,
+        knowledge: RegulationIndex | None = None,
     ) -> ReadModels:
         """Read models over the given AML plane (and partner plane and ledger, when given); the rest is built fresh."""
         partners: PartnerReadModel = partner or PartnerWorkstationService()
@@ -77,4 +82,5 @@ class ReadModels:
             clock=clock,
             aml_origin=aml_origin,
             partner_origin=DataOrigin.ENGINE if partner is not None else DataOrigin.FIXTURE,
+            knowledge=knowledge,
         )

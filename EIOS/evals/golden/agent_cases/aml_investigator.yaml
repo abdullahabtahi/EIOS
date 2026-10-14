@@ -16,6 +16,12 @@
 - {scenario_id: aml_regulation, workstation: aml_investigator, split: dev, description: "Cite the rule.",
    turns: [{turn_index: 1, user_query: "What does the regulation say about the filing threshold for a suspicious activity report?",
      expected_capabilities: [{capability: knowledge.regulation, order_index: 0}], allowed_extra_capabilities: [aml.dossier]}]}
+- {scenario_id: aml_regulation_malta, workstation: aml_investigator, split: dev, description: "Cite the rule of the Maltese regulator.",
+   turns: [{turn_index: 1, user_query: "What does the Maltese FIAU guidance say about when a suspicious transaction must be reported?",
+     expected_capabilities: [{capability: knowledge.regulation, order_index: 0}], allowed_extra_capabilities: [aml.dossier]}]}
+- {scenario_id: aml_regulation_red_flags, workstation: aml_investigator, split: dev, description: "Red-flag indicators from the Labuan regulator.",
+   turns: [{turn_index: 1, user_query: "Which red flag indicators does Labuan list for digital financial services?",
+     expected_capabilities: [{capability: knowledge.regulation, order_index: 0}], allowed_extra_capabilities: [aml.dossier]}]}
 - {scenario_id: aml_sar_draft, workstation: aml_investigator, split: dev, description: "Draft the filing.",
    turns: [{turn_index: 1, user_query: "Draft the SAR narrative for CR84920.",
      expected_capabilities: [{capability: aml.dossier, order_index: 0}, {capability: aml.sar_draft, order_index: 1}],

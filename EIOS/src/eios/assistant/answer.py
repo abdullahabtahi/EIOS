@@ -23,10 +23,23 @@ class FigureRef(StrictModel):
     text: str
 
 
+class SourceRef(StrictModel):
+    """One passage shown in the answer: the document, where in it, and the text as the regulator wrote it."""
+
+    passage_id: str
+    document_id: str
+    title: str
+    jurisdiction: str
+    pages: str
+    text: str
+    data_origin: DataOrigin
+
+
 class Answer(StrictModel):
     text: str
     figures: tuple[FigureRef, ...] = ()
     citations: tuple[str, ...] = ()  # the sources of the results the figures came from
+    sources: tuple[SourceRef, ...] = ()  # passages quoted in the text, in order of appearance
     proposed_actions: tuple[dict[str, Any], ...] = ()
     view_commands: tuple[
         dict[str, Any], ...

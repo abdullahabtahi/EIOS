@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 import pytest
 
 from eios.assistant.config import AssistantSettings
@@ -13,9 +15,9 @@ SETTINGS = AssistantSettings.from_env(
 
 
 def make_runtime(
-    steps: list[Step], settings: AssistantSettings = SETTINGS, sessions=None
+    steps: list[Step], settings: AssistantSettings = SETTINGS, sessions=None, knowledge=None
 ) -> tuple[AssistantRuntime, ScriptedLlm]:
-    models = ReadModels.default()
+    models = replace(ReadModels.default(), knowledge=knowledge)
     port = build_port(models)
     llm = ScriptedLlm(steps=steps)
     runtime = AssistantRuntime(

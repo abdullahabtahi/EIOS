@@ -96,7 +96,9 @@ def render_result(title: str, payload: dict[str, Any]) -> list[str]:
         if isinstance(value, list):
             items = [v for v in value if isinstance(v, dict)]
             lines += [f"- {_label(key)}: {_item(i, key, units)}" for i in items]
-            if value and not items:
+            if value and not items and payload.get("untrusted"):
+                lines.append(f"- {_label(key)}: {len(value)} untrusted text item(s), not repeated")
+            elif value and not items:
                 lines.append(f"- {_label(key)}: {', '.join(map(str, value))}")
             continue
         name = payload["metric_id"] if key == "value" and "metric_id" in payload else key

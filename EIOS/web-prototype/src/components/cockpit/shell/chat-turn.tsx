@@ -9,6 +9,7 @@ import { SimpleMarkdown } from '../common/simple-markdown';
 import { AnswerStatusBanner } from './copilot-status';
 import { CopilotWorking } from './copilot-working';
 import { ProposalCard, ProposalState } from './copilot-proposals';
+import { SourceChips } from './source-chips';
 
 export interface ChatTurn {
   kind: 'turn';
@@ -94,6 +95,7 @@ export function ChatTurnView({ turn, proposalStates, onStage, onShowInDossier }:
           />
 
           {figures.length > 0 && <FigureBadges figures={figures} />}
+          <SourceChips sources={response.sources ?? []} />
 
           {(response.proposals ?? []).map((proposal) => (
             <ProposalCard

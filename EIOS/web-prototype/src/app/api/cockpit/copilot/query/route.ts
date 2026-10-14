@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CopilotQueryResponse } from '@/components/cockpit/state/cockpit-types';
+import { AnswerSource, CopilotQueryResponse } from '@/components/cockpit/state/cockpit-types';
 
 import { backendUnavailable, callBackend, relayError } from '@/lib/server/backend';
 import {
@@ -7,6 +7,7 @@ import {
   dataOriginOf,
   normalizeCitedMetric,
   normalizeProposal,
+  normalizeSource,
 } from '@/lib/server/normalize';
 
 // A live Gemini turn with tool calls can take well over the default proxy timeout.
@@ -46,12 +47,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ detail: 'EIOS backend returned an answer with no readable status' }, { status: 502 });
   }
   const rawProposals: Record<string, unknown>[] = Array.isArray(data.proposals) ? data.proposals : [];
+  const rawSources: unknown[] = Array.isArray(data.sources) ? data.sources : [];
 
   const normalized: CopilotQueryResponse = {
     queryId: data.queryId ?? `qry_${Date.now()}`,
     naturalLanguageQuery: data.query || query,
     responseMarkdown: data.response ?? '',
     citedMetrics: rawCitations.map(normalizeCitedMetric),
+    sources: rawSources.map(normalizeSource).filter((s): s is AnswerSource => s !== undefined),
     assistantStatus,
     blocked: data.blocked === true,
     blockReason: typeof data.block_reason === 'string' ? data.block_reason : undefined,

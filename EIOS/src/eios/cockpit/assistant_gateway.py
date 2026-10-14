@@ -122,6 +122,18 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
             }
             for figure in answer.figures
         ],
+        "sources": [
+            {
+                "passage_id": source.passage_id,
+                "document_id": source.document_id,
+                "title": source.title,
+                "jurisdiction": source.jurisdiction,
+                "pages": source.pages,
+                "text": source.text,
+                "data_origin": source.data_origin.value,
+            }
+            for source in answer.sources
+        ],
         "turn_latency_ms": outcome.latency_ms,
         "blocked": answer.blocked,
         "block_reason": answer.block_reason,

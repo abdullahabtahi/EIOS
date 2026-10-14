@@ -77,11 +77,23 @@ def _context(request: LlmRequest) -> dict[str, Any]:
     return {"entity_id": match.group(1)} if match else {}
 
 
+def _quoted(payload: dict[str, Any]) -> str:
+    """A regulation result is shown by quoting its best passage; with no passage the draft says the corpus has no support."""
+    passages = payload.get("passages") or []
+    first = next((p for p in passages if isinstance(p, dict) and p.get("passage_id")), None)
+    if first is None:
+        return "The regulatory corpus has nothing that supports an answer to this question."
+    return f"The most relevant passage of the regulatory corpus:\n\n{{{{quote:{first['passage_id']}}}}}"
+
+
 def _draft(responses: list[tuple[str, dict[str, Any]]]) -> str:
     lines: list[str] = []
     for name, payload in responses:
         title = name.replace("_", " ").capitalize()
         error = payload.get("error")
+        if not error and payload.get("capability") == "knowledge.regulation":
+            lines.append(_quoted(payload))
+            continue
         if error:
             message = error.get("message", "unavailable") if isinstance(error, dict) else str(error)
             lines.append(f"{title}: {message}")

@@ -22,10 +22,18 @@ from eios.assistant.assembly import (
     MAX_ATTEMPTS,
     Assembled,
     TurnFact,
+    TurnPassage,
     assemble_draft,
     fail_closed_answer,
 )
-from eios.assistant.tools import FACTS_KEY, IDENTIFIERS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
+from eios.assistant.tools import (
+    FACTS_KEY,
+    IDENTIFIERS_KEY,
+    ORIGINS_KEY,
+    PASSAGES_KEY,
+    PROPOSALS_KEY,
+    SOURCES_KEY,
+)
 from eios.llm_gateway.providers.adk_types import Content, Part
 from eios.ontology.omcp.port.contracts import DataOrigin, weakest
 
@@ -63,6 +71,26 @@ def _turn_fact(fact_id: str, raw: dict[str, Any]) -> TurnFact:
     )
 
 
+def _turn_passages(raw: dict[str, Any]) -> dict[str, TurnPassage]:
+    """The regulation passages of this turn; one that cannot be read is dropped, so it cannot be quoted."""
+    passages: dict[str, TurnPassage] = {}
+    for passage_id, item in raw.items():
+        try:
+            passages[passage_id] = TurnPassage(
+                passage_id=passage_id,
+                document_id=item["document_id"],
+                title=item["title"],
+                jurisdiction=item["jurisdiction"],
+                pages=item["pages"],
+                text=item["text"],
+                data_origin=DataOrigin(item["data_origin"]),
+                highlight=str(item.get("highlight") or ""),
+            )
+        except KeyError, TypeError, ValueError:
+            logger.warning("dropping an unreadable turn passage: %s", passage_id)
+    return passages
+
+
 def final_event(author: str, answer: Answer, *, escalate: bool = True) -> Event:
     return Event(
         author=author,
@@ -81,11 +109,13 @@ class AnswerAssembler(BaseAgent):
             str(state.get(DRAFT_KEY, "")),
             facts=_turn_facts(state.get(FACTS_KEY, {})),
             identifiers=frozenset(state.get(IDENTIFIERS_KEY, [])),
+            passages=_turn_passages(state.get(PASSAGES_KEY, {})),
         )
         if isinstance(result, Assembled):
             answer = Answer(
                 text=result.text,
                 figures=result.figures,
+                sources=result.sources,
                 citations=tuple(dict.fromkeys(state.get(SOURCES_KEY, []))),
                 proposed_actions=tuple(state.get(PROPOSALS_KEY, [])),
                 data_origin=origin,

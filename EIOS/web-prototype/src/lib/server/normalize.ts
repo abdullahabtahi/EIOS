@@ -8,6 +8,7 @@
  */
 import type {
   ActionIntentCard,
+  AnswerSource,
   AssistantProposal,
   AssistantStatus,
   CaseExtras,
@@ -116,6 +117,24 @@ export function normalizeProposal(raw: Raw): AssistantProposal | undefined {
     source: text(raw.source),
     asOf: text(raw.as_of),
     stageRequest,
+  };
+}
+
+/** One quoted regulation passage. Without a passage id, a document and text it names no source, so it is dropped. */
+export function normalizeSource(raw: unknown): AnswerSource | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Raw;
+  const passageId = text(r.passage_id);
+  const body = text(r.text);
+  if (!passageId || !body || !text(r.title)) return undefined;
+  return {
+    passageId,
+    documentId: text(r.document_id),
+    title: text(r.title),
+    jurisdiction: text(r.jurisdiction),
+    pages: text(r.pages),
+    text: body,
+    dataOrigin: dataOriginOf(r.data_origin),
   };
 }
 

@@ -461,11 +461,23 @@ export interface AssistantProposal {
   stageRequest: StageRequest;
 }
 
+/** A passage of a regulation the answer quoted: the document, where in it, and the text as the regulator wrote it. */
+export interface AnswerSource {
+  passageId: string;
+  documentId: string;
+  title: string;
+  jurisdiction: string;
+  pages: string;
+  text: string;
+  dataOrigin?: DataOrigin;
+}
+
 export interface CopilotQueryResponse {
   queryId: string;
   naturalLanguageQuery: string;
   responseMarkdown: string;
   citedMetrics: MetricProvenance[];
+  sources?: AnswerSource[];
   assistantStatus: AssistantStatus;
   blocked: boolean;
   blockReason?: string;

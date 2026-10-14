@@ -1,0 +1,6 @@
+# Copy to terraform.tfvars (which is git-ignored and never committed) and replace every value.
+# All values below are placeholders, not real identifiers.
+project_id     = "REPLACE_ME_project_id"
+region         = "us-central1"
+search_members = [] # add "user:REPLACE_ME_email" to query the index from a local run
+ingest_members = [] # add "user:REPLACE_ME_email" to upload and import the corpus

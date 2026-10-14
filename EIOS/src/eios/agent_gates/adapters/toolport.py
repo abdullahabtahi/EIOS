@@ -7,8 +7,10 @@ impossible, and that the answer agrees with the screen. Identity is the verified
 """
 
 import time
+from dataclasses import replace
 from typing import Any
 
+from eios.agent_gates.adapters.offline_regulations import offline_index
 from eios.agent_gates.adapters.toolport_render import (
     REFUSAL,
     render_error,
@@ -21,6 +23,7 @@ from eios.agent_gates.records import DataOrigin, IdentitySource, ToolCall, ToolE
 from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.contracts import PortError
 from eios.ontology.omcp.port.principal import principal_for
+from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.service import GovernedToolPort
 
 UNTRUSTED_FLAG = "untrusted"
@@ -35,7 +38,8 @@ class ToolPortRuntime:
     offline = True
 
     def __init__(self, port: GovernedToolPort | None = None) -> None:
-        self._port = port or build_port()
+        # The reference run still exercises retrieval, on labelled test passages (never the acquired corpus).
+        self._port = port or build_port(replace(ReadModels.default(), knowledge=offline_index()))
 
     def run_turn(self, request: TurnRequest) -> TurnRecord:
         started = time.perf_counter()

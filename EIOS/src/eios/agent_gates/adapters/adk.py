@@ -10,12 +10,14 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
+from dataclasses import replace
 from typing import Any
 
 from google.adk.models.base_llm import BaseLlm
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 
 from eios.agent_gates.adapters.adk_offline import RuleLlm
+from eios.agent_gates.adapters.offline_regulations import offline_index
 from eios.agent_gates.port import TurnRequest, completed_record, inconclusive_record
 from eios.agent_gates.records import (
     Binding,
@@ -71,6 +73,10 @@ class AdkRuntime:
         models = (
             read_models()
         )  # the plane `EIOS_DATA_PLANE` names, so a plane is judged as the cockpit runs it
+        if (
+            offline and models.knowledge is None
+        ):  # the scripted run still exercises retrieval, on labelled test passages
+            models = replace(models, knowledge=offline_index())
         self._port = build_port(models)
         self._settings = AssistantSettings.from_env(
             {**_live_env(), "EIOS_ENVIRONMENT": _EVAL_ENVIRONMENT}
