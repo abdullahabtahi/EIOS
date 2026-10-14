@@ -19,7 +19,6 @@ from eios.assistant.assembler_agent import DRAFT_KEY, FEEDBACK_KEY, AnswerAssemb
 from eios.assistant.assembly import MAX_ATTEMPTS
 from eios.assistant.tools import build_toolset
 from eios.llm_gateway.providers.adk_types import generation_config
-from eios.ontology.omcp.port.facts import FactResolver
 from eios.ontology.omcp.port.principal import Principal, Workstation
 from eios.ontology.omcp.port.service import GovernedToolPort
 
@@ -63,9 +62,7 @@ def instruction_for(workstation: Workstation) -> Callable[[ReadonlyContext], str
     return provide
 
 
-def build_agent(
-    *, port: GovernedToolPort, facts: FactResolver, principal: Principal, model: str | BaseLlm
-) -> LoopAgent:
+def build_agent(*, port: GovernedToolPort, principal: Principal, model: str | BaseLlm) -> LoopAgent:
     workstation = principal.workstation
     drafter = Agent(
         name="drafter",
@@ -75,7 +72,7 @@ def build_agent(
         output_key=DRAFT_KEY,
         generate_content_config=generation_config(temperature=0.2, max_output_tokens=2048),
     )
-    assembler = AnswerAssembler(name="assembler", facts=facts, principal=principal)
+    assembler = AnswerAssembler(name="assembler")
     return LoopAgent(
         name=f"{workstation.value}_assistant",
         sub_agents=[drafter, assembler],

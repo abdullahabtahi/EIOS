@@ -19,7 +19,7 @@ from eios.ontology.omcp.port.registry import ToolSpec
 from eios.ontology.omcp.port.service import GovernedToolPort
 
 # `temp:` state lives for one invocation: the loop's attempts share it, the stored session does not keep it.
-FACT_IDS_KEY = "temp:fact_ids"
+FACTS_KEY = "temp:facts"  # fact id -> the figure, unit and envelope a tool returned this turn
 SOURCES_KEY = "temp:sources"
 ORIGINS_KEY = "temp:data_origins"
 PROPOSALS_KEY = "temp:proposals"
@@ -46,12 +46,39 @@ class PortTool(BaseTool):
         if outcome.result is None:
             return payload
         state = tool_context.state
-        state[FACT_IDS_KEY] = [*state.get(FACT_IDS_KEY, []), *payload.get("fact_ids", {}).values()]
+        state[FACTS_KEY] = {**state.get(FACTS_KEY, {}), **_turn_facts(payload)}
         state[SOURCES_KEY] = [*state.get(SOURCES_KEY, []), payload["source"]]
         state[ORIGINS_KEY] = [*state.get(ORIGINS_KEY, []), payload["data_origin"]]
         if self._spec.kind == _PROPOSAL_KIND:
             state[PROPOSALS_KEY] = [*state.get(PROPOSALS_KEY, []), payload]
         return payload
+
+
+def _figure(payload: dict[str, Any], path: str) -> float | None:
+    """The number at a dotted path of a result, or None for list items and anything that is not a plain number."""
+    if "[]" in path:
+        return None
+    node: Any = payload
+    for key in path.split("."):
+        if not isinstance(node, dict) or key not in node:
+            return None
+        node = node[key]
+    return float(node) if isinstance(node, int | float) and not isinstance(node, bool) else None
+
+
+def _turn_facts(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Every figure of a result the assembler may later show: its value, unit, as-of and origin, by fact id."""
+    facts: dict[str, dict[str, Any]] = {}
+    for path, fact_id in (payload.get("fact_ids") or {}).items():
+        value, unit = _figure(payload, path), (payload.get("units") or {}).get(path)
+        if value is not None and unit:
+            facts[fact_id] = {
+                "value": value,
+                "unit": unit,
+                "as_of": payload["as_of"],
+                "data_origin": payload["data_origin"],
+            }
+    return facts
 
 
 def build_toolset(port: GovernedToolPort, principal: Principal) -> list[PortTool]:

@@ -8,26 +8,25 @@ the drafter through turn state; an accepted one, or the third rejection, ends th
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
+from datetime import datetime
 from typing import Any
 
 from google.adk.agents.base_agent import BaseAgent
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
-from pydantic import ConfigDict
 
 from eios.assistant.answer import Answer
 from eios.assistant.assembly import (
     MAX_ATTEMPTS,
     Assembled,
+    TurnFact,
     assemble_draft,
     fail_closed_answer,
 )
-from eios.assistant.tools import FACT_IDS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
+from eios.assistant.tools import FACTS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
 from eios.llm_gateway.providers.adk_types import Content, Part
 from eios.ontology.omcp.port.contracts import DataOrigin
-from eios.ontology.omcp.port.facts import FactResolver
-from eios.ontology.omcp.port.principal import Principal
 
 DRAFT_KEY = "temp:draft"
 ATTEMPT_KEY = "temp:assembly_attempts"
@@ -43,6 +42,16 @@ def _origin(values: list[str]) -> DataOrigin:
     )
 
 
+def _turn_fact(fact_id: str, raw: dict[str, Any]) -> TurnFact:
+    return TurnFact(
+        fact_id=fact_id,
+        value=float(raw["value"]),
+        unit=raw["unit"],
+        as_of=datetime.fromisoformat(raw["as_of"]),
+        data_origin=DataOrigin(raw["data_origin"]),
+    )
+
+
 def final_event(author: str, answer: Answer, *, escalate: bool = True) -> Event:
     return Event(
         author=author,
@@ -53,20 +62,13 @@ def final_event(author: str, answer: Answer, *, escalate: bool = True) -> Event:
 
 
 class AnswerAssembler(BaseAgent):
-    model_config = ConfigDict(arbitrary_types_allowed=True)
-
-    facts: Any  # FactResolver; typed Any so pydantic does not copy the live resolver
-    principal: Principal
-
     async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event]:
         state = ctx.session.state
         attempt = int(state.get(ATTEMPT_KEY, 0)) + 1
-        resolver: FactResolver = self.facts
         origin = _origin(list(state.get(ORIGINS_KEY, [])))
         result = assemble_draft(
             str(state.get(DRAFT_KEY, "")),
-            offered_fact_ids=frozenset(state.get(FACT_IDS_KEY, [])),
-            resolve=lambda fact_id: resolver.resolve(self.principal, fact_id),
+            facts={fid: _turn_fact(fid, raw) for fid, raw in state.get(FACTS_KEY, {}).items()},
         )
         if isinstance(result, Assembled):
             answer = Answer(

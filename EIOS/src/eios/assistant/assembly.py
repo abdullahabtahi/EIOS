@@ -9,13 +9,13 @@ back to the model for another attempt; after `MAX_ATTEMPTS` the answer fails clo
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import datetime
 
 from eios.assistant.answer import Answer, FigureRef
 from eios.ontology.auditor.normalizer import MONTH_PATTERN, NumericTokenNormalizer
-from eios.ontology.omcp.port.contracts import DataOrigin, PortError
-from eios.ontology.omcp.port.facts import ResolvedFact
+from eios.ontology.omcp.port.contracts import DataOrigin
 
 MAX_ATTEMPTS = 3
 FAIL_CLOSED_TEXT = (
@@ -30,6 +30,17 @@ _DAY_FIRST_DATE = re.compile(rf"\b\d{{1,2}}\s+{MONTH_PATTERN}(?:\s+\d{{4}})?\b",
 
 
 @dataclass(frozen=True)
+class TurnFact:
+    """A figure a governed tool returned to the model in this turn, with the envelope that qualifies it."""
+
+    fact_id: str
+    value: float
+    unit: str
+    as_of: datetime
+    data_origin: DataOrigin
+
+
+@dataclass(frozen=True)
 class Assembled:
     text: str
     figures: tuple[FigureRef, ...]
@@ -38,6 +49,8 @@ class Assembled:
 @dataclass(frozen=True)
 class Rejected:
     problems: tuple[str, ...]
+
+
 # An entity or alert identifier (CR84920, PTR-882, ALT-CR84920) is a name, not a figure: a token that starts with a
 # letter and contains a digit. A number that starts with a digit (16x, 40) is never exempt.
 _IDENTIFIER = re.compile(r"\b[A-Za-z][A-Za-z0-9_-]*\d[A-Za-z0-9_-]*\b")
@@ -76,8 +89,7 @@ def _footer(figures: tuple[FigureRef, ...]) -> str:
 def assemble_draft(
     draft: str,
     *,
-    offered_fact_ids: frozenset[str],
-    resolve: Callable[[str], ResolvedFact],
+    facts: Mapping[str, TurnFact],
 ) -> Assembled | Rejected:
     if not draft.strip():
         return Rejected(("the draft is empty",))
@@ -87,15 +99,11 @@ def assemble_draft(
 
     def fill(match: re.Match[str]) -> str:
         fact_id = match.group(1).strip()
-        if fact_id not in offered_fact_ids:
+        fact = facts.get(fact_id)
+        if fact is None:
             problems.append(f"fact id '{fact_id}' was not returned by a tool in this turn")
             return ""
         if fact_id not in resolved:
-            try:
-                fact = resolve(fact_id)
-            except PortError as exc:
-                problems.append(f"fact id '{fact_id}' could not be resolved: {exc.error.message}")
-                return ""
             ref = FigureRef(
                 fact_id=fact_id,
                 value=fact.value,

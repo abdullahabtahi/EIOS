@@ -30,9 +30,8 @@ from eios.assistant.assembler_agent import (
 from eios.assistant.config import AssistantConfigError, AssistantSettings
 from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED
 from eios.assistant.sessions import APP_NAME, session_key
-from eios.assistant.tools import FACT_IDS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
+from eios.assistant.tools import FACTS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
 from eios.llm_gateway.providers.adk_types import text_of, user_message
-from eios.ontology.omcp.port.facts import FactResolver
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
 
@@ -74,7 +73,7 @@ def _fresh_turn_state(
     return {
         ATTEMPT_KEY: 0,
         FEEDBACK_KEY: "",
-        FACT_IDS_KEY: [],
+        FACTS_KEY: {},
         SOURCES_KEY: [],
         ORIGINS_KEY: [],
         PROPOSALS_KEY: [],
@@ -88,7 +87,6 @@ class AssistantRuntime:
         self,
         *,
         port: GovernedToolPort,
-        facts: FactResolver,
         settings: AssistantSettings,
         session_service: BaseSessionService,
         model: str | BaseLlm | None = None,
@@ -99,7 +97,7 @@ class AssistantRuntime:
             raise AssistantConfigError(
                 "EIOS_GEMINI_MODEL must name the model; no model id lives in source"
             )
-        self._port, self._facts, self._settings = port, facts, settings
+        self._port, self._settings = port, settings
         self._sessions, self._model, self._plugins = session_service, chosen, plugins
 
     async def run_turn(
@@ -144,9 +142,7 @@ class AssistantRuntime:
         entity_id: str | None,
         entity_context: dict[str, Any] | None,
     ) -> TurnOutcome:
-        agent = build_agent(
-            port=self._port, facts=self._facts, principal=principal, model=self._model
-        )
+        agent = build_agent(port=self._port, principal=principal, model=self._model)
         app = App(name=APP_NAME, root_agent=agent, plugins=list(self._plugins))
         runner = Runner(app=app, session_service=self._sessions, auto_create_session=True)
         offered = {spec.name for spec in self._port.list_tools(principal)}
@@ -196,7 +192,11 @@ class AssistantRuntime:
             tuple(traces),
             steps=tuple(t.name for t in traces),
             events=tuple(events),
-            model_calls=sum(1 for e in events if e.author == "drafter"),
+            model_calls=sum(
+                1
+                for e in events
+                if e.author == "drafter" and e.content and e.content.role == "model"
+            ),
         )
 
     def _trace(

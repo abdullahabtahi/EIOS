@@ -6,7 +6,7 @@ from typing import Any
 
 import pytest
 
-from eios.assistant.tools import FACT_IDS_KEY, PROPOSALS_KEY, build_toolset
+from eios.assistant.tools import FACTS_KEY, PROPOSALS_KEY, build_toolset
 from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.principal import Workstation, principal_for
 from eios.ontology.omcp.port.service import GovernedToolPort
@@ -59,7 +59,9 @@ def test_a_successful_call_returns_the_payload_and_remembers_its_fact_ids(
     payload = _run(tools["get_aml_dossier"], {"entity_id": "CR84920"}, ctx)
     assert "error" not in payload
     assert payload["fact_ids"]
-    assert set(payload["fact_ids"].values()) <= set(ctx.state[FACT_IDS_KEY])
+    facts = ctx.state[FACTS_KEY]
+    assert facts["aml.dossier:CR84920:discrepancy_multiplier"]["value"] == 16.0
+    assert facts["aml.dossier:CR84920:discrepancy_multiplier"]["unit"] == "multiplier"
 
 
 def test_an_unknown_entity_is_a_typed_error_and_offers_no_fact_ids(port: GovernedToolPort) -> None:
@@ -67,7 +69,7 @@ def test_an_unknown_entity_is_a_typed_error_and_offers_no_fact_ids(port: Governe
     ctx = _context()
     payload = _run(tools["get_aml_dossier"], {"entity_id": "CR-NOPE"}, ctx)
     assert payload["error"]["code"] == "NOT_FOUND"
-    assert not ctx.state.get(FACT_IDS_KEY)
+    assert not ctx.state.get(FACTS_KEY)
 
 
 def test_arguments_cannot_carry_an_identity(port: GovernedToolPort) -> None:
@@ -82,9 +84,9 @@ def test_the_facts_of_two_calls_accumulate_in_one_turn(port: GovernedToolPort) -
     tools = {t.name: t for t in build_toolset(port, principal_for("op-1", "aml_investigator"))}
     ctx = _context()
     _run(tools["get_aml_dossier"], {"entity_id": "CR84920"}, ctx)
-    first = set(ctx.state[FACT_IDS_KEY])
+    first = set(ctx.state[FACTS_KEY])
     _run(tools["list_alerts"], {}, ctx)
-    assert first <= set(ctx.state[FACT_IDS_KEY])
+    assert first <= set(ctx.state[FACTS_KEY])
 
 
 def test_a_proposal_is_kept_for_the_answer_and_stages_nothing(port: GovernedToolPort) -> None:

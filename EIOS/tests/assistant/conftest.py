@@ -20,7 +20,6 @@ def make_runtime(
     llm = ScriptedLlm(steps=steps)
     runtime = AssistantRuntime(
         port=port,
-        facts=models.facts,
         settings=settings,
         session_service=sessions or build_session_service(settings),
         model=llm,
