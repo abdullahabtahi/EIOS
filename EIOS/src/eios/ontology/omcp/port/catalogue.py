@@ -6,6 +6,7 @@ from eios.ontology.omcp.port import (
     aml_tools,
     compliance_tools,
     executive_tools,
+    knowledge_tools,
     ops_tools,
     partner_tools,
     proposals,
@@ -25,6 +26,7 @@ def all_specs() -> tuple[ToolSpec, ...]:
         *proposals.TOOLS,
         *executive_tools.TOOLS,
         *compliance_tools.TOOLS,
+        *knowledge_tools.TOOLS,
         *ops_tools.TOOLS,
     )
     return tuple(

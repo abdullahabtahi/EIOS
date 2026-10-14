@@ -13,14 +13,20 @@ from eios.ontology.omcp.port.service import GovernedToolPort, RefusalLog
 
 # Capabilities the golden cases name that other specs deliver (reported as planned, never as passing).
 PLANNED = {
-    "knowledge.regulation",
     "knowledge.policy",
     "knowledge.sar_precedent",
     "exec.cohort_trend",
     "exec.market_context",
 }
 
+# A search query is the one free-text argument: it goes to the platform's own regulatory index, never to a data tool
+# that returns operator data, and the passages it brings back are untrusted text the assembler can only quote.
+FREE_TEXT_ARGUMENTS = {("search_regulations", "query")}
+# One managed-search round trip cannot meet the in-process budget; its own budget is bounded and measured on the index.
+SLOW_BUDGETS_MS = {"search_regulations": 5000}
+
 SAMPLE_ARGS: dict[str, dict[str, object]] = {
+    "search_regulations": {"query": "when must a suspicious report be filed"},
     "get_metric": {"metric_id": "net_revenue_usd"},
     "resolve_entity": {"entity_id": "PTR-882"},
     "get_causal_evidence": {},
@@ -109,12 +115,14 @@ def test_no_capability_takes_free_text() -> None:
             annotation = field.annotation
             is_text = annotation is str or str in getattr(annotation, "__args__", ())
             is_enum = isinstance(annotation, type) and issubclass(annotation, Enum)
-            if is_text and not is_enum:
+            if is_text and not is_enum and (spec.name, name) not in FREE_TEXT_ARGUMENTS:
                 assert name.endswith("_id"), f"{spec.name}.{name} is free text"
 
 
 def test_every_budget_fits_the_turn_budget() -> None:
-    assert all(0 < s.budget_ms <= 300 for s in all_specs())  # SC-006 [ASSUMPTION]
+    assert all(
+        0 < s.budget_ms <= SLOW_BUDGETS_MS.get(s.name, 300) for s in all_specs()
+    )  # SC-006 [ASSUMPTION]
 
 
 def test_every_catalogue_tool_has_a_sample_or_is_known_unavailable() -> None:

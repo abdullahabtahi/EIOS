@@ -35,6 +35,7 @@ from eios.assistant.tools import (
     FACTS_KEY,
     IDENTIFIERS_KEY,
     ORIGINS_KEY,
+    PASSAGES_KEY,
     PROPOSALS_KEY,
     SOURCES_KEY,
 )
@@ -110,6 +111,7 @@ def _fresh_turn_state(
         FEEDBACK_KEY: "",
         FACTS_KEY: {},
         SOURCES_KEY: [],
+        PASSAGES_KEY: {},
         ORIGINS_KEY: [],
         IDENTIFIERS_KEY: [],
         PROPOSALS_KEY: [],

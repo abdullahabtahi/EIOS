@@ -13,6 +13,7 @@ import os
 import threading
 import time
 from collections.abc import Iterable, Mapping
+from dataclasses import replace
 from enum import StrEnum
 
 from eios.cockpit.compliance import ComplianceExplorerService
@@ -26,11 +27,15 @@ from eios.foundry.scenarios.aml_config import STORY_PARTNER, AmlWorldConfig
 from eios.foundry.scenarios.aml_world import build_aml_world
 from eios.foundry.scenarios.partner_config import PartnerWorldConfig
 from eios.foundry.scenarios.partner_world import build_partner_world
+from eios.knowledge.agent_search import AgentSearchIndex
+from eios.knowledge.passage import RegulationIndex
 from eios.ontology.omcp.port.contracts import DataOrigin
 from eios.ontology.omcp.port.readmodels import ReadModels
 
 logger = logging.getLogger(__name__)
 PLANE_ENV = "EIOS_DATA_PLANE"
+KNOWLEDGE_STORE_ENV = "EIOS_KNOWLEDGE_DATA_STORE"
+KNOWLEDGE_PROJECT_ENV = "GOOGLE_CLOUD_PROJECT"
 
 
 class PlaneKind(StrEnum):
@@ -121,6 +126,20 @@ def _build_engines() -> tuple[EngineAMLService, EnginePartnerService]:
     return EngineAMLService(snapshot), EnginePartnerService(partner, snapshot)
 
 
+def knowledge_index(env: Mapping[str, str] | None = None) -> RegulationIndex | None:
+    """The regulatory index named by `EIOS_KNOWLEDGE_DATA_STORE`, or None when none is configured (the tool then says so)."""
+    source = os.environ if env is None else env
+    store, project = (
+        source.get(KNOWLEDGE_STORE_ENV, "").strip(),
+        source.get(KNOWLEDGE_PROJECT_ENV, "").strip(),
+    )
+    if not store:
+        return None
+    if not project:
+        raise PlaneConfigError(f"{KNOWLEDGE_STORE_ENV} needs {KNOWLEDGE_PROJECT_ENV}")
+    return AgentSearchIndex(project, store)
+
+
 def read_models() -> ReadModels:
     """The process-wide read models; every route and the assistant share these objects."""
     global _models, _engine, _partner
@@ -138,9 +157,10 @@ def read_models() -> ReadModels:
                     compliance=ComplianceExplorerService.over_ledger(
                         ledger.sequencer, ledger.worm, ledger.hub
                     ),
+                    knowledge=knowledge_index(),
                 )
             else:
-                _models = ReadModels.default()
+                _models = replace(ReadModels.default(), knowledge=knowledge_index())
         return _models
 
 

@@ -80,6 +80,12 @@ You are the {title} assistant in the Enterprise Intelligence cockpit. Answer in 
    For a list, a brief or an overview, give one sentence on the picture, then the first few items. Name each
    item (name and id) with its main figure as a placeholder, using the fact id of that item (such as
    partners[0].expected_loss_usd), and say there are more. Never state how many items you show or omit.
+9. For what a regulation or guideline requires, call the regulation search tool and show a passage with
+   {{{{quote:<passage_id>}}}}, using a passage_id from that result in this turn. Never state in your own words what a
+   rule requires, and never write a deadline, threshold, article or section number: the quoted passage carries
+   them. After a quote add at most one short sentence, with no number. Pass the jurisdiction when the question
+   names a regulator or country: MT for Malta, LB for Labuan, US for the United States. If the tool returns no
+   passage, say the regulatory corpus has nothing that supports an answer, and quote nothing.
 """
 
 

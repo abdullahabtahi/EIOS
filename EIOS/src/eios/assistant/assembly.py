@@ -2,8 +2,10 @@
 
 The draft carries `{{fact:<fact id>}}` placeholders. Each id must be one a governed tool returned in this very turn;
 its value, unit and as-of are the ones that result carried (a second port call could not be made for capabilities that
-need more than an entity id, and could disagree with what the model saw). After the placeholders are
-removed, any number left in the text is a figure the model typed itself and the draft is rejected. The reasons go
+need more than an entity id, and could disagree with what the model saw). A passage of a regulation is shown the
+same way, with `{{quote:<passage id>}}`: the text and its page come from the result of this turn, so a deadline or a
+threshold in a rule reaches the operator exactly as the regulator wrote it and is never retyped. After the
+placeholders are removed, any number left in the text is a figure the model typed itself and the draft is rejected. The reasons go
 back to the model for another attempt; after `MAX_ATTEMPTS` the answer fails closed with no figure at all.
 """
 
@@ -14,7 +16,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 
-from eios.assistant.answer import Answer, FigureRef
+from eios.assistant.answer import Answer, FigureRef, SourceRef
 from eios.ontology.auditor.normalizer import MONTH_PATTERN, NumericTokenNormalizer
 from eios.ontology.omcp.port.contracts import DataOrigin
 
@@ -35,6 +37,8 @@ _UNIT_ECHOES = {
     "multiplier": {"x", "×", "times"},
     "x": {"x", "×", "times"},
 }
+_QUOTE = re.compile(r"\{\{quote:([^{}]*)\}\}")
+_SENTINEL = "\x00"  # stands in for a quote while the draft is checked, so text from a document is never read as a placeholder
 _NORMALIZER = NumericTokenNormalizer()
 # The auditor exempts "March 15, 2026"; the day-first form "15 March 2026" is a date too, so it is exempt here.
 _DAY_FIRST_DATE = re.compile(rf"\b\d{{1,2}}\s+{MONTH_PATTERN}(?:\s+\d{{4}})?\b", re.IGNORECASE)
@@ -53,9 +57,23 @@ class TurnFact:
 
 
 @dataclass(frozen=True)
+class TurnPassage:
+    """A passage of a regulation a governed tool returned to the model in this turn."""
+
+    passage_id: str
+    document_id: str
+    title: str
+    jurisdiction: str
+    pages: str
+    text: str
+    data_origin: DataOrigin
+
+
+@dataclass(frozen=True)
 class Assembled:
     text: str
     figures: tuple[FigureRef, ...]
+    sources: tuple[SourceRef, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -138,27 +156,82 @@ def _without_identifiers(prose: str, identifiers: frozenset[str]) -> str:
     return prose
 
 
-def assemble_draft(
-    draft: str,
-    *,
-    facts: Mapping[str, TurnFact],
-    identifiers: frozenset[str] = frozenset(),
-) -> Assembled | Rejected:
-    if not draft.strip():
-        return Rejected(("the draft is empty",))
-    problems: list[str] = []
-    figures: list[FigureRef] = []
-    resolved: dict[str, FigureRef] = {}
+def _inert(text: str) -> str:
+    """Document text as the regulator wrote it, minus control characters. It is shown by a renderer that builds elements
+    from text (never HTML or links), so a quote needs no escaping and stays verbatim."""
+    return text.replace(_SENTINEL, "").strip()
 
-    def fill(match: re.Match[str]) -> str:
+
+def render_quote(passage: TurnPassage) -> str:
+    body = "\n".join(
+        f"> {line}" if line.strip() else ">" for line in _inert(passage.text).splitlines()
+    )
+    credit = (
+        f"> — {_inert(passage.title)}, p. {_inert(passage.pages)} ({_inert(passage.jurisdiction)})"
+    )
+    return f"\n\n{body}\n{credit}\n\n"
+
+
+def _typed_figures(draft: str, identifiers: frozenset[str]) -> list[str]:
+    """Every figure the model typed itself. The draft is read with each placeholder removed, so a resolved figure or a
+    quoted passage is never mistaken for one."""
+    prose = _without_identifiers(
+        _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", _QUOTE.sub(" ", draft))), identifiers
+    )
+    disguised = [m.group(0) for m in _DISGUISED_FIGURE.finditer(prose)]
+    prose = _DIGEST.sub(" ", _IDENTIFIER.sub(" ", prose))
+    prose = _LIST_MARKER.sub("", _ISO_TIMESTAMP.sub(" ", prose))
+    typed = [_where(prose, t) for t in disguised]
+    typed += [_where(prose, m.group(0), m.start()) for m in _RANK_LABEL.finditer(prose)]
+    typed += [_where(prose, n.raw_string, n.start_char) for n in _NORMALIZER.extract_numbers(prose)]
+    return typed
+
+
+def _sources_of(quoted: list[TurnPassage]) -> tuple[SourceRef, ...]:
+    """One source per distinct passage quoted, in order of first appearance."""
+    return tuple(
+        SourceRef(
+            passage_id=p.passage_id,
+            document_id=p.document_id,
+            title=p.title,
+            jurisdiction=p.jurisdiction,
+            pages=p.pages,
+            text=p.text,
+            data_origin=p.data_origin,
+        )
+        for p in {p.passage_id: p for p in quoted}.values()
+    )
+
+
+class _Fill:
+    """What one draft's placeholders resolve to, and the problems met on the way."""
+
+    def __init__(self, facts: Mapping[str, TurnFact], passages: Mapping[str, TurnPassage]) -> None:
+        self.facts, self.passages = facts, passages
+        self.problems: list[str] = []
+        self.figures: dict[str, FigureRef] = {}
+        self.quoted: list[TurnPassage] = []
+
+    def mark(self, match: re.Match[str]) -> str:
+        passage_id = match.group(1).strip()
+        passage = self.passages.get(passage_id)
+        if passage is None:
+            self.problems.append(
+                f"passage id '{passage_id}' was not returned by a tool in this turn"
+            )
+            return " "
+        self.quoted.append(passage)
+        return f"{_SENTINEL}{len(self.quoted) - 1}{_SENTINEL}"
+
+    def fill(self, match: re.Match[str]) -> str:
         fact_id = match.group(1).strip()
         echo = match.group("echo") or ""
-        fact = facts.get(fact_id)
+        fact = self.facts.get(fact_id)
         if fact is None:
-            problems.append(f"fact id '{fact_id}' was not returned by a tool in this turn")
+            self.problems.append(f"fact id '{fact_id}' was not returned by a tool in this turn")
             return echo
-        if fact_id not in resolved:
-            ref = FigureRef(
+        if fact_id not in self.figures:
+            self.figures[fact_id] = FigureRef(
                 fact_id=fact_id,
                 value=fact.value,
                 unit=fact.unit,
@@ -167,33 +240,41 @@ def assemble_draft(
                 source=fact.source,
                 text=render_figure(fact.value, fact.unit),
             )
-            resolved[fact_id] = ref
-            figures.append(ref)
         repeated = echo.strip().lower() in _UNIT_ECHOES.get(fact.unit, set())
-        return resolved[fact_id].text + ("" if repeated else echo)
+        return self.figures[fact_id].text + ("" if repeated else echo)
 
-    text = _PLACEHOLDER.sub(fill, draft)
+
+def assemble_draft(
+    draft: str,
+    *,
+    facts: Mapping[str, TurnFact],
+    identifiers: frozenset[str] = frozenset(),
+    passages: Mapping[str, TurnPassage] | None = None,
+) -> Assembled | Rejected:
+    if not draft.strip():
+        return Rejected(("the draft is empty",))
+    if _SENTINEL in draft:
+        return Rejected(("the draft contains a control character",))
+    state = _Fill(facts, passages or {})
+    text = _PLACEHOLDER.sub(state.fill, _QUOTE.sub(state.mark, draft))
+    problems = state.problems
     if "{{" in text or "}}" in text:
-        problems.append("a placeholder is malformed; use exactly {{fact:<fact id>}}")
-    # Numbers are searched in the draft with every placeholder removed, so a resolved figure is never mistaken for one.
-    prose = _without_identifiers(
-        _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", draft)), identifiers
-    )
-    typed = [m.group(0) for m in _DISGUISED_FIGURE.finditer(prose)]
-    prose = _DIGEST.sub(" ", _IDENTIFIER.sub(" ", prose))
-    prose = _LIST_MARKER.sub("", _ISO_TIMESTAMP.sub(" ", prose))
-    typed = [_where(prose, t) for t in typed]
-    typed += [_where(prose, m.group(0), m.start()) for m in _RANK_LABEL.finditer(prose)]
-    typed += [_where(prose, n.raw_string, n.start_char) for n in _NORMALIZER.extract_numbers(prose)]
-    if typed:
+        problems.append(
+            "a placeholder is malformed; use exactly {{fact:<fact id>}} or {{quote:<passage id>}}"
+        )
+    if typed := _typed_figures(draft, identifiers):
         problems.append(
             "write no figure yourself, use a {{fact:<id>}} placeholder instead of: "
             + ", ".join(typed)
         )
     if problems:
         return Rejected(tuple(problems))
-    shown = tuple(figures)
-    return Assembled(text=text.strip() + _footer(shown), figures=shown)
+    shown = tuple(state.figures.values())
+    for index, passage in enumerate(state.quoted):
+        text = text.replace(f"{_SENTINEL}{index}{_SENTINEL}", render_quote(passage))
+    return Assembled(
+        text=text.strip() + _footer(shown), figures=shown, sources=_sources_of(state.quoted)
+    )
 
 
 def fail_closed_answer(origin: DataOrigin) -> Answer:

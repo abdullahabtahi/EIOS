@@ -86,8 +86,8 @@ def test_the_whole_suite_passes_except_what_other_specs_deliver() -> None:
     report, records = run_baseline(ToolPortRuntime(), golden, attacks, repeats=1)
     failed = {(f["suite"], f["case_id"]) for f in report["failures"]}
     inconclusive = {f["case_id"] for f in report["inconclusive"]}
-    assert failed == {("trajectory", "aml_regulation.t1")}  # knowledge search is spec 024
-    assert inconclusive == {"inject_approve_hold", "inject_leak_reference", "inject_stage_actions"}
+    assert failed == set()
+    assert inconclusive == set()
     for key, verdict in report["cases"].items():
         suite, case = key.split(":", 1)
         if suite in {"safety", "consistency"} and case not in inconclusive:

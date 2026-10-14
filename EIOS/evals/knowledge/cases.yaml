@@ -1,0 +1,68 @@
+# Retrieval cases for the regulatory index: a question an investigator would ask, and where the answer is in the
+# acquired documents. Pages are PDF page numbers (1-based), read from the files themselves (the manifest holds their
+# sha256), so the truth does not depend on the index. A passage is a hit when it comes from an expected document and its
+# page span overlaps an expected page. `expect: []` marks a question the corpus must not answer: the right result is
+# no passage. Questions are written in the operator's words, not copied from the documents.
+cases:
+  - id: mt_employee_to_mlro
+    question: How quickly must an employee pass a suspicion on to the money laundering reporting officer?
+    jurisdiction: MT
+    expect: [{document_id: MT-FIAU-IP1, pages: [234, 235, 236]}]
+  - id: mt_record_retention
+    question: For how long do subject persons have to keep customer due diligence records?
+    jurisdiction: MT
+    expect: [{document_id: MT-FIAU-IP1, pages: [296, 297]}]
+  - id: mt_tipping_off
+    question: What is the offence of tipping off and what is the penalty?
+    jurisdiction: MT
+    expect: [{document_id: MT-FIAU-IP1, pages: [250, 251, 252, 312]}]
+  - id: mt_pep_measures
+    question: What must be done when a customer is a politically exposed person?
+    jurisdiction: MT
+    expect:
+      - {document_id: MT-PMLFTR, pages: [27, 28]}
+      - {document_id: MT-FIAU-IP1, pages: [198, 199]}
+  - id: mt_enhanced_due_diligence
+    question: In which situations must enhanced due diligence be applied?
+    jurisdiction: MT
+    expect: [{document_id: MT-FIAU-IP1, pages: [187, 188, 189, 190]}]
+  - id: mt_cdd_measures
+    question: What do customer due diligence measures consist of?
+    jurisdiction: MT
+    expect:
+      - {document_id: MT-PMLFTR, pages: [18, 19]}
+      - {document_id: MT-FIAU-IP1, pages: [100, 101, 102, 103, 104, 105]}
+  - id: lb_report_next_working_day
+    question: By when must the compliance officer submit a suspicious transaction report once suspicion is established?
+    jurisdiction: LB
+    expect: [{document_id: LB-KRI-2025, pages: [83]}]
+  - id: lb_reporting_triggers
+    question: When should a Labuan institution consider filing a suspicious transaction report?
+    jurisdiction: LB
+    expect: [{document_id: LB-KRI-2025, pages: [85]}]
+  - id: lb_disclosure_ban
+    question: May an institution tell a customer that a suspicious transaction report was filed?
+    jurisdiction: LB
+    expect: [{document_id: LB-KRI-2025, pages: [86]}]
+  - id: lb_dfs_red_flags_mixers
+    question: Which red flags relate to customers using mixing services or tumblers for digital assets?
+    jurisdiction: LB
+    expect: [{document_id: LB-REDFLAG-DFS-2024, pages: [3, 5]}]
+  - id: lb_ibfc_circular_ocr
+    question: What red flag indicators does the Labuan circular for the international business and financial centre list?
+    jurisdiction: LB
+    expect: [{document_id: LB-REDFLAG-IBFC-2024, pages: [1, 2]}]  # an image-only file: a hit shows the parser read the scan
+  - id: us_five_ws
+    question: What information should a SAR narrative contain about the suspicious activity?
+    jurisdiction: US
+    expect: [{document_id: US-FINCEN-NARR-2003, pages: [5, 6]}]
+  - id: us_sufficient_examples
+    question: Can you show examples of a sufficient and an insufficient SAR narrative?
+    jurisdiction: US
+    expect: [{document_id: US-FINCEN-NARR-2003, pages: [13, 14, 18]}]
+  - id: unsupported_dress_code
+    question: What does the regulation say about the dress code in our offices?
+    expect: []
+  - id: unsupported_revenue_forecast
+    question: How will interest rate changes affect our next quarter trading revenue?
+    expect: []

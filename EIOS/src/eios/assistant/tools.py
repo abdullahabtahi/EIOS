@@ -25,6 +25,7 @@ from eios.ontology.omcp.port.service import GovernedToolPort
 # `temp:` state lives for one invocation: the loop's attempts share it, the stored session does not keep it.
 FACTS_KEY = "temp:facts"  # fact id -> the figure, unit and envelope a tool returned this turn
 SOURCES_KEY = "temp:sources"
+PASSAGES_KEY = "temp:passages"  # passage id -> a regulation passage a tool returned this turn
 ORIGINS_KEY = "temp:data_origins"
 PROPOSALS_KEY = "temp:proposals"
 IDENTIFIERS_KEY = (
@@ -110,6 +111,7 @@ class PortTool(BaseTool):
         )  # what the model sees; the facts are read from the result as the port gave it
         state = tool_context.state
         state[FACTS_KEY] = {**state.get(FACTS_KEY, {}), **_turn_facts(raw)}
+        state[PASSAGES_KEY] = {**state.get(PASSAGES_KEY, {}), **_turn_passages(raw)}
         state[SOURCES_KEY] = [*state.get(SOURCES_KEY, []), payload["source"]]
         state[ORIGINS_KEY] = [*state.get(ORIGINS_KEY, []), payload["data_origin"]]
         state[IDENTIFIERS_KEY] = sorted({*state.get(IDENTIFIERS_KEY, []), *identifiers_of(raw)})
@@ -178,6 +180,20 @@ def _turn_facts(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
         }
         for _, fact_id, unit, value in _facts_of(payload)
         if unit and isinstance(value, int | float) and not isinstance(value, bool)
+    }
+
+
+def _turn_passages(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """The regulation passages of a result by passage id, each with the origin of the result that carried it."""
+    found = payload.get("passages")
+    if not isinstance(found, list):
+        return {}
+    return {
+        item["passage_id"]: {**item, "data_origin": payload["data_origin"]}
+        for item in found
+        if isinstance(item, dict)
+        and isinstance(item.get("passage_id"), str)
+        and isinstance(item.get("text"), str)
     }
 
 

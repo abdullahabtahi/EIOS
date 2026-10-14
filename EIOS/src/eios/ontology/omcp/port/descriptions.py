@@ -35,6 +35,12 @@ DESCRIPTIONS: dict[str, str] = {
         "The SAR narrative and case identifiers for one account. It returns no figures to cite: call "
         "get_aml_dossier for the same account first, then this tool, and cite figures from the dossier."
     ),
+    "knowledge.regulation": (
+        "Passages of the acquired regulations and regulator guidance (Malta FIAU and PMLFTR, Labuan FSA, FinCEN "
+        "narrative guidance), with document, page and jurisdiction. Use it for what a rule requires, such as when "
+        "and how to file a suspicious report, due diligence duties or red-flag indicators. It cannot say what an "
+        "account did; use the account tools for that."
+    ),
     "partner.worklist": "The partners that need attention, ranked, with their risk quadrant.",
     "partner.signals": (
         "One partner's risk picture: churn hazard, login and deposit decay, recent volume, main root cause, "
