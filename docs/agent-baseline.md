@@ -1,6 +1,7 @@
 # Agent baseline: the copilot before the ADK migration
 
 **Status**: measured `[MEASURED]`, 2026-10-14. **Spec**: `specs/022-agent-quality-gates/`. **Reproduce**: `specs/022-agent-quality-gates/quickstart.md`.
+**Removed 2026-10-14**: the copilot measured here (`conversation/copilot_engine.py`, the `copilot` adapter) and the LangGraph mesh were deleted when the ADK assistant became the only runtime (ADR-019). This document is kept as the "before" record; its saved run records still re-grade with `--runtime recorded`, but `--runtime copilot` no longer exists.
 **Tags**: every number below is `[MEASURED]` by the harness in `EIOS/src/eios/agent_gates/` unless it says otherwise. Nothing here is a target.
 
 > This is the "before" picture. The ADK runtime (spec 021) must beat it through the same port, with the same cases, under the pre-registered thresholds in `EIOS/evals/agent/thresholds.yaml`. A red baseline is the expected and useful result: it tells us what the migration has to fix.

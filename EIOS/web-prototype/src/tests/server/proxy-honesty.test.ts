@@ -58,58 +58,21 @@ describe('copilot proxy', () => {
   const upstream = (overrides: Record<string, unknown> = {}) => ({
     query: 'q',
     response: 'Net revenue is $3,820,000.',
-    auditor_status: 'PASS',
-    is_replay_fallback: false,
+    assistant_status: 'ASSEMBLED',
     fallback_reason: null,
     provenance_citations: [{ metric_id: 'net_revenue_usd', formatted_value: 'Net revenue', steward: 'DuckDB', as_of: '2026-01-02T03:04:05+00:00' }],
-    audit_record: { passed: true, unanchored_tokens: [], anchored_numbers: [3820000], relative_tolerance: 0.01 },
-    tool_trace_count: 3,
-    suggested_action: null,
     ...overrides,
-  });
-
-  it('reports the real audit, with no invented numbers or trace counts', async () => {
-    fetchMock.mockResolvedValue(json(upstream()));
-    const body = await (await post()).json();
-    expect(body.auditorResult.auditPassed).toBe(true);
-    expect(body.auditorResult.anchoredNumbers).toEqual([3820000]);
-    expect(body.auditorResult.toolTracesCount).toBe(3);
-    expect(JSON.stringify(body)).not.toContain('3,820,000"'); // the old hard-coded fixture string
-    expect(body.citedMetrics[0].asOfTimestamp).toBe('2026-01-02T03:04:05+00:00');
-  });
-
-  it('carries is_replay_fallback and its reason to the browser', async () => {
-    fetchMock.mockResolvedValue(json(upstream({ is_replay_fallback: true, fallback_reason: 'live Gemini call failed' })));
-    const body = await (await post()).json();
-    expect(body.isReplayFallback).toBe(true);
-    expect(body.fallbackReason).toBe('live Gemini call failed');
-  });
-
-  it('never treats a missing or UNAUDITED audit as a pass', async () => {
-    fetchMock.mockResolvedValue(json(upstream({ auditor_status: 'UNAUDITED', audit_record: { passed: false, unanchored_tokens: [], anchored_numbers: [] } })));
-    const body = await (await post()).json();
-    expect(body.auditorResult.auditPassed).toBe(false);
-  });
-
-  it('does not sign a suggested action the backend left unsigned', async () => {
-    fetchMock.mockResolvedValue(json(upstream({ suggested_action: { intent_id: 'rec_1', action_type: 'HoldWithdrawal', target_entity_id: 'ACC-1' } })));
-    const body = await (await post()).json();
-    expect(body.suggestedAction.kmsSignatureBadge.verified).toBe(false);
-    expect(body.suggestedAction.kmsSignatureBadge.signatureDigest).toBe('');
   });
 
   describe('an ADK assistant answer', () => {
     const adk = (overrides: Record<string, unknown> = {}) =>
       upstream({
-        auditor_status: 'ASSEMBLED',
-        assistant_status: 'ASSEMBLED',
         failed_closed: false,
         blocked: false,
         block_reason: null,
         data_origin: 'fixture',
         steps: ['get_aml_dossier'],
         turn_latency_ms: 4200,
-        audit_record: { passed: false, unanchored_tokens: [], anchored_numbers: ['16x'], relative_tolerance: 0 },
         provenance_citations: [
           {
             metric_id: 'aml.dossier:CR84920:discrepancy_multiplier',
@@ -126,12 +89,13 @@ describe('copilot proxy', () => {
         ...overrides,
       });
 
-    it('is carried as an assembled answer, not as a failed audit', async () => {
+    it('is carried as an assembled answer, with no audit claim of any kind', async () => {
       fetchMock.mockResolvedValue(json(adk()));
       const body = await (await post()).json();
       expect(body.assistantStatus).toBe('ASSEMBLED');
-      expect(body.auditorResult.auditPassed).toBe(false); // the Metric Auditor did not run, and is never claimed
-      expect(body.auditorResult.rejectionReason).toBeUndefined();
+      expect(body.auditorResult).toBeUndefined(); // the Metric Auditor did not run, and is never claimed
+      expect(body.suggestedAction).toBeUndefined();
+      expect(body.isReplayFallback).toBeUndefined();
       expect(body.dataOrigin).toBe('fixture');
       expect(body.steps).toEqual(['get_aml_dossier']);
     });
@@ -152,14 +116,21 @@ describe('copilot proxy', () => {
       expect((await (await post()).json()).citedMetrics[0].dataOrigin).toBeUndefined();
     });
 
+    it('refuses an answer whose status it cannot read instead of guessing a pass', async () => {
+      fetchMock.mockResolvedValue(json(adk({ assistant_status: 'SOMETHING_NEW' })));
+      expect((await post()).status).toBe(502);
+      fetchMock.mockResolvedValue(json(adk({ assistant_status: undefined })));
+      expect((await post()).status).toBe(502);
+    });
+
     it('says blocked, with the reason, and fails closed on an unknown status', async () => {
       fetchMock.mockResolvedValue(json(adk({ assistant_status: 'BLOCKED', blocked: true, block_reason: 'input', provenance_citations: [] })));
       const blocked = await (await post()).json();
       expect(blocked.assistantStatus).toBe('BLOCKED');
       expect(blocked.blockReason).toBe('input');
 
-      fetchMock.mockResolvedValue(json(adk({ assistant_status: 'SOMETHING_NEW' })));
-      expect((await (await post()).json()).assistantStatus).toBeUndefined();
+      fetchMock.mockResolvedValue(json(adk({ assistant_status: 'BLOCKED', blocked: true, block_reason: 'output', provenance_citations: [] })));
+      expect((await (await post()).json()).blockReason).toBe('output');
     });
 
     it('carries a fail-closed answer with no figures', async () => {

@@ -24,14 +24,15 @@ the hash-chained decision ledger in Firestore (database `eios-state`).
 3. Put the two image digests in `terraform.tfvars` (`cockpit_api_image`, `cockpit_web_image`) and `terraform apply`.
 4. Smoke test: sign in as each operator; stage, approve twice (two distinct approvers), verify the ledger.
 
-## ADK assistant (flag `EIOS_ASSISTANT_RUNTIME`)
-The cockpit's copilot endpoint is served by one of two runtimes. `legacy` (default) is the old copilot. `adk` is the ADK
-assistant (`src/eios/assistant/`, ADR-019). Nothing in this section is applied by Terraform yet; set these on the
-`eios-api` Cloud Run service only when the rollout gate has passed (`evals/agent/thresholds.yaml`, `docs/agent-baseline.md`).
+## ADK assistant
+The cockpit's copilot endpoint is served by the ADK assistant (`src/eios/assistant/`, ADR-019) and nothing else; the
+legacy copilot and the `EIOS_ASSISTANT_RUNTIME` switch were removed. **Prerequisite for the next deploy:** the Model
+Armor templates and `GOOGLE_GENAI_USE_ENTERPRISE` below must exist, or every copilot query answers 503 `offline`.
+Nothing in this section is applied by Terraform yet. There is no kill switch: to take the assistant out of service,
+redeploy the previous revision.
 
 | Variable | Value | Notes |
 |---|---|---|
-| `EIOS_ASSISTANT_RUNTIME` | `legacy` or `adk` | Per environment. **Kill switch: set it back to `legacy`** and redeploy the revision; no code change. Any other value makes the endpoint answer 503 `offline`. |
 | `GOOGLE_GENAI_USE_ENTERPRISE` | `true` | Makes the model client use Vertex AI with the service identity instead of an API key. |
 | `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION` | project id, `global` | The current model generation is served from the `global` endpoint only. |
 | `EIOS_GEMINI_MODEL` | model id | Lives in tfvars/config only (ADR-002). |

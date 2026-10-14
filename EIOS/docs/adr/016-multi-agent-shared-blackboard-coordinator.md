@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by ADR-019
 
 ## Date
 
@@ -41,3 +41,7 @@ Architectural review by enterprise FDE team; red-team analysis of multi-agent cy
 ## Revisit when
 
 Autonomous multi-party negotiation across external institutional agents is required.
+
+## Supersession
+
+The coordinator and blackboard were never built; the LangGraph mesh stayed a keyword-routed stub. ADR-019 replaces it with one ADK agent per workstation over the governed tool port, and the mesh was deleted on 2026-10-14.

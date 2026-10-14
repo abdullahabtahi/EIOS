@@ -1,9 +1,8 @@
 """Run the quality gates against a runtime and write one report (spec 022, US4).
 
-`python -m evals.agent.baseline --runtime copilot [--live] [--repeats 3] [--compare EARLIER.json]`
+`python -m evals.agent.baseline --runtime adk [--live] [--repeats 3] [--compare EARLIER.json]`
 
-Offline (the default) uses the copilot's deterministic replay path: free, repeatable, and exactly the path an
-outage would serve. `--live` calls the model through the existing gateway and needs `EIOS_AGENT_EVAL_MAX_TURNS`
+Offline (the default) uses the assistant with a scripted model: free and repeatable. `--live` calls the model and needs `EIOS_AGENT_EVAL_MAX_TURNS`
 (a hard cap, checked before the first call) and an EIOS project as quota project. The thresholds file must be
 committed before any run (pre-registration). A case the runtime cannot serve is reported as such, never skipped.
 """
@@ -89,7 +88,9 @@ def check_spend_cap(turns: int, repeats: int, live: bool, cap_turns: int | None)
 
 
 def _runtime_key(runtime_name: str) -> str:
-    return "copilot" if runtime_name == "copilot" else "target"
+    return (
+        "copilot" if runtime_name == "copilot" else "target"
+    )  # "copilot": re-grading recorded legacy runs
 
 
 _UNSERVED = (Availability.CAPABILITY_MISSING, Availability.PLANNED)
@@ -348,12 +349,6 @@ def _port(runtime: str, live: bool, records: Path | None = None) -> AgentPort:
         from eios.agent_gates.adapters.adk import AdkRuntime
 
         return AdkRuntime(offline=not live)
-    if runtime == "copilot":
-        from eios.agent_gates.adapters.copilot import CopilotAdapter
-
-        adapter = CopilotAdapter(offline=not live)
-        adapter.offline = not live  # type: ignore[attr-defined]
-        return adapter
     from eios.agent_gates.adapters.standin import AlwaysAnswerStandin
 
     return AlwaysAnswerStandin("42")
@@ -385,8 +380,8 @@ def main(argv: Sequence[str]) -> int:
     ap = argparse.ArgumentParser(prog="python -m evals.agent.baseline")
     ap.add_argument(
         "--runtime",
-        choices=["copilot", "toolport", "adk", "always42", "recorded"],
-        default="copilot",
+        choices=["toolport", "adk", "always42", "recorded"],
+        default="adk",
     )
     ap.add_argument("--live", action="store_true")
     ap.add_argument(

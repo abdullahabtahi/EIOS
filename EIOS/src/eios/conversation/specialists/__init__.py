@@ -1,3 +1,0 @@
-"""
-Specialist agents module
-"""

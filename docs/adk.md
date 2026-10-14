@@ -1,6 +1,6 @@
 # EIOS Conversational Agent: LangGraph to Google ADK
 
-**Status**: DRAFT, nothing built yet. **Updated**: 2026-10-13. **Owner**: you. **Companions**: `adk-research.md` (research, pre-mortem, spec plan), `data-strategy.md`, `financial_geospatial.md` (v3, section 7.2 item 1), `EIOS/docs/evidence/adrs/016-*` (to be superseded), `specs/018-genai-conversational-agent`.
+**Status**: the ADK assistant is the only copilot runtime; the legacy copilot and the LangGraph mesh are deleted (ADR-019 Accepted). **Updated**: 2026-10-14. **Owner**: you. **Companions**: `adk-research.md` (research, pre-mortem, spec plan), `data-strategy.md`, `financial_geospatial.md` (v3, section 7.2 item 1), `EIOS/docs/adr/016-*` (superseded by ADR-019), `specs/018-genai-conversational-agent`.
 **Tags**: `[ASSUMPTION]` `[TARGET]` `[SPIKE]`. "Verified" means checked on 2026-10-13.
 
 > Principle: build less custom code. Replace what ADK, MCP Toolbox, Agent Search and Model Armor already do; keep only what is our IP (intent hub, KMS signing, WORM ledger, metric semantics, domain engines, red-line tests).
@@ -12,30 +12,32 @@
 | # | Phase | Status | Exit criterion |
 |---|---|---|---|
 | A0 | Dependency alignment PR: `google-adk[gcp]==2.11.0`, `fastapi>=0.133,<0.142.2`, `opentelemetry-*<=1.42.1` (`fastapi>=0.142.2` itself needs `opentelemetry>=1.44`, so both move together) | A-9 approved 2026-10-14; PR `chore/adk-dependency-pins` with Dependabot ignores tied to ADK's cap: full suite identical on old and new pins, 0 advisories (`adk-research.md` section 3.2) | `make check` green on the new pins |
-| A1 | ADR superseding 016, and spec 021 | Research done (`adk-research.md`); decisions A-2 to A-10 await your review; specs 021 to 028 planned, build order starts with 022 | Reviewed; `open_decisions.yaml` updated |
+| A1 | ADR superseding 016, and spec 021 | Done: ADR-019 Accepted, ADR-016 Superseded by ADR-019, spec 021 merged | Reviewed; `open_decisions.yaml` updated |
 | A2 | Eval set first (probe cases below plus golden questions for expected tool calls) | Done (spec 022): 22 golden cases `[MEASURED]`, 15 attacks `[MEASURED]`, deterministic judges and a port any runtime plugs into. Baseline in `agent-baseline.md`: 28 of 61 case results fail `[MEASURED]` against today's engine | Suite runs red against today's engine, as expected: met |
-| A3 | Thin slice: one ADK `LlmAgent`, 2-3 tools behind a tool port (real OMCP handlers over the existing hot state first; MCP Toolbox when the warm tier exists), reference-based answer check, honest replay | Tool port done (spec 023, `eios.ontology.omcp.port`, judged in `agent-baseline.md` section 6); the ADK runtime and reference-based answer check are built (spec 021, `src/eios/assistant/`, behind `EIOS_ASSISTANT_RUNTIME`, default `legacy`); offline it equals the tool-port reference, live quality unmeasured until the live run | Same `/api/cockpit/copilot/query` contract; A2 suite green; bugs B1-B4 fixed |
-| A4 | Sub-agents, Agent Search RAG, Model Armor plugin, ADK session service on Firestore | Not started | Parity with the 24 existing conversation test files, ported not deleted |
-| A5 | Wire the browser action shelf to real stage/authorize; remove client-side fabricated fallbacks | Not started | Shelf actions hit the intent hub |
+| A3 | Thin slice: one ADK agent per workstation over the governed tool port, reference-based answers | Done (specs 021 and 023): the ADK assistant serves the cockpit and the legacy copilot is deleted. Live quality is in `agent-baseline.md` section 7. On a model outage the endpoint answers 503 `offline`; there is no replay (decision of 2026-10-14) | Gates in `evals/agent/thresholds.yaml`; the three-repeat gating run is still owed |
+| A4 | Sub-agents, Agent Search RAG, Model Armor plugin, ADK session service on Firestore | Session service and the Model Armor plugin are built in code; the Model Armor templates need Terraform (ask first); RAG is spec 024 | Templates exist; RAG answers carry citations |
+| A5 | Wire the browser action shelf to real stage/authorize; remove client-side fabricated copilot fallbacks | Done for the copilot (stage and authorize hit the intent hub; the chat lives in the dossier column). The workstation fallbacks in `api-bridge.ts` remain | Shelf actions hit the intent hub |
 
 Sequencing (revised 2026-10-13): A0-A3 do not wait on the wider data work. They need only the DDD context map (`data-strategy.md` D0) and a tool port, and they run on the existing hot state. Real tables behind MCP Toolbox come with the warm tier (`data-strategy.md` D4). Note `data-strategy.md` R1: the deployed API has no loaded hot state, so tools backed by it need a data path in the deployed environment, or must label themselves fixture, before A3 can claim live answers. Fix R2 (vault salt) before any tool exposes pseudonymised data.
 
-## 2. Defect register (current copilot)
+## 2. Defect register (the legacy copilot, deleted 2026-10-14)
+
+Kept as history: the code these rows name no longer exists, so the file links were removed.
 
 | ID | Defect | Where | Fixed by |
 |---|---|---|---|
 | B1 | All operators share session `sess_default`; memory leaks across users | [server.py](../EIOS/src/eios/cockpit/server.py) | Fixed at the endpoint by spec 023 (session per verified operator and workstation) |
-| B2 | Browser sends `activeEntityId`, server expects `context_entity_id`; no session id sent. Server now accepts both names (spec 023); the browser rename and the entity reaching the engine ride with spec 021 and 030 | [copilot-command-bar.tsx](../EIOS/web-prototype/src/components/cockpit/shell/copilot-command-bar.tsx) | A3 |
+| B2 | Browser sends `activeEntityId`, server expects `context_entity_id`; no session id sent. Server now accepts both names (spec 023); the browser rename and the entity reaching the engine ride with spec 021 and 030 | `copilot-command-bar.tsx` | A3 |
 | B3 | Role is taken from the request body, not the verified operator. The role match also never succeeded, so every query ran as executive | [server.py](../EIOS/src/eios/cockpit/server.py) | Fixed by spec 023: the verified operator is the identity, an unknown workstation is refused (422), the workstation only scopes the tools |
-| B4 | No multi-turn memory on the live path; raw query sent, resolved query unused | [copilot_engine.py](../EIOS/src/eios/conversation/copilot_engine.py) | A3 |
+| B4 | No multi-turn memory on the live path; raw query sent, resolved query unused | `copilot_engine.py` | A3 |
 | B5 | Replay path is hardcoded keyword branches with fixed entity ids | same | A3 |
-| B6 | Keyword routing, keyword adversarial blocklist, `"sec"` policy trigger | same, [rag_tools.py](../EIOS/src/eios/conversation/rag_tools.py) | A3-A4 (Model Armor) |
-| B7 | Tools are fixtures; copilot bypasses the governed OMCP server and markings | [tools.py](../EIOS/src/eios/conversation/tools.py) | A3 |
+| B6 | Keyword routing, keyword adversarial blocklist, `"sec"` policy trigger | same, `rag_tools.py` | A3-A4 (Model Armor) |
+| B7 | Tools are fixtures; copilot bypasses the governed OMCP server and markings | `tools.py` | A3 |
 | B8 | Citations carry tool name, not metric id; label used as value | copilot_engine | A3 |
-| B9 | `ThreadCheckpointer` is SQLite `:memory:`: lost on restart, not shared | [checkpointer.py](../EIOS/src/eios/conversation/checkpointer.py) | A4 |
+| B9 | `ThreadCheckpointer` is SQLite `:memory:`: lost on restart, not shared | `checkpointer.py` | A4 |
 | B10 | Turns up to 50-65 s (manual loop plus correction rounds) `[SPIKE]` from CLAUDE.md | copilot_engine | A3 (reference check removes most retries) |
-| B11 | `ActionIntentToken` defaults to a simulated signature and a legacy-project KMS key | [models.py](../EIOS/src/eios/conversation/models.py) | A3 (remove defaults; signing only via the intent hub) |
-| B12 | LangGraph path is a stub (constant strings, unset `compliance_hold`) | [graph.py](../EIOS/src/eios/conversation/graph.py), [supervisor.py](../EIOS/src/eios/conversation/supervisor.py) | A4 (delete) |
+| B11 | `ActionIntentToken` defaults to a simulated signature and a legacy-project KMS key | `models.py` | A3 (remove defaults; signing only via the intent hub) |
+| B12 | LangGraph path is a stub (constant strings, unset `compliance_hold`) | `graph.py`, `supervisor.py` | A4 (delete) |
 
 ## 3. The auditor: why it is replaced
 
@@ -82,7 +84,7 @@ Database access: never expose generic `execute_sql` to the model; only named par
 | MCP Toolbox ADK SDK on Python 3.14; Toolbox as a new private Cloud Run service (identity, `infra/identities.yaml`) | Unverified |
 | Offline tests need a Toolbox stand-in (SQLite or stub) | Open |
 | Google docs search tool (Developer Knowledge MCP) rejected its API key this session; Check Grounding and Model Armor details come from public doc pages | Known limitation |
-| 24 test files under `tests/conversation/` assert today's behaviour | Port, do not delete |
+| The legacy conversation tests asserted the old copilot | Retired with the code; what they said about OMCP and endpoint identity is kept (ADR-019 Evidence) |
 
 ## 6. Open decisions
 

@@ -5,7 +5,6 @@ Executes and verifies Scenarios 1 through 6 defined in specs/011-governed-action
 
 import pytest
 
-from eios.conversation.specialists.governance import GovernanceAuditorSpecialist
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
     ActionIntentHub,
@@ -214,14 +213,3 @@ def test_quickstart_scenario_6_omcp_and_replay_fallback(seeded_hot_state):
     audit_status = omcp.call_tool("get_ledger_audit_status", {}, caller_role="ComplianceAuditor")
     assert "head_seq" in audit_status
     assert "integrity_score" in audit_status
-
-    # Test Governance Conversational Specialist Replay Fallback
-    specialist = GovernanceAuditorSpecialist(omcp_server=omcp)
-    response = specialist.handle_query(
-        query="What is the cryptographic health of our action ledger?",
-        simulate_llm_outage=True,
-    )
-
-    assert "[REPLAY]" in response["content"]
-    assert "Cryptographic Ledger Status" in response["content"]
-    assert response["is_fallback"] is True

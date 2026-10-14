@@ -360,19 +360,10 @@ export interface SloHealthItem {
   dlqQuarantineDepth: number;
 }
 
-export interface AuditorGateResult {
-  auditPassed: boolean;
-  extractedNumbers: (number | string)[];
-  anchoredNumbers: (number | string)[];
-  untraceableNumbers: (number | string)[];
-  rejectionReason?: string;
-  toolTracesCount: number;
-}
-
 /**
  * What the ADK assistant says about its own answer. ASSEMBLED: every figure was filled in by the system from a
  * governed result of this turn (the Metric Auditor did not run). BLOCKED: screening stopped it. FAILED_CLOSED: it
- * could not support an answer and shows no figure. UNAVAILABLE: the model or data failed. Absent for the legacy copilot.
+ * could not support an answer and shows no figure. UNAVAILABLE: the model or data failed.
  */
 export type AssistantStatus = 'ASSEMBLED' | 'BLOCKED' | 'FAILED_CLOSED' | 'UNAVAILABLE';
 
@@ -409,17 +400,13 @@ export interface CopilotQueryResponse {
   naturalLanguageQuery: string;
   responseMarkdown: string;
   citedMetrics: MetricProvenance[];
-  suggestedAction?: ActionIntentCard;
-  auditorResult: AuditorGateResult;
-  assistantStatus?: AssistantStatus;
-  blocked?: boolean;
+  assistantStatus: AssistantStatus;
+  blocked: boolean;
   blockReason?: string;
   dataOrigin?: DataOrigin;
-  steps?: string[];
-  proposals?: AssistantProposal[];
+  steps: string[];
+  proposals: AssistantProposal[];
   turnLatencyMs?: number;
-  /** True when the answer is a deterministic replay, not a live model turn. Set by the backend, never inferred. */
-  isReplayFallback?: boolean;
   fallbackReason?: string;
   timestamp: string;
 }
