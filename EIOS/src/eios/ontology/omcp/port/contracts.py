@@ -90,8 +90,11 @@ class ToolResult(StrictModel):
         return value
 
     def domain_leaves(self) -> dict[str, bool]:
-        body = {k: v for k, v in self.model_dump().items() if k not in ENVELOPE_FIELDS}
-        body.pop("fact_ids", None)
+        body = {
+            k: v
+            for k, v in self.model_dump(exclude={"fact_ids"}).items()
+            if k not in ENVELOPE_FIELDS
+        }
         return leaf_paths(body)
 
     @model_validator(mode="after")
@@ -108,9 +111,12 @@ class ToolResult(StrictModel):
             )
         return self
 
+    def fact_scope(self) -> str:
+        """The middle part of a fact id: what the figures are about (the entity, or `-` for the portfolio)."""
+        return self.entity_id or "-"
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def fact_ids(self) -> dict[str, str]:
-        return {
-            path: f"{self.capability}:{self.entity_id or '-'}:{path}" for path in sorted(self.units)
-        }
+        figures = {path for path, is_figure in self.domain_leaves().items() if is_figure}
+        return {path: f"{self.capability}:{self.fact_scope()}:{path}" for path in sorted(figures)}

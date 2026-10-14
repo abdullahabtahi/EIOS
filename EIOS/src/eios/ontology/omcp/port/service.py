@@ -17,19 +17,11 @@ from pydantic import ValidationError
 
 from eios.ontology.omcp.markings import SecurityMarkingEnforcer
 from eios.ontology.omcp.port.contracts import PortError, ToolError, ToolErrorCode, ToolResult
-from eios.ontology.omcp.port.principal import Principal, Workstation
+from eios.ontology.omcp.port.principal import Principal, Workstation, enforcer_role
 from eios.ontology.omcp.port.registry import ToolSpec
 
 _LOG = logging.getLogger("eios.ontology.omcp.port")
 
-# Marking clearance reuses the OMCP enforcer's role table; the workstation is mapped to its enforcer role.
-_ENFORCER_ROLE = {
-    Workstation.AML_INVESTIGATOR: "AMLInvestigator",
-    Workstation.PARTNER_MANAGER: "PartnerManager",
-    Workstation.EXECUTIVE: "Executive",
-    Workstation.COMPLIANCE_AUDITOR: "ComplianceOfficer",
-    Workstation.DATA_OPERATIONS: "PublicAgent",
-}
 MAX_RECORDED = 10_000  # bounded in memory; the durable trail is the ledger, not this list
 
 
@@ -93,6 +85,9 @@ class GovernedToolPort:
         self.refusals = refusals or RefusalLog()
         self.traces: list[CallTrace] = []
 
+    def spec_for_capability(self, capability: str) -> ToolSpec | None:
+        return next((s for s in self._specs.values() if s.capability == capability), None)
+
     def list_tools(self, principal: Principal) -> list[ToolSpec]:
         return [s for s in self._specs.values() if principal.workstation in s.workstations]
 
@@ -107,7 +102,7 @@ class GovernedToolPort:
                 started,
                 "this capability is not available to your workstation",
             )
-        enforcer = SecurityMarkingEnforcer(_ENFORCER_ROLE[principal.workstation])
+        enforcer = SecurityMarkingEnforcer(enforcer_role(principal.workstation))
         if not all(enforcer.can_access(m) for m in spec.markings):
             return self._refuse(
                 principal,

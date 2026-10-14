@@ -13,7 +13,12 @@ from eios.cockpit.compliance import ComplianceExplorerService
 from eios.cockpit.executive import ExecutiveCockpitService
 from eios.cockpit.operations import DataPlatformOperationsService
 from eios.cockpit.partner import PartnerWorkstationService
+from eios.flywheel.diagnostics import CalibrationDiagnosticsEngine
+from eios.flywheel.ledger import DecisionOutcomesLedger
+from eios.hardening.runbooks import RunbookVerificationEngine
+from eios.observability.slo_engine import SLOMonitoringEngine
 from eios.ontology.omcp.port.entities import EntityDirectory, default_directory
+from eios.ontology.omcp.port.facts import FactResolver
 
 
 def _utc_now() -> datetime:
@@ -28,7 +33,12 @@ class ReadModels:
     compliance: ComplianceExplorerService
     operations: DataPlatformOperationsService
     directory: EntityDirectory
+    slo_engine: SLOMonitoringEngine
+    runbooks: RunbookVerificationEngine
+    outcomes: DecisionOutcomesLedger
+    calibration: CalibrationDiagnosticsEngine
     clock: Callable[[], datetime] = field(default=_utc_now)
+    facts: FactResolver = field(default_factory=FactResolver)
 
     @classmethod
     def default(cls) -> ReadModels:
@@ -39,4 +49,8 @@ class ReadModels:
             compliance=ComplianceExplorerService(),
             operations=DataPlatformOperationsService(),
             directory=default_directory(),
+            slo_engine=SLOMonitoringEngine(),
+            runbooks=RunbookVerificationEngine(),
+            outcomes=DecisionOutcomesLedger(),
+            calibration=CalibrationDiagnosticsEngine(),
         )

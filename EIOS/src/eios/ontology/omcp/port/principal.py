@@ -49,3 +49,17 @@ def principal_for(uid: str | None, workstation: str) -> Principal:
             ToolErrorCode.FORBIDDEN_ROLE, "operator is not entitled to this workstation"
         )
     return Principal(uid=resolved_uid, workstation=chosen)
+
+
+# The OMCP marking enforcer is keyed by role name; each workstation maps to the role whose clearance it has.
+_ENFORCER_ROLE = {
+    Workstation.AML_INVESTIGATOR: "AMLInvestigator",
+    Workstation.PARTNER_MANAGER: "PartnerManager",
+    Workstation.EXECUTIVE: "Executive",
+    Workstation.COMPLIANCE_AUDITOR: "ComplianceOfficer",
+    Workstation.DATA_OPERATIONS: "PublicAgent",
+}
+
+
+def enforcer_role(workstation: Workstation) -> str:
+    return _ENFORCER_ROLE[workstation]

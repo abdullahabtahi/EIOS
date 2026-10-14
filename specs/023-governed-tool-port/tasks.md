@@ -25,26 +25,26 @@
 
 ## Phase 3: US1 AML slice (P1)
 
-- [ ] T010 [US1] Tests (`tests/ontology/port/test_aml_tools.py`): dossier fields and units, discrepancy 16.0 equals the workstation payload, unknown id `NOT_FOUND`, known-without-dossier `DATA_UNAVAILABLE`, alerts ranked, network flags hub suppression, timeline ordered, withdrawal risk, SAR draft sections reference facts
-- [ ] T011 [US1] `port/aml_tools.py`: `list_alerts`, `get_aml_dossier`, `get_network_evidence`, `get_activity_timeline`, `check_withdrawal_risk`, `draft_sar`
-- [ ] T012 [P] [US1] Add `aml:CR84920` to `evals/agent/screen_payloads.py` (read from `AMLWorkstationService`) and the case that uses it
+- [X] T010 [US1] Tests (`tests/ontology/port/test_aml_tools.py`): dossier fields and units, discrepancy 16.0 equals the workstation payload, unknown id `NOT_FOUND`, known-without-dossier `DATA_UNAVAILABLE`, alerts ranked, network flags hub suppression, timeline ordered, withdrawal risk, SAR draft sections reference facts
+- [X] T011 [US1] `port/aml_tools.py`: `list_alerts`, `get_aml_dossier`, `get_network_evidence`, `get_activity_timeline`, `check_withdrawal_risk`, `draft_sar`
+- [X] T012 [P] [US1] Add `aml:CR84920` to `evals/agent/screen_payloads.py` (read from `AMLWorkstationService`) and the case that uses it
 
 ## Phase 4: US2 Safe by construction (P1)
 
-- [ ] T013 [US2] Tests (`tests/ontology/port/test_safety.py`): for every role, no tool approves or executes (walk the registry); every out-of-role call is refused and recorded; the capability map roles equal the port roles; untrusted text is flagged, structured first, bounded; a marking the role lacks gives `FORBIDDEN_MARKING` and no restricted field
-- [ ] T014 [US2] Enforce markings per tool in `service.py`; `port/untrusted.py` wrapper
+- [X] T013 [US2] Tests (`tests/ontology/port/test_safety.py`): for every role, no tool approves or executes (walk the registry); every out-of-role call is refused and recorded; the capability map roles equal the port roles; untrusted text is flagged, structured first, bounded; a marking the role lacks gives `FORBIDDEN_MARKING` and no restricted field
+- [X] T014 [US2] Enforce markings per tool in `service.py`; `port/untrusted.py` wrapper
 
 ## Phase 5: US3 Partner slice (P2)
 
-- [ ] T015 [US3] Tests (`tests/ontology/port/test_partner_tools.py`): signals equal the radar payload for the golden partner (0.78, login decay), aliases resolve, no default partner, worklist ranked, integrity states observed facts only, comms untrusted, proposals carry label, cost, effect range, approver, no action constant
-- [ ] T016 [US3] `port/partner_tools.py`: `list_partner_worklist`, `get_partner_signals`, `get_partner_integrity`, `get_client_quality`, `read_partner_comms`
-- [ ] T017 [US3] `port/proposals.py`: `propose_hold`, `propose_partner_action`, closed action-kind enum with labels
+- [X] T015 [US3] Tests (`tests/ontology/port/test_partner_tools.py`): signals equal the radar payload for the golden partner (0.78, login decay), aliases resolve, no default partner, worklist ranked, integrity states observed facts only, comms untrusted, proposals carry label, cost, effect range, approver, no action constant
+- [X] T016 [US3] `port/partner_tools.py`: `list_partner_worklist`, `get_partner_signals`, `get_partner_integrity`, `get_client_quality`, `read_partner_comms`
+- [X] T017 [US3] `port/proposals.py`: `propose_hold`, `propose_partner_action`, closed action-kind enum with labels
 
 ## Phase 6: US4 Executive, compliance and operations (P2)
 
-- [ ] T018 [US4] Tests (`tests/ontology/port/test_executive_tools.py`): `compare_facts` difference, ratio, percentage with cited inputs and unit rules, mismatched units rejected; what-if attribution sums to 100.0, labelled simulation; causal label verified versus correlation only; metric returns unit and definition
-- [ ] T019 [US4] `port/shared_tools.py` (`get_metric`, `resolve_entity`, `get_causal_evidence`, `compare_facts`) and `port/executive_tools.py` (`get_briefing`, `get_forecast`, `run_what_if`)
-- [ ] T020 [P] [US4] Tests and `port/compliance_tools.py` + `port/ops_tools.py`: ledger timeline, intent status, audit status, verify chain; DQ board, reliability, drill status, calibration (`tests/ontology/port/test_compliance_ops_tools.py`)
+- [X] T018 [US4] Tests (`tests/ontology/port/test_executive_tools.py`): `compare_facts` difference, ratio, percentage with cited inputs and unit rules, mismatched units rejected; what-if attribution sums to 100.0, labelled simulation; causal label verified versus correlation only; metric returns unit and definition
+- [X] T019 [US4] `port/shared_tools.py` (`get_metric`, `resolve_entity`, `get_causal_evidence`, `compare_facts`) and `port/executive_tools.py` (`get_briefing`, `get_forecast`, `run_what_if`)
+- [X] T020 [P] [US4] Tests and `port/compliance_tools.py` + `port/ops_tools.py`: ledger timeline, intent status, audit status, verify chain; DQ board, reliability, drill status, calibration (`tests/ontology/port/test_compliance_ops_tools.py`)
 
 ## Phase 7: Judge through the agent port
 
