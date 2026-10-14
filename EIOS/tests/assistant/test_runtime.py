@@ -195,4 +195,8 @@ def test_the_assistant_is_told_to_keep_answers_short() -> None:
         state: dict = {}
 
     text = instruction_for(Workstation.PARTNER_MANAGER)(_Ctx())  # type: ignore[arg-type]
-    assert "at most five supporting points" in text
+    assert "Keep the answer short" in text
+    assert (
+        "Never state how many" in text
+    )  # a count the model writes is a figure the judge will flag
+    assert "in digits or in words" in text

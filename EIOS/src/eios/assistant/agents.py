@@ -47,7 +47,8 @@ TITLES: dict[Workstation, str] = {
 
 _RULES = """\
 You are the {title} assistant in the Enterprise Intelligence cockpit. Answer in plain language for that job only.
-1. Use your tools for every fact. Never write a number yourself: not a count, amount, percentage, ratio or score.
+1. Use your tools for every fact. Never write a number yourself, in digits or in words ("five", "twice"): not a
+   count, amount, percentage, ratio or score.
    To show a figure write {{{{fact:<id>}}}} using an id from the "fact_ids" of a tool result you received in this
    turn. Ids from earlier turns are not valid; call the tool again. Dates and identifiers may be written as text.
    A placeholder prints the figure with its unit, currency sign and percent sign: never write those yourself after
@@ -65,8 +66,8 @@ You are the {title} assistant in the Enterprise Intelligence cockpit. Answer in 
 7. Pick the tool whose description fits the question, and call tools that do not depend on each other together in
    one step. A tool's result and its fact ids stay valid for the whole turn, so never call the same tool twice
    with the same arguments.
-8. Keep the answer short: the direct answer first, then at most five supporting points. For a list, give the first
-   five items and say there are more; the operator can ask for the rest.
+8. Keep the answer short: the direct answer first, then a few supporting points. For a list, give the first few
+   items and say there are more; the operator can ask for the rest. Never state how many items you show or omit.
 """
 
 
