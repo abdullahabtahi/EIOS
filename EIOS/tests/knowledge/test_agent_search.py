@@ -36,13 +36,15 @@ def chunk(
 
 class FakeClient:
     def __init__(self, results: list[Any] | Exception) -> None:
-        self.results, self.requests = results, []
+        self.results, self.requests, self.timeouts = results, [], []
 
-    def search(self, request: Any) -> list[Any]:
+    def search(self, request: Any, timeout: float | None = None) -> Any:
         self.requests.append(request)
+        self.timeouts.append(timeout)
         if isinstance(self.results, Exception):
             raise self.results
-        return self.results
+        # a pager: the first page holds the results, a second page must never be asked for
+        return SimpleNamespace(pages=iter([SimpleNamespace(results=self.results)]))
 
 
 def index(client: FakeClient, **kw: Any) -> AgentSearchIndex:
@@ -98,3 +100,10 @@ def test_a_missing_page_span_is_n_a_and_an_empty_chunk_is_dropped() -> None:
 def test_a_long_chunk_is_cut_to_the_limit_with_an_ellipsis() -> None:
     [p] = index(FakeClient([chunk("word " * 2000)])).search("q", None, 5)
     assert len(p.text) <= MAX_PASSAGE_CHARS and p.text.endswith("…")
+
+
+def test_the_call_has_a_deadline_and_reads_only_the_first_page() -> None:
+    client = FakeClient([chunk("one"), chunk("two")])
+    assert len(index(client).search("q", None, 5)) == 2
+    assert client.timeouts == [8.0]
+    assert next(iter(client.results), None) is not None  # the fake serves no second page

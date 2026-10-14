@@ -22,7 +22,7 @@ regulator beside every passage. This note records the design and how to run it. 
 
 Agent Search (formerly Vertex AI Search) parses with a layout parser, chunks along headings and returns each chunk with its
 page span and document metadata, which is exactly a citation. RAG Engine and Vector Search would mean building the parser,
-the chunker and the citation mapping ourselves; the corpus is six documents, so the managed path is the proportionate one.
+the chunker and the citation mapping ourselves; the corpus is five documents, so the managed path is the proportionate one.
 `VertexAiSearchTool` (the model-side built-in) is not used: its passages reach the model outside the port, so they would
 bypass fact ids, the untrusted mark and tool-result screening. Our tool calls the service through
 `eios.knowledge.agent_search` behind the `RegulationIndex` seam, so the offline gates run on an in-memory index.
@@ -40,11 +40,27 @@ bypass fact ids, the untrusted mark and tool-result screening. Our tool calls th
   `evals/knowledge/cases.yaml` (page-level truth read from the files) and reports recall at 1, 3 and 5 and the share of
   unanswerable questions that returned nothing.
 
+## Measured (dev index, 2026-10-15)
+
+- Import of five documents and 558 pages `[MEASURED]` took about 18.5 minutes `[MEASURED]`, all five succeeded. Layout
+  parsing is billed per count at a rate of 0.01 USD `[MEASURED]` from the Cloud Billing catalogue; if a count is a page, the
+  import cost about 5.6 USD `[ASSUMPTION]`.
+- Retrieval, 14 cases (12 answerable, 2 not) `[MEASURED]`: recall at 1 is 91.7%, at 3 and at 5 it is 100% `[MEASURED]`; both
+  unanswerable questions returned nothing `[MEASURED]`. Before one truth correction (regulation 13 of the Maltese
+  regulations is also a correct answer on record keeping) recall at 1 was 83.3% and at 3 was 91.7% `[MEASURED]`.
+- Query latency: median 2.3 s, worst 5.2 s `[MEASURED]` over those runs. A first version that read every result page took
+  14 to 17 s `[MEASURED]`; the adapter now reads the first page only and has an 8 s deadline `[ASSUMPTION]`. One query still
+  exceeded 8 s in an earlier run, so expect an occasional typed `DATA_UNAVAILABLE` rather than a hang.
+- One real assistant turn (AML investigator, live model) quoted the right FIAU passage with its source in 14.7 s
+  `[MEASURED]`, status ASSEMBLED, origin live. This is one turn, not an evaluation.
+
 ## Limits
 
 - Page numbers are PDF page indexes, which can differ from the numbers printed on a page.
 - The relevance threshold defaults to LOW `[ASSUMPTION]`; tune it with the retrieval cases, not by feel.
-- The jurisdiction filter is exercised against the real index by the retrieval cases, not by unit tests.
+- The jurisdiction filter works on the real index (the retrieval cases use it); unit tests cover only the request shape.
+- A quotation is a whole chunk (up to about 2000 characters) and can carry page furniture such as footers and footnote marks.
+  Quoting only the relevant sentences is the next improvement.
 - The offline agent baseline answers from labelled test passages (origin `fixture`); it shows routing and assembly, not
   retrieval quality.
 - SAR drafts do not cite a rule yet; the dossier does not pick the rule for an entity's licensing jurisdiction yet.

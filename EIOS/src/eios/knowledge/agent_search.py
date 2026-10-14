@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 
 SERVING_CONFIG = "default_search"
 RELEVANCE_LEVELS = frozenset({"LOWEST", "LOW", "MEDIUM", "HIGH"})
+SEARCH_TIMEOUT_S = 8.0  # [ASSUMPTION] a query takes 2 to 3 s [MEASURED]; the deadline keeps an outage from stalling a turn
 _SAFE_ID = re.compile(r"[^A-Za-z0-9_.-]")
 _JURISDICTION = re.compile(r"^[A-Z]{2,5}$")
 
@@ -85,8 +86,13 @@ class AgentSearchIndex:
 
     def search(self, query: str, jurisdiction: str | None, limit: int) -> list[Passage]:
         try:
-            response = self._search_client().search(self._request(query, jurisdiction, limit))
-            return [p for r in response if (p := self._passage(r)) is not None][:limit]
+            response = self._search_client().search(
+                self._request(query, jurisdiction, limit), timeout=SEARCH_TIMEOUT_S
+            )
+            # Only the first page: iterating the pager would fetch every further page, which is slow and unwanted.
+            first = next(iter(response.pages), None)
+            results = list(first.results) if first is not None else []
+            return [p for r in results if (p := self._passage(r)) is not None][:limit]
         except IndexUnavailable:
             raise
         except (

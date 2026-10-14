@@ -106,8 +106,8 @@ documents:
     licence_state: accepted_for_prototype
     serves: [aml_investigator]
     use: Red-flag indicators for the Labuan international business and financial centre
-    status: acquired
-    note: "Image-only PDF with no text layer; the layout parser's OCR reads it at ingestion"
+    status: dropped_by_user
+    note: "Dropped from v1 by the user (2026-10-15): two pages, image-only. Re-acquire with status acquired to add it back; the layout parser OCRs scans."
 
   - id: US-FINCEN-NARR-2003
     title: Guidance on Preparing a Complete and Sufficient Suspicious Activity Report Narrative

@@ -11,7 +11,9 @@ cases:
   - id: mt_record_retention
     question: For how long do subject persons have to keep customer due diligence records?
     jurisdiction: MT
-    expect: [{document_id: MT-FIAU-IP1, pages: [296, 297]}]
+    expect:
+      - {document_id: MT-FIAU-IP1, pages: [296, 297]}
+      - {document_id: MT-PMLFTR, pages: [33, 34]}  # regulation 13, the legal basis; added after the first live run showed it ranked first
   - id: mt_tipping_off
     question: What is the offence of tipping off and what is the penalty?
     jurisdiction: MT
@@ -48,10 +50,6 @@ cases:
     question: Which red flags relate to customers using mixing services or tumblers for digital assets?
     jurisdiction: LB
     expect: [{document_id: LB-REDFLAG-DFS-2024, pages: [3, 5]}]
-  - id: lb_ibfc_circular_ocr
-    question: What red flag indicators does the Labuan circular for the international business and financial centre list?
-    jurisdiction: LB
-    expect: [{document_id: LB-REDFLAG-IBFC-2024, pages: [1, 2]}]  # an image-only file: a hit shows the parser read the scan
   - id: us_five_ws
     question: What information should a SAR narrative contain about the suspicious activity?
     jurisdiction: US

@@ -28,7 +28,9 @@ def main() -> int:
     REPORT.parent.mkdir(parents=True, exist_ok=True)
     REPORT.write_text(json.dumps(report, indent=2))
     for row in report["rows"]:
-        print(f"{row['id']:<32} rank={row['rank']!s:<5} returned={row['returned']} {row['top']}")
+        print(
+            f"{row['id']:<30} rank={row['rank']!s:<5} n={row['returned']:<2} {row['latency_s']:>5}s {row['error'] or ''} {row['top']}"
+        )
     print({k: v for k, v in report.items() if k != "rows"})
     return 0
 

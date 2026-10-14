@@ -9,6 +9,7 @@ in the answer wording.
 from __future__ import annotations
 
 import re
+import time
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
@@ -17,7 +18,7 @@ import yaml
 from pydantic import Field
 
 from eios.common.validation import StrictModel
-from eios.knowledge.passage import Passage, RegulationIndex
+from eios.knowledge.passage import IndexUnavailable, Passage, RegulationIndex
 
 KS = (1, 3, 5)
 _PAGES = re.compile(r"^(\d+)(?:-(\d+))?$")
@@ -64,13 +65,22 @@ def evaluate(
 ) -> dict[str, Any]:
     rows: list[dict[str, Any]] = []
     for case in cases:
-        found = index.search(case.question, case.jurisdiction, limit)
+        started = time.perf_counter()
+        error: str | None = None
+        try:
+            found = index.search(case.question, case.jurisdiction, limit)
+        except (
+            IndexUnavailable
+        ) as exc:  # an outage is a miss with its reason, not a crash of the whole run
+            found, error = [], str(exc) or "unavailable"
         rows.append(
             {
                 "id": case.id,
                 "answerable": bool(case.expect),
                 "rank": first_hit_rank(found, case.expect) if case.expect else None,
                 "returned": len(found),
+                "latency_s": round(time.perf_counter() - started, 2),
+                "error": error,
                 "top": [f"{p.document_id} p.{p.pages}" for p in found[:3]],
             }
         )
@@ -88,8 +98,11 @@ def evaluate(
             )
             for k in KS
         },
+        "errors": sum(1 for r in rows if r["error"]),
+        "latency_s_median": round(sorted(r["latency_s"] for r in rows)[len(rows) // 2], 2),
+        "latency_s_max": max(r["latency_s"] for r in rows),
         "silence_on_unanswerable": round(
-            sum(1 for r in silent if r["returned"] == 0) / max(len(silent), 1), 3
+            sum(1 for r in silent if r["returned"] == 0 and not r["error"]) / max(len(silent), 1), 3
         ),
         "rows": rows,
     }
