@@ -42,6 +42,19 @@ export function MetricCitationTag({ citation }: { citation: ProvenanceCitation |
   );
 }
 
+/** What the figure's origin is, from the backend's own word. Unknown is never shown as live. */
+function originText(metric: MetricProvenance): string {
+  if (metric.dataOrigin === 'fixture') return 'Demo data (fixture)';
+  if (metric.dataOrigin === 'live') return 'Live data';
+  return metric.isCached ? 'Cached snapshot' : 'Origin not stated';
+}
+
+function originTone(metric: MetricProvenance): string {
+  if (metric.dataOrigin === 'live') return 'text-emerald-700';
+  if (metric.dataOrigin === 'fixture' || metric.isCached) return 'text-amber-700';
+  return 'text-slate-500';
+}
+
 export function MetricProvenanceBadge({
   metric,
   displayMode = 'inline',
@@ -61,14 +74,23 @@ export function MetricProvenanceBadge({
         } ${className}`}
       >
         <span className="tabular-nums font-mono">{metric.formattedValue}</span>
-        {metric.unit && <span className="text-xs text-slate-500 font-normal">{metric.unit}</span>}
+        {/* An assistant figure's text already carries its unit and sign; only legacy citations show the unit apart. */}
+        {metric.unit && metric.dataOrigin === undefined && (
+          <span className="text-xs text-slate-500 font-normal">{metric.unit}</span>
+        )}
+        {metric.dataOrigin === 'fixture' && (
+          <span className="px-1 text-label font-mono uppercase text-cx-warn bg-cx-warn-bg border border-cx-warn-line">demo</span>
+        )}
         <MetricCitationTag citation={metric.citation} />
-        <span
-          className="material-symbols-sharp text-[13px] text-slate-400 group-hover:text-blue-600 transition-colors ml-0.5"
-          aria-hidden="true"
-        >
-          verified
-        </span>
+        {/* A tick only when the figure names where it came from. */}
+        {metric.originEngine && (
+          <span
+            className="material-symbols-sharp text-[13px] text-slate-400 group-hover:text-blue-600 transition-colors ml-0.5"
+            aria-hidden="true"
+          >
+            verified
+          </span>
+        )}
       </PopoverTrigger>
 
       <PopoverContent
@@ -128,18 +150,9 @@ export function MetricProvenanceBadge({
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-slate-500">Live Telemetry</span>
-            <span
-              className={`inline-flex items-center gap-1 text-label font-mono ${
-                metric.isCached ? 'text-amber-700' : 'text-emerald-700'
-              }`}
-            >
-              <span
-                className={`inline-block size-1.5 rounded-full ${
-                  metric.isCached ? 'bg-amber-500' : 'bg-emerald-500'
-                }`}
-              />
-              {metric.isCached ? 'Cached Snapshot' : 'Real-Time Synchronized'}
+            <span className="text-slate-500">Data origin</span>
+            <span className={`inline-flex items-center gap-1 text-label font-mono ${originTone(metric)}`}>
+              {originText(metric)}
             </span>
           </div>
         </div>

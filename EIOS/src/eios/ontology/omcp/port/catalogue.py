@@ -1,5 +1,7 @@
 """The one catalogue: every capability the assistant can be offered, and the port built over it."""
 
+from dataclasses import replace
+
 from eios.ontology.omcp.port import (
     aml_tools,
     compliance_tools,
@@ -9,13 +11,14 @@ from eios.ontology.omcp.port import (
     proposals,
     shared_tools,
 )
+from eios.ontology.omcp.port.descriptions import DESCRIPTIONS
 from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.registry import ToolSpec
 from eios.ontology.omcp.port.service import GovernedToolPort, RefusalLog
 
 
 def all_specs() -> tuple[ToolSpec, ...]:
-    return (
+    declared = (
         *shared_tools.TOOLS,
         *aml_tools.TOOLS,
         *partner_tools.TOOLS,
@@ -23,6 +26,9 @@ def all_specs() -> tuple[ToolSpec, ...]:
         *executive_tools.TOOLS,
         *compliance_tools.TOOLS,
         *ops_tools.TOOLS,
+    )
+    return tuple(
+        replace(s, description=DESCRIPTIONS.get(s.capability, s.description)) for s in declared
     )
 
 

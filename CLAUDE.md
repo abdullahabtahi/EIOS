@@ -90,20 +90,20 @@ Every quantitative claim in code, tests, fixtures, docs and UI carries a tag: `[
 
 ## 8. How we work
 
-- **Spec-driven** (`specs/`): Constitution, Specify, Clarify, Plan, Tasks, Analyze, Implement (skills `speckit-<stage>`, plus `speckit-converge`). Read the existing `spec.md`, `plan.md`, `tasks.md` before adding models or endpoints. Build 80/20: spec, short plan, only the tasks the work needs.
+- **Spec-driven** (`specs/`): `spec.md` is the contract. Plan in the Claude Code harness (plan mode), one short plan with the tasks inline, built 80/20; the spec-kit skills are retired. Read the existing `spec.md` (and any `plan.md`/`tasks.md`) before adding models or endpoints.
 - **Eval first, TDD, 80% coverage** on new code. Agent changes are judged through the agent port (`src/eios/agent_gates/port.py`) against the golden cases, never by the agent itself.
 - **Git:** trunk-based, one short-lived branch per spec in the main checkout (not scratchpad worktrees, which the IDE cannot see; use a worktree only for genuinely parallel work), squash-merge, conventional commits, no Co-Authored-By trailers, delete the branch after merge (squash leaves it behind; verify the PR shows MERGED first). PR when implementation lands, not per artifact. Merge only with green CI and an up-to-date branch, and only when the user has said you may.
 - **CI:** 15+ gates plus CodeQL (logging a secret in clear text is a real finding). Dependabot lockfile conflicts: take `main`'s `package.json`/lock, then `npm install <pkg>`.
-- **Context:** start a fresh session per spec; state lives in `tasks.md`, the docs above and memory. Long jobs (the live baseline) get a log line per step and run in the background.
+- **Context:** start a fresh session per spec; state lives in the spec, the docs above and memory. Long jobs (the live baseline) get a log line per step and run in the background.
 
 ## 9. State and next steps
 
-Done and merged: real KMS signing, durable Firestore ledger and approvals, signed hub-routed staging, Firebase auth with RBAC and identity-bound four-eyes, honest proxies, Cloud Run with Terraform, live copilot grounding, **spec 022 agent quality gates and the measured baseline** (`docs/agent-baseline.md`).
+Done and merged: real KMS signing, durable Firestore ledger and approvals, signed hub-routed staging, Firebase auth with RBAC and identity-bound four-eyes, honest proxies, Cloud Run with Terraform, live copilot grounding, **spec 022 agent quality gates and the measured baseline** (`docs/agent-baseline.md`), **spec 023 typed tool port** (`eios.ontology.omcp.port`), and the ADK dependency pins (#40).
 
 The copilot today, measured: p95 48.6 s `[MEASURED]` live, contradicts the workstation screen, no role scoping (5 of 15 attacks succeed offline `[MEASURED]`), 8 of 33 needed capabilities have a tool `[MEASURED]`.
 
 Next, in order (approved build order 022 > 023 > 021 > 024 ... 028; status in `docs/adk.md`):
-1. **Spec 023 (typed tool port), then spec 021 (ADK runtime)** replacing LangGraph: needs an ADR superseding 016, embeds in `eios-api` on Cloud Run, use `/google-agents-cli-adk-code`. Keep the auditor egress, compliance-hold arbitration, KMS-signed human-in-the-loop interception, the allow-listed OMCP tools (also exposed as an MCP server) and the 3-cycle bound. It must beat the baseline through the same port under `evals/agent/thresholds.yaml`. Decision A-9 (dependency pins) awaits approval. Pass `is_replay_fallback` through the web proxy so the UI can badge replays.
+1. **Spec 021 (ADK runtime)**, built on branch `spec/021-adk-agent-runtime` (`src/eios/assistant/`, ADR-019 Proposed, flag `EIOS_ASSISTANT_RUNTIME=legacy|adk`, default `legacy`): offline it matches the tool-port reference through the agent port; live quality is not yet measured. Open: the live run (needs `EIOS_AGENT_EVAL_MAX_TURNS` and the user's say-so), Model Armor templates, telemetry plugin, labelled replay on model outage, web proxy status for `ASSEMBLED` answers. Then flip the default and delete the legacy copilot and LangGraph mesh in a follow-up PR. Pass `is_replay_fallback` through the web proxy so the UI can badge replays.
 2. Chat workspace in the dossier (spec 030) and the governed action shelf wired to the real stage/authorize endpoints; remove client-side fabricated copilot fallbacks.
 3. Product direction in `docs/financial_geospatial.md`: regulator-grade AML investigator, geography as an evidence lens. Verify GLEIF and labelled-data licences before ingesting; Dekart is AGPL.
 4. Deploy via GitHub Actions workload identity (pool `eios-ci`), apply Terraform to stage and dev, close ADR-002, re-enable org-policy guardrails.
