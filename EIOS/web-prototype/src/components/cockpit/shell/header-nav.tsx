@@ -16,7 +16,8 @@ import { SystemStatusDialog } from '../common/system-status-dialog';
 import { getPipelineStatus, type PipelineTone } from '../state/pipeline-status';
 import { useAuth } from '@/lib/auth/auth-context';
 
-const ENV_LABEL = process.env.NEXT_PUBLIC_EIOS_ENV ?? 'DEMO';
+// An environment name (STAGE, PROD) is shown only when one is configured; there is no default label.
+const ENV_LABEL = process.env.NEXT_PUBLIC_EIOS_ENV;
 
 const TONE_DOT: Record<PipelineTone, string> = {
   ok: 'bg-emerald-400',
@@ -56,7 +57,7 @@ export function HeaderNav({
             </span>
           </div>
           <span className="px-1.5 py-0.5 bg-white/8 border border-white/15 text-slate-200 font-mono text-label font-bold tracking-wider">
-            {ENV_LABEL} • TLP:AMBER
+            {ENV_LABEL ? `${ENV_LABEL} • ` : ''}TLP:AMBER
           </span>
         </div>
 

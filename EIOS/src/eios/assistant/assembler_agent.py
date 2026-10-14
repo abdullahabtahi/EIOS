@@ -27,7 +27,7 @@ from eios.assistant.assembly import (
 )
 from eios.assistant.tools import FACTS_KEY, IDENTIFIERS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
 from eios.llm_gateway.providers.adk_types import Content, Part
-from eios.ontology.omcp.port.contracts import DataOrigin
+from eios.ontology.omcp.port.contracts import DataOrigin, weakest
 
 DRAFT_KEY = "temp:draft"
 ATTEMPT_KEY = "temp:assembly_attempts"
@@ -37,11 +37,8 @@ logger = logging.getLogger(__name__)
 
 
 def _origin(values: list[str]) -> DataOrigin:
-    return (
-        DataOrigin.LIVE
-        if values and all(v == DataOrigin.LIVE.value for v in values)
-        else DataOrigin.FIXTURE
-    )
+    """The weakest origin of what the turn read; no tool result means fixture."""
+    return weakest(DataOrigin(v) for v in values)
 
 
 def _turn_facts(raw: dict[str, Any]) -> dict[str, TurnFact]:

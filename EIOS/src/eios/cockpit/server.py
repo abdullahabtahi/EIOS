@@ -22,7 +22,7 @@ import logging
 import os
 import time
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 import uvicorn
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
@@ -33,7 +33,8 @@ from starlette.responses import JSONResponse
 
 from eios.assistant.config import AssistantConfigError
 from eios.assistant.sessions import valid_entity_id
-from eios.cockpit.aml import AMLWorkstationService
+from eios.cockpit import aml_engine_view as aml_view
+from eios.cockpit.aml_engine_view import default_entity
 from eios.cockpit.assistant_gateway import (
     get_runtime,
 )
@@ -46,15 +47,13 @@ from eios.cockpit.auth import (
     current_operator,
     require_roles,
 )
-from eios.cockpit.compliance import ComplianceExplorerService
-from eios.cockpit.executive import ExecutiveCockpitService
 from eios.cockpit.governance_runtime import build_governance_runtime
 from eios.cockpit.governance_shelf import GovernedActionCard
-from eios.cockpit.operations import DataPlatformOperationsService
-from eios.cockpit.partner import PartnerWorkstationService
 from eios.cockpit.session import SessionManager
 from eios.cockpit.shell import CockpitShellPresenter
-from eios.flywheel.ledger import DecisionOutcomeRecord, DecisionOutcomesLedger
+from eios.dataplane.aml_service import EngineAMLService, UnknownAccountError
+from eios.dataplane.plane import engine_service, read_models
+from eios.flywheel.ledger import DecisionOutcomeRecord
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
     CANONICAL_ACTION_SPECS,
@@ -96,12 +95,15 @@ if os.getenv("EIOS_ENVIRONMENT", "dev") in {"dev", "test"}:
 
 action_shelf = governance.shelf
 presenter = CockpitShellPresenter(session_manager=session_mgr, action_shelf=action_shelf)
-executive_svc = ExecutiveCockpitService()
-aml_svc = AMLWorkstationService()
-partner_svc = PartnerWorkstationService()
-compliance_svc = ComplianceExplorerService()
-operations_svc = DataPlatformOperationsService()
-outcomes_ledger = DecisionOutcomesLedger()
+# One set of read models under every route and the assistant (spec 031 FR-008): a screen and an answer read the
+# same objects. `EIOS_DATA_PLANE` chooses engine-backed or fixture AML data.
+_models = read_models()
+executive_svc = _models.executive
+aml_svc = _models.aml
+partner_svc = _models.partner
+compliance_svc = _models.compliance
+operations_svc = _models.operations
+outcomes_ledger = _models.outcomes
 
 
 # Request/Response Models
@@ -232,6 +234,8 @@ class CockpitHealthResponse(BaseModel):
 # Workstation payloads are assembled from in-process fixtures, not from the ingestion pipeline, so the
 # contract says so. "[LIVE]" must wait until a state actually arrives from governed data products.
 FIXTURE_DATA_BADGE = "[ILLUSTRATIVE]"
+ENGINE_DATA_BADGE = "[ENGINE]"  # computed by the engines over the seeded world, not hand-written
+AML_ROLES = ("aml_investigator", "aml", "compliance_aml")
 
 
 def _get_utc_now() -> str:
@@ -286,7 +290,9 @@ def _ensure_default_staged_cards() -> None:
     governance.seed_demo_intents()
 
 
-def _build_contract_state(role_str: str, operator_id: str | None = None) -> dict[str, Any]:  # noqa: PLR0915
+def _build_contract_state(  # noqa: PLR0915
+    role_str: str, operator_id: str | None = None, entity_id: str | None = None
+) -> dict[str, Any]:
     """Compiles the full CockpitUiContract JSON structure for a role (read-only, side-effect free)."""
     norm_role = role_str.lower().strip()
     now_iso = _get_utc_now()
@@ -389,6 +395,16 @@ def _build_contract_state(role_str: str, operator_id: str | None = None) -> dict
                 ],
             },
         }
+
+    elif norm_role in AML_ROLES and engine_service() is not None:
+        role_enum = "aml_investigator"
+        engine = cast(EngineAMLService, engine_service())
+        chosen = (
+            entity_id if entity_id and engine.supports_detail(entity_id) else default_entity(engine)
+        )
+        triage_items = aml_view.triage_items(engine, now_iso)
+        active_dossier = aml_view.active_dossier(engine, chosen)
+        kinetic_canvas = aml_view.kinetic_canvas(engine, chosen)
 
     elif norm_role in ("aml_investigator", "aml", "compliance_aml"):
         role_enum = "aml_investigator"
@@ -845,7 +861,9 @@ def _build_contract_state(role_str: str, operator_id: str | None = None) -> dict
         },
         "fallback_state": {
             "is_active": False,
-            "badge_label": FIXTURE_DATA_BADGE,
+            "badge_label": ENGINE_DATA_BADGE
+            if role_enum == "aml_investigator" and engine_service() is not None
+            else FIXTURE_DATA_BADGE,
             "cached_timestamp": None,
             "outage_reason": None,
         },
@@ -932,6 +950,7 @@ WORKSTATIONS_PATH = "/api/cockpit/workstations/{role}"
 SIMULATE_PATH = "/api/cockpit/simulate"
 STAGE_ACTION_PATH = "/api/cockpit/actions/stage"
 AUTHORIZE_ACTION_PATH = "/api/cockpit/actions/authorize"
+AML_CASE_PATH = "/api/cockpit/aml/cases/{entity_id}"
 COPILOT_QUERY_PATH = "/api/cockpit/copilot/query"
 FLYWHEEL_FEEDBACK_PATH = "/api/cockpit/flywheel/feedback"
 AUDIT_VERIFY_PATH = "/api/cockpit/audit/verify"
@@ -959,16 +978,45 @@ def get_health() -> CockpitHealthResponse:
 
 @router.get(WORKSTATIONS_PATH)
 def get_workstation_state(
-    role: str, operator: Operator | None = Depends(current_operator)
+    role: str,
+    entity_id: str | None = None,
+    operator: Operator | None = Depends(current_operator),
 ) -> dict[str, Any]:
-    """Returns the full contract-compliant client state for the requested workstation."""
+    """Returns the full contract-compliant client state for the requested workstation.
+
+    `entity_id` selects which case the dossier and canvas open on (the AML workstation); unknown ids fall back to the
+    strongest case rather than showing another account's data.
+    """
     try:
-        return _build_contract_state(role, operator_id=operator.uid if operator else None)
+        return _build_contract_state(
+            role, operator_id=operator.uid if operator else None, entity_id=entity_id
+        )
     except Exception as exc:
         _LOG.exception("failed to assemble workstation state for %s", role)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to assemble workstation state",
+        ) from exc
+
+
+@router.get(AML_CASE_PATH)
+def get_aml_case(entity_id: str) -> dict[str, Any]:
+    """One account's computed dossier and network canvas, for the selection a browser just made."""
+    engine = engine_service()
+    if engine is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="no engine plane")
+    if not valid_entity_id(entity_id) or not engine.supports_detail(entity_id):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="no such account")
+    try:
+        return {
+            "entity_id": entity_id,
+            "active_dossier": aml_view.active_dossier(engine, entity_id),
+            "kinetic_canvas": aml_view.kinetic_canvas(engine, entity_id),
+            "data_origin": "engine",
+        }
+    except UnknownAccountError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="no such account"
         ) from exc
 
 

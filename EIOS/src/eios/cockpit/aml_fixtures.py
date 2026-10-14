@@ -5,33 +5,17 @@ returns the same content whatever id it is given. A capability must never let th
 so these tables say which account each fixture is true for. Replaced by the warm tier in spec 025.
 """
 
-from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from eios.aml.case_views import PendingWithdrawal, TimelineEvent
+
 DOSSIER_ENTITY = "CR84920"  # the entity the service's dossier, graph and SAR describe
-
-
-@dataclass(frozen=True)
-class PendingWithdrawal:
-    withdrawal_id: str
-    amount_usd: float
-    hours_since_deposit: float
-    market_risk_pct: float
-    hours_since_kyc: float
 
 
 PENDING_WITHDRAWALS: dict[str, PendingWithdrawal] = {
     "CR84920": PendingWithdrawal("W-84920-1", 7800.0, 2.0, 0.004, 1500.0),
     "CR91204": PendingWithdrawal("W-91204-1", 3200.0, 0.2, 0.0, 900.0),
 }
-
-
-@dataclass(frozen=True)
-class TimelineEvent:
-    at: datetime
-    kind: str
-    amount_usd: float | None
-    detail: str
 
 
 def timeline_for(entity_id: str, kyc_approved: datetime) -> list[TimelineEvent] | None:

@@ -7,13 +7,14 @@ from collections.abc import AsyncIterable
 from datetime import UTC, datetime
 from typing import Any
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.sse import EventSourceResponse, ServerSentEvent
 
-from eios.cockpit.aml import AMLWorkstationService
+from eios.dataplane.aml_service import UnknownAccountError, normalize_ref
+from eios.dataplane.plane import engine_service, read_models
 
 router = APIRouter(tags=["AML Monitoring"])
-aml_svc = AMLWorkstationService()
+aml_svc = read_models().aml
 
 TRIAGE_PATH = "/api/v1/aml/triage"
 DOSSIER_PATH = "/api/v1/aml/dossier/{case_id}"
@@ -34,9 +35,27 @@ def get_aml_triage_queue(
     }
 
 
+def _engine_dossier(case_id: str) -> dict[str, Any]:
+    engine = engine_service()
+    assert engine is not None  # noqa: S101  # the caller checked
+    entity_id = normalize_ref(case_id)
+    try:
+        contract = engine.get_entity_dossier(entity_id).to_contract_dict()
+        contract["sar_draft"] = engine.compose_sar_draft(
+            case_id=case_id, entity_id=entity_id
+        ).to_contract_dict()
+        contract["peer_group_comparison"] = engine.get_case_view(entity_id)["peer_group_comparison"]
+    except UnknownAccountError as exc:
+        raise HTTPException(status_code=404, detail="no such account") from exc
+    return contract
+
+
 @router.get(DOSSIER_PATH)
 def get_aml_dossier(case_id: str) -> dict[str, Any]:
     """Returns 1-screen unified AML dossier with peer comparisons, velocity discrepancy, and SAR draft."""
+    engine = engine_service()
+    if engine is not None:
+        return _engine_dossier(case_id)
     entity_id = case_id.replace("case_aml_", "").replace("ALT-", "")
     dossier = aml_svc.get_entity_dossier(entity_id=entity_id)
     contract_data = dossier.to_contract_dict()
@@ -57,6 +76,14 @@ def get_aml_dossier(case_id: str) -> dict[str, Any]:
 @router.get(GRAPH_PATH)
 def get_aml_graph(case_id: str, hub_threshold: int = Query(default=100)) -> dict[str, Any]:
     """Returns topological relational network graph for hardware-accelerated Canvas / WebGL rendering."""
+    engine = engine_service()
+    if engine is not None:
+        try:
+            return engine.get_kinetic_network_graph(
+                normalize_ref(case_id), hub_threshold
+            ).to_contract_dict()
+        except UnknownAccountError as exc:
+            raise HTTPException(status_code=404, detail="no such account") from exc
     entity_id = case_id.replace("case_aml_", "").replace("ALT-", "")
     graph = aml_svc.get_kinetic_network_graph(entity_id=entity_id, hub_threshold=hub_threshold)
     contract_graph = graph.to_contract_dict()

@@ -20,6 +20,8 @@ import { authFetch } from '@/lib/auth/token';
 import {
   PersonaRole,
   WorkstationApiResponse,
+  CaseApiResponse,
+  DataOrigin,
   TriageItem,
   CopilotDossier,
   ActionIntentCard,
@@ -76,7 +78,10 @@ export interface CockpitState {
   // Infrastructure Telemetry & Outage State
   isLiveConnected: boolean;
   isCachedFallback: boolean;
-  dataOrigin: 'live' | 'fixture';
+  dataOrigin: DataOrigin;
+  /** The selected AML case: its computed dossier is fetched on selection when the data is engine-backed. */
+  caseStatus: 'idle' | 'loading' | 'ready' | 'error';
+  caseError: string | null;
   isSimulatedOutage: boolean;
   asOfTimestamp: string;
   systemLatencyMs: number;
@@ -92,6 +97,8 @@ export type CockpitAction =
   | { type: 'LOAD_WORKSTATION_START' }
   | { type: 'LOAD_WORKSTATION_SUCCESS'; payload: WorkstationApiResponse }
   | { type: 'LOAD_WORKSTATION_FAILURE'; payload: string }
+  | { type: 'CASE_LOADED'; payload: CaseApiResponse }
+  | { type: 'CASE_FAILED'; payload: { entityId: string; message: string } }
   | { type: 'STAGE_ACTION'; payload: ActionIntentCard }
   | { type: 'UNSTAGE_ACTION'; payload: string }
   | { type: 'CLEAR_STAGED_ACTIONS' }
@@ -106,6 +113,11 @@ export type CockpitAction =
   | { type: 'MARK_CHAT_UNREAD' }
   | { type: 'TOGGLE_SIMULATED_OUTAGE'; payload?: boolean }
   | { type: 'SELECT_ENTITY'; payload: string };
+
+/** True when the AML workstation shows engine-computed cases, so selections are fetched, not looked up locally. */
+function isEngineCaseView(state: CockpitState): boolean {
+  return state.dataOrigin === 'engine' && state.activeRole === 'aml_investigator';
+}
 
 const initialWhatIfParams: WhatIfShockParameters = {
   feeShockBps: 0,
@@ -141,6 +153,8 @@ const initialState: CockpitState = {
   isLiveConnected: true,
   isCachedFallback: false,
   dataOrigin: initialData.dataOrigin ?? 'fixture',
+  caseStatus: 'idle',
+  caseError: null,
   isSimulatedOutage: false,
   asOfTimestamp: initialData.asOfTimestamp,
   systemLatencyMs: 14,
@@ -165,6 +179,16 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
 
     case 'SELECT_TRIAGE_ITEM': {
       const selectedItem = (state.triageItems || []).find((i) => i.id === action.payload);
+      if (isEngineCaseView(state)) {
+        // Engine-backed cases are computed per account: never swap in a client-side stand-in while it loads.
+        return {
+          ...state,
+          activeTriageItemId: action.payload,
+          activeEntityId: selectedItem?.entityId ?? null,
+          caseStatus: selectedItem ? 'loading' : state.caseStatus,
+          caseError: null,
+        };
+      }
       let contextualDossier =
         (action.payload && TRIAGE_DOSSIERS_BY_ID[action.payload]) ||
         (selectedItem?.entityId && TRIAGE_DOSSIERS_BY_ID[selectedItem.entityId]);
@@ -191,6 +215,15 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
       const found = (state.triageItems || []).find(
         (i) => i.entityId === entityId || i.id === entityId
       );
+      if (isEngineCaseView(state)) {
+        return {
+          ...state,
+          activeEntityId: found?.entityId ?? entityId,
+          activeTriageItemId: found ? found.id : state.activeTriageItemId,
+          caseStatus: 'loading',
+          caseError: null,
+        };
+      }
       let contextualDossier =
         (entityId && TRIAGE_DOSSIERS_BY_ID[entityId]) ||
         (found && TRIAGE_DOSSIERS_BY_ID[found.id]);
@@ -312,6 +345,8 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
         isLiveConnected: resp?.isLiveConnected ?? state.isLiveConnected,
         isCachedFallback: resp?.isCachedFallback ?? false,
         dataOrigin: resp?.dataOrigin ?? 'fixture',
+        caseStatus: 'ready',
+        caseError: null,
         asOfTimestamp: resp?.asOfTimestamp ?? state.asOfTimestamp,
         triageItems: resp?.triageItems ?? state.triageItems,
         activeTriageItemId: initialActiveId ?? state.activeTriageItemId,
@@ -325,6 +360,24 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
         systemLatencyMs: resp?.session?.systemLatencyMs ?? 18,
         error: null,
       };
+    }
+
+    case 'CASE_LOADED': {
+      const loaded = action.payload;
+      // A reply for an account that is no longer the selected one is stale.
+      if (loaded.entityId !== state.activeEntityId) return state;
+      return {
+        ...state,
+        activeDossier: loaded.activeDossier,
+        canvasPayload: loaded.canvasPayload ?? state.canvasPayload,
+        caseStatus: 'ready',
+        caseError: null,
+      };
+    }
+
+    case 'CASE_FAILED': {
+      if (action.payload.entityId !== state.activeEntityId) return state;
+      return { ...state, caseStatus: 'error', caseError: action.payload.message };
     }
 
     case 'LOAD_WORKSTATION_FAILURE': {
@@ -549,6 +602,36 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     fetchWorkstation(state.activeRole, state.isSimulatedOutage);
   }, [state.activeRole, state.isSimulatedOutage, fetchWorkstation]);
+
+  // Engine-backed AML: opening a case fetches that account's computed dossier and network (latest wins).
+  const caseSeq = useRef(0);
+  useEffect(() => {
+    const entityId = state.activeEntityId;
+    if (state.dataOrigin !== 'engine' || state.activeRole !== 'aml_investigator' || !entityId) return;
+    if (state.caseStatus !== 'loading') return;
+    const seq = ++caseSeq.current;
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await authFetch(`/api/cockpit/aml/cases/${encodeURIComponent(entityId)}`, {
+          method: 'GET',
+          headers: { Accept: 'application/json' },
+          signal: controller.signal,
+        });
+        if (seq !== caseSeq.current) return;
+        if (!res.ok) {
+          const message = res.status === 404 ? `No account record for ${entityId}` : `The case could not be loaded (${res.status})`;
+          dispatch({ type: 'CASE_FAILED', payload: { entityId, message } });
+          return;
+        }
+        dispatch({ type: 'CASE_LOADED', payload: (await res.json()) as CaseApiResponse });
+      } catch (err) {
+        if (seq !== caseSeq.current || (err instanceof DOMException && err.name === 'AbortError')) return;
+        dispatch({ type: 'CASE_FAILED', payload: { entityId, message: 'The case could not be loaded' } });
+      }
+    })();
+    return () => controller.abort();
+  }, [state.activeEntityId, state.caseStatus, state.dataOrigin, state.activeRole]);
 
   // Global shortcut: Cmd/Ctrl+K opens the chat in the dossier column and focuses its input
   useEffect(() => {

@@ -1,6 +1,6 @@
 # EIOS Agent Architecture and Tool Use Cases
 
-**Status**: DRAFT for review, nothing built. **Updated**: 2026-10-14. **Companions**: `adk-research.md` (decisions A-2..A-10, pre-mortem), `adk.md`, `lighthouse.md`, ADR-018, `specs/022-agent-quality-gates`.
+**Status**: the tool port and ADK assistant are built (see section 3 for the shape that shipped); retrieval, the warm tier and ambient dossiers are not. **Updated**: 2026-10-14. **Companions**: `adk-research.md` (decisions A-2..A-10, pre-mortem), `adk.md`, `lighthouse.md`, ADR-018, `specs/022-agent-quality-gates`.
 **Evidence tiers**: **SRC** read in our code or the ADK 2.11.0 package; **RUN** executed; **DOC** read in documentation; **INF** my inference; **GAP** does not exist yet.
 
 > The agent is a thin, governed interface over deterministic engines. It selects tools, assembles evidence, drafts, and proposes. It never computes, scores, approves or writes.
@@ -80,6 +80,8 @@ Counts per agent: AML 11, partner 8, executive 8 (shared tools included), compli
 **Surface hygiene (spec 023).** OMCP has 42 handlers (SRC); about eight are duplicates or overlaps (`get_client_aml_dossier`/`get_aml_entity_dossier`, `generate_sar_draft`/`compose_sar_draft`, `get_briefing`/`get_morning_briefing`, `run_scenario`/`simulate_what_if_shock`, three graph tools, two chain-verify tools). Today's copilot exposes a different, smaller fixture set (`get_governed_metric`, `inspect_aml_entity`, `query_graph_topology`, `inspect_partner_churn`, `run_causal_what_if`, `stage_action_intent`) plus two fake retrieval tools. The port replaces both with the one typed catalogue above.
 
 ## 3. Agent topology
+
+**Shipped shape (2026-10-14, SRC `EIOS/src/eios/assistant/`).** One `LoopAgent` per turn holding a `drafter` (an ADK `Agent` with the principal's tools) and an `AnswerAssembler` (at most three attempts, fails closed); two plugins, `ContextFilterPlugin` and a Model Armor subclass that screens the prompt and the response but not tool results; Firestore sessions keyed by uid; no sub-agents and no `Workflow`. The diagram below is the target, not what runs. The tools read the same `ReadModels` as the screens (`dataplane/plane.py`).
 
 ```
 Cockpit command bar --(verified uid, role, workstation, entity context)--> eios-api (Cloud Run)

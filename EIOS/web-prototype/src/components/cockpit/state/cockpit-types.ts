@@ -30,7 +30,8 @@ export type ProvenanceCitation =
   | '[ASSUMPTION]'
   | '[ILLUSTRATIVE]'
   | '[TARGET]'
-  | '[SPIKE]';
+  | '[SPIKE]'
+  | '[COMPUTED]';
 
 export interface OperatorIdentity {
   officerId: string;
@@ -74,7 +75,8 @@ export interface TriageItem {
 }
 
 /** Where a figure came from. Absent means the backend did not say, which is never shown as live. */
-export type DataOrigin = 'live' | 'fixture';
+/** `engine`: computed by the engines over the seeded world; `fixture`: hand-written payloads. */
+export type DataOrigin = 'live' | 'engine' | 'fixture';
 
 export interface MetricProvenance {
   metricId: string;
@@ -455,12 +457,20 @@ export interface RedLineGateStatus {
   evaluatedOn: string;
 }
 
+/** One account's computed dossier and canvas, fetched when the operator selects a case. */
+export interface CaseApiResponse {
+  entityId: string;
+  dataOrigin: DataOrigin;
+  activeDossier: CopilotDossier;
+  canvasPayload: WorkstationApiResponse['canvasPayload'] | null;
+}
+
 export interface WorkstationApiResponse {
   workstation: PersonaRole;
   isLiveConnected: boolean;
   isCachedFallback: boolean;
   /** Absent means fixture: a state is only 'live' when the backend says it came from governed data. */
-  dataOrigin?: 'live' | 'fixture';
+  dataOrigin?: DataOrigin;
   fallbackReason?: string;
   asOfTimestamp: string;
   session: CockpitSession;

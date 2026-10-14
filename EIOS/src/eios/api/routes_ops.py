@@ -8,10 +8,10 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from eios.cockpit.operations import DataPlatformOperationsService
+from eios.dataplane.plane import read_models
 
 router = APIRouter(tags=["Data Operations"])
-ops_svc = DataPlatformOperationsService()
+ops_svc = read_models().operations
 
 TELEMETRY_PATH = "/api/v1/ops/telemetry"
 DLQ_PATH = "/api/v1/ops/dlq"

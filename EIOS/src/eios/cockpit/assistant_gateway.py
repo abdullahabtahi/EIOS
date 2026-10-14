@@ -18,8 +18,8 @@ from eios.assistant.config import AssistantSettings
 from eios.assistant.runtime import AssistantRuntime, TurnOutcome
 from eios.assistant.safety import build_safety_plugins
 from eios.assistant.sessions import build_session_service
+from eios.dataplane.plane import read_models
 from eios.ontology.omcp.port.catalogue import build_port
-from eios.ontology.omcp.port.readmodels import ReadModels
 
 _LOG = logging.getLogger(__name__)
 _lock = threading.Lock()
@@ -33,7 +33,7 @@ def get_runtime() -> AssistantRuntime:
         if _runtime is None:
             settings = AssistantSettings.from_env()
             _runtime = AssistantRuntime(
-                port=build_port(ReadModels.default()),
+                port=build_port(read_models()),
                 settings=settings,
                 session_service=build_session_service(settings),
                 plugins=build_safety_plugins(settings),

@@ -12,7 +12,6 @@ from typing import Any
 
 from eios.common.validation import StrictModel
 from eios.ontology.config import SecurityMarking
-from eios.ontology.omcp.port.aml_fixtures import PENDING_WITHDRAWALS
 from eios.ontology.omcp.port.common import envelope
 from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode, ToolResult
 from eios.ontology.omcp.port.entities import EntityKind
@@ -51,6 +50,9 @@ class Proposal(ToolResult):
     expected_effect_high: float
     expected_effect_basis: str
     approval_requirement: str
+    withdrawal_id: str | None = (
+        None  # a hold names the withdrawal it holds; the stage request reads it
+    )
     signed: bool = False
     staged: bool = False
     next_step: str = _NEXT_STEP
@@ -72,8 +74,9 @@ def stage_request(proposal: Proposal, args: Mapping[str, Any]) -> dict[str, Any]
     if entity is None:
         raise ValueError("a proposal names the entity it is about")
     if proposal.kind is ProposalKind.HOLD_WITHDRAWAL:
-        pending = PENDING_WITHDRAWALS[entity]
-        metadata: dict[str, Any] = {"txn_id": pending.withdrawal_id, "reason": _HOLD_REASON}
+        if proposal.withdrawal_id is None:
+            raise ValueError("a hold proposal names the withdrawal it holds")
+        metadata: dict[str, Any] = {"txn_id": proposal.withdrawal_id, "reason": _HOLD_REASON}
         severity, dual = _HOLD_SEVERITY, True
     else:
         metadata = {
@@ -150,7 +153,7 @@ def propose_partner_action(ctx: ReadModels, _who: Principal, args: ProposeDealAr
 
 def propose_hold(ctx: ReadModels, _who: Principal, args: ProposeHoldArgs) -> Proposal:
     account = ctx.directory.resolve(args.entity_id, EntityKind.ACCOUNT).entity_id
-    pending = PENDING_WITHDRAWALS.get(account)
+    pending = ctx.aml.get_pending_withdrawal(account)
     if pending is None:
         raise PortError(ToolErrorCode.NOT_FOUND, f"no pending withdrawal for {account}")
     return Proposal(
@@ -158,15 +161,17 @@ def propose_hold(ctx: ReadModels, _who: Principal, args: ProposeHoldArgs) -> Pro
             ctx,
             "action.propose_hold",
             account,
-            "port.aml_fixtures.PENDING_WITHDRAWALS",
+            "cockpit.aml.get_pending_withdrawal",
             {
                 "estimated_cost_usd": "USD",
                 "expected_effect_low": "USD",
                 "expected_effect_high": "USD",
             },
             (SecurityMarking.PII, SecurityMarking.SENSITIVE_COMPLIANCE),
+            origin=ctx.aml_origin,
         ),
         proposal_ref=_ref(ProposalKind.HOLD_WITHDRAWAL, account, pending.withdrawal_id),
+        withdrawal_id=pending.withdrawal_id,
         kind=ProposalKind.HOLD_WITHDRAWAL,
         label=LABELS[ProposalKind.HOLD_WITHDRAWAL],
         offer=f"Hold withdrawal {pending.withdrawal_id} on account {account}",

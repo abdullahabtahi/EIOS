@@ -11,7 +11,7 @@ from eios.ontology.omcp.port.readmodels import ReadModels
 FIXTURE_NOTE = "FIXTURE [ILLUSTRATIVE]"  # every current result is fixture data (data-strategy R1)
 
 
-def envelope(
+def envelope(  # noqa: PLR0913
     ctx: ReadModels,
     capability: str,
     entity_id: str | None,
@@ -19,12 +19,13 @@ def envelope(
     units: dict[str, str],
     markings: tuple[SecurityMarking, ...] = (),
     untrusted: bool = False,
+    origin: DataOrigin = DataOrigin.FIXTURE,
 ) -> dict[str, Any]:
     return {
         "capability": capability,
         "entity_id": entity_id,
         "as_of": ctx.clock(),
-        "data_origin": DataOrigin.FIXTURE,
+        "data_origin": origin,
         "source": source,
         "markings": markings,
         "units": units,
