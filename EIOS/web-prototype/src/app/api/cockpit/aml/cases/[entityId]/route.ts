@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { CaseApiResponse } from '@/components/cockpit/state/cockpit-types';
 import { getMockWorkstationState } from '@/components/cockpit/state/fixtures';
 import { backendUnavailable, callBackend, relayError } from '@/lib/server/backend';
-import { dataOriginOf, normalizeCanvas, normalizeDossier } from '@/lib/server/normalize';
+import { dataOriginOf, normalizeCanvas, normalizeCaseExtras, normalizeDossier } from '@/lib/server/normalize';
 
 /**
  * One account's computed dossier and network canvas, for the case an operator just selected.
@@ -21,8 +21,13 @@ export async function GET(req: NextRequest, context: { params: Promise<{ entityI
   const body: CaseApiResponse = {
     entityId: raw.entity_id ?? entityId,
     dataOrigin: dataOriginOf(raw.data_origin) ?? 'fixture',
-    activeDossier: normalizeDossier(raw.active_dossier ?? {}, 'aml_investigator', shape.activeDossier),
+    activeDossier: normalizeDossier(raw.active_dossier ?? {}, 'aml_investigator', {
+      ...shape.activeDossier,
+      tradeOffs: undefined,
+      sarDraft: undefined,
+    }),
     canvasPayload: raw.kinetic_canvas ? normalizeCanvas(raw.kinetic_canvas, shape.canvasPayload) : null,
+    ...normalizeCaseExtras(raw),
   };
   return NextResponse.json(body);
 }

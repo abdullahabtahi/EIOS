@@ -10,11 +10,13 @@ import type {
   ActionIntentCard,
   AssistantProposal,
   AssistantStatus,
+  CaseExtras,
   CopilotDossier,
   DataOrigin,
   MetricProvenance,
   PersonaRole,
   ProvenanceCitation,
+  SarDraftDocument,
   StageRequest,
   WorkstationApiResponse,
 } from '@/components/cockpit/state/cockpit-types';
@@ -142,6 +144,45 @@ export function normalizeCitedMetric(raw: Raw, index: number): MetricProvenance 
   };
 }
 
+/** One cited figure in cockpit shape; a field the backend left out gets a neutral default, never a claim. */
+export function normalizeMetric(m: Raw): MetricProvenance {
+  return {
+    metricId: m.metric_id || m.metricId || 'M-UNKNOWN',
+    name: m.name || m.metric_id || m.metricId || 'Metric',
+    rawValue: m.raw_value ?? m.rawValue ?? 0,
+    formattedValue: m.formatted_value || m.formattedValue || String(m.raw_value ?? m.rawValue ?? 0),
+    unit: m.unit || '',
+    semanticDefinitionVersion: m.semantic_definition_version || m.semanticDefinitionVersion || 'v1.4',
+    asOfTimestamp: m.as_of_timestamp || m.asOfTimestamp || new Date().toISOString(),
+    originEngine: m.origin_engine || m.originEngine || 'duckdb:semantic_layer',
+    stewardRole: m.steward_role || m.stewardRole || 'Steward',
+    citation: provenanceLabel(m.citation),
+    isCached: m.is_cached ?? m.isCached ?? false,
+    dataOrigin: dataOriginOf(m.data_origin),
+  };
+}
+
+/** What the AML screen shows around a case, from an engine-backed response. Absent parts stay absent. */
+export function normalizeCaseExtras(raw: Raw): CaseExtras {
+  const strip: Raw | undefined = raw.evidence_strip;
+  const actions: Raw | undefined = raw.case_actions;
+  return {
+    evidenceStrip: strip
+      ? {
+          title: text(strip.title),
+          severity: text(strip.severity, 'NONE'),
+          score: typeof strip.score === 'number' ? strip.score : null,
+          tiles: Array.isArray(strip.tiles) ? strip.tiles : [],
+          metrics: Array.isArray(strip.metrics) ? strip.metrics.map(normalizeMetric) : [],
+        }
+      : undefined,
+    sarDraft: raw.sar_draft && typeof raw.sar_draft === 'object' ? (raw.sar_draft as SarDraftDocument) : undefined,
+    caseActions: actions
+      ? { hold: (actions.hold as StageRequest | null) ?? null, fileSar: (actions.file_sar as StageRequest | null) ?? null }
+      : undefined,
+  };
+}
+
 /**
  * A backend dossier in cockpit shape. A field the backend did not send keeps the fallback's value, so a partial
  * payload still renders; `sections` fall back only when the backend sent none.
@@ -155,20 +196,7 @@ export function normalizeDossier(rawDossier: Raw, role: PersonaRole, fallback: C
           title: s.title || `Section ${idx + 1}`,
           narrativeText: s.narrative_text || s.narrativeText || s.narrativeMarkdown || s.narrative || '',
           citations: s.citations || s.tags || [],
-          metrics: (s.metrics || s.citedMetrics || []).map((m: Raw) => ({
-            metricId: m.metric_id || m.metricId || 'M-UNKNOWN',
-            name: m.name || m.metric_id || m.metricId || 'Metric',
-            rawValue: m.raw_value ?? m.rawValue ?? 0,
-            formattedValue: m.formatted_value || m.formattedValue || String(m.raw_value ?? m.rawValue ?? 0),
-            unit: m.unit || '',
-            semanticDefinitionVersion: m.semantic_definition_version || m.semanticDefinitionVersion || 'v1.4',
-            asOfTimestamp: m.as_of_timestamp || m.asOfTimestamp || new Date().toISOString(),
-            originEngine: m.origin_engine || m.originEngine || 'duckdb:semantic_layer',
-            stewardRole: m.steward_role || m.stewardRole || 'Steward',
-            citation: provenanceLabel(m.citation),
-            isCached: m.is_cached ?? m.isCached ?? false,
-            dataOrigin: dataOriginOf(m.data_origin),
-          })),
+          metrics: (s.metrics || s.citedMetrics || []).map(normalizeMetric),
         }))
       : fallback.sections;
   return {

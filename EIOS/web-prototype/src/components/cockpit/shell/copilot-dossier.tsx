@@ -8,6 +8,7 @@
  * Strict Institutional Light-Mode styling.
  */
 
+import { useStageRequest } from '../common/use-stage-request';
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
 import { MetricProvenanceBadge } from '../common/metric-provenance';
@@ -17,6 +18,7 @@ import { MOCK_PARTNERS } from '../state/fixtures';
 
 export function CopilotDossier() {
   const { state, stageAction } = useCockpit();
+  const staging = useStageRequest();
   const dossier = state.activeDossier;
 
   if (!dossier) {
@@ -171,6 +173,11 @@ export function CopilotDossier() {
                   <button
                     type="button"
                     onClick={() => {
+                      if (to.stageRequest) {
+                        void staging.stage(to.stageRequest);
+                        return;
+                      }
+                      // Fixture trade-offs have no backend request: a placeholder card that claims no signature.
                       stageAction({
                         intentId: `act_tradeoff_${Date.now()}`,
                         actionType: to.proposedAction,
@@ -183,24 +190,28 @@ export function CopilotDossier() {
                         parameters: { rationale: to.proposedAction },
                         estimatedImpact: `${to.projectedReturn} return vs ${to.projectedRisk} risk`,
                         requiresFourEyes: true,
-                        kmsSignatureBadge: {
-                          keyId: 'projects/feios-prod/locations/global/keyRings/eios-cockpit/cryptoKeys/action-signer-p256',
-                          algorithm: 'ECDSA_P256_SHA256',
-                          signatureDigest: `DIGEST_SIM_${Date.now()}`,
-                          verified: true,
-                        },
+                        kmsSignatureBadge: { keyId: '', algorithm: '', signatureDigest: '', verified: false },
                         fourEyesRecord: {
                           initiatorOfficerId: state.operator.officerId,
                           initiatorTimestamp: new Date().toISOString(),
-                          idpClaimValidation: true,
+                          idpClaimValidation: false,
                         },
                       });
                     }}
+                    disabled={staging.busy}
                     className="w-full py-1.5 bg-cx-sub hover:bg-cx-sub-2 border border-cx-line text-cx-ink text-label font-semibold flex items-center justify-center gap-1 cursor-pointer transition-colors"
                   >
                     <span className="material-symbols-sharp text-xs">playlist_add</span>
                     Stage Trade-off Action to Shelf
                   </button>
+                  {staging.message && (
+                    <div
+                      role={staging.message.tone === 'error' ? 'alert' : 'status'}
+                      className={`text-label font-mono ${staging.message.tone === 'error' ? 'text-cx-bad' : 'text-cx-ok'}`}
+                    >
+                      {staging.message.text}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -226,7 +237,9 @@ export function CopilotDossier() {
 
             <div className="grid grid-cols-2 gap-2 text-label font-mono pt-1 text-cx-muted">
               <div>Turnover: ${dossier.sarDraft.totalTurnover.toLocaleString()}</div>
-              <div>Loss/Profit Ratio: {dossier.sarDraft.netLossProfitRatio}x</div>
+              {dossier.sarDraft.netLossProfitRatio !== undefined && (
+                <div>Loss/Profit Ratio: {dossier.sarDraft.netLossProfitRatio}x</div>
+              )}
             </div>
           </section>
         )}

@@ -16,7 +16,10 @@ import { suggestedQuestions } from './chat-suggestions';
 import type { ProposalState } from './copilot-proposals';
 
 /** An operator-readable reason for a failed copilot request. Never an answer. */
-export function describeCopilotFailure(status: number | null): string {
+export function describeCopilotFailure(status: number | null, reason?: string): string {
+  // The backend answered but could not produce one (a timeout, a model failure) and said so in plain words: use them,
+  // never "offline", which would blame the connection for something the backend reported itself.
+  if (status === 503 && reason) return reason;
   if (status === null) return 'The Copilot could not be reached. No answer was generated.';
   if (status === 401) return 'Your session is not authorized for the Copilot (HTTP 401). Sign in again.';
   if (status === 403) return 'Your role is not permitted to use the Copilot (HTTP 403).';
@@ -25,7 +28,10 @@ export function describeCopilotFailure(status: number | null): string {
 }
 
 class CopilotRequestError extends Error {
-  constructor(readonly status: number) {
+  constructor(
+    readonly status: number,
+    readonly reason?: string,
+  ) {
     super(`Copilot query error (HTTP ${status})`);
   }
 }
@@ -89,11 +95,17 @@ export function CopilotChat() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: trimmed, role: askedAs, activeEntityId: entityId }),
       });
-      if (!res.ok) throw new CopilotRequestError(res.status);
+      if (!res.ok) {
+        const failure = await res.json().catch(() => null);
+        const said = failure && failure.fallback_reason && typeof failure.response === 'string' ? failure.response : undefined;
+        throw new CopilotRequestError(res.status, said);
+      }
       const data: CopilotQueryResponse = await res.json();
       settle({ response: data });
     } catch (err) {
-      settle({ error: describeCopilotFailure(err instanceof CopilotRequestError ? err.status : null) });
+      settle({
+        error: err instanceof CopilotRequestError ? describeCopilotFailure(err.status, err.reason) : describeCopilotFailure(null),
+      });
     } finally {
       setPending((n) => n - 1);
       markChatUnread();

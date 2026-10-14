@@ -296,6 +296,7 @@ def _build_contract_state(  # noqa: PLR0915
     """Compiles the full CockpitUiContract JSON structure for a role (read-only, side-effect free)."""
     norm_role = role_str.lower().strip()
     now_iso = _get_utc_now()
+    case_extras: dict[str, Any] = {}  # what the AML engine view adds around its dossier
 
     if norm_role in ("executive", "ceo", "cro"):
         role_enum = "executive"
@@ -402,9 +403,11 @@ def _build_contract_state(  # noqa: PLR0915
         chosen = (
             entity_id if entity_id and engine.supports_detail(entity_id) else default_entity(engine)
         )
+        case = aml_view.case_payload(engine, chosen)
         triage_items = aml_view.triage_items(engine, now_iso)
-        active_dossier = aml_view.active_dossier(engine, chosen)
-        kinetic_canvas = aml_view.kinetic_canvas(engine, chosen)
+        active_dossier = case["active_dossier"]
+        kinetic_canvas = case["kinetic_canvas"]
+        case_extras = {k: case[k] for k in ("evidence_strip", "sar_draft", "case_actions")}
 
     elif norm_role in ("aml_investigator", "aml", "compliance_aml"):
         role_enum = "aml_investigator"
@@ -841,6 +844,7 @@ def _build_contract_state(  # noqa: PLR0915
 
     # Build full contract JSON conforming to cockpit-ui-contract.schema.json
     contract_payload: dict[str, Any] = {
+        **case_extras,
         "session": {
             "session_id": f"sess_{role_enum}_{int(time.time())}",
             "active_role": role_enum,
@@ -1008,12 +1012,7 @@ def get_aml_case(entity_id: str) -> dict[str, Any]:
     if not valid_entity_id(entity_id) or not engine.supports_detail(entity_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="no such account")
     try:
-        return {
-            "entity_id": entity_id,
-            "active_dossier": aml_view.active_dossier(engine, entity_id),
-            "kinetic_canvas": aml_view.kinetic_canvas(engine, entity_id),
-            "data_origin": "engine",
-        }
+        return aml_view.case_payload(engine, entity_id)
     except UnknownAccountError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="no such account"

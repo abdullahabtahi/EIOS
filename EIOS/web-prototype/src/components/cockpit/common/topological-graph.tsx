@@ -23,6 +23,8 @@ import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
 import { GraphNode, GraphEdge } from '../state/cockpit-types';
 import { fetchAmlGraph } from '../state/api-bridge';
+import { useStageRequest } from './use-stage-request';
+import { nodeOpensCase } from './graph-selection';
 
 interface SimNode extends GraphNode {
   x: number;
@@ -66,6 +68,33 @@ const FALLBACK_EDGES: GraphEdge[] = [
   { id: 'e8', source: 'CR84920', target: 'PTR-491', type: 'TRANSACTION_FLOW', weight: 0.4, label: 'Sub-IB Referral Tree' },
   { id: 'e9', source: 'CR84920', target: 'IP-CGNAT-TELCO', type: 'SHARED_IP', weight: 0.2, label: 'Telco CGNAT Gateway' },
 ];
+
+/** A node's risk is its own strongest alert when the backend measured one, else derived from structure only. */
+function insightRisk(insight: any, n: any, seed: string | undefined): number {
+  return typeof insight?.risk === 'number' ? insight.risk : structuralRisk(n, seed);
+}
+
+/** A live node shows the risk the backend measured for it, or n/a; only the sample network shows an estimate. */
+function riskLabel(node: GraphNode, live: boolean): string {
+  if (!live) return `${Math.round((node.riskScore || 0.5) * 100)}%`;
+  return node.details?.risk ?? 'n/a';
+}
+
+const usd = (v: number) => `$${Math.round(v).toLocaleString()}`;
+
+/** What the inspector shows for a live node: only what the backend computed for it. */
+function liveDetails(n: any, insight: any): Record<string, string> {
+  return {
+    degree: `${n.degree} connections`,
+    type: String(n.node_type).replace(/_/g, ' ').toLowerCase(),
+    ...(n.is_hub_suppressed ? { suppressed: `hub collapsed (${n.collapsed_node_count} accounts)` } : {}),
+    ...(typeof insight?.risk === 'number' ? { risk: `${Math.round(insight.risk * 100)}%` } : {}),
+    ...(typeof insight?.betweenness === 'number' ? { betweenness: insight.betweenness.toFixed(2) } : {}),
+    ...(typeof insight?.clustering === 'number' ? { clustering: insight.clustering.toFixed(2) } : {}),
+    ...(typeof insight?.velocity_usd === 'number' ? { turnover: usd(insight.velocity_usd) } : {}),
+    ...(insight?.country ? { country: insight.country } : {}),
+  };
+}
 
 /** The graph the backend computed carries no per-node risk, so the view derives it from structure only. */
 function structuralRisk(n: any, seed: string | undefined): number {
@@ -124,6 +153,8 @@ export function TopologicalGraphCanvas() {
 
   // Data & API State
   const [isLiveApi, setIsLiveApi] = React.useState(false);
+  const staging = useStageRequest();
+  const [graphError, setGraphError] = React.useState<string | null>(null);
   const [rawNodes, setRawNodes] = React.useState<GraphNode[]>(FALLBACK_NODES);
   const [rawEdges, setRawEdges] = React.useState<GraphEdge[]>(FALLBACK_EDGES);
 
@@ -285,7 +316,18 @@ export function TopologicalGraphCanvas() {
     fetchAmlGraph(caseId, suppressCgnat ? 100 : 9999)
       .then((data) => {
         if (!active || !data || !Array.isArray(data.nodes)) return;
+        if (data.isReplay && state.dataOrigin === 'engine') {
+          // Engine-backed cases never fall back to the sample network: say it could not be loaded.
+          setIsLiveApi(false);
+          setRawNodes([]);
+          setRawEdges([]);
+          setSelectedNode(null);
+          setGraphError('The network for this case could not be loaded.');
+          return;
+        }
+        setGraphError(null);
         setIsLiveApi(!data.isReplay);
+        const insights: Record<string, any> = data.node_insights ?? {};
 
         const convertedNodes: GraphNode[] = data.nodes.map((n: any) => ({
           id: n.node_id,
@@ -300,7 +342,7 @@ export function TopologicalGraphCanvas() {
           label: n.label || n.node_id,
           degree: n.degree || 1,
           isCgnatHub: (n.degree || 0) >= 100,
-          riskScore: data.isReplay ? replayRisk(n) : structuralRisk(n, data.seed_entity_id),
+          riskScore: data.isReplay ? replayRisk(n) : insightRisk(insights[n.node_id], n, data.seed_entity_id),
           details: data.isReplay
             ? {
                 degree: `${n.degree} connections`,
@@ -309,11 +351,7 @@ export function TopologicalGraphCanvas() {
                 country: n.node_id.includes('84920') ? 'Colombia / Panama' : 'LatAm Regional',
                 betweenness: Math.min(1.0, (n.degree || 1) * 0.14).toFixed(2),
               }
-            : {
-                degree: `${n.degree} connections`,
-                type: String(n.node_type).replace(/_/g, ' ').toLowerCase(),
-                ...(n.is_hub_suppressed ? { suppressed: `hub collapsed (${n.collapsed_node_count} accounts)` } : {}),
-              },
+            : liveDetails(n, insights[n.node_id]),
         }));
 
         const convertedEdges: GraphEdge[] = (data.edges || []).map((e: any, idx: number) => ({
@@ -323,10 +361,13 @@ export function TopologicalGraphCanvas() {
           type: e.edge_type,
           weight: 0.8,
           label: edgeLabel(e, !!data.isReplay),
+          amountUsd: data.isReplay ? undefined : (e.transaction_volume_usd ?? undefined),
         }));
 
-        setRawNodes(convertedNodes.length > 0 ? convertedNodes : FALLBACK_NODES);
-        setRawEdges(convertedEdges.length > 0 ? convertedEdges : FALLBACK_EDGES);
+        const live = !data.isReplay;
+        setRawNodes(convertedNodes.length > 0 || live ? convertedNodes : FALLBACK_NODES);
+        setRawEdges(convertedEdges.length > 0 || live ? convertedEdges : FALLBACK_EDGES);
+        if (live) setSelectedNode(convertedNodes.find((n) => n.id === data.seed_entity_id) ?? null);
       })
       .catch((err) => {
         console.warn('[Topological Graph] Serving deterministic baseline topologies:', err);
@@ -335,7 +376,7 @@ export function TopologicalGraphCanvas() {
     return () => {
       active = false;
     };
-  }, [state.activeEntityId, state.activeTriageItemId, suppressCgnat]);
+  }, [state.activeEntityId, state.activeTriageItemId, state.dataOrigin, suppressCgnat]);
 
   // Synchronize Simulation Entities, Filter Geometry & Layouts
   React.useEffect(() => {
@@ -422,8 +463,9 @@ export function TopologicalGraphCanvas() {
     const simEdges: SimEdge[] = rawEdges
       .filter((e) => nodeMap.has(e.source) && nodeMap.has(e.target))
       .map((e, idx) => {
-        const estAmount = (idx + 1) * 35000;
-        const estDay = ((idx * 3) % 30) + 1;
+        // The sample network has no measured volumes, so it gets placeholders; a live network never does.
+        const estAmount = isLiveApi ? e.amountUsd : (idx + 1) * 35000;
+        const estDay = isLiveApi ? e.dayIndex : ((idx * 3) % 30) + 1;
         return {
           id: e.id || `e_${idx}`,
           source: nodeMap.get(e.source)!,
@@ -436,15 +478,15 @@ export function TopologicalGraphCanvas() {
         };
       })
       .filter((e) => {
-        if (minVolumeThreshold > 0 && (e.amountUsd || 0) < minVolumeThreshold) return false;
-        if (timelineDay < 30 && (e.dayIndex || 0) > timelineDay) return false;
+        if (minVolumeThreshold > 0 && (e.amountUsd ?? 0) < minVolumeThreshold) return false;
+        if (timelineDay < 30 && e.dayIndex !== undefined && e.dayIndex > timelineDay) return false;
         return true;
       });
 
     simNodesRef.current = simNodes;
     simEdgesRef.current = simEdges;
     tickCountRef.current = 0;
-  }, [rawNodes, rawEdges, suppressCgnat, hopFilter, isFullscreen, layoutMode, minVolumeThreshold, timelineDay, focalId]);
+  }, [rawNodes, rawEdges, suppressCgnat, hopFilter, isFullscreen, layoutMode, minVolumeThreshold, timelineDay, focalId, isLiveApi]);
 
   // Counterparties for selected node
   const selectedConnectedEdges = React.useMemo(() => {
@@ -1053,8 +1095,7 @@ export function TopologicalGraphCanvas() {
           setPathEndNode(hit.id);
         }
       } else {
-        setSelectedNode(hit);
-        selectEntity(hit.id);
+        openNode(hit);
         setInspectorOpen(true);
       }
     }
@@ -1073,8 +1114,7 @@ export function TopologicalGraphCanvas() {
   const centerCameraOnNode = (nodeId: string) => {
     const target = simNodesRef.current.find((n) => n.id.toLowerCase().includes(nodeId.toLowerCase()));
     if (!target) return;
-    setSelectedNode(target);
-    selectEntity(target.id);
+    openNode(target);
     setTransform({
       x: -target.x * 1.3,
       y: -target.y * 1.3,
@@ -1083,35 +1123,52 @@ export function TopologicalGraphCanvas() {
   };
 
   // Governed Pre-Settlement Hold Action
-  const handleStageHold = () => {
-    if (selectedNode) {
-      stageAction({
-        intentId: `act_hold_${Date.now()}`,
-        actionType: 'HOLD_WITHDRAWAL',
-        targetEntityId: selectedNode.id,
-        targetEntityType: selectedNode.type,
-        severity: 'HIGH',
-        lifecycleState: 'STAGED',
-        stagedTimestamp: new Date().toISOString(),
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-        parameters: { reason: `Suspicious topological collusion loop detected on ${selectedNode.id}` },
-        estimatedImpact: 'Holds funds pending statutory SAR filing (Four-Eyes approval required)',
-        requiresFourEyes: true,
-        kmsSignatureBadge: {
-          keyId: 'projects/feios-prod/locations/global/keyRings/eios-cockpit/cryptoKeys/action-signer-p256',
-          algorithm: 'ECDSA_P256_SHA256',
-          signatureDigest: `DIGEST_${Date.now()}`,
-          verified: true,
-        },
-        fourEyesRecord: {
-          initiatorOfficerId: state.operator.officerId,
-          initiatorTimestamp: new Date().toISOString(),
-          idpClaimValidation: true,
-        },
-      });
-      setExhibitToast(`Pre-Settlement Hold staged for ${selectedNode.id} (ECDSA P-256 Signed)`);
+  // Engine-backed: the hold is the one the hub understands for the selected account (its pending withdrawal), staged
+  // through the backend. It exists only when the selected node is the open case and that account has one pending.
+  const holdRequest =
+    state.dataOrigin === 'engine' && selectedNode?.id === state.activeEntityId
+      ? (state.caseExtras.caseActions?.hold ?? null)
+      : null;
+  const holdUnavailable = state.dataOrigin === 'engine' && !holdRequest;
+
+  // Selecting a node always shows it in the inspector. Only an account opens a case: a device, a payment method, a
+  // gateway or a collapsed ring has no dossier of its own, so selecting one must not ask the backend for one.
+  const openNode = (node: GraphNode) => {
+    setSelectedNode(node);
+    if (nodeOpensCase(node, state.dataOrigin)) selectEntity(node.id);
+  };
+
+  const handleStageHold = async () => {
+    if (!selectedNode) return;
+    if (state.dataOrigin === 'engine') {
+      if (!holdRequest) return;
+      const ok = await staging.stage(holdRequest);
+      setExhibitToast(ok ? `Hold staged for ${selectedNode.id}; a second approver is needed.` : 'The hold was not staged.');
       setTimeout(() => setExhibitToast(null), 4000);
+      return;
     }
+    // Sample network only: a placeholder card that carries no signature and claims none.
+    stageAction({
+      intentId: `act_hold_${Date.now()}`,
+      actionType: 'HOLD_WITHDRAWAL',
+      targetEntityId: selectedNode.id,
+      targetEntityType: selectedNode.type,
+      severity: 'HIGH',
+      lifecycleState: 'STAGED',
+      stagedTimestamp: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      parameters: { reason: `Suspicious topological collusion loop detected on ${selectedNode.id}` },
+      estimatedImpact: 'Holds funds pending statutory SAR filing (Four-Eyes approval required)',
+      requiresFourEyes: true,
+      kmsSignatureBadge: { keyId: '', algorithm: '', signatureDigest: '', verified: false },
+      fourEyesRecord: {
+        initiatorOfficerId: state.operator.officerId,
+        initiatorTimestamp: new Date().toISOString(),
+        idpClaimValidation: false,
+      },
+    });
+    setExhibitToast(`Placeholder hold staged for ${selectedNode.id}`);
+    setTimeout(() => setExhibitToast(null), 4000);
   };
 
   // 1-Click Cryptographically Watermarked SAR Exhibit Snapshot
@@ -1175,6 +1232,11 @@ export function TopologicalGraphCanvas() {
       }
     >
       {/* Toast Notification */}
+      {graphError && (
+        <div role="alert" className="p-2 bg-cx-bad-bg border border-cx-bad-line text-cx-bad text-label font-mono">
+          {graphError}
+        </div>
+      )}
       {exhibitToast && (
         <div
           className={`absolute top-3 right-3 z-50 text-xs font-mono px-3 py-1.5 shadow-lg flex items-center gap-2 transition-all duration-200 animate-in fade-in slide-in-from-top-1 ${
@@ -1804,7 +1866,7 @@ export function TopologicalGraphCanvas() {
                       : 'bg-amber-50 text-amber-800 border-amber-300'
                   }`}
                 >
-                  Risk: {Math.round((selectedNode.riskScore || 0.5) * 100)}%
+                  Risk: {riskLabel(selectedNode, isLiveApi)}
                 </span>
               </div>
               <div
@@ -1819,7 +1881,7 @@ export function TopologicalGraphCanvas() {
                 <span>
                   Jurisdiction:{' '}
                   <strong className={isFullscreen ? 'text-slate-200' : 'text-slate-900'}>
-                    {selectedNode.details?.country || 'LatAm Regional'}
+                    {selectedNode.details?.country || '—'}
                   </strong>
                 </span>
               </div>
@@ -1867,7 +1929,7 @@ export function TopologicalGraphCanvas() {
                       isFullscreen ? 'text-amber-400' : 'text-amber-700'
                     }`}
                   >
-                    {selectedNode.details?.betweenness || '0.84'}
+                    {selectedNode.details?.betweenness || '—'}
                   </div>
                 </div>
                 <div
@@ -1877,7 +1939,7 @@ export function TopologicalGraphCanvas() {
                 >
                   <div className="text-label uppercase text-slate-500">30D Velocity ($)</div>
                   <div className={`text-sm font-bold ${isFullscreen ? 'text-white' : 'text-slate-900'}`}>
-                    {selectedNode.details?.turnover || '$1,420,000'}
+                    {selectedNode.details?.turnover || '—'}
                   </div>
                 </div>
                 <div
@@ -1891,7 +1953,7 @@ export function TopologicalGraphCanvas() {
                       isFullscreen ? 'text-emerald-400' : 'text-emerald-700'
                     }`}
                   >
-                    0.92 (Collusion)
+                    {selectedNode.details?.clustering || '—'}
                   </div>
                 </div>
               </div>
@@ -1922,8 +1984,7 @@ export function TopologicalGraphCanvas() {
                     <div
                       key={idx}
                       onClick={() => {
-                        setSelectedNode(counterparty);
-                        selectEntity(counterparty.id);
+                        openNode(counterparty);
                       }}
                       className={`p-2 border flex items-center justify-between cursor-pointer transition-colors ${
                         isFullscreen
@@ -1960,14 +2021,14 @@ export function TopologicalGraphCanvas() {
                             isFullscreen ? 'text-slate-100' : 'text-slate-900'
                           }`}
                         >
-                          ${(e.amountUsd || 145000).toLocaleString()}
+                          {e.amountUsd !== undefined ? `$${e.amountUsd.toLocaleString()}` : (e.label || '—')}
                         </div>
                         <div
                           className={`text-label ${
                             isFullscreen ? 'text-slate-400' : 'text-slate-500'
                           }`}
                         >
-                          Day {e.dayIndex || 12}
+                          {e.dayIndex !== undefined ? `Day ${e.dayIndex}` : ''}
                         </div>
                       </div>
                     </div>
@@ -1985,6 +2046,8 @@ export function TopologicalGraphCanvas() {
               <button
                 type="button"
                 onClick={handleStageHold}
+                disabled={holdUnavailable || staging.busy}
+                title={holdUnavailable ? 'This account has no pending withdrawal to hold' : undefined}
                 className={`w-full h-8 px-3 text-xs font-mono font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer border ${
                   isFullscreen
                     ? 'bg-rose-950/80 hover:bg-rose-900 border-rose-600 text-rose-200 shadow-sm'
@@ -2044,7 +2107,7 @@ export function TopologicalGraphCanvas() {
                   : 'bg-amber-50 text-amber-800 border-amber-300'
               }`}
             >
-              Risk: {Math.round((selectedNode.riskScore || 0.5) * 100)}%
+              Risk: {riskLabel(selectedNode, isLiveApi)}
             </span>
             <span
               className={`text-label hidden md:inline ${
@@ -2071,7 +2134,9 @@ export function TopologicalGraphCanvas() {
             <button
               type="button"
               onClick={handleStageHold}
-              className="px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white font-bold transition-colors flex items-center gap-1 shadow-sm cursor-pointer"
+              disabled={holdUnavailable || staging.busy}
+              title={holdUnavailable ? 'This account has no pending withdrawal to hold' : undefined}
+              className="px-3 py-1 disabled:opacity-60 bg-rose-600 hover:bg-rose-700 text-white font-bold transition-colors flex items-center gap-1 shadow-sm cursor-pointer"
             >
               <span className="material-symbols-sharp text-sm">lock</span>
               <span>Stage Hold</span>

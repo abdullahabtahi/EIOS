@@ -40,6 +40,10 @@ Partner, executive, compliance wiring (spec 032); retrieval (024); BigQuery (025
 
 6,000 accounts, 30 days, seed 20261014: 1,684 raw alerts `[MEASURED]` became 1,130 cases `[MEASURED]` (a ring is one case). Of 35 cases containing planted accounts `[MEASURED]`, 33 sit in the top 50 `[MEASURED]` (precision at 50 is 0.66 because only 35 planted cases exist to fill 50 slots; 98% of planted accounts are covered `[MEASURED]`). Every planted ring was recovered whole and the largest cluster is the planted 23, so no hub merged the world `[MEASURED]`. The engine builds in about 5 s `[MEASURED]`. Offline agent baseline (scripted model) is identical on both planes: 69 pass, 1 fail (`aml_regulation.t1`, needs the retrieval tool of spec 024), 3 inconclusive `[MEASURED]`. The two planted wash accounts missed by the top 50 are a measured weakness of the existing triage scorer, not tuned away.
 
+## Follow-up: the panels around the dossier (review of the first click-through)
+
+The first PR left the graph, the inspector, the evidence strip and the SAR composer on built-in sample data, so a computed case sat beside invented figures (`ACC-88219`, `$1,420,000`, "LatAm Suspect", Colombia / Panama). They now read the selected case: the evidence strip, the SAR draft and the stage requests come with it, and the graph carries per-node insights (risk, jurisdiction, 30-day volume, betweenness and clustering of the displayed network). A value the platform did not compute shows as a dash or is omitted. The three buttons that forged a shelf card client-side (a made-up KMS digest with `verified: true`) now stage through the intent hub (`HoldWithdrawal`, `FileSARDraft`); the sample-network placeholders claim no signature. The graph fetch goes through the same-origin proxy instead of a hard-coded `localhost:8002`.
+
 ## What it does not do yet
 
 SAR statutory citations are empty until retrieval (spec 024); partner, executive, compliance and operations are still fixtures (spec 032); the engine build is not cached on disk (about 5 s at start).
