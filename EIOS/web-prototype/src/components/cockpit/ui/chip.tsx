@@ -2,11 +2,12 @@ import * as React from 'react';
 
 export type ChipTone = 'neutral' | 'info' | 'ok' | 'warn' | 'bad' | 'accent';
 
+/** Colour budget: category tags are neutral. Colour on a chip means state only (ok/warn as text, bad as the one alert tint). */
 const TONE: Record<ChipTone, string> = {
-  neutral: 'bg-cx-sub text-cx-muted border-cx-line',
-  info: 'bg-cx-info-bg text-cx-accent border-cx-info-line',
-  ok: 'bg-cx-ok-bg text-cx-ok border-cx-ok-line',
-  warn: 'bg-cx-warn-bg text-cx-warn border-cx-warn-line',
+  neutral: 'bg-transparent text-cx-muted border-cx-line',
+  info: 'bg-transparent text-cx-ink-soft border-cx-line',
+  ok: 'bg-transparent text-cx-ok border-cx-line',
+  warn: 'bg-transparent text-cx-warn border-cx-line',
   bad: 'bg-cx-bad-bg text-cx-bad border-cx-bad-line',
   accent: 'bg-cx-accent text-white border-cx-accent',
 };

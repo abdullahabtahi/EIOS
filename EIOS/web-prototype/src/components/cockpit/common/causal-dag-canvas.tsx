@@ -80,7 +80,7 @@ export function CausalDagCanvas() {
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="material-symbols-sharp text-base text-emerald-700">insights</span>
+            <span className="material-symbols-sharp text-base text-green-700">insights</span>
             <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
               Interactive 4-Domain Causal Directed Acyclic Graph (DAG)
             </h3>
@@ -116,7 +116,7 @@ export function CausalDagCanvas() {
               markerHeight="6"
               orient="auto"
             >
-              <path d="M 0 2 L 8 5 L 0 8 z" fill="#0F9960" />
+              <path d="M 0 2 L 8 5 L 0 8 z" fill="#64748B" />
             </marker>
             <marker
               id="arrow-correlation"
@@ -127,7 +127,7 @@ export function CausalDagCanvas() {
               markerHeight="6"
               orient="auto"
             >
-              <path d="M 0 2 L 8 5 L 0 8 z" fill="#d97706" />
+              <path d="M 0 2 L 8 5 L 0 8 z" fill="#a66321" />
             </marker>
           </defs>
 
@@ -142,14 +142,17 @@ export function CausalDagCanvas() {
               y1="80"
               x2="315"
               y2="80"
-              stroke="#059669"
+              stroke="#64748B"
               strokeWidth="2.5"
               markerEnd="url(#arrow-causal)"
-              className="group-hover:stroke-emerald-800 transition-colors"
+              className="group-hover:stroke-green-800 transition-colors"
             />
-            <rect x="210" y="66" width="90" height="16" fill="#f0fdf4" stroke="#86efac" strokeWidth="1" />
-            <text x="255" y="78" fill="#065f46" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
-              β=-9.16 (p=0.42)
+            <rect x="222" y="64" width="62" height="32" fill="#F1F5F9" stroke="#CBD5E1" strokeWidth="1" />
+            <text x="253" y="74" fill="#334155" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
+              β=-9.16
+            </text>
+            <text x="253" y="87" fill="#64748B" fontSize="10" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
+              p=0.42
             </text>
           </g>
 
@@ -163,14 +166,17 @@ export function CausalDagCanvas() {
               y1="80"
               x2="535"
               y2="80"
-              stroke="#059669"
+              stroke="#64748B"
               strokeWidth="2.5"
               markerEnd="url(#arrow-causal)"
-              className="group-hover:stroke-emerald-800 transition-colors"
+              className="group-hover:stroke-green-800 transition-colors"
             />
-            <rect x="458" y="66" width="70" height="16" fill="#f0fdf4" stroke="#86efac" strokeWidth="1" />
-            <text x="493" y="78" fill="#065f46" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
-              β=+0.18 (p=0.38)
+            <rect x="461" y="64" width="62" height="32" fill="#F1F5F9" stroke="#CBD5E1" strokeWidth="1" />
+            <text x="492" y="74" fill="#334155" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
+              β=+0.18
+            </text>
+            <text x="492" y="87" fill="#64748B" fontSize="10" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
+              p=0.38
             </text>
           </g>
 
@@ -181,76 +187,79 @@ export function CausalDagCanvas() {
           >
             <path
               d="M 190 98 C 240 115, 260 155, 315 178"
-              stroke="#d97706"
+              stroke="#a66321"
               strokeWidth="2"
               strokeDasharray="4 3"
               fill="none"
               markerEnd="url(#arrow-correlation)"
               className="group-hover:stroke-amber-700 transition-colors"
             />
-            <rect x="180" y="146" width="130" height="16" fill="#fffbeb" stroke="#fcd34d" strokeWidth="1" />
-            <text x="245" y="158" fill="#92400e" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
-              Correlation (refuter fail)
+            <rect x="190" y="138" width="104" height="32" fill="#faf6ef" stroke="#e8d3ac" strokeWidth="1" />
+            <text x="242" y="148" fill="#704119" fontSize="10" fontWeight="bold" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
+              Correlation only
+            </text>
+            <text x="242" y="161" fill="#8a501b" fontSize="10" fontFamily="monospace" textAnchor="middle" dominantBaseline="middle">
+              refuter failed
             </text>
           </g>
 
           {/* Nodes */}
           {/* Node 1: Broker Fee */}
           <g transform="translate(60, 45)">
-            <rect width="130" height="70" fill="#ffffff" stroke="#0284c7" strokeWidth="2" />
-            <rect width="130" height="18" fill="#e0f2fe" />
-            <text x="8" y="13" fill="#0369a1" fontSize="10" fontWeight="bold" fontFamily="monospace">
+            <rect width="130" height="70" fill="#ffffff" stroke="#106ba3" strokeWidth="2" />
+            <rect width="130" height="18" fill="#e3eef6" />
+            <text x="8" y="13" fill="#0e5c8a" fontSize="10" fontWeight="bold" fontFamily="monospace">
               COMPETITIVE
             </text>
             <text x="8" y="36" fill="#0f172a" fontSize="10" fontWeight="bold">
               {nodes[0].label}
             </text>
-            <text x="8" y="56" fill="#0284c7" fontSize="13" fontWeight="bold" fontFamily="monospace">
+            <text x="8" y="56" fill="#106ba3" fontSize="13" fontWeight="bold" fontFamily="monospace">
               {nodes[0].shockedValue} {nodes[0].unit}
             </text>
           </g>
 
           {/* Node 2: LatAm Flow */}
           <g transform="translate(320, 45)">
-            <rect width="130" height="70" fill="#ffffff" stroke="#059669" strokeWidth="2" />
-            <rect width="130" height="18" fill="#d1fae5" />
-            <text x="8" y="13" fill="#065f46" fontSize="10" fontWeight="bold" fontFamily="monospace">
+            <rect width="130" height="70" fill="#ffffff" stroke="#64748B" strokeWidth="2" />
+            <rect width="130" height="18" fill="#E2E8F0" />
+            <text x="8" y="13" fill="#334155" fontSize="10" fontWeight="bold" fontFamily="monospace">
               PARTNER FLOW
             </text>
             <text x="8" y="36" fill="#0f172a" fontSize="10" fontWeight="bold">
               {nodes[1].label}
             </text>
-            <text x="8" y="56" fill="#059669" fontSize="13" fontWeight="bold" fontFamily="monospace">
+            <text x="8" y="56" fill="#64748B" fontSize="13" fontWeight="bold" fontFamily="monospace">
               {nodes[1].shockedValue} {nodes[1].unit}
             </text>
           </g>
 
           {/* Node 3: Net PnL */}
           <g transform="translate(540, 45)">
-            <rect width="130" height="70" fill="#ffffff" stroke="#10b981" strokeWidth="2" />
-            <rect width="130" height="18" fill="#ecfdf5" />
-            <text x="8" y="13" fill="#047857" fontSize="10" fontWeight="bold" fontFamily="monospace">
+            <rect width="130" height="70" fill="#ffffff" stroke="#64748B" strokeWidth="2" />
+            <rect width="130" height="18" fill="#F1F5F9" />
+            <text x="8" y="13" fill="#334155" fontSize="10" fontWeight="bold" fontFamily="monospace">
               FINANCIAL
             </text>
             <text x="8" y="36" fill="#0f172a" fontSize="10" fontWeight="bold">
               {nodes[3].label}
             </text>
-            <text x="8" y="56" fill="#047857" fontSize="13" fontWeight="bold" fontFamily="monospace">
+            <text x="8" y="56" fill="#334155" fontSize="13" fontWeight="bold" fontFamily="monospace">
               {nodes[3].shockedValue} {nodes[3].unit}
             </text>
           </g>
 
           {/* Node 4: Client Churn */}
           <g transform="translate(320, 150)">
-            <rect width="130" height="60" fill="#ffffff" stroke="#d97706" strokeWidth="1.5" />
-            <rect width="130" height="16" fill="#fef3c7" />
-            <text x="8" y="12" fill="#92400e" fontSize="10" fontWeight="bold" fontFamily="monospace">
+            <rect width="130" height="60" fill="#ffffff" stroke="#a66321" strokeWidth="1.5" />
+            <rect width="130" height="16" fill="#f4ead8" />
+            <text x="8" y="12" fill="#704119" fontSize="10" fontWeight="bold" fontFamily="monospace">
               CLIENT CHURN
             </text>
             <text x="8" y="32" fill="#0f172a" fontSize="10" fontWeight="bold">
               {nodes[2].label}
             </text>
-            <text x="8" y="48" fill="#b45309" fontSize="11" fontWeight="bold" fontFamily="monospace">
+            <text x="8" y="48" fill="#8a501b" fontSize="11" fontWeight="bold" fontFamily="monospace">
               {nodes[2].shockedValue} {nodes[2].unit}
             </text>
           </g>

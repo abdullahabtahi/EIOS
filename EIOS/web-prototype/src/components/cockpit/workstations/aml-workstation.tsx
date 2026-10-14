@@ -54,12 +54,12 @@ export function AmlWorkstationView() {
           <section aria-label="AML Evidence KPI Strip" className="bg-white border border-slate-200 p-4 shadow-sm space-y-3">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-sharp text-base text-rose-600">shield_with_heart</span>
+                <span className="material-symbols-sharp text-base text-red-600">shield_with_heart</span>
                 <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
                   One-Screen Evidence Dossier: ACC-88219 (LatAm Primary)
                 </h3>
               </div>
-              <span className="text-label font-mono bg-rose-100 text-rose-800 px-1.5 py-0.5 border border-rose-200 font-bold">
+              <span className="text-label font-mono bg-red-100 text-red-800 px-1.5 py-0.5 border border-red-200 font-bold">
                 SEVERITY: CRITICAL (SCORE: 0.94)
               </span>
             </div>
@@ -68,7 +68,7 @@ export function AmlWorkstationView() {
               <div className="p-3 bg-slate-50 border border-slate-200">
                 <span className="text-label text-slate-500 block">Total 30D Turnover</span>
                 <div className="text-base font-bold text-slate-900 mt-0.5">$1,420,000</div>
-                <span className="text-label text-rose-600 font-semibold block mt-0.5">4.8x KYC Baseline</span>
+                <span className="text-label text-red-600 font-semibold block mt-0.5">4.8x KYC Baseline</span>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200">
@@ -79,14 +79,14 @@ export function AmlWorkstationView() {
 
               <div className="p-3 bg-slate-50 border border-slate-200">
                 <span className="text-label text-slate-500 block">Tick Alignment</span>
-                <div className="text-base font-bold text-rose-700 mt-0.5">99.2%</div>
+                <div className="text-base font-bold text-red-700 mt-0.5">99.2%</div>
                 <span className="text-label text-slate-500 block mt-0.5">Mirror Trade Match</span>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200">
                 <span className="text-label text-slate-500 block">Hardware Fingerprint</span>
                 <div className="text-sm font-bold text-slate-800 mt-0.5">DEV-F89A</div>
-                <span className="text-label text-purple-700 font-semibold block mt-0.5">2 Linked Accounts</span>
+                <span className="text-label text-blue-700 font-semibold block mt-0.5">2 Linked Accounts</span>
               </div>
             </div>
 

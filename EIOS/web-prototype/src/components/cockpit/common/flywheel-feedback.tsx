@@ -85,19 +85,19 @@ export function FlywheelFeedbackModal({ open, onOpenChange }: FlywheelFeedbackMo
         {/* Header */}
         <div className="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-2">
-            <span className="material-symbols-sharp text-purple-400 text-lg">psychology_alt</span>
+            <span className="material-symbols-sharp text-blue-400 text-lg">psychology_alt</span>
             <DialogTitle className="text-sm font-bold font-mono tracking-wide text-white uppercase">
               Active Learning Flywheel Feedback
             </DialogTitle>
           </div>
-          <span className="px-1.5 py-0.2 bg-purple-950 border border-purple-500 text-purple-300 font-mono text-label font-bold">
+          <span className="px-1.5 py-0.2 bg-blue-950 border border-blue-500 text-blue-300 font-mono text-label font-bold">
             F014 CALIBRATION
           </span>
         </div>
 
         {successReceipt ? (
           <div className="p-6 text-center space-y-4">
-            <div className="size-12 bg-emerald-100 text-emerald-700 border border-emerald-300 flex items-center justify-center mx-auto">
+            <div className="size-12 bg-green-100 text-green-700 border border-green-300 flex items-center justify-center mx-auto">
               <span className="material-symbols-sharp text-2xl">check_circle</span>
             </div>
             <div>

@@ -19,18 +19,8 @@ interface MetricProvenanceBadgeProps {
 }
 
 export function MetricCitationTag({ citation }: { citation: ProvenanceCitation | string }) {
-  let badgeColor = 'bg-cx-sub text-cx-ink-soft border-cx-line';
-  if (citation === '[BRIEF]') {
-    badgeColor = 'bg-cx-info-bg text-cx-accent border-cx-info-line';
-  } else if (citation === '[ASSUMPTION]') {
-    badgeColor = 'bg-cx-warn-bg text-cx-warn border-cx-warn-line';
-  } else if (citation === '[SPIKE]') {
-    badgeColor = 'bg-cx-bad-bg text-cx-bad border-cx-bad-line';
-  } else if (citation === '[TARGET]') {
-    badgeColor = 'bg-cx-ok-bg text-cx-ok border-cx-ok-line';
-  } else if (citation === '[ILLUSTRATIVE]') {
-    badgeColor = 'bg-cx-sub text-cx-muted border-cx-line';
-  }
+  // Citation type is a category, not a state: one neutral outline for every tag.
+  const badgeColor = 'bg-cx-sub text-cx-ink-soft border-cx-line';
 
   return (
     <span
@@ -54,7 +44,7 @@ function originText(metric: MetricProvenance): string {
 }
 
 function originTone(metric: MetricProvenance): string {
-  if (metric.dataOrigin === 'live' || metric.dataOrigin === 'engine') return 'text-emerald-700';
+  if (metric.dataOrigin === 'live' || metric.dataOrigin === 'engine') return 'text-green-700';
   if (metric.dataOrigin === 'fixture' || metric.isCached) return 'text-amber-700';
   return 'text-slate-500';
 }

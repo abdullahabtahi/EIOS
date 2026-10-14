@@ -8,7 +8,7 @@
  * Sovereign Dark Mode Architecture:
  * - Obsidian Slate Base (#080C14 / --slate-950) with 32px coordinate dot matrix.
  * - Sharp 0px geometry (--rad-reg: 0px) and hairline architectural strokes (--border-divider).
- * - Restrained status palette: Crimson Rose (#F43F5E), Warm Amber (#F59E0B), Electric Cobalt (#3B82F6), Mist White (#F8FAFC).
+ * - Restrained status palette: Crimson Rose (#a82a2a), Warm Amber (#b37a30), Electric Cobalt (#106ba3), Mist White (#F8FAFC).
  * - Multi-Layout Dispatch: Organic Force-Directed, Radial Ego-Orbits, and Bipartite Layering Funnel.
  * - Interactive Capabilities:
  *   1. Entity 360 Flyout Inspector with graph centrality metrics & counterparty ledger.
@@ -681,13 +681,13 @@ export function TopologicalGraphCanvas() {
 
         ctx.lineWidth = isPathEdge ? 2.8 : isCycleEdge ? 2.5 : isConnectedToSelected ? 2.0 : 1.2;
         ctx.strokeStyle = isPathEdge
-          ? (isFullscreen ? '#38BDF8' : '#0284C7')
+          ? (isFullscreen ? '#5f9cc2' : '#106ba3')
           : isCycleEdge
-          ? (isFullscreen ? '#F43F5E' : '#E11D48')
+          ? (isFullscreen ? '#d86a6a' : '#a82a2a')
           : e.type === 'MIRROR_TRADE'
-          ? (isFullscreen ? '#FB7185' : '#E11D48')
+          ? (isFullscreen ? '#cc7070' : '#a82a2a')
           : isConnectedToSelected
-          ? (isFullscreen ? '#60A5FA' : '#2563EB')
+          ? (isFullscreen ? '#5f9cc2' : '#106ba3')
           : (isFullscreen ? '#334155' : '#94A3B8');
 
         if (e.type === 'RAPID_INTERNAL_TRANSFER' && !isCycleEdge && !isPathEdge) {
@@ -707,9 +707,9 @@ export function TopologicalGraphCanvas() {
         ctx.beginPath();
         ctx.arc(px, py, isPathEdge ? 2.8 : isCycleEdge ? 2.5 : 2.0, 0, 2 * Math.PI);
         ctx.fillStyle = isPathEdge
-          ? (isFullscreen ? '#38BDF8' : '#0284C7')
+          ? (isFullscreen ? '#5f9cc2' : '#106ba3')
           : isCycleEdge
-          ? (isFullscreen ? '#F43F5E' : '#E11D48')
+          ? (isFullscreen ? '#d86a6a' : '#a82a2a')
           : (isFullscreen ? '#94A3B8' : '#64748B');
         ctx.fill();
 
@@ -731,7 +731,7 @@ export function TopologicalGraphCanvas() {
           ctx.fillStyle = isFullscreen ? '#0F172A' : '#FFFFFF';
           ctx.fillRect(midX - pillWidth / 2, midY - 8, pillWidth, 16);
           ctx.strokeStyle = isPathEdge
-            ? (isFullscreen ? '#38BDF8' : '#0284C7')
+            ? (isFullscreen ? '#5f9cc2' : '#106ba3')
             : isFullscreen
             ? 'rgba(255, 255, 255, 0.2)'
             : '#94A3B8';
@@ -739,7 +739,7 @@ export function TopologicalGraphCanvas() {
           ctx.strokeRect(midX - pillWidth / 2, midY - 8, pillWidth, 16);
 
           ctx.fillStyle = isPathEdge
-            ? (isFullscreen ? '#E0F2FE' : '#0369A1')
+            ? (isFullscreen ? '#e3eef6' : '#0e5c8a')
             : isFullscreen
             ? '#CBD5E1'
             : '#1E293B';
@@ -780,7 +780,7 @@ export function TopologicalGraphCanvas() {
 
         // Selection Reticle Crosshairs
         if (isSelected) {
-          ctx.strokeStyle = isFullscreen ? '#38BDF8' : '#2563EB';
+          ctx.strokeStyle = isFullscreen ? '#5f9cc2' : '#106ba3';
           ctx.lineWidth = 1;
           const reticleSize = n.radius + 9;
           ctx.beginPath();
@@ -803,10 +803,10 @@ export function TopologicalGraphCanvas() {
         // Outer Status Stroke Ring
         const ringColor =
           n.riskScore >= 0.85
-            ? (isFullscreen ? '#F43F5E' : '#E11D48')
+            ? (isFullscreen ? '#d86a6a' : '#a82a2a')
             : n.riskScore >= 0.65
-            ? (isFullscreen ? '#F59E0B' : '#D97706')
-            : (isFullscreen ? '#3B82F6' : '#2563EB');
+            ? (isFullscreen ? '#d8b476' : '#a66321')
+            : (isFullscreen ? '#5f9cc2' : '#106ba3');
 
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.radius + 2, 0, 2 * Math.PI);
@@ -819,7 +819,7 @@ export function TopologicalGraphCanvas() {
         // Inner Node Core Body
         ctx.beginPath();
         ctx.arc(n.x, n.y, n.radius - 2, 0, 2 * Math.PI);
-        ctx.fillStyle = isFullscreen ? '#0F172A' : (isSelected ? '#EFF6FF' : '#F1F5F9');
+        ctx.fillStyle = isFullscreen ? '#0F172A' : (isSelected ? '#f0f6fa' : '#F1F5F9');
         ctx.fill();
 
         // Inner Semantic Typographic Badge
@@ -834,7 +834,7 @@ export function TopologicalGraphCanvas() {
 
         ctx.fillStyle = isFullscreen
           ? (isSelected ? '#FFFFFF' : '#CBD5E1')
-          : (isSelected ? '#1D4ED8' : '#0F172A');
+          : (isSelected ? '#0e5c8a' : '#0F172A');
         ctx.font = `bold ${Math.max(8, n.radius - 5)}px "Roboto Mono", monospace`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -924,19 +924,19 @@ export function TopologicalGraphCanvas() {
           ctx.fillStyle = isFullscreen ? '#0B1120' : '#FFFFFF';
           ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
           ctx.strokeStyle = isFullscreen
-            ? '#38BDF8'
+            ? '#5f9cc2'
             : isSelected
-            ? '#2563EB'
+            ? '#106ba3'
             : '#94A3B8';
           ctx.lineWidth = isSelected ? 1.5 : 1;
           ctx.strokeRect(boxX, boxY, boxWidth, boxHeight);
 
           ctx.fillStyle = isFullscreen
             ? isSelected
-              ? '#38BDF8'
+              ? '#5f9cc2'
               : '#F8FAFC'
             : isSelected
-            ? '#1D4ED8'
+            ? '#0e5c8a'
             : '#0F172A';
           ctx.textAlign = align;
           ctx.textBaseline = baseline;
@@ -1001,10 +1001,10 @@ export function TopologicalGraphCanvas() {
         mCtx.arc(mx, my, n.id.includes('84920') ? 2.5 : 1.5, 0, 2 * Math.PI);
         mCtx.fillStyle =
           n.riskScore >= 0.85
-            ? (isFullscreen ? '#F43F5E' : '#E11D48')
+            ? (isFullscreen ? '#d86a6a' : '#a82a2a')
             : n.riskScore >= 0.65
-            ? (isFullscreen ? '#F59E0B' : '#D97706')
-            : (isFullscreen ? '#3B82F6' : '#2563EB');
+            ? (isFullscreen ? '#d8b476' : '#a66321')
+            : (isFullscreen ? '#5f9cc2' : '#106ba3');
         mCtx.fill();
       }
 
@@ -1025,7 +1025,7 @@ export function TopologicalGraphCanvas() {
         const bw = (viewWidth / boundW) * mW;
         const bh = (viewHeight / boundH) * mH;
 
-        mCtx.strokeStyle = isFullscreen ? '#38BDF8' : '#2563EB';
+        mCtx.strokeStyle = isFullscreen ? '#5f9cc2' : '#106ba3';
         mCtx.lineWidth = 1;
         mCtx.fillStyle = isFullscreen ? 'rgba(56, 189, 248, 0.14)' : 'rgba(37, 99, 235, 0.12)';
         mCtx.fillRect(bx, by, bw, bh);
@@ -1241,11 +1241,11 @@ export function TopologicalGraphCanvas() {
         <div
           className={`absolute top-3 right-3 z-50 text-xs font-mono px-3 py-1.5 shadow-lg flex items-center gap-2 transition-all duration-200 animate-in fade-in slide-in-from-top-1 ${
             isFullscreen
-              ? 'bg-slate-900 border border-emerald-500/80 text-emerald-300'
-              : 'bg-white border border-emerald-500 text-emerald-800'
+              ? 'bg-slate-900 border border-green-500/80 text-green-300'
+              : 'bg-white border border-green-500 text-green-800'
           }`}
         >
-          <span className="material-symbols-sharp text-sm text-emerald-500">verified</span>
+          <span className="material-symbols-sharp text-sm text-green-500">verified</span>
           <span>{exhibitToast}</span>
         </div>
       )}
@@ -1277,7 +1277,7 @@ export function TopologicalGraphCanvas() {
 
           <div className="hidden sm:flex flex-wrap items-center gap-1.5 text-label whitespace-nowrap">
             {isLiveApi ? (
-              <span className="px-1.5 py-0.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 font-semibold">
+              <span className="px-1.5 py-0.5 bg-green-500/10 text-green-700 dark:text-green-400 border border-green-500/30 font-semibold">
                 LIVE
               </span>
             ) : (
@@ -1291,12 +1291,12 @@ export function TopologicalGraphCanvas() {
             </span>
 
             {highlightCycles && (
-              <span className="px-1.5 py-0.5 bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/30 font-semibold animate-pulse">
+              <span className="px-1.5 py-0.5 bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/30 font-semibold animate-pulse">
                 {cycleNodeIds.size} LOOPS DETECTED
               </span>
             )}
             {pathfindingMode && (
-              <span className="px-1.5 py-0.5 bg-sky-500/10 text-sky-800 dark:text-sky-300 border border-sky-500/30 font-semibold">
+              <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-800 dark:text-blue-300 border border-blue-500/30 font-semibold">
                 PATH TRACER ({pathStartNode || '?'} → {pathEndNode || 'Select Target'})
               </span>
             )}
@@ -1379,7 +1379,7 @@ export function TopologicalGraphCanvas() {
 
       {/* Level 2: Command & Filter Ribbon */}
       <div
-        className={`flex items-center justify-between px-3 py-1.5 border-b text-xs font-mono select-none overflow-x-auto ${
+        className={`flex flex-wrap items-center justify-between gap-y-1.5 px-3 py-1.5 border-b text-xs font-mono select-none ${
           isFullscreen
             ? 'border-slate-800/80 bg-cx-studio-2 text-slate-300'
             : 'border-slate-200 bg-slate-50 text-slate-700'
@@ -1531,8 +1531,8 @@ export function TopologicalGraphCanvas() {
             className={`h-7 px-2 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
               highlightCycles
                 ? isFullscreen
-                  ? 'bg-rose-950/90 border-rose-500 text-rose-200 font-bold shadow-xs'
-                  : 'bg-rose-50 border-rose-400 text-rose-800 font-bold shadow-xs'
+                  ? 'bg-red-950/90 border-red-500 text-red-200 font-bold shadow-xs'
+                  : 'bg-red-50 border-red-400 text-red-800 font-bold shadow-xs'
                 : isFullscreen
                 ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
                 : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'
@@ -1541,7 +1541,7 @@ export function TopologicalGraphCanvas() {
             <span
               className={`material-symbols-sharp text-sm ${
                 highlightCycles
-                  ? isFullscreen ? 'text-rose-400' : 'text-rose-600'
+                  ? isFullscreen ? 'text-red-400' : 'text-red-600'
                   : isFullscreen ? 'text-slate-400' : 'text-slate-500'
               }`}
             >
@@ -1566,8 +1566,8 @@ export function TopologicalGraphCanvas() {
             className={`h-7 px-2 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
               pathfindingMode
                 ? isFullscreen
-                  ? 'bg-sky-950/80 border-sky-400 text-sky-200 font-bold shadow-xs'
-                  : 'bg-sky-50 border-sky-400 text-sky-800 font-bold shadow-xs'
+                  ? 'bg-blue-950/80 border-blue-400 text-blue-200 font-bold shadow-xs'
+                  : 'bg-blue-50 border-blue-400 text-blue-800 font-bold shadow-xs'
                 : isFullscreen
                 ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
                 : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'
@@ -1576,7 +1576,7 @@ export function TopologicalGraphCanvas() {
             <span
               className={`material-symbols-sharp text-sm ${
                 pathfindingMode
-                  ? isFullscreen ? 'text-sky-400' : 'text-sky-600'
+                  ? isFullscreen ? 'text-blue-400' : 'text-blue-600'
                   : isFullscreen ? 'text-slate-400' : 'text-slate-500'
               }`}
             >
@@ -1715,7 +1715,7 @@ export function TopologicalGraphCanvas() {
                   </button>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 bg-cx-bad-solid-2 inline-block border border-rose-300/40" />
+                  <span className="w-2 h-2 bg-cx-bad-solid-2 inline-block border border-red-300/40" />
                   <span>Critical Syndicate (&ge; 0.85)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -1859,8 +1859,8 @@ export function TopologicalGraphCanvas() {
                   className={`px-1.5 py-0.2 text-label font-bold border ${
                     selectedNode.riskScore >= 0.85
                       ? isFullscreen
-                        ? 'bg-rose-950/80 text-rose-300 border-rose-600/60'
-                        : 'bg-rose-50 text-rose-700 border-rose-300'
+                        ? 'bg-red-950/80 text-red-300 border-red-600/60'
+                        : 'bg-red-50 text-red-700 border-red-300'
                       : isFullscreen
                       ? 'bg-amber-950/80 text-amber-300 border-amber-600/60'
                       : 'bg-amber-50 text-amber-800 border-amber-300'
@@ -1950,7 +1950,7 @@ export function TopologicalGraphCanvas() {
                   <div className="text-label uppercase text-slate-500">Clustering Index</div>
                   <div
                     className={`text-sm font-bold ${
-                      isFullscreen ? 'text-emerald-400' : 'text-emerald-700'
+                      isFullscreen ? 'text-green-400' : 'text-green-700'
                     }`}
                   >
                     {selectedNode.details?.clustering || '—'}
@@ -2002,11 +2002,11 @@ export function TopologicalGraphCanvas() {
                             className={`material-symbols-sharp text-xs ${
                               isOutflow
                                 ? isFullscreen
-                                  ? 'text-rose-400'
-                                  : 'text-rose-600'
+                                  ? 'text-red-400'
+                                  : 'text-red-600'
                                 : isFullscreen
-                                ? 'text-emerald-400'
-                                : 'text-emerald-600'
+                                ? 'text-green-400'
+                                : 'text-green-600'
                             }`}
                           >
                             {isOutflow ? 'arrow_forward' : 'arrow_back'}
@@ -2050,8 +2050,8 @@ export function TopologicalGraphCanvas() {
                 title={holdUnavailable ? 'This account has no pending withdrawal to hold' : undefined}
                 className={`w-full h-8 px-3 text-xs font-mono font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer border ${
                   isFullscreen
-                    ? 'bg-rose-950/80 hover:bg-rose-900 border-rose-600 text-rose-200 shadow-sm'
-                    : 'bg-rose-600 hover:bg-rose-700 border-rose-700 text-white shadow-xs'
+                    ? 'bg-red-950/80 hover:bg-red-900 border-red-600 text-red-200 shadow-sm'
+                    : 'bg-red-600 hover:bg-red-700 border-red-700 text-white shadow-xs'
                 }`}
               >
                 <span className="material-symbols-sharp text-sm">lock</span>
@@ -2100,8 +2100,8 @@ export function TopologicalGraphCanvas() {
               className={`px-1.5 py-0.2 text-label font-bold border ${
                 selectedNode.riskScore >= 0.85
                   ? isFullscreen
-                    ? 'bg-rose-950/80 text-rose-300 border-rose-700/60'
-                    : 'bg-rose-50 text-rose-700 border-rose-300'
+                    ? 'bg-red-950/80 text-red-300 border-red-700/60'
+                    : 'bg-red-50 text-red-700 border-red-300'
                   : isFullscreen
                   ? 'bg-amber-950/80 text-amber-300 border-amber-700/60'
                   : 'bg-amber-50 text-amber-800 border-amber-300'
@@ -2136,7 +2136,7 @@ export function TopologicalGraphCanvas() {
               onClick={handleStageHold}
               disabled={holdUnavailable || staging.busy}
               title={holdUnavailable ? 'This account has no pending withdrawal to hold' : undefined}
-              className="px-3 py-1 disabled:opacity-60 bg-rose-600 hover:bg-rose-700 text-white font-bold transition-colors flex items-center gap-1 shadow-sm cursor-pointer"
+              className="px-3 py-1 disabled:opacity-60 bg-red-600 hover:bg-red-700 text-white font-bold transition-colors flex items-center gap-1 shadow-sm cursor-pointer"
             >
               <span className="material-symbols-sharp text-sm">lock</span>
               <span>Stage Hold</span>
