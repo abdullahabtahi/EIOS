@@ -17,12 +17,14 @@ from google.adk.models.base_llm import BaseLlm
 
 from eios.assistant.assembler_agent import DRAFT_KEY, FEEDBACK_KEY, AnswerAssembler
 from eios.assistant.assembly import MAX_ATTEMPTS
+from eios.assistant.prefetch import Prefetcher
 from eios.assistant.tools import build_toolset
 from eios.llm_gateway.providers.adk_types import (
     HttpRetryOptions,
     generation_config,
     retrying_gemini,
 )
+from eios.llm_gateway.providers.hedged import hedged
 from eios.ontology.omcp.port.principal import Principal, Workstation
 from eios.ontology.omcp.port.service import GovernedToolPort
 
@@ -80,7 +82,8 @@ You are the {title} assistant in the Enterprise Intelligence cockpit. Answer in 
    For a list, a brief or an overview, give one sentence on the picture, then the first few items. Name each
    item (name and id) with its main figure as a placeholder, using the fact id of that item (such as
    partners[0].expected_loss_usd), and say there are more. Never state how many items you show or omit.
-9. For what a regulation or guideline requires, call the regulation search tool and answer in this order. First one or
+9. For what a regulation or guideline requires, call the regulation search tool once, with the question as the query, and
+   answer from its result; do not search again unless it returned nothing. Answer in this order. First one or
    two plain sentences that answer the question using only what the passage says: add no obligation it does not
    state, and where it says "should" or "preferably" do not write "must". Then the exact words: each
    passage lists its sentences as s1, s2, ...; quote the fewest that answer, as {{{{quote:<passage_id>#s4}}}} or
@@ -116,11 +119,20 @@ def instruction_for(workstation: Workstation) -> Callable[[ReadonlyContext], str
     return provide
 
 
-def build_agent(*, port: GovernedToolPort, principal: Principal, model: str | BaseLlm) -> LoopAgent:
+def build_agent(
+    *,
+    port: GovernedToolPort,
+    principal: Principal,
+    model: str | BaseLlm,
+    prefetch: bool = False,
+    hedge_after_s: float = 0.0,
+) -> LoopAgent:
     workstation = principal.workstation
     drafter = Agent(
         name="drafter",
-        model=retrying_gemini(model, MODEL_RETRY) if isinstance(model, str) else model,
+        model=hedged(retrying_gemini(model, MODEL_RETRY), hedge_after_s)
+        if isinstance(model, str)
+        else model,
         instruction=instruction_for(workstation),
         tools=list(build_toolset(port, principal)),
         output_key=DRAFT_KEY,
@@ -133,6 +145,8 @@ def build_agent(*, port: GovernedToolPort, principal: Principal, model: str | Ba
     assembler = AnswerAssembler(name="assembler")
     return LoopAgent(
         name=f"{workstation.value}_assistant",
-        sub_agents=[drafter, assembler],
+        sub_agents=[Prefetcher(name="prefetch", port=port, principal=principal), drafter, assembler]
+        if prefetch
+        else [drafter, assembler],
         max_iterations=MAX_ATTEMPTS,
     )

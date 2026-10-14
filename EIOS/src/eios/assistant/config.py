@@ -11,6 +11,7 @@ DEFAULT_TURN_DEADLINE_S = 30.0  # [ASSUMPTION] bounds a turn well under the 60 s
 DEFAULT_HISTORY_TURNS = (
     6  # [ASSUMPTION] earlier turns the model sees; older ones stay stored but out of context
 )
+DEFAULT_HEDGE_AFTER_S = 5.0  # [ASSUMPTION] a model call that has not answered by now is probably stalled; 0 turns hedging off
 DEFAULT_MAX_LLM_CALLS = 12  # [ASSUMPTION] tool rounds plus up to three assembly attempts
 
 
@@ -29,6 +30,10 @@ class AssistantSettings:
     turn_deadline_s: float
     max_llm_calls: int
     history_turns: int
+    hedge_after_s: float = DEFAULT_HEDGE_AFTER_S
+    prefetch: bool = (
+        True  # run the obvious tool before the model's first turn (one model call instead of two)
+    )
 
     @property
     def local(self) -> bool:
@@ -49,4 +54,7 @@ class AssistantSettings:
             ),
             max_llm_calls=int(source.get("EIOS_ASSISTANT_MAX_LLM_CALLS", DEFAULT_MAX_LLM_CALLS)),
             history_turns=int(source.get("EIOS_ASSISTANT_HISTORY_TURNS", DEFAULT_HISTORY_TURNS)),
+            hedge_after_s=float(source.get("EIOS_ASSISTANT_HEDGE_AFTER_S", DEFAULT_HEDGE_AFTER_S)),
+            prefetch=source.get("EIOS_ASSISTANT_PREFETCH", "1").strip().lower()
+            not in {"0", "false", "no", "off"},
         )
