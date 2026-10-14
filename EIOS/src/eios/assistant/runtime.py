@@ -28,9 +28,10 @@ from eios.assistant.assembler_agent import (
     FEEDBACK_KEY,
 )
 from eios.assistant.config import AssistantConfigError, AssistantSettings
+from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED
 from eios.assistant.sessions import APP_NAME, session_key
 from eios.assistant.tools import FACT_IDS_KEY, ORIGINS_KEY, PROPOSALS_KEY, SOURCES_KEY
-from eios.llm_gateway.providers.adk_types import user_message
+from eios.llm_gateway.providers.adk_types import text_of, user_message
 from eios.ontology.omcp.port.facts import FactResolver
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
@@ -150,6 +151,7 @@ class AssistantRuntime:
         runner = Runner(app=app, session_service=self._sessions, auto_create_session=True)
         offered = {spec.name for spec in self._port.list_tools(principal)}
         answer: Answer | None = None
+        blocked: str | None = None
         calls: dict[str, dict[str, Any]] = {}
         traces: list[ToolCallTrace] = []
         events: list[Any] = []
@@ -169,8 +171,18 @@ class AssistantRuntime:
             for response in event.get_function_responses():
                 traces.append(self._trace(principal, offered, calls, response))
             metadata = event.custom_metadata or {}
+            if metadata.get(BLOCKED_METADATA_KEY):
+                blocked = text_of(event.content)
             if ANSWER_METADATA_KEY in metadata:
                 answer = Answer.model_validate(metadata[ANSWER_METADATA_KEY])
+        if (
+            blocked is not None
+        ):  # screening wins over whatever the loop assembled from the replacement text
+            answer = Answer(
+                text=blocked,
+                blocked=True,
+                block_reason="input" if blocked == INPUT_BLOCKED else "output",
+            )
         if answer is None:
             return TurnOutcome(
                 _unavailable(UNAVAILABLE_TEXT, "no answer was assembled"),
