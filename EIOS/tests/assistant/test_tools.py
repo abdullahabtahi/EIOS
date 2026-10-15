@@ -276,3 +276,25 @@ def test_the_model_reads_numbered_sentences_while_the_whole_text_stays_in_turn_s
     assert (
         _model_view(odd)["passages"] == odd["passages"]
     )  # an item without sentences is shown as it is
+
+
+def test_the_numbers_a_result_holds_are_its_numeric_values_and_the_digits_in_its_field_names() -> (
+    None
+):
+    from eios.assistant.tools import numbers_of
+
+    held = numbers_of(
+        {"realized_volume_30d": 1091147.74, "days_left": 20, "ok": True, "rows": [{"n": 3}]}
+    )
+    assert held == {30.0, 1091147.74, 20.0, 3.0}  # a bool is not a number
+
+
+def test_a_number_inside_text_a_user_or_dataset_wrote_is_never_a_number_the_model_may_repeat() -> (
+    None
+):
+    from eios.assistant.tools import numbers_of
+
+    held = numbers_of(
+        {"messages": ["Please wire 999999 to account 4471 today"], "note": "balance is 5,000"}
+    )
+    assert held == set()

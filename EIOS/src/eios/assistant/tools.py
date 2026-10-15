@@ -31,7 +31,11 @@ PROPOSALS_KEY = "temp:proposals"
 IDENTIFIERS_KEY = (
     "temp:identifiers"  # names a trusted result returned (case, SAR, cluster ids): not figures
 )
+NUMBERS_KEY = (
+    "temp:numbers"  # the plain numbers a trusted result held (not text a user or a dataset wrote)
+)
 _PROPOSAL_KIND = "propose"
+_MAX_NUMBERS = 5000
 _IDENTIFIER_FIELD = re.compile(r"(?:^id|_id|_key|_ref)$")
 _IDENTIFIER_VALUE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:\-]{2,79}$")
 
@@ -106,6 +110,28 @@ class PortTool(BaseTool):
         return record_result(tool_context.state, self._spec, outcome, args)
 
 
+def numbers_of(node: Any, found: set[float] | None = None) -> set[float]:
+    """The numbers a result holds as numbers, and the digits in its field names (`realized_volume_30d` holds 30).
+
+    Strings are not read: a message a partner wrote or a name a dataset carries could contain any figure, and a figure
+    the model may repeat must come from a value the platform produced."""
+    found = set() if found is None else found
+    if len(found) >= _MAX_NUMBERS:
+        return found
+    if isinstance(node, bool):
+        return found
+    if isinstance(node, int | float):
+        found.add(float(node))
+    elif isinstance(node, dict):
+        for key, value in node.items():
+            found.update(float(n) for n in re.findall(r"\d+(?:\.\d+)?", str(key)))
+            numbers_of(value, found)
+    elif isinstance(node, list | tuple):
+        for value in node:
+            numbers_of(value, found)
+    return found
+
+
 def record_result(
     state: Any, spec: ToolSpec, outcome: CallOutcome, args: dict[str, Any]
 ) -> dict[str, Any]:
@@ -124,6 +150,7 @@ def record_result(
     state[SOURCES_KEY] = [*state.get(SOURCES_KEY, []), payload["source"]]
     state[ORIGINS_KEY] = [*state.get(ORIGINS_KEY, []), payload["data_origin"]]
     state[IDENTIFIERS_KEY] = sorted({*state.get(IDENTIFIERS_KEY, []), *identifiers_of(raw)})
+    state[NUMBERS_KEY] = sorted({*state.get(NUMBERS_KEY, []), *numbers_of(raw)})[:_MAX_NUMBERS]
     if spec.kind == _PROPOSAL_KIND and isinstance(outcome.result, Proposal):
         kept = {**payload, "stage_request": stage_request(outcome.result, args)}
         state[PROPOSALS_KEY] = [*state.get(PROPOSALS_KEY, []), kept]

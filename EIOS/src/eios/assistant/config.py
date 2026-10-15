@@ -37,6 +37,9 @@ class AssistantSettings:
     hedge_after_s: float = DEFAULT_HEDGE_AFTER_S
     # the turn reads and writes its session in memory and the durable store catches up after (session_cache.py)
     session_write_behind: bool = True
+    # a figure the model writes plainly is shown when a tool returned it this turn (assembly.py, traced mode); off
+    # restores the old rule that every figure be a {{fact:...}} placeholder
+    plain_figures: bool = True
     prefetch: bool = (
         True  # run the obvious tool before the model's first turn (one model call instead of two)
     )
@@ -62,5 +65,6 @@ class AssistantSettings:
             history_turns=int(source.get("EIOS_ASSISTANT_HISTORY_TURNS", DEFAULT_HISTORY_TURNS)),
             hedge_after_s=float(source.get("EIOS_ASSISTANT_HEDGE_AFTER_S", DEFAULT_HEDGE_AFTER_S)),
             prefetch=_on(source.get("EIOS_ASSISTANT_PREFETCH", "1")),
+            plain_figures=_on(source.get("EIOS_ASSISTANT_PLAIN_FIGURES", "1")),
             session_write_behind=_on(source.get("EIOS_ASSISTANT_SESSION_WRITE_BEHIND", "1")),
         )
