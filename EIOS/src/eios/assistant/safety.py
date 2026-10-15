@@ -9,6 +9,7 @@ outside as untrusted instead). Deployed environments must name both templates, o
 from __future__ import annotations
 
 import logging
+import time
 from typing import Any
 
 from google.adk.agents.callback_context import CallbackContext
@@ -18,12 +19,19 @@ from google.adk.models.llm_response import LlmResponse
 from google.adk.plugins.base_plugin import BasePlugin
 
 from eios.assistant.config import AssistantConfigError, AssistantSettings
+from eios.assistant.timing import current_timer
 
 _LOG = logging.getLogger(__name__)
 INPUT_BLOCKED = "I can't help with that request."
 OUTPUT_BLOCKED = "I can't share that answer. Please rephrase the question."
 BLOCKED_METADATA_KEY = "model_armor_blocked"
 SCREENED_KEY = "temp:input_screened"
+
+
+def _record(started: float) -> None:
+    timer = current_timer()
+    if timer is not None:
+        timer.screen_calls_ms.append((time.perf_counter() - started) * 1000)
 
 
 class ScreenOncePerTurn(ModelArmorPlugin):
@@ -37,12 +45,27 @@ class ScreenOncePerTurn(ModelArmorPlugin):
     ) -> LlmResponse | None:
         if callback_context.state.get(SCREENED_KEY):
             return None
-        blocked = await super().before_model_callback(
-            callback_context=callback_context, llm_request=llm_request
-        )
+        started = time.perf_counter()
+        try:
+            blocked = await super().before_model_callback(
+                callback_context=callback_context, llm_request=llm_request
+            )
+        finally:
+            _record(started)
         if blocked is None:
             callback_context.state[SCREENED_KEY] = True
         return blocked
+
+    async def after_model_callback(
+        self, *, callback_context: CallbackContext, llm_response: LlmResponse
+    ) -> LlmResponse | None:
+        started = time.perf_counter()
+        try:
+            return await super().after_model_callback(
+                callback_context=callback_context, llm_response=llm_response
+            )
+        finally:
+            _record(started)
 
     async def warm_up(self) -> None:
         """Open the screening connection before the first operator turn. The service channel and credentials are

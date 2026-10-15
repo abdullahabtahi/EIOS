@@ -21,7 +21,7 @@ from google.adk.plugins.context_filter_plugin import ContextFilterPlugin
 from google.adk.runners import Runner
 from google.adk.sessions.base_session_service import BaseSessionService
 
-from eios.assistant.agents import build_agent
+from eios.assistant.agents import build_agent, build_llm
 from eios.assistant.answer import Answer
 from eios.assistant.assembler_agent import (
     ANSWER_METADATA_KEY,
@@ -30,9 +30,9 @@ from eios.assistant.assembler_agent import (
 )
 from eios.assistant.config import AssistantSettings
 from eios.assistant.prefetch import PLATFORM_CALL, PREFETCH_KEY
-from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED
+from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED, SCREENED_KEY
 from eios.assistant.sessions import APP_NAME, session_key, valid_entity_id
-from eios.assistant.timing import TimingPlugin, TurnTimer, start_turn_timer
+from eios.assistant.timing import TimedSessionService, TimingPlugin, TurnTimer, start_turn_timer
 from eios.assistant.tools import (
     FACTS_KEY,
     IDENTIFIERS_KEY,
@@ -130,6 +130,7 @@ def _fresh_turn_state(
         ATTEMPT_KEY: 0,
         FEEDBACK_KEY: "",
         PREFETCH_KEY: False,
+        SCREENED_KEY: False,  # every turn screens its own prompt, whatever the session service kept
         FACTS_KEY: {},
         SOURCES_KEY: [],
         PASSAGES_KEY: {},
@@ -153,11 +154,10 @@ class AssistantRuntime:
         plugins: tuple[BasePlugin, ...] = (),
     ) -> None:
         self._port, self._settings = port, settings
-        self._sessions, self._model = (
-            session_service,
-            model,
-        )  # an injected model wins over the registry (tests)
+        # every read and write the turn waits for is timed; an injected model wins over the registry (tests)
+        self._sessions, self._model = TimedSessionService(session_service), model
         self._registry = registry or load_registry()
+        self._llms: dict[str, BaseLlm] = {}  # one model client per model id, reused by every turn
         # ADK's own filter bounds what the model reads; the stored thread keeps everything.
         self._plugins = (
             ContextFilterPlugin(num_invocations_to_keep=settings.history_turns),
@@ -165,9 +165,20 @@ class AssistantRuntime:
             *plugins,
         )
 
+    def _llm(self, model_id: str) -> BaseLlm:
+        """The model for this id, built on first use and then shared: its connection and token outlive a turn."""
+        llm = self._llms.get(model_id)
+        if llm is None:
+            llm = self._llms[model_id] = build_llm(model_id, self._settings.hedge_after_s)
+        return llm
+
     @property
     def registry(self) -> ModelRegistry:
         return self._registry
+
+    async def flush(self) -> None:
+        """Wait until everything the session service holds back has been written (shutdown, tests, probes)."""
+        await self._sessions.flush()
 
     async def warm_up(self) -> None:
         """Let each plugin that can open its connection ahead of the first turn do so (best effort)."""
@@ -231,7 +242,7 @@ class AssistantRuntime:
         agent = build_agent(
             port=self._port,
             principal=principal,
-            model=self._model or model_id,
+            model=self._model or self._llm(model_id),
             prefetch=self._settings.prefetch,
             hedge_after_s=self._settings.hedge_after_s,
         )

@@ -19,6 +19,7 @@ from eios.api.routes_ops import router as ops_router
 from eios.api.routes_synthesis import router as synthesis_router
 from eios.api.routes_webhooks import router as webhooks_router
 from eios.cockpit import geo as geo_routes
+from eios.cockpit.assistant_gateway import drain_sessions
 from eios.cockpit.assistant_gateway import warm_up as warm_up_assistant
 from eios.cockpit.auth import cors_origins, current_operator
 from eios.cockpit.server import public_router as cockpit_public_router
@@ -63,6 +64,7 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     finally:
         task.cancel()
         address_task.cancel()
+        await drain_sessions()  # conversation events still held in memory are written before exit
 
 
 def create_app() -> FastAPI:

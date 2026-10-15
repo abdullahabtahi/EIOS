@@ -18,7 +18,7 @@ from google.adk.models.base_llm import BaseLlm
 from eios.assistant.assembler_agent import DRAFT_KEY, FEEDBACK_KEY, AnswerAssembler
 from eios.assistant.assembly import MAX_ATTEMPTS
 from eios.assistant.prefetch import Prefetcher
-from eios.assistant.timing import timed
+from eios.assistant.timing import TimedLlm, timed
 from eios.assistant.tools import build_toolset
 from eios.llm_gateway.providers.adk_types import (
     HttpRetryOptions,
@@ -122,6 +122,19 @@ def instruction_for(workstation: Workstation) -> Callable[[ReadonlyContext], str
     return provide
 
 
+def build_llm(model_id: str, hedge_after_s: float = 0.0) -> BaseLlm:
+    """The drafting model: ADK's Gemini with its retry policy, hedged, timed. Build it once and reuse it: a new one
+    opens a new connection and fetches a new token, which cost about 0.8 s per turn [MEASURED, from a laptop]."""
+    return timed(hedged(retrying_gemini(model_id, MODEL_RETRY), hedge_after_s))
+
+
+def _timed_model(model: str | BaseLlm, hedge_after_s: float) -> BaseLlm:
+    """A model id builds a hedged, timed model; a model object is timed once (one already timed is left as it is)."""
+    if isinstance(model, str):
+        return build_llm(model, hedge_after_s)
+    return model if isinstance(model, TimedLlm) else timed(model)
+
+
 def build_agent(
     *,
     port: GovernedToolPort,
@@ -133,11 +146,7 @@ def build_agent(
     workstation = principal.workstation
     drafter = Agent(
         name="drafter",
-        model=timed(
-            hedged(retrying_gemini(model, MODEL_RETRY), hedge_after_s)
-            if isinstance(model, str)
-            else model
-        ),
+        model=_timed_model(model, hedge_after_s),
         instruction=instruction_for(workstation),
         tools=list(build_toolset(port, principal)),
         output_key=DRAFT_KEY,

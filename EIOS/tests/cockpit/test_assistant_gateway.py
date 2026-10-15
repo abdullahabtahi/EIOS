@@ -261,7 +261,14 @@ def test_the_answer_reports_its_stage_timings(client: TestClient) -> None:
     )
     assistant_gateway.set_runtime_for_testing(runtime)
     body = client.post(PATH, json=BODY).json()
-    assert set(body["timing_ms"]) == {"model", "tools", "other", "model_calls"}
+    assert set(body["timing_ms"]) == {
+        "model",
+        "tools",
+        "session",
+        "screening",
+        "other",
+        "model_calls",
+    }
 
 
 def test_a_served_turn_moves_the_agent_objectives_on_the_operations_board(

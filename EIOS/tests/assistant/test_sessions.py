@@ -47,8 +47,24 @@ def test_firestore_is_used_when_configured_and_names_the_shared_database() -> No
     )
     client = MagicMock()
     service = build_session_service(settings, client_factory=lambda database: client)
+    assert (
+        service.__class__.__name__ == "WriteBehindSessionService"
+    )  # the turn does not wait for Firestore
+    assert service.durable.__class__.__name__ == "FirestoreSessionService"
+    assert service.durable.client is client
+
+
+def test_write_behind_can_be_switched_off_to_write_through_firestore() -> None:
+    settings = AssistantSettings.from_env(
+        {
+            "EIOS_ENVIRONMENT": "prod-like",
+            "EIOS_PERSISTENCE": "firestore",
+            "EIOS_FIRESTORE_DATABASE": "eios-state",
+            "EIOS_ASSISTANT_SESSION_WRITE_BEHIND": "0",
+        }
+    )
+    service = build_session_service(settings, client_factory=lambda database: MagicMock())
     assert service.__class__.__name__ == "FirestoreSessionService"
-    assert service.client is client
 
 
 def test_firestore_database_name_is_required_when_deployed() -> None:
