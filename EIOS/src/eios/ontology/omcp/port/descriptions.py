@@ -62,10 +62,17 @@ DESCRIPTIONS: dict[str, str] = {
         "approve it. It never executes anything."
     ),
     "exec.briefing": "The executive briefing: top risks and opportunities across horizons. One call answers it.",
-    "exec.forecast": "The projected movement of one metric with its headline. It is a projection, not an actual.",
+    "exec.forecast": (
+        "The projected net revenue one horizon ahead, with the interval backtesting measured around it, how often "
+        "that interval held on held-out forecasts, and this model's error as a multiple of the error of carrying "
+        "today's value forward (under one is better). It is a projection, not an actual."
+    ),
     "exec.what_if": (
-        "Simulate a shock to the business and return the churn, turnover and EBITDA effects with their "
-        "attribution. It is a simulation, not an actual."
+        "Simulate a competitor raising its payout (competitor_payout_increase, size in percent of today's "
+        "payout) and return the effect on partner churn, first-time deposits and net revenue, an interval, which "
+        "regions bear it, and the retention playbooks that would defend it. A shock with no tested causal path "
+        "is refused. Changes are signed: a negative change is already a fall, so state the direction once and "
+        "never write a minus sign after a word such as decrease. It is a simulation, not an actual."
     ),
     "compliance.ledger": "The decision ledger entries in order, with their sequence numbers.",
     "compliance.intent_status": (

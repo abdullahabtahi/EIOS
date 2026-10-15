@@ -176,8 +176,13 @@ def run_edge_refutation_suite(
     is_placebo: bool = False,
     n_bootstrap: int = 100,
     rng: np.random.Generator | None = None,
+    placebo_repeats: int = 1,
 ) -> RefutationReport:
-    """Execute complete refutation battery and compute Causal-Evidence Gate verdict."""
+    """Execute complete refutation battery and compute Causal-Evidence Gate verdict.
+
+    The placebo p-value of one run is uniform under a true edge, so a single run fails a genuine edge one time in
+    twenty. `placebo_repeats` > 1 takes the median over independent runs, which makes a chance failure rare.
+    """
     if rng is None:
         rng = np.random.default_rng(seed=42)
 
@@ -199,7 +204,11 @@ def run_edge_refutation_suite(
     ci_excludes_zero = (ci_lower > 0.0 and ci_upper > 0.0) or (ci_lower < 0.0 and ci_upper < 0.0)
 
     # 2. Refutation Tests
-    placebo_res = run_placebo_treatment_refuter(t, y, n_permutations=100, rng=rng)
+    runs = [
+        run_placebo_treatment_refuter(t, y, n_permutations=100, rng=rng)
+        for _ in range(max(placebo_repeats, 1))
+    ]
+    placebo_res = sorted(runs, key=lambda r: r["p_value"])[len(runs) // 2]  # the median run
     cause_res = run_random_common_cause_refuter(t, y, rng=rng)
     subset_res = run_data_subset_refuter(t, y, subset_fraction=0.8, n_subsets=30, rng=rng)
 
@@ -234,6 +243,7 @@ def run_edge_refutation_suite(
     return RefutationReport(
         edge_id=edge_id,
         placebo_p_value=placebo_res["p_value"],
+        placebo_effect=placebo_res["placebo_effect_mean"],
         random_cause_delta_pct=cause_res["delta_pct"],
         subset_stability_delta_pct=subset_res["relative_std"],
         ci_excludes_zero=ci_excludes_zero,

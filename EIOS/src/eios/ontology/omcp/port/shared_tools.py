@@ -86,12 +86,7 @@ def get_metric(ctx: ReadModels, who: Principal, args: MetricArgs) -> MetricValue
             raise PortError(
                 ToolErrorCode.INVALID_ARGUMENTS, f"{args.metric_id.value} is a portfolio metric"
             )
-        financial = next(
-            h
-            for h in ctx.executive.get_morning_briefing().horizons
-            if h.horizon_name == "Financial"
-        )
-        value, source = financial.observed_value, "cockpit.executive.get_morning_briefing"
+        value, source = ctx.executive.current_net_revenue(), "cockpit.executive.current_net_revenue"
     else:
         if not args.entity_id:
             raise PortError(
@@ -119,9 +114,9 @@ def get_metric(ctx: ReadModels, who: Principal, args: MetricArgs) -> MetricValue
 
 
 def _metric_origin(ctx: ReadModels, args: MetricArgs) -> DataOrigin:
-    """Per-entity metrics take their plane's origin; everything else is fixture until its plane lands."""
+    """Each metric takes the origin of the plane that computes it."""
     if not args.entity_id:
-        return DataOrigin.FIXTURE
+        return ctx.executive_origin
     if args.metric_id in (MetricId.DISCREPANCY, MetricId.DEPOSIT_VOLUME):
         return ctx.aml_origin
     if args.metric_id in (MetricId.PARTNER_VOLUME, MetricId.CHURN_HAZARD):
@@ -235,6 +230,7 @@ def get_causal_evidence(ctx: ReadModels, _who: Principal, args: CausalArgs) -> C
                 "required_placebo_p_above": "ratio",
                 "required_confidence_at_least": "ratio",
             },
+            origin=ctx.executive_origin,
         ),
         dag_version=dag.dag_version,
         required_placebo_p_above=MIN_PLACEBO_P,

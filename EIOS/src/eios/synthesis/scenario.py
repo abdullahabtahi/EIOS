@@ -48,7 +48,9 @@ class ScenarioSimulator:
 
             if has_incoming:
                 current_val = deltas.get(node, 0.0) if node in direct_shocks else 0.0
-                deltas[node] = round(current_val + incoming_sum, 4)
+                deltas[node] = round(
+                    current_val + incoming_sum, 10
+                )  # four places compounded to 1% on a rate shock
 
         return deltas
 

@@ -9,3 +9,11 @@
 - {scenario_id: exec_causal_label, workstation: executive, split: dev, description: "Correlation is labelled as correlation.",
    turns: [{turn_index: 1, user_query: "Is the spread cut causing the partner churn?",
      expected_capabilities: [{capability: causal.evidence, order_index: 0}], allowed_extra_capabilities: [exec.what_if, metric.get]}]}
+- {scenario_id: exec_payout_what_if, workstation: executive, split: dev, description: "A payout shock with a tested causal path.",
+   turns: [{turn_index: 1, user_query: "What happens to revenue if a competitor raises its payout by 10 percent?",
+     expected_capabilities: [{capability: exec.what_if, order_index: 0}], allowed_extra_capabilities: [metric.get, causal.evidence],
+     expected_facts: [{capability: exec.what_if, path: projected_revenue_impact_usd, unit: currency}]}]}
+- {scenario_id: exec_forecast_interval, workstation: executive, split: dev, description: "A projection is quoted with its measured interval.",
+   turns: [{turn_index: 1, user_query: "What is the net revenue forecast and how sure are we?",
+     expected_capabilities: [{capability: exec.forecast, order_index: 0}], allowed_extra_capabilities: [metric.get],
+     expected_facts: [{capability: exec.forecast, path: point_estimate, unit: currency}]}]}
