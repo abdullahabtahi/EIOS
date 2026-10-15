@@ -17,7 +17,13 @@ const INDICATOR_LABEL: Readonly<Record<string, string>> = {
   'BN.CAB.XOKA.GD.ZS': 'Current account, % of GDP',
 };
 const NOT_RECORDED = 'Not recorded';
-const capitalise = (word: string): string => word.charAt(0).toUpperCase() + word.slice(1);
+const TIER_LABEL = { high: 'High', medium: 'Medium', low: 'Low' } as const;
+
+/** A country's display name from the reference layer; its code when the layer is absent or does not know it. */
+export const nameOf = (reference: GeoReference | null, code: string): string =>
+  reference?.countries.find((c) => c.iso2 === code)?.name ?? code;
+export const FATF_TEXT = FATF_LABEL;
+export const tierText = (tier: keyof typeof TIER_LABEL | null): string => (tier ? TIER_LABEL[tier] : 'Unrated');
 
 function indicatorRow(i: ReferenceIndicator): readonly [string, string] {
   const label = INDICATOR_LABEL[i.code] ?? i.name;
@@ -38,7 +44,7 @@ export function describeSelection(
   selection: GeoSelection,
 ): SelectionView | null {
   if (!selection) return null;
-  const name = (code: string) => reference?.countries.find((c) => c.iso2 === code)?.name ?? code;
+  const name = (code: string) => nameOf(reference, code);
   if (selection.kind === 'country') {
     const c = reference?.countries.find((x) => x.iso2 === selection.id);
     if (!c) return null;
@@ -58,7 +64,7 @@ export function describeSelection(
       ? {
           title: `${name(c.origin)} → ${name(c.destination)}`,
           rows: [
-            ['Risk tier', c.tier ? capitalise(c.tier) : 'Unrated'],
+            ['Risk tier', tierText(c.tier)],
             ['Volume', formatUsd(c.volume_usd)],
             ['Accounts', COUNT.format(c.accounts)],
             ['Payments', COUNT.format(c.events)],

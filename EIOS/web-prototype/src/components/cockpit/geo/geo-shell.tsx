@@ -2,17 +2,21 @@
 
 import * as React from 'react';
 import { AppNavRail } from '../shell/app-nav-rail';
+import { ChromeBrand, ChromeOperator } from '../shell/chrome-bar';
 import { GeoWorkspace } from './geo-workspace';
 
-/** Geospatial section shell: global rail plus one slim title row (no persona strip; one header only) and the workspace. */
+/**
+ * Geospatial section shell: the global rail, the same dark chrome row as the workstations (brand and operator;
+ * the telemetry and Ask controls need workstation state and are not shown here), and the workspace. One header only.
+ */
 export function GeoShell() {
   return (
     <div data-cockpit-shell className="relative flex h-screen w-screen flex-row overflow-hidden bg-cx-canvas font-sans text-slate-900 antialiased">
       <AppNavRail currentId="geospatial" />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-11 shrink-0 items-center gap-3 border-b border-cx-line bg-white px-4">
-          <h1 className="text-title font-sans font-semibold text-cx-ink">Geospatial</h1>
-          <span className="text-xs text-cx-muted">Financial geography as an evidence lens</span>
+        <header className="z-30 flex h-11 shrink-0 select-none items-center justify-between bg-cockpit-rail px-4 text-slate-100">
+          <ChromeBrand section="Geospatial" heading />
+          <ChromeOperator />
         </header>
         <main id="workspace" className="min-h-0 flex-1">
           <GeoWorkspace />

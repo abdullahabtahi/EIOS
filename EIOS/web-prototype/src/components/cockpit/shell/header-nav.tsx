@@ -14,10 +14,7 @@ import { WORKSTATION_ROLES } from './workstation-roles';
 import { FallbackReplayBanner } from '../common/fallback-replay-badge';
 import { SystemStatusDialog } from '../common/system-status-dialog';
 import { getPipelineStatus, type PipelineTone } from '../state/pipeline-status';
-import { useAuth } from '@/lib/auth/auth-context';
-
-// An environment name (STAGE, PROD) is shown only when one is configured; there is no default label.
-const ENV_LABEL = process.env.NEXT_PUBLIC_EIOS_ENV;
+import { ChromeBrand, ChromeOperator } from './chrome-bar';
 
 const TONE_DOT: Record<PipelineTone, string> = {
   ok: 'bg-green-400',
@@ -39,7 +36,6 @@ export function HeaderNav({
 }: {
   onOpenShortcuts?: () => void;
 } = {}) {
-  const { status: authStatus, operator: authOperator, signOutOperator } = useAuth();
   const { state, setRole, openChat } = useCockpit();
   const pipeline = getPipelineStatus(state);
   const [statusOpen, setStatusOpen] = React.useState(false);
@@ -48,18 +44,7 @@ export function HeaderNav({
     <header className="w-full bg-white border-b border-slate-200 select-none z-30 shrink-0 shadow-2xs">
       {/* Top Utility & Identity Bar */}
       <div className="h-11 px-4 flex items-center justify-between bg-cockpit-rail text-slate-100">
-        {/* Left Branding */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-baseline gap-1.5">
-            <span className="font-mono font-bold tracking-widest text-xs text-white uppercase">EIOS</span>
-            <span className="text-label text-slate-400 font-mono tracking-wider uppercase hidden sm:inline">
-              / OPERATOR COCKPIT v2.4
-            </span>
-          </div>
-          <span className="px-1.5 py-0.5 bg-white/8 border border-white/15 text-slate-200 font-mono text-label font-bold tracking-wider">
-            {ENV_LABEL ? `${ENV_LABEL} • ` : ''}TLP:AMBER
-          </span>
-        </div>
+        <ChromeBrand section="OPERATOR COCKPIT v2.4" />
 
         {/* Center / Right Telemetry & Controls */}
         <div className="flex items-center gap-2.5">
@@ -122,29 +107,7 @@ export function HeaderNav({
             </button>
           )}
 
-          {/* Current Operator Badge */}
-          <div className="flex items-center gap-2 pl-2 border-l border-chrome-line">
-            <div className="size-6 bg-white/10 border border-white/15 text-white flex items-center justify-center font-mono font-bold text-label">
-              {(authOperator?.email ?? state.operator.officerId).slice(0, 2).toUpperCase()}
-            </div>
-            <div className="hidden xl:block text-left">
-              <div className="text-label font-bold text-white leading-tight">
-                {authOperator?.email ?? state.operator.name}
-              </div>
-              <div className="text-label font-mono text-slate-400 leading-tight uppercase tracking-wider">
-                {authOperator?.role ?? state.operator.clearanceLevel.replace(/_/g, ' ')}
-              </div>
-            </div>
-            {authStatus === 'signedIn' && (
-              <button
-                type="button"
-                onClick={() => void signOutOperator()}
-                className="ml-1 px-2 py-1 border border-white/15 text-label font-mono uppercase tracking-wider text-slate-300 hover:bg-white/10"
-              >
-                Sign out
-              </button>
-            )}
-          </div>
+          <ChromeOperator />
         </div>
       </div>
 

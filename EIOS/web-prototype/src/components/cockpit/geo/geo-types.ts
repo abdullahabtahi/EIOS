@@ -85,6 +85,5 @@ export interface GeoSummary {
   /** null when no corridor was measured: never zero, never healthy. */
   readonly corridorVolumeUsd: number | null;
   readonly exposure: Readonly<Record<RiskTier, number>> | null;
-  readonly topCorridors: readonly FlowCorridor[];
   readonly flaggedAccounts: number;
 }

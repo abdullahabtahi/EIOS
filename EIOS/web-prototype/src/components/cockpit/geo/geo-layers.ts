@@ -9,18 +9,20 @@ import type {
   ReferenceCountry,
   RiskTier,
 } from './geo-types';
+import { corridorId, pairId, shownCorridors, shownPairs } from './geo-rank';
 
 type Rgba = [number, number, number, number];
 
+/** Colour carries risk only: elevated tiers are red and amber; low and unrated corridors stay a quiet grey, never green. */
 export const TIER_COLOR: Readonly<Record<RiskTier, Rgba>> = {
-  low: [34, 139, 94, 200],
+  low: [138, 155, 168, 120],
   medium: [217, 150, 20, 210],
   high: [200, 50, 50, 220],
 };
-const MISMATCH_COLOR: Rgba = [57, 75, 89, 230];
-const OFFSHORE_COLOR: Rgba = [16, 107, 163, 170];
+const MISMATCH_COLOR: Rgba = [16, 107, 163, 210];
+const OFFSHORE_COLOR: Rgba = [16, 107, 163, 150];
 const SELECTED_COLOR: Rgba = [17, 17, 17, 255];
-const UNRATED_COLOR: Rgba = [138, 155, 168, 200];
+const UNRATED_COLOR: Rgba = [138, 155, 168, 120];
 const OUTLINE_COLOR: Rgba = [120, 134, 148, 90];
 const NO_FILL: Rgba = [0, 0, 0, 0];
 
@@ -30,12 +32,14 @@ const AREA_FILL_ALPHA = 70;
 // Arcs lift out of the map plane; on a flat (untilted) map that is invisible, so lay the arc in the plane to read as a curve.
 const ARC_TILT_DEG = 90;
 const ARC_HEIGHT = 0.06;
-/** Arcs drawn: every elevated-tier corridor plus this many of the largest others, and this many flagged country pairs. */
-export const MAX_PLAIN_CORRIDORS = 6;
-export const MAX_MISMATCH_PAIRS = 10;
+/** Where the pointer is over the map, in the map's own pixels, so a tooltip can sit beside it. */
+export interface HoverPoint {
+  readonly x: number;
+  readonly y: number;
+}
 
 export interface LayerHandlers {
-  readonly onHover?: (selection: GeoSelection) => void;
+  readonly onHover?: (selection: GeoSelection, point?: HoverPoint) => void;
   readonly onSelect?: (selection: GeoSelection) => void;
 }
 
@@ -49,7 +53,8 @@ interface ArcRow {
 
 const toLngLat = (p: LngLat): [number, number] => [p[0], p[1]];
 const MIN_ARC_WIDTH = 1.5;
-const ARC_WIDTH_RANGE = 6;
+const ARC_WIDTH_RANGE = 3.5;
+const SELECTED_EXTRA_WIDTH = 1.5;
 /** Arc width grows with the square root of the value relative to the largest, so every dataset reads the same. */
 const widthFor = (value: number, max: number): number =>
   MIN_ARC_WIDTH + ARC_WIDTH_RANGE * Math.sqrt(max > 0 ? value / max : 0);
@@ -66,44 +71,42 @@ function positions(reference: GeoReference): ReadonlyMap<string, LngLat> {
   return new Map(reference.countries.map((c) => [c.iso2, c.position]));
 }
 
-/** Every elevated corridor, plus the largest of the rest; the full list stays in the widgets. */
-export function shownCorridors(flows: GeoFlows): GeoFlows['corridors'] {
-  const byVolume = [...flows.corridors].sort((a, b) => b.volume_usd - a.volume_usd);
-  const elevated = byVolume.filter((c) => c.tier === 'high' || c.tier === 'medium');
-  const plain = byVolume.filter((c) => c.tier !== 'high' && c.tier !== 'medium').slice(0, MAX_PLAIN_CORRIDORS);
-  return [...elevated, ...plain];
-}
-
-export function shownPairs(flows: GeoFlows): GeoFlows['mismatch_pairs'] {
-  return [...flows.mismatch_pairs].sort((a, b) => b.accounts - a.accounts).slice(0, MAX_MISMATCH_PAIRS);
-}
-
 function corridorRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly ArcRow[] {
   const at = positions(reference);
   const max = Math.max(0, ...flows.corridors.map((c) => c.volume_usd));
-  return shownCorridors(flows).flatMap((c) => {
+  const drawn = shownCorridors(flows);
+  // A corridor picked from the list is drawn even when it is not among the largest, so a selection is never invisible.
+  const picked = selection?.kind === 'corridor' ? flows.corridors.find((c) => corridorId(c) === selection.id) : undefined;
+  const rows = picked && !drawn.includes(picked) ? [...drawn, picked] : drawn;
+  return rows.flatMap((c) => {
     const source = at.get(c.origin);
     const target = at.get(c.destination);
     if (!source || !target) return [];
-    const id = `${c.origin}>${c.destination}`;
-    const picked = selection?.kind === 'corridor' && selection.id === id;
-    const color = picked ? SELECTED_COLOR : c.tier ? TIER_COLOR[c.tier] : UNRATED_COLOR;
-    return [{ source, target, width: widthFor(c.volume_usd, max), color, ref: { kind: 'corridor', id } as const }];
+    const id = corridorId(c);
+    const isPicked = picked === c;
+    const color = isPicked ? SELECTED_COLOR : c.tier ? TIER_COLOR[c.tier] : UNRATED_COLOR;
+    const width = widthFor(c.volume_usd, max) + (isPicked ? SELECTED_EXTRA_WIDTH : 0);
+    return [{ source, target, width, color, ref: { kind: 'corridor', id } as const }];
   });
 }
 
 function mismatchRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly ArcRow[] {
   const at = positions(reference);
   const max = Math.max(0, ...flows.mismatch_pairs.map((p) => p.accounts));
-  return shownPairs(flows).flatMap((p) => {
+  const drawn = shownPairs(flows);
+  const picked = selection?.kind === 'mismatch' ? flows.mismatch_pairs.find((p) => pairId(p) === selection.id) : undefined;
+  const rows = picked && !drawn.includes(picked) ? [...drawn, picked] : drawn;
+  return rows.flatMap((p) => {
     const source = at.get(p.kyc_country);
     const target = at.get(p.ip_country);
     if (!source || !target) return [];
-    const id = `${p.kyc_country}>${p.ip_country}`;
-    const picked = selection?.kind === 'mismatch' && selection.id === id;
-    return [{ source, target, width: widthFor(p.accounts, max), color: picked ? SELECTED_COLOR : MISMATCH_COLOR, ref: { kind: 'mismatch', id } as const }];
+    const isPicked = picked === p;
+    const width = widthFor(p.accounts, max) + (isPicked ? SELECTED_EXTRA_WIDTH : 0);
+    return [{ source, target, width, color: isPicked ? SELECTED_COLOR : MISMATCH_COLOR, ref: { kind: 'mismatch', id: pairId(p) } as const }];
   });
 }
+
+const point = (info: { x: number; y: number }): HoverPoint => ({ x: info.x, y: info.y });
 
 function arcLayer(id: string, rows: readonly ArcRow[], handlers: LayerHandlers): ArcLayer<ArcRow> {
   return new ArcLayer<ArcRow>({
@@ -118,7 +121,7 @@ function arcLayer(id: string, rows: readonly ArcRow[], handlers: LayerHandlers):
     getWidth: (d) => d.width,
     getTilt: () => ARC_TILT_DEG,
     getHeight: () => ARC_HEIGHT,
-    onHover: (info) => handlers.onHover?.(info.object ? (info.object as ArcRow).ref : null),
+    onHover: (info) => handlers.onHover?.(info.object ? (info.object as ArcRow).ref : null, point(info)),
     onClick: (info) => handlers.onSelect?.(info.object ? (info.object as ArcRow).ref : null),
   });
 }
@@ -158,7 +161,7 @@ function riskAreaLayer(reference: GeoReference, selection: GeoSelection, handler
     getLineColor: (f) => (picked((f as unknown as AreaFeature).properties.country) ? SELECTED_COLOR : OUTLINE_COLOR),
     getLineWidth: (f) => (picked((f as unknown as AreaFeature).properties.country) ? 3 : 1),
     updateTriggers: { getLineColor: [selection?.kind, selection?.id], getLineWidth: [selection?.kind, selection?.id] },
-    onHover: (info) => handlers.onHover?.(info.object ? countryRef((info.object as unknown as AreaFeature).properties.country) : null),
+    onHover: (info) => handlers.onHover?.(info.object ? countryRef((info.object as unknown as AreaFeature).properties.country) : null, point(info)),
     onClick: (info) => handlers.onSelect?.(info.object ? countryRef((info.object as unknown as AreaFeature).properties.country) : null),
   });
 }
@@ -176,7 +179,7 @@ function offshoreLayer(reference: GeoReference, handlers: LayerHandlers): Scatte
     getRadius: (c) => Math.max(5, Math.sqrt(c.entities_incorporated ?? 0) / 14),
     getFillColor: OFFSHORE_COLOR,
     getLineColor: [255, 255, 255, 255],
-    onHover: (info) => handlers.onHover?.(info.object ? countryRef(info.object as ReferenceCountry) : null),
+    onHover: (info) => handlers.onHover?.(info.object ? countryRef(info.object as ReferenceCountry) : null, point(info)),
     onClick: (info) => handlers.onSelect?.(info.object ? countryRef(info.object as ReferenceCountry) : null),
   });
 }

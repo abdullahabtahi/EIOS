@@ -8,10 +8,10 @@ import type { MapProps } from '@vis.gl/react-google-maps';
 export const MUTED_LIGHT_STYLE: NonNullable<MapProps['styles']> = [
   { elementType: 'geometry', stylers: [{ color: '#f5f8fa' }] },
   { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#8a9ba8' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#9aabb7' }] },
   { elementType: 'labels.text.stroke', stylers: [{ color: '#f5f8fa' }] },
   { featureType: 'administrative.country', elementType: 'geometry.stroke', stylers: [{ color: '#ced9e0' }, { weight: 0.8 }] },
-  { featureType: 'administrative.country', elementType: 'labels.text.fill', stylers: [{ color: '#5c7080' }] },
+  { featureType: 'administrative.country', elementType: 'labels.text.fill', stylers: [{ color: '#7d909f' }] },
   { featureType: 'administrative.province', stylers: [{ visibility: 'off' }] },
   { featureType: 'administrative.locality', stylers: [{ visibility: 'off' }] },
   { featureType: 'administrative.neighborhood', stylers: [{ visibility: 'off' }] },

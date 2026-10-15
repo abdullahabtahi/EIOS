@@ -40,6 +40,16 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllEnvs());
 
+const MANY_FLOWS = {
+  ...FLOWS,
+  corridors: [
+    ...FLOWS.corridors,
+    ...Array.from({ length: 10 }, (_, i) => ({ origin: 'PA', destination: 'BS', volume_usd: 1_000 + i, accounts: 1, events: 1, tier: 'low' as const })),
+  ],
+};
+
+const tab = (name: string) => screen.getByRole('tab', { name });
+
 describe('GeoWorkspace', () => {
   it('says the map is unavailable, rather than rendering blank, when no key is configured', () => {
     vi.stubEnv('NEXT_PUBLIC_GOOGLE_MAPS_API_KEY', '');
@@ -54,64 +64,173 @@ describe('GeoWorkspace', () => {
     expect(screen.getByTestId('google-map')).toBeInTheDocument();
   });
 
-  it('explains the marks with a legend', () => {
+  it('opens on one question, with only that view in the legend', async () => {
     render(<GeoWorkspace />);
+    expect(tab('Corridors')).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('heading', { level: 2, name: /Where does money cross borders/ })).toBeInTheDocument();
     const legend = screen.getByRole('list', { name: 'Map legend' });
+    expect(within(legend).getByText('High-risk corridor')).toBeInTheDocument();
     expect(within(legend).getByText('FATF call for action')).toBeInTheDocument();
-    expect(within(legend).getByText(/Offshore entities/)).toBeInTheDocument();
+    expect(within(legend).queryByText(/Offshore entities/)).not.toBeInTheDocument();
+    expect(within(legend).queryByText(/Registered here/)).not.toBeInTheDocument();
   });
 
-  it('states the copilot is not connected and never offers a live answer', () => {
+  it('carries no data-origin labels and no unconnected placeholder on first view', async () => {
     render(<GeoWorkspace />);
-    const panel = screen.getByRole('complementary', { name: 'Geo copilot' });
-    expect(within(panel).getByText('Not connected')).toBeInTheDocument();
-    expect(within(panel).queryByLabelText('Message geo copilot')).not.toBeInTheDocument(); // collapsed by default
-    fireEvent.click(within(panel).getByRole('button', { name: /Geo copilot/ }));
-    expect(within(panel).getByLabelText('Message geo copilot')).toBeDisabled();
-  });
-
-  it('shows reference and engine figures with their sources once both load', async () => {
-    render(<GeoWorkspace />);
-    expect(await screen.findByText(/AML engine over the seeded world/)).toBeInTheDocument();
-    expect(screen.getByText(/Overture Maps division_area/)).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'FATF lists' })).toHaveTextContent('1 call for action');
-    const top = screen.getByRole('region', { name: 'Top corridors' });
-    expect(within(top).getByText('NO → IR')).toBeInTheDocument();
-    expect(screen.getByRole('region', { name: 'Corridor volume by risk tier' })).toHaveTextContent('25');
-  });
-
-  it('with the reference layer down, disables every lens (flows need it to be placed) and says so', async () => {
-    serve(DOWN, OK(FLOWS));
-    render(<GeoWorkspace />);
-    expect(await screen.findByText(/Reference layer unavailable \(HTTP 503\)/)).toBeInTheDocument();
-    for (const name of [/FATF risk areas/, /Offshore entity centres/, /Cross-border corridors/, /IP vs KYC country/]) {
-      expect(screen.getByLabelText(name)).toBeDisabled();
+    await screen.findByRole('region', { name: 'Where to look first' });
+    for (const word of [/^Engine$/i, /^Reference$/i, /Not connected/i, /Geo copilot/i, /Evidence lenses/i]) {
+      expect(screen.queryByText(word)).not.toBeInTheDocument();
     }
   });
 
-  it('with the flows down, keeps the reference lenses and disables the flow lenses', async () => {
-    serve(OK(REFERENCE), DOWN);
+  it('lists where to look first, elevated corridors on top, and says how much the map draws', async () => {
     render(<GeoWorkspace />);
-    expect(await screen.findByText(/Customer flows unavailable \(HTTP 503\)/)).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByLabelText(/FATF risk areas/)).not.toBeDisabled());
-    expect(screen.getByLabelText(/Cross-border corridors/)).toBeDisabled();
-    expect(within(screen.getByRole('region', { name: 'Top corridors' })).getByText('NO_DATA')).toBeInTheDocument();
+    const list = await screen.findByRole('region', { name: 'Where to look first' });
+    const rows = within(list).getAllByRole('button');
+    expect(rows[0]).toHaveTextContent('Norway → Iran');
+    expect(rows[0]).toHaveTextContent('High');
+    expect(rows[1]).toHaveTextContent('Kenya → The Bahamas');
+    expect(screen.getByRole('list', { name: 'Map legend' }).parentElement).toHaveTextContent('Showing 3 of 3 corridors');
   });
 
-  it('lets an analyst turn each evidence lens off and on', async () => {
+  it('pins a lead into the panel with its full facts, and puts it down again', async () => {
     render(<GeoWorkspace />);
-    await waitFor(() => expect(screen.getByLabelText(/Cross-border corridors/)).not.toBeDisabled());
-    const box = screen.getByLabelText(/Cross-border corridors/) as HTMLInputElement;
+    const list = await screen.findByRole('region', { name: 'Where to look first' });
+    fireEvent.click(within(list).getByRole('button', { name: /Norway → Iran/ }));
+    const detail = screen.getByRole('region', { name: 'Selection' });
+    expect(detail).toHaveTextContent('Risk tier');
+    expect(detail).toHaveTextContent('$900K');
+    expect(within(list).getByRole('button', { name: /Norway → Iran/ })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(within(detail).getByRole('button', { name: 'Clear selection' }));
+    expect(screen.queryByRole('region', { name: 'Selection' })).not.toBeInTheDocument();
+  });
+
+  it('clears a selection with Escape', async () => {
+    render(<GeoWorkspace />);
+    const list = await screen.findByRole('region', { name: 'Where to look first' });
+    fireEvent.click(within(list).getByRole('button', { name: /Kenya → The Bahamas/ }));
+    expect(screen.getByRole('region', { name: 'Selection' })).toBeInTheDocument();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('region', { name: 'Selection' })).not.toBeInTheDocument();
+  });
+
+  it('shows the first rows only, and all of them on request', async () => {
+    serve(OK(REFERENCE), OK(MANY_FLOWS));
+    render(<GeoWorkspace />);
+    const list = await screen.findByRole('region', { name: 'Where to look first' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(8);
+    fireEvent.click(within(list).getByRole('button', { name: 'Show all 13' }));
+    expect(within(list).getAllByRole('listitem')).toHaveLength(13);
+    fireEvent.click(within(list).getByRole('button', { name: 'Show fewer' }));
+    expect(within(list).getAllByRole('listitem')).toHaveLength(8);
+  });
+
+  it('switches view: the question, the legend, the list and the selection all follow', async () => {
+    render(<GeoWorkspace />);
+    const list = await screen.findByRole('region', { name: 'Where to look first' });
+    fireEvent.click(within(list).getByRole('button', { name: /Norway → Iran/ }));
+
+    fireEvent.click(tab('Login vs KYC'));
+    expect(tab('Login vs KYC')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(/log in from a different country/);
+    expect(screen.queryByRole('region', { name: 'Selection' })).not.toBeInTheDocument();
+    const rows = within(screen.getByRole('region', { name: 'Where to look first' })).getAllByRole('button');
+    expect(rows[0]).toHaveTextContent('Norway → Kenya');
+    expect(rows[0]).toHaveTextContent('23 accounts');
+    expect(within(screen.getByRole('list', { name: 'Map legend' })).getByText(/Registered here/)).toBeInTheDocument();
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('25 accounts flagged across 2 country pairs');
+
+    fireEvent.click(tab('Jurisdictions'));
+    const groups = screen.getByRole('region', { name: 'Where to look first' });
+    expect(within(groups).getByText('On the FATF call-for-action list')).toBeInTheDocument();
+    expect(within(groups).getByText('Largest offshore centres')).toBeInTheDocument();
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('1 on the call-for-action list');
+    expect(within(screen.getByRole('list', { name: 'Map legend' })).getByText(/Offshore entities/)).toBeInTheDocument();
+  });
+
+  it('moves between views with the arrow keys, like the persona strip', async () => {
+    render(<GeoWorkspace />);
+    await screen.findByRole('region', { name: 'Where to look first' });
+    fireEvent.keyDown(tab('Corridors'), { key: 'ArrowRight' });
+    expect(tab('Login vs KYC')).toHaveAttribute('aria-selected', 'true');
+    fireEvent.keyDown(tab('Login vs KYC'), { key: 'End' });
+    expect(tab('Jurisdictions')).toHaveAttribute('aria-selected', 'true');
+    fireEvent.keyDown(tab('Jurisdictions'), { key: 'ArrowRight' });
+    expect(tab('Corridors')).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('shows the corridor exposure by tier on the corridors view', async () => {
+    render(<GeoWorkspace />);
+    await screen.findByRole('region', { name: 'Where to look first' });
+    const panel = screen.getByRole('tabpanel');
+    expect(within(panel).getByRole('img', { name: 'Corridor volume by risk tier' })).toBeInTheDocument();
+    expect(panel).toHaveTextContent('$900K');
+  });
+
+  it('keeps the sources one click away, with the as-of date visible', async () => {
+    render(<GeoWorkspace />);
+    await screen.findByRole('region', { name: 'Where to look first' });
+    const sources = screen.getByText('Sources').closest('details')!;
+    expect(sources).not.toHaveAttribute('open');
+    expect(sources).toHaveTextContent('as of 2026-10-14');
+    expect(sources).toHaveTextContent(/Overture Maps division_area/);
+    expect(sources).toHaveTextContent(/AML engine over the seeded world/);
+  });
+
+  it('lets an analyst change the mix of layers, collapsed until asked', async () => {
+    render(<GeoWorkspace />);
+    await waitFor(() => expect(screen.getByLabelText(/Payment corridors/)).not.toBeDisabled());
+    expect(screen.getByText('Layers').closest('details')).not.toHaveAttribute('open');
+    const box = screen.getByLabelText(/Payment corridors/) as HTMLInputElement;
     expect(box.checked).toBe(true);
+    expect((screen.getByLabelText(/Offshore entity centres/) as HTMLInputElement).checked).toBe(false);
     fireEvent.click(box);
     expect(box.checked).toBe(false);
+    expect(screen.getByText('Layers').closest('summary')).toHaveTextContent('1 of 4 on');
   });
 
-  it('shows NO_DATA, not zero, for corridor volume when the engine reports no corridors', async () => {
+  it('with the reference layer down, says so with a retry, and disables every layer (flows need it to be placed)', async () => {
+    serve(DOWN, OK(FLOWS));
+    render(<GeoWorkspace />);
+    expect(await screen.findByText(/reference layer could not be loaded \(HTTP 503\)/)).toBeInTheDocument();
+    for (const name of [/FATF-listed countries/, /Offshore entity centres/, /Payment corridors/, /Login vs KYC country/]) {
+      expect(screen.getByLabelText(name)).toBeDisabled();
+    }
+    serve(OK(REFERENCE), OK(FLOWS));
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(await screen.findByRole('region', { name: 'Where to look first' })).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('with the flows down, keeps the jurisdictions view and disables the flow layers', async () => {
+    serve(OK(REFERENCE), DOWN);
+    render(<GeoWorkspace />);
+    expect(await screen.findByText(/customer flows could not be loaded \(HTTP 503\)/)).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Where to look first' })).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.getByLabelText(/FATF-listed countries/)).not.toBeDisabled());
+    expect(screen.getByLabelText(/Payment corridors/)).toBeDisabled();
+    fireEvent.click(tab('Jurisdictions'));
+    expect(await screen.findByText('Largest offshore centres')).toBeInTheDocument();
+  });
+
+  it('shows a placeholder, not a blank panel, while the engine builds its view', () => {
+    authFetch.mockImplementation(() => new Promise(() => {}));
+    render(<GeoWorkspace />);
+    expect(screen.getAllByTestId('geo-loading')).toHaveLength(1);
+    expect(screen.getByText(/Reading customer flows from the engine/)).toBeInTheDocument();
+  });
+
+  it('shows NO_DATA, not zero, when the engine reports no corridors', async () => {
     serve(OK(REFERENCE), OK({ ...FLOWS, corridors: [], exposure: null }));
     render(<GeoWorkspace />);
-    const region = await screen.findByRole('region', { name: 'Corridor volume by risk tier' });
-    await waitFor(() => expect(within(region).getByText('NO_DATA')).toBeInTheDocument());
+    await waitFor(() => expect(within(screen.getByRole('tabpanel')).getByText('NO_DATA')).toBeInTheDocument());
+  });
+
+  it('says tiers are unavailable, rather than drawing a bar, when the engine could not rate corridors', async () => {
+    serve(OK(REFERENCE), OK({ ...FLOWS, tiers_known: false, exposure: null, corridors: FLOWS.corridors.map((c) => ({ ...c, tier: null })) }));
+    render(<GeoWorkspace />);
+    expect(await screen.findByText(/Tiers unavailable/)).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'Corridor volume by risk tier' })).not.toBeInTheDocument();
   });
 });
 

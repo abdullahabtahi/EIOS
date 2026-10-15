@@ -8,6 +8,7 @@ import { GeoDeckOverlay } from './geo-deck-overlay';
 import { readMapsConfig } from './geo-config';
 import { MUTED_LIGHT_STYLE } from './geo-map-style';
 import type { MapFocus } from './geo-focus';
+import type { CameraTarget } from './geo-camera';
 
 const WORLD_CENTER = { lat: 22, lng: 20 };
 const WORLD_ZOOM = 2;
@@ -24,8 +25,27 @@ function InitialView({ focus }: { readonly focus: MapFocus | null }) {
   return null;
 }
 
+const FIT_PADDING = { top: 96, right: 64, bottom: 96, left: 64 };
+
+/** Moves the camera when the analyst picks a lead; a new target object (not a new value) is a new request. */
+function CameraTo({ target }: { readonly target: CameraTarget | null }) {
+  const map = useMap();
+  React.useEffect(() => {
+    if (!map || !target) return;
+    if (target.kind === 'point') map.moveCamera({ center: target.center, zoom: target.zoom });
+    else map.fitBounds({ north: target.north, south: target.south, east: target.east, west: target.west }, FIT_PADDING);
+  }, [map, target]);
+  return null;
+}
+
+export interface GeoMapProps {
+  readonly layers: readonly Layer[];
+  readonly focus?: MapFocus | null;
+  readonly target?: CameraTarget | null;
+}
+
 /** Google basemap with the deck.gl evidence layers; labelled unavailable, never blank, when no key is configured. */
-export function GeoMap({ layers, focus = null }: { readonly layers: readonly Layer[]; readonly focus?: MapFocus | null }) {
+export function GeoMap({ layers, focus = null, target = null }: GeoMapProps) {
   const config = readMapsConfig();
   if (!config) {
     return (
@@ -53,6 +73,7 @@ export function GeoMap({ layers, focus = null }: { readonly layers: readonly Lay
         zoomControl
         className="h-full w-full">
         <InitialView focus={focus} />
+        <CameraTo target={target} />
         <GeoDeckOverlay layers={layers} />
       </Map>
     </APIProvider>

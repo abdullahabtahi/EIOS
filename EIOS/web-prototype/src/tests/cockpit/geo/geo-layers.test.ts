@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { summarize, summarizeReference } from '@/components/cockpit/geo/geo-aggregates';
-import { buildLayers, shownCorridors, shownPairs, tierOf, MAX_MISMATCH_PAIRS, MAX_PLAIN_CORRIDORS, MIN_OFFSHORE_ENTITIES } from '@/components/cockpit/geo/geo-layers';
+import { buildLayers, tierOf, MIN_OFFSHORE_ENTITIES } from '@/components/cockpit/geo/geo-layers';
+import { ARC_BUDGET, MAX_MISMATCH_PAIRS, drawnKinds, rankedCorridors, shownCorridors, shownPairs } from '@/components/cockpit/geo/geo-rank';
+import type { FlowCorridor } from '@/components/cockpit/geo/geo-types';
 import type { LayerId } from '@/components/cockpit/geo/geo-types';
 import { FLOWS } from './flows-fixture';
 import { REFERENCE } from './reference-fixture';
@@ -8,11 +10,6 @@ import { REFERENCE } from './reference-fixture';
 const ALL: ReadonlySet<LayerId> = new Set(['risk', 'offshore', 'corridors', 'mismatches']);
 
 describe('summarize (engine flows)', () => {
-  it('ranks corridors by volume, descending, capped at n', () => {
-    const top = summarize(FLOWS, 2)!.topCorridors;
-    expect(top.map((c) => c.volume_usd)).toEqual([900_000, 400_000]);
-  });
-
   it('passes the engine exposure through and counts flagged accounts across pairs', () => {
     const s = summarize(FLOWS)!;
     expect(s.exposure).toEqual(FLOWS.exposure);
@@ -33,10 +30,8 @@ describe('summarize (engine flows)', () => {
 });
 
 describe('summarizeReference', () => {
-  it('counts FATF listings by list and ranks offshore centres by incorporated entities', () => {
-    const r = summarizeReference(REFERENCE, 2);
-    expect(r?.fatf).toEqual({ call_for_action: 1, increased_monitoring: 1 });
-    expect(r?.topOffshore.map((c) => c.iso2)).toEqual(['BS', 'PA']);
+  it('counts FATF listings by list', () => {
+    expect(summarizeReference(REFERENCE)?.fatf).toEqual({ call_for_action: 1, increased_monitoring: 1 });
   });
 
   it('is null when there is no reference layer: no data, not zero', () => {
@@ -96,22 +91,62 @@ describe('buildLayers', () => {
 });
 
 describe('which arcs are drawn', () => {
+  const corridor = (i: number, tier: FlowCorridor['tier'], volume: number): FlowCorridor => ({
+    origin: 'NO', destination: `D${i}`, volume_usd: volume, accounts: 1, events: 1, tier,
+  });
   const many = {
     ...FLOWS,
     corridors: [
-      ...FLOWS.corridors,
-      ...Array.from({ length: 20 }, (_, i) => ({ origin: 'NO', destination: 'BS', volume_usd: 10 + i, accounts: 1, events: 1, tier: 'low' as const })),
+      ...Array.from({ length: 20 }, (_, i) => corridor(i, 'medium', 1_000 + i)),
+      ...Array.from({ length: 6 }, (_, i) => corridor(100 + i, 'high', 10 + i)),
+      ...Array.from({ length: 20 }, (_, i) => corridor(200 + i, 'low', 50_000 + i)),
     ],
     mismatch_pairs: Array.from({ length: 30 }, (_, i) => ({ ...FLOWS.mismatch_pairs[0], ip_country: `X${i}`, accounts: i + 1 })),
   };
 
-  it('always draws every elevated corridor, plus only the largest of the rest', () => {
+  it('ranks high before medium before the rest, then by volume, whatever the volumes', () => {
+    const tiers = rankedCorridors(many).map((c) => c.tier);
+    expect(tiers.slice(0, 6)).toEqual(Array(6).fill('high'));
+    expect(tiers.slice(6, 26)).toEqual(Array(20).fill('medium'));
+    expect(tiers.slice(26)).toEqual(Array(20).fill('low'));
+    const high = rankedCorridors(many).slice(0, 6).map((c) => c.volume_usd);
+    expect(high).toEqual([...high].sort((a, b) => b - a));
+  });
+
+  it('gives each kind of arc its own budget, so medium corridors are drawn beside a crowd of high ones', () => {
     const shown = shownCorridors(many);
-    const elevated = many.corridors.filter((c) => c.tier === 'high' || c.tier === 'medium');
-    expect(elevated.every((c) => shown.includes(c))).toBe(true);
-    expect(shown.length).toBe(elevated.length + MAX_PLAIN_CORRIDORS);
-    const plain = shown.filter((c) => c.tier === 'low').map((c) => c.volume_usd);
-    expect(Math.min(...plain)).toBeGreaterThanOrEqual(Math.max(...many.corridors.filter((c) => c.tier === 'low' && !shown.includes(c)).map((c) => c.volume_usd)));
+    const count = (tier: FlowCorridor['tier']) => shown.filter((c) => c.tier === tier).length;
+    expect(count('high')).toBe(Math.min(6, ARC_BUDGET.high)); // all 6 high
+    expect(count('medium')).toBe(ARC_BUDGET.medium);
+    expect(count('low')).toBe(ARC_BUDGET.other);
+    const crowd = { ...many, corridors: [...many.corridors, ...Array.from({ length: 30 }, (_, i) => corridor(300 + i, 'high', 5_000 + i))] };
+    expect(shownCorridors(crowd).filter((c) => c.tier === 'high')).toHaveLength(ARC_BUDGET.high);
+    expect(shownCorridors(crowd).filter((c) => c.tier === 'medium')).toHaveLength(ARC_BUDGET.medium);
+  });
+
+  it('takes the largest of each kind, and says which kinds are on the map', () => {
+    const shown = shownCorridors(many);
+    const lowShown = shown.filter((c) => c.tier === 'low').map((c) => c.volume_usd);
+    const lowLeft = many.corridors.filter((c) => c.tier === 'low' && !shown.includes(c)).map((c) => c.volume_usd);
+    expect(Math.min(...lowShown)).toBeGreaterThanOrEqual(Math.max(...lowLeft));
+    expect([...drawnKinds(many)].sort()).toEqual(['high', 'medium', 'other']);
+    expect([...drawnKinds({ ...FLOWS, corridors: [FLOWS.corridors[0]] })]).toEqual(['high']);
+  });
+
+  it('draws a corridor picked from the list even when it is not among the largest', () => {
+    const hidden = many.corridors.find((c) => c.tier === 'low' && !shownCorridors(many).includes(c))!;
+    const id = `${hidden.origin}>${hidden.destination}`;
+    // Every synthetic destination needs a place on the map, or its arc is (rightly) skipped.
+    const placed = {
+      ...REFERENCE,
+      countries: [
+        ...REFERENCE.countries,
+        ...many.corridors.map((c) => ({ ...REFERENCE.countries[0], iso2: c.destination, name: c.destination, position: [10, 10] as const })),
+      ],
+    };
+    const rows = (sel: Parameters<typeof buildLayers>[3]) =>
+      (buildLayers(many, placed, new Set<LayerId>(['corridors']), sel)[0].props.data as unknown[]).length;
+    expect(rows({ kind: 'corridor', id })).toBe(rows(null) + 1);
   });
 
   it('draws the largest flagged pairs first, capped', () => {
@@ -123,6 +158,14 @@ describe('which arcs are drawn', () => {
   it('never drops an unrated corridor silently into the elevated set', () => {
     const unrated = { ...FLOWS, corridors: FLOWS.corridors.map((c) => ({ ...c, tier: null })) };
     expect(shownCorridors(unrated).length).toBe(FLOWS.corridors.length);
+    expect(rankedCorridors(unrated).every((c) => c.tier === null)).toBe(true);
+  });
+
+  it('does not mutate the flows it ranks', () => {
+    const before = JSON.stringify(many);
+    rankedCorridors(many);
+    shownPairs(many);
+    expect(JSON.stringify(many)).toBe(before);
   });
 });
 
