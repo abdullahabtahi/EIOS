@@ -63,9 +63,9 @@ DESCRIPTIONS: dict[str, str] = {
     ),
     "exec.briefing": "The executive briefing: top risks and opportunities across horizons. One call answers it.",
     "exec.forecast": (
-        "The projected net revenue 28 days ahead, with the interval backtesting measured around it, how often "
+        "The projected net revenue one horizon ahead, with the interval backtesting measured around it, how often "
         "that interval held on held-out forecasts, and this model's error as a multiple of the error of carrying "
-        "today's value forward (below 1 is better). It is a projection, not an actual."
+        "today's value forward (under one is better). It is a projection, not an actual."
     ),
     "exec.what_if": (
         "Simulate a competitor raising its payout (competitor_payout_increase, size in percent of today's "
