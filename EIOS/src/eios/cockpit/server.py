@@ -33,6 +33,7 @@ from starlette.responses import JSONResponse
 
 from eios.assistant.config import AssistantConfigError
 from eios.assistant.sessions import valid_entity_id
+from eios.assistant.telemetry import record_turn
 from eios.cockpit import aml_engine_view as aml_view
 from eios.cockpit import compliance_view, operations_view
 from eios.cockpit import executive_view as exec_view
@@ -1210,6 +1211,7 @@ async def query_copilot(
         )
     except UnknownModelError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+    record_turn(read_models().slo_engine, outcome)
     if outcome.status != "ok":  # an outage is offline, never a 200 that looks like an answer
         return JSONResponse(  # type: ignore[return-value]
             status_code=503,

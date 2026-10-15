@@ -28,8 +28,12 @@ that still breaks its contract is refused with the reason and stays quarantined.
 - **Freshness is reported, not judged.** The worlds are batch snapshots cut at the as-of; the newest event's age
   reflects how busy a product is (the AML world's last transaction before the cut is 85 minutes old `[MEASURED]`), not
   how late ingestion was. Judging it against a 30-second contract SLA would paint a false incident.
-- **An unobserved objective reads `NO_DATA`**, with no compliance figure. Agent turns, ingestion freshness, approvals and
-  the hallucination gate have no probe yet (agent telemetry is Phase 6). Six of eleven objectives were observed `[MEASURED]`.
+- **An unobserved objective reads `NO_DATA`**, with no compliance figure. Ingestion freshness, approvals and the agent's
+  first-token time have no probe (the assistant does not stream, so there is no first token). Six of eleven objectives
+  were observed at start-up `[MEASURED]`; the agent's full-answer latency and the hallucination gate fill in as real
+  turns are served (`assistant/telemetry.py`): a timed-out or failed turn spends latency budget, and the gate counts the
+  turns that went through the assembler (zero unverified figures passed is true by construction, so the count, not the
+  zero, is the information). The window is the running instance's memory, not history.
 - **Two red lines are `NOT_MEASURED`** and say why. RL-2 (four-eyes) is tested in CI, but a probe would write to the
   ledger. RL-7 (replay) does not apply: the assistant never replays by decision (ADR-019).
 - **Only the warm-start path is drilled.** Key rotation shows `NOT_ASSESSED`. The other nine runbooks are still a
