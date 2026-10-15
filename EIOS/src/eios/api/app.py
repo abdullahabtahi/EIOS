@@ -18,6 +18,7 @@ from eios.api.routes_fraud import router as fraud_router
 from eios.api.routes_ops import router as ops_router
 from eios.api.routes_synthesis import router as synthesis_router
 from eios.api.routes_webhooks import router as webhooks_router
+from eios.cockpit import geo as geo_routes
 from eios.cockpit.assistant_gateway import warm_up as warm_up_assistant
 from eios.cockpit.auth import cors_origins, current_operator
 from eios.cockpit.server import public_router as cockpit_public_router
@@ -74,6 +75,7 @@ def create_app() -> FastAPI:
     app.include_router(ops_router, dependencies=[Depends(current_operator)])
     app.include_router(cockpit_public_router)
     app.include_router(cockpit_router)
+    app.include_router(geo_routes.router)  # carries its own operator dependency
 
     @app.get(HEALTH_PATH)
     @app.get(API_HEALTH_PATH)
