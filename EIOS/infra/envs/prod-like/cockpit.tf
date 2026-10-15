@@ -78,7 +78,7 @@ module "service_cockpit_api" {
   service_account_email = module.identity_cockpit_api.email
   stateful              = false
   warm_start_required   = false
-  min_instances         = 0
+  min_instances         = 1 # keep one warm: the engines are built at start-up, and an idle demo must not scale to zero
   max_instances         = 5
   cpu                   = "1"
   memory                = "1Gi"

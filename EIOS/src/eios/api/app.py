@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -21,14 +22,25 @@ from eios.cockpit.assistant_gateway import warm_up as warm_up_assistant
 from eios.cockpit.auth import cors_origins, current_operator
 from eios.cockpit.server import public_router as cockpit_public_router
 from eios.cockpit.server import router as cockpit_router
+from eios.dataplane.plane import read_models
 
+_LOG = logging.getLogger(__name__)
 HEALTH_PATH = "/health"
 API_HEALTH_PATH = "/api/health"
 
 
 @asynccontextmanager
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
-    """Warm the assistant in the background so startup is not held up and the first turn is not slow."""
+    """Build the data plane before serving, then warm the assistant in the background.
+
+    The engines take seconds to build and every route reads them. Built on first request, the first operator after a
+    deploy or a scale-up waited for it, and the web proxy's short timeout turned that wait into a labelled replay. Built
+    here, an instance is not ready until it can answer, and Cloud Run keeps sending traffic to the old revision until then.
+    A failed build is logged and retried by the next request, so a start-up fault shows as real errors, not a crash loop."""
+    try:
+        await asyncio.to_thread(read_models)
+    except Exception:
+        _LOG.exception("the data plane could not be built at start-up; requests will retry")
     task = asyncio.create_task(warm_up_assistant())
     try:
         yield
