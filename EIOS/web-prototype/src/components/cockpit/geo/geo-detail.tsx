@@ -3,7 +3,13 @@ import { Icon } from '@/components/ui/icon';
 import type { SelectionView } from './geo-format';
 
 /** The picked mark in full: every fact the data holds for it, with a way to put it down. */
-export function GeoDetail({ view, onClear }: { readonly view: SelectionView; readonly onClear: () => void }) {
+export interface GeoDetailProps {
+  readonly view: SelectionView;
+  readonly onClear: () => void;
+  readonly onPickAccount?: (id: string) => void;
+}
+
+export function GeoDetail({ view, onClear, onPickAccount }: GeoDetailProps) {
   return (
     <section aria-label="Selection" className="border border-cx-line bg-cx-sub p-3">
       <div className="flex items-start justify-between gap-2">
@@ -25,6 +31,24 @@ export function GeoDetail({ view, onClear }: { readonly view: SelectionView; rea
           </div>
         ))}
       </dl>
+      {view.accounts && view.accounts.length > 0 && onPickAccount && (
+        <div className="mt-2.5 space-y-1 border-t border-cx-line-soft pt-2">
+          <p className="text-label font-semibold text-cx-ink-soft">Open an account</p>
+          <ul className="flex flex-wrap gap-1">
+            {view.accounts.map((id) => (
+              <li key={id}>
+                <button
+                  type="button"
+                  onClick={() => onPickAccount(id)}
+                  className="cursor-pointer border border-cx-line bg-white px-1.5 py-0.5 font-mono text-label text-cx-accent outline-none hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-cx-accent">
+                  {id}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {view.note && <p className="mt-2 text-label text-cx-muted">{view.note}</p>}
     </section>
   );
 }

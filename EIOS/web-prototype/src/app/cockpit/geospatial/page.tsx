@@ -8,11 +8,18 @@ export const metadata: Metadata = {
   description: 'Financial geography as an evidence lens inside the AML investigation.',
 };
 
-export default function GeospatialPage() {
+type Search = Promise<{ [key: string]: string | string[] | undefined }>;
+
+/** The view and pick in the URL reach the workspace from the server, so the first render matches on both sides. */
+export default async function GeospatialPage({ searchParams }: { searchParams: Search }) {
+  const params = await searchParams;
+  const initialSearch = new URLSearchParams(
+    Object.entries(params).flatMap(([k, v]) => (typeof v === 'string' ? [[k, v]] : [])),
+  ).toString();
   return (
     <RequireAuth>
       <CockpitProvider>
-        <GeoShell />
+        <GeoShell initialSearch={initialSearch} />
       </CockpitProvider>
     </RequireAuth>
   );

@@ -8,18 +8,22 @@ from __future__ import annotations
 
 import functools
 import logging
+import re
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from eios.cockpit.auth import current_operator
+from eios.cockpit.geo_account import account_payload
 from eios.cockpit.geo_view import flows_payload
-from eios.dataplane.geo_plane import geo_snapshot
+from eios.dataplane.geo_plane import geo_snapshot, graph_store
 from eios.reference.reader import ReferenceReader, ReferenceUnavailable, reader_from_env
 
 _LOG = logging.getLogger("eios.cockpit.geo")
 GEO_REFERENCE_PATH = "/api/cockpit/geo/reference"
 GEO_FLOWS_PATH = "/api/cockpit/geo/flows"
+GEO_ACCOUNT_PATH = "/api/cockpit/geo/accounts/{account_id}"
+_ACCOUNT_ID = re.compile(r"^[A-Z]{2}[0-9]{3,8}$")
 
 router = APIRouter(tags=["Cockpit Geo"], dependencies=[Depends(current_operator)])
 
@@ -58,3 +62,21 @@ def geo_flows() -> dict[str, Any]:
     if snapshot is None:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="geo_unavailable")
     return flows_payload(snapshot)
+
+
+@router.get(GEO_ACCOUNT_PATH)
+def geo_account(account_id: str) -> dict[str, Any]:
+    """One account's geography as case evidence. Unknown account is 404; no engine plane is a plain 503."""
+    if not _ACCOUNT_ID.match(account_id):
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="unknown_account")
+    try:
+        snapshot = geo_snapshot()
+    except Exception as exc:
+        _LOG.exception("geo engine build failed")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="geo_unavailable") from exc
+    if snapshot is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="geo_unavailable")
+    payload = account_payload(snapshot, account_id, graph_store())
+    if payload is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="unknown_account")
+    return payload

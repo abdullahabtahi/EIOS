@@ -14,6 +14,7 @@ import { useCockpit } from '../state/cockpit-context';
 import { MetricProvenanceBadge } from '../common/metric-provenance';
 import { FallbackReplayBadge } from '../common/fallback-replay-badge';
 import type { DossierSection, MetricProvenance } from '../state/cockpit-types';
+import { GeoDossierCard } from '../geo/geo-dossier-card';
 import { MOCK_PARTNERS } from '../state/fixtures';
 
 /** ' · 14:57 UTC' for a valid ISO timestamp, '' otherwise (never invent a time). */
@@ -141,6 +142,9 @@ export function CopilotDossier() {
             </section>
           );
         })}
+
+        {/* Geography of the account under investigation (AML only) */}
+        {state.activeRole === 'aml_investigator' && dossier.entityId && <GeoDossierCard entityId={dossier.entityId} />}
 
         {/* Strategic Trade-offs (Executive Horizon) */}
         {dossier.tradeOffs && dossier.tradeOffs.length > 0 && (

@@ -22,8 +22,26 @@ function between(a: LngLat, b: LngLat): CameraTarget {
  * Where to move the camera when an analyst picks a lead: both ends of a route, or the country. Null when the
  * reference layer cannot place it, so nothing moves rather than the map jumping somewhere invented.
  */
+/** Frame a set of countries (a gateway and its users' homes, an account's login countries); null if none can be placed. */
+export function cameraForCodes(codes: readonly string[], reference: GeoReference | null): CameraTarget | null {
+  if (!reference) return null;
+  const points = codes
+    .map((code) => reference.countries.find((c) => c.iso2 === code)?.position)
+    .filter((p): p is LngLat => p !== undefined);
+  if (points.length === 0) return null;
+  if (points.length === 1) return { kind: 'point', center: { lat: points[0][1], lng: points[0][0] }, zoom: COUNTRY_ZOOM };
+  const lngs = points.map((p) => p[0]);
+  const lats = points.map((p) => p[1]);
+  return between([Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]);
+}
+
 export function cameraFor(selection: GeoSelection, flows: GeoFlows | null, reference: GeoReference | null): CameraTarget | null {
   if (!selection || !reference) return null;
+  if (selection.kind === 'gateway') {
+    const g = flows?.gateways?.find((x) => x.gateway_id === selection.id);
+    return g ? cameraForCodes([g.country, ...g.home_countries.map((h) => h.iso2)], reference) : null;
+  }
+  if (selection.kind === 'account') return null; // framed once the account's evidence arrives
   const at = (code: string): LngLat | undefined => reference.countries.find((c) => c.iso2 === code)?.position;
   if (selection.kind === 'country') {
     const p = at(selection.id);

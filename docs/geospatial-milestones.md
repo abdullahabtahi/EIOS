@@ -70,3 +70,37 @@ What changed:
 
 Verified in headless Chrome against the live backend: hover and click on country and arc, lead selection and camera move, all three views, the dark header, no console errors. The legend is hidden below the `sm` breakpoint; the page stacks map over panel on narrow screens. Not done: the Caribbean offshore centres are off-screen on the Corridors view until the analyst pans (the Jurisdictions view opens on the world), and the per-client lens still cannot see accounts with fewer than 3 events.
 
+## N0 to N2 (branch `feat/geo-graph-n0-n2`, stacked on `feat/geo-scaffold`)
+
+Plan agreed after the UX pass: build one loop (trigger, investigate, act, prove) and stop after N2 for review. N3 (SAR geography paragraph, governed hold from the map, evidence bundle on BigQuery snapshots) is not started.
+
+### N0: shareable state and honest coverage
+The URL holds the view and the pick (`view=logins&sel=account:CR11568`; kinds `country`, `corridor`, `mismatch`, `gateway`, `account`; anything else in the URL is ignored). The server page passes the search string down so the first render matches on both sides. Each lens states how many clients it can judge (3,341 of 6,000 for login vs KYC `[MEASURED]`); an unflagged client the lens cannot judge is not read as clean.
+
+### N1: login sessions, session lenses, BigQuery Graph
+**World.** Every transaction is made in a login session, and clients also log in without transacting: 47,984 sessions `[MEASURED]`, each through a synthetic gateway (home broadband line, carrier NAT, hotel network, VPN exit; `GW-<country>-<kind><n>`, country level only). Planted: one shared VPN exit per mule ring (all six rings, exits in NG, AE, IQ, TR, ZA, PK), and a controller who works members' accounts from that exit within hours of the holder logging in at home; travellers make one trip with no session close to its ends; 140 privacy-minded clients share one commercial VPN exit used by more than 100 accounts, the same shape as the carrier NAT gateways RL-4 suppresses. Clients, transactions, trades and edges stay byte-identical.
+
+**Engine lenses** (`dataplane/aml_geo_sessions.py`), measured on the served world against the planted truth, with real Overture centroids from the reference layer:
+
+| Lens | Result `[MEASURED]` |
+|---|---|
+| Shared foreign exit (non-hub gateway abroad used by 3 or more accounts that live elsewhere; 2 or more sessions through it) | 71 flagged, precision 1.00, recall 0.99 of 72 ring members; recovers all 7 ring members the per-client lens cannot judge |
+| Impossible travel (consecutive sessions further apart than 1,000 km/h allows, 500 km or more) | 58 flagged, precision 0.72, recall 0.58; counting jumps through hubs too (no RL-4) flags 63 at precision 0.67 and 21 benign accounts instead of 16 |
+| Geo score, top 50 | precision 1.00 against a base rate of 0.017, lift 59.5x |
+
+Precision 1.00 on the shared exit is what a planted world gives: on real data a shared exit also catches families on one VPN and corporate egress, which is why the lens stays one signal among several and RL-4 stays on. The per-client IP-vs-KYC lens dropped to recall 0.60 of ring members (from 0.74): every ring now logs in through its own exit with less foreign share, and the planted benign mismatchers now include the privacy VPN users and short trips, which a per-client rate test should not flag. Targets were rebased with that diagnosis in `tests/dataplane/test_aml_geo_engine.py`.
+
+**BigQuery Graph** (`src/eios/graph/`). Graph tables are derived from the world's frames, not from the engine's output: accounts, countries, gateways and shared identifiers (devices, payment tokens, IP addresses) as nodes; registered in, logged in via, located in, paid via and uses as edges. They load into `warm_graph` (us-central1, `python -m eios.graph load --project <p>`, 37.5 s `[MEASURED]`) with a `_meta` row naming the world they came from, and `CREATE PROPERTY GRAPH warm_graph.aml_geo` declares the graph. Named queries (`shared_exits`, `account_neighbourhood`) run as GQL through `GRAPH_TABLE`; the SQL around the traversal is shared text, and a DuckDB double runs the same queries as plain joins, so offline, CI and the parity check need no cloud. The store refuses tables built from another world (it caught a mismatched test world on its first run).
+
+GQL runs only on an Enterprise reservation: `eios-graph` in the dev project, baseline 0 slots, autoscale to 50, no project assignment; each graph job names the reservation itself, so nothing else in the project changes how it is billed. Created with `bq mk --reservation --edition=ENTERPRISE --slots=0 --autoscale_max_slots=50 --location=us-central1 eios-graph`; delete with `bq rm --reservation --location=us-central1 eios-graph`. Not yet in Terraform. Cost is bounded by the 50-slot ceiling; an idle reservation costs nothing.
+
+Parity `[MEASURED]` (`python -m eios.graph parity`): BigQuery equals the local double on every query; the graph's shared-exit accounts equal the engine's flags (71 = 71), an independent check from a second derivation; warm latency 1.7 to 1.8 s per query, the first (cold) 9.3 s; 54 to 133 slot-milliseconds per query. A live test (`requires_cloud`) holds the parity.
+
+### N2: geography inside the case
+- **Map.** The login view lists shared foreign exits first ("Shared exit in Nigeria: 22 accounts from 8 countries, 67 impossible jumps"), then country pairs. An exit shows who uses it and from where, the hubs set aside under RL-4, and its accounts; picking one draws its users' homes to the exit. Accounts in an exit or a country pair open in one click.
+- **Account evidence** (`GET /api/cockpit/geo/accounts/{id}`): registered country, login countries, gateways, impossible jumps with an example (distance and hours), cross-border money with tiers, what each lens concluded, and linked accounts from BigQuery Graph with the source and time ("From BigQuery Graph in 2.1 s"). A graph outage empties only the links and says why; the travel lens without positions is "not assessable", never "none"; an unknown account is a 404.
+- **Into the case and back.** "Open the case in the AML workstation" opens that account's dossier, which now carries a Geography card with the same facts and "Open in map". Fixing this exposed a workstation bug: its first load reset the case to the first triage item and ignored the URL's `entityId`, so no forensic deep link opened the account asked for; the URL's entity is now applied after the first load.
+- Verified in headless Chrome against the live stack (BigQuery Graph backend): map, exit, account, workstation dossier for `CR11568` (registered in Thailand, 22 of 24 logins from Nigeria through an exit shared by 23 accounts, a jump of 10,041 km in 1.42 h, 24 linked accounts); no console errors.
+
+Open after N2: the reservation is created by CLI, not Terraform; the first graph query of a process takes about 9 s; the workstation's Kinetic Canvas showed "The network for this case could not be loaded" before and after this work (not investigated here).
+

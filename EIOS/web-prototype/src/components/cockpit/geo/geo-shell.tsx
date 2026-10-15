@@ -9,7 +9,7 @@ import { GeoWorkspace } from './geo-workspace';
  * Geospatial section shell: the global rail, the same dark chrome row as the workstations (brand and operator;
  * the telemetry and Ask controls need workstation state and are not shown here), and the workspace. One header only.
  */
-export function GeoShell() {
+export function GeoShell({ initialSearch = '' }: { readonly initialSearch?: string } = {}) {
   return (
     <div data-cockpit-shell className="relative flex h-screen w-screen flex-row overflow-hidden bg-cx-canvas font-sans text-slate-900 antialiased">
       <AppNavRail currentId="geospatial" />
@@ -19,7 +19,7 @@ export function GeoShell() {
           <ChromeOperator />
         </header>
         <main id="workspace" className="min-h-0 flex-1">
-          <GeoWorkspace />
+          <GeoWorkspace initialSearch={initialSearch} />
         </main>
       </div>
     </div>

@@ -75,6 +75,58 @@ export interface GeoFlows {
   readonly exposure: Readonly<Record<RiskTier, number>> | null;
   /** How many clients each lens can judge at all; the rest have too few events and are not assessable, never clean. */
   readonly coverage?: GeoCoverage;
+  /** Gateways abroad shared by accounts that live elsewhere (hubs above the RL-4 line excluded). */
+  readonly gateways?: readonly GeoGateway[];
+  /** Gateways shared so widely they were suppressed as hubs (RL-4); null when the world has no sessions. */
+  readonly hubs_suppressed?: number | null;
+}
+
+export interface GeoGateway {
+  readonly gateway_id: string;
+  readonly country: string;
+  readonly accounts: number;
+  readonly home_countries: readonly { readonly iso2: string; readonly accounts: number }[];
+  readonly impossible_jumps: number;
+  readonly sample_accounts: readonly string[];
+}
+
+/** One account's geography as case evidence (`/api/cockpit/geo/accounts/{id}`). */
+export interface GeoAccount {
+  readonly account_id: string;
+  readonly kyc_country: string;
+  readonly source: string;
+  readonly as_of: string;
+  readonly sessions: number;
+  readonly login_countries: readonly { readonly iso2: string; readonly sessions: number }[];
+  readonly gateways: readonly {
+    readonly gateway_id: string;
+    readonly country: string;
+    readonly sessions: number;
+    readonly accounts: number | null;
+    readonly hub: boolean | null;
+    readonly shared_exit: boolean | null;
+  }[];
+  /** null when the travel lens could not be assessed (no country positions): not the same as no jumps. */
+  readonly jumps: {
+    readonly count: number;
+    readonly via_hub: number;
+    readonly examples: readonly { readonly from: string; readonly to: string; readonly hours: number; readonly km: number; readonly at: string }[];
+  } | null;
+  readonly payments: readonly { readonly iso2: string; readonly direction: 'in' | 'out'; readonly events: number; readonly volume_usd: number; readonly tier: RiskTier | null }[];
+  readonly lenses: {
+    readonly mismatch: { readonly flag: boolean; readonly assessable: boolean; readonly foreign_events: number; readonly events: number };
+    readonly shared_exit: { readonly flag: boolean; readonly gateway: string | null; readonly sessions: number };
+    readonly travel: { readonly flag: boolean; readonly assessable: boolean };
+    readonly corridor: { readonly flag: boolean; readonly assessable: boolean };
+  };
+  readonly geo_score: number;
+  readonly neighbourhood: {
+    readonly source: string | null;
+    readonly seconds?: number;
+    readonly total?: number;
+    readonly rows: readonly { readonly via: 'gateway' | 'identifier'; readonly link: string; readonly detail: string; readonly account_id: string; readonly kyc_country: string }[] | null;
+    readonly error: string | null;
+  };
 }
 
 export interface GeoCoverage {

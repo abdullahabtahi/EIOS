@@ -35,6 +35,20 @@ function indicatorRow(i: ReferenceIndicator): readonly [string, string] {
 export interface SelectionView {
   readonly title: string;
   readonly rows: readonly (readonly [label: string, value: string])[];
+  /** Accounts behind this mark, each of which can be opened. */
+  readonly accounts?: readonly string[];
+  readonly note?: string;
+}
+
+const REGIONS = typeof Intl !== 'undefined' && 'DisplayNames' in Intl ? new Intl.DisplayNames(['en'], { type: 'region' }) : null;
+
+/** A country's English name from its ISO code without any data fetch; the code itself when the runtime cannot name it. */
+export function regionName(code: string): string {
+  try {
+    return REGIONS?.of(code) ?? code;
+  } catch {
+    return code;
+  }
 }
 
 /** Resolves a selection to display text from the data itself; an unknown id yields null, never a guess. */
@@ -72,6 +86,25 @@ export function describeSelection(
         }
       : null;
   }
+  if (selection.kind === 'gateway') {
+    const g = flows?.gateways?.find((x) => x.gateway_id === selection.id);
+    if (!g) return null;
+    const from = g.home_countries.map((h) => `${name(h.iso2)} ${h.accounts}`).join(', ');
+    return {
+      title: `Shared exit in ${name(g.country)}`,
+      rows: [
+        ['Gateway', g.gateway_id],
+        ['Accounts using it', COUNT.format(g.accounts)],
+        ['Registered in', from],
+        ['Impossible jumps', COUNT.format(g.impossible_jumps)],
+      ],
+      accounts: g.sample_accounts,
+      note:
+        flows?.hubs_suppressed != null
+          ? `None of these accounts lives in ${name(g.country)}. ${COUNT.format(flows.hubs_suppressed)} gateway${flows.hubs_suppressed === 1 ? '' : 's'} shared by more than 100 accounts ${flows.hubs_suppressed === 1 ? 'was' : 'were'} set aside as hubs (RL-4).`
+          : undefined,
+    };
+  }
   if (selection.kind !== 'mismatch') return null;
   const p = flows?.mismatch_pairs.find((x) => `${x.kyc_country}>${x.ip_country}` === selection.id);
   return p
@@ -83,6 +116,7 @@ export function describeSelection(
           ['Volume', formatUsd(p.volume_usd)],
           ['Examples', p.sample_accounts.join(', ')],
         ],
+        accounts: p.sample_accounts,
       }
     : null;
 }

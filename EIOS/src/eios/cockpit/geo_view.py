@@ -52,6 +52,37 @@ def _mismatch_pairs(snap: GeoSnapshot) -> list[dict[str, Any]]:
     return sorted(pairs, key=lambda p: (-p["accounts"], p["kyc_country"], p["ip_country"]))
 
 
+def _gateways(snap: GeoSnapshot) -> list[dict[str, Any]]:
+    """Shared foreign exits with at least one flagged account: where they are, who uses them and from where."""
+    lenses = snap.sessions
+    if lenses is None:
+        return []
+    home = snap.world.clients.set_index("client_id")["country"]
+    flagged = snap.clients[snap.clients["exit_flag"].fillna(False).astype(bool)]
+    jumps = snap.clients.set_index("client_id")["jumps"]
+    rows: list[dict[str, Any]] = []
+    for g in lenses.gateways[lenses.gateways["shared_exit"]].itertuples():
+        users = flagged[flagged["exit_gateway"] == g.gateway_id]
+        if users.empty:
+            continue
+        homes = users["client_id"].map(home).value_counts()
+        rows.append(
+            {
+                "gateway_id": g.gateway_id,
+                "country": g.country,
+                "accounts": len(users),
+                "home_countries": [{"iso2": c, "accounts": int(n)} for c, n in homes.items()],
+                "impossible_jumps": int(users["client_id"].map(jumps).fillna(0).sum()),
+                "sample_accounts": sorted(users["client_id"])[:_SAMPLE_ACCOUNTS],
+            }
+        )
+    return sorted(rows, key=lambda r: (-r["accounts"], r["gateway_id"]))
+
+
+def _hubs_suppressed(snap: GeoSnapshot) -> int | None:
+    return None if snap.sessions is None else int(snap.sessions.gateways["hub"].sum())
+
+
 def _coverage(snap: GeoSnapshot) -> dict[str, int | None]:
     """How many clients each lens can judge at all. Computed from the engine's own statistics, never from the truth."""
     clients = snap.clients
@@ -79,4 +110,6 @@ def flows_payload(snap: GeoSnapshot) -> dict[str, Any]:
         "mismatch_pairs": _mismatch_pairs(snap),
         "exposure": exposure,
         "coverage": _coverage(snap),
+        "gateways": _gateways(snap),
+        "hubs_suppressed": _hubs_suppressed(snap),
     }

@@ -32,6 +32,13 @@ const AREA_FILL_ALPHA = 70;
 // Arcs lift out of the map plane; on a flat (untilted) map that is invisible, so lay the arc in the plane to read as a curve.
 const ARC_TILT_DEG = 90;
 const ARC_HEIGHT = 0.06;
+/** An arc drawn for the current pick (a gateway and its users' homes, an account's logins), above every lens. */
+export interface HighlightArc {
+  readonly from: string;
+  readonly to: string;
+  readonly weight: number;
+}
+
 /** Where the pointer is over the map, in the map's own pixels, so a tooltip can sit beside it. */
 export interface HoverPoint {
   readonly x: number;
@@ -189,12 +196,37 @@ function offshoreLayer(reference: GeoReference, handlers: LayerHandlers): Scatte
  * areas, offshore centres) draw only when the reference layer is present; flow lenses only when both the flows and
  * the reference layer (which places the countries) are present. Absent data draws nothing.
  */
+function highlightLayer(arcs: readonly HighlightArc[], reference: GeoReference): ArcLayer<ArcRow> | null {
+  const at = positions(reference);
+  const max = Math.max(0, ...arcs.map((a) => a.weight));
+  const rows = arcs.flatMap((a): ArcRow[] => {
+    const source = at.get(a.from);
+    const target = at.get(a.to);
+    if (!source || !target || a.from === a.to) return [];
+    return [{ source, target, width: widthFor(a.weight, max) + SELECTED_EXTRA_WIDTH, color: SELECTED_COLOR, ref: { kind: 'mismatch', id: `${a.from}>${a.to}` } }];
+  });
+  if (rows.length === 0) return null;
+  return new ArcLayer<ArcRow>({
+    id: 'geo-highlight',
+    data: rows,
+    pickable: false,
+    getSourcePosition: (d) => toLngLat(d.source),
+    getTargetPosition: (d) => toLngLat(d.target),
+    getSourceColor: (d) => d.color,
+    getTargetColor: (d) => d.color,
+    getWidth: (d) => d.width,
+    getTilt: () => ARC_TILT_DEG,
+    getHeight: () => ARC_HEIGHT,
+  });
+}
+
 export function buildLayers(
   flows: GeoFlows | null,
   reference: GeoReference | null,
   visible: ReadonlySet<LayerId>,
   selection: GeoSelection,
   handlers: LayerHandlers = {},
+  highlight: readonly HighlightArc[] = [],
 ): Layer[] {
   const layers: Layer[] = [];
   if (reference && visible.has('risk')) layers.push(riskAreaLayer(reference, selection, handlers));
@@ -205,5 +237,7 @@ export function buildLayers(
   if (flows && reference && visible.has('mismatches')) {
     layers.push(arcLayer('geo-mismatches', mismatchRows(flows, reference, selection), handlers));
   }
+  const picked = reference ? highlightLayer(highlight, reference) : null;
+  if (picked) layers.push(picked);
   return layers;
 }

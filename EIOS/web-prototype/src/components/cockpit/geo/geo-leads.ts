@@ -28,14 +28,28 @@ function corridorLeads(flows: GeoFlows, reference: GeoReference | null): readonl
   }));
 }
 
+function gatewayLeads(flows: GeoFlows, reference: GeoReference | null): readonly Lead[] {
+  return (flows.gateways ?? []).map((g): Lead => ({
+    key: `gateway:${g.gateway_id}`,
+    selection: { kind: 'gateway', id: g.gateway_id },
+    title: `Shared exit in ${nameOf(reference, g.country)}`,
+    detail: `${plural(g.accounts, 'account')} from ${plural(g.home_countries.length, 'country', 'countries')} · ${plural(g.impossible_jumps, 'impossible jump')}`,
+    tier: 'high',
+    group: 'Shared foreign exits',
+  }));
+}
+
 function loginLeads(flows: GeoFlows, reference: GeoReference | null): readonly Lead[] {
-  return rankedPairs(flows).map((p) => ({
+  const exits = gatewayLeads(flows, reference);
+  const pairs = rankedPairs(flows).map((p): Lead => ({
     key: `mismatch:${pairId(p)}`,
     selection: { kind: 'mismatch', id: pairId(p) },
     title: `${nameOf(reference, p.kyc_country)} → ${nameOf(reference, p.ip_country)}`,
     detail: `${plural(p.accounts, 'account')} · ${COUNT.format(p.foreign_events)} of ${COUNT.format(p.events)} logins abroad`,
     tier: null,
+    ...(exits.length > 0 ? { group: 'Registered here, logging in there' } : {}),
   }));
+  return [...exits, ...pairs];
 }
 
 function jurisdictionLeads(reference: GeoReference): readonly Lead[] {

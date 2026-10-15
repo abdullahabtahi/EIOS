@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { describeSelection } from './geo-format';
+import { GeoAccountDetail } from './geo-account-detail';
 import { GeoDetail } from './geo-detail';
 import { GeoLayerToggles } from './geo-layer-toggles';
 import { GeoLeadList } from './geo-lead-list';
@@ -11,7 +12,7 @@ import { GeoStatus } from './geo-status';
 import { GeoSummary } from './geo-summary';
 import { VIEW_PANEL_ID, viewTabId } from './geo-view-switcher';
 import { dataOf, type ResourceState } from './use-geo-resource';
-import type { GeoFlows, GeoReference, GeoSelection, LayerId } from './geo-types';
+import type { GeoAccount, GeoFlows, GeoReference, GeoSelection, LayerId } from './geo-types';
 import type { GeoView } from './geo-views';
 
 export interface GeoPanelProps {
@@ -23,6 +24,9 @@ export interface GeoPanelProps {
   readonly selected: GeoSelection;
   readonly onSelect: (selection: NonNullable<GeoSelection>) => void;
   readonly onClear: () => void;
+  readonly onPickAccount: (id: string) => void;
+  /** The picked account's evidence, when the pick is an account. */
+  readonly account: ResourceState<GeoAccount> | null;
 }
 
 /** Lenses that cannot draw without their data: a flow needs the engine and the reference layer (which places the countries). */
@@ -37,7 +41,7 @@ export function disabledLayers(flows: GeoFlows | null, reference: GeoReference |
  * The right-hand panel, read top to bottom: the question this view answers, how big the picture is, the picked
  * mark in full, then where to look first. Layers and sources sit below, collapsed.
  */
-export function GeoPanel({ view, flows, reference, visible, onToggle, selected, onSelect, onClear }: GeoPanelProps) {
+export function GeoPanel({ view, flows, reference, visible, onToggle, selected, onSelect, onClear, onPickAccount, account }: GeoPanelProps) {
   const ref = dataOf(reference);
   const fl = dataOf(flows);
   const leads = leadsFor(view.id, fl, ref);
@@ -66,7 +70,11 @@ export function GeoPanel({ view, flows, reference, visible, onToggle, selected, 
           </div>
         ) : (
           <>
-            {detail && <GeoDetail view={detail} onClear={onClear} />}
+            {selected?.kind === 'account' && account ? (
+              <GeoAccountDetail accountId={selected.id} state={account} onClear={onClear} onPickAccount={onPickAccount} />
+            ) : (
+              detail && <GeoDetail view={detail} onClear={onClear} onPickAccount={onPickAccount} />
+            )}
             <section aria-label="Where to look first" className="space-y-1">
               <h3 className="text-title font-sans font-semibold text-cx-ink">Where to look first</h3>
               {leads ? <GeoLeadList leads={leads} selected={selected} onSelect={onSelect} /> : null}
