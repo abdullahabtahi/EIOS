@@ -58,3 +58,12 @@ describe('the copilot chat never fabricates an answer', () => {
     expect(screen.queryByText(/AUDIT PASSED/i)).not.toBeInTheDocument();
   });
 });
+
+describe('a rate-limited question', () => {
+  it('says so plainly and generates no answer', async () => {
+    const { describeCopilotFailure } = await import('@/components/cockpit/shell/copilot-chat');
+    const message = describeCopilotFailure(429);
+    expect(message).toMatch(/too many questions/i);
+    expect(message).toMatch(/no answer was generated/i);
+  });
+});
