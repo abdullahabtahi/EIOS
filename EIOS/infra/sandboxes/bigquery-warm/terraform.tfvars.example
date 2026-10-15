@@ -1,0 +1,4 @@
+# Do not commit a real project id. Pass it on the command line instead:
+#   terraform plan -var project_id=<id> -var 'writer_members=["user:you@example.com"]'
+reader_members = [] # add "user:REPLACE_ME_email" for local queries
+writer_members = [] # add "user:REPLACE_ME_email" to run the loader locally

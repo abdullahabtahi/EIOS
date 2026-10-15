@@ -1,0 +1,1017 @@
+[
+  {
+    "dataset": "warm_aml",
+    "table": "client_360",
+    "partition_field": "_loaded_at",
+    "cluster_fields": [
+      "client_id"
+    ],
+    "schema": [
+      {
+        "name": "client_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "tax_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "full_name",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "email",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "phone",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "dob",
+        "type": "DATE",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "country",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "kyc_status",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "kyc_approved_at",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "partner_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "declared_monthly_income",
+        "type": "FLOAT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "lifetime_value",
+        "type": "FLOAT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "segment",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_aml",
+    "table": "client_funnel",
+    "partition_field": "entered_at",
+    "cluster_fields": [
+      "client_id"
+    ],
+    "schema": [
+      {
+        "name": "client_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "stage",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "entered_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "source",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "utm_campaign",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_aml",
+    "table": "transactions_aml",
+    "partition_field": "timestamp",
+    "cluster_fields": [
+      "client_id",
+      "txn_type"
+    ],
+    "schema": [
+      {
+        "name": "txn_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "client_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "txn_type",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "amount",
+        "type": "FLOAT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "currency",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "payment_method_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "payment_agent_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "timestamp",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "is_first_deposit",
+        "type": "BOOL",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_partner",
+    "table": "trading_activity",
+    "partition_field": "open_ts",
+    "cluster_fields": [
+      "client_id"
+    ],
+    "schema": [
+      {
+        "name": "trade_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "client_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "symbol",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "side",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "volume",
+        "type": "FLOAT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "open_price",
+        "type": "FLOAT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "close_price",
+        "type": "FLOAT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "open_ts",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "close_ts",
+        "type": "TIMESTAMP",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "profit_loss",
+        "type": "FLOAT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_aml",
+    "table": "device_network_graph",
+    "partition_field": "last_seen",
+    "cluster_fields": [
+      "source_id",
+      "target_id"
+    ],
+    "schema": [
+      {
+        "name": "edge_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "source_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "target_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "edge_type",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "first_seen",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "last_seen",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "session_count",
+        "type": "INT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "is_shared_context",
+        "type": "BOOL",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_partner",
+    "table": "partner_360",
+    "partition_field": "_loaded_at",
+    "cluster_fields": [
+      "partner_id"
+    ],
+    "schema": [
+      {
+        "name": "partner_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "tier",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "region",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "tenure_months",
+        "type": "INT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "value_at_risk",
+        "type": "FLOAT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "manager_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_partner",
+    "table": "partner_referral_tree",
+    "partition_field": "since",
+    "cluster_fields": [
+      "parent_id",
+      "child_id"
+    ],
+    "schema": [
+      {
+        "name": "parent_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "child_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "layer",
+        "type": "INT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "attributed_master_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "since",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_partner",
+    "table": "commission_ledger",
+    "partition_field": "paid_at",
+    "cluster_fields": [
+      "partner_id",
+      "client_id"
+    ],
+    "schema": [
+      {
+        "name": "entry_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "partner_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "client_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "basis",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "amount",
+        "type": "FLOAT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "currency",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "paid_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_partner",
+    "table": "partner_engagement_signals",
+    "partition_field": "date",
+    "cluster_fields": [
+      "partner_id"
+    ],
+    "schema": [
+      {
+        "name": "partner_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "date",
+        "type": "DATE",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "logins",
+        "type": "INT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "referrals",
+        "type": "INT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "ftd_count",
+        "type": "INT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "conversion_rate",
+        "type": "FLOAT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "clicks",
+        "type": "INT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_partner",
+    "table": "partner_comms",
+    "partition_field": "timestamp",
+    "cluster_fields": [
+      "partner_id"
+    ],
+    "schema": [
+      {
+        "name": "message_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "partner_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "channel",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "sentiment",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "text",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "timestamp",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_executive",
+    "table": "financial_pnl",
+    "partition_field": "date",
+    "cluster_fields": [],
+    "schema": [
+      {
+        "name": "date",
+        "type": "DATE",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "product",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "region",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "revenue",
+        "type": "FLOAT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "cost",
+        "type": "FLOAT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "net_margin",
+        "type": "FLOAT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "ltv_cohort",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_executive",
+    "table": "competitor_benchmarks",
+    "partition_field": "date",
+    "cluster_fields": [],
+    "schema": [
+      {
+        "name": "competitor",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "date",
+        "type": "DATE",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "region",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "payout_rate",
+        "type": "FLOAT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "spread_pips",
+        "type": "FLOAT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "promo_event",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_ops",
+    "table": "platform_operations",
+    "partition_field": "date",
+    "cluster_fields": [],
+    "schema": [
+      {
+        "name": "date",
+        "type": "DATE",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "service",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "latency_p95_ms",
+        "type": "FLOAT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "incidents_count",
+        "type": "INT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "escrow_disputes_count",
+        "type": "INT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "uptime_percentage",
+        "type": "FLOAT64",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_aml",
+    "table": "compliance_cases",
+    "partition_field": "created_at",
+    "cluster_fields": [
+      "client_id",
+      "case_id"
+    ],
+    "schema": [
+      {
+        "name": "case_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "client_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "status",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "typology",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "analyst_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "risk_score",
+        "type": "FLOAT64",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "created_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "updated_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  },
+  {
+    "dataset": "warm_dlq",
+    "table": "quarantined",
+    "partition_field": "breach_timestamp",
+    "cluster_fields": [
+      "product_name",
+      "breach_type"
+    ],
+    "schema": [
+      {
+        "name": "dlq_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "event_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      },
+      {
+        "name": "product_name",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "breach_type",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "field_paths",
+        "type": "STRING",
+        "mode": "REPEATED"
+      },
+      {
+        "name": "error_messages",
+        "type": "STRING",
+        "mode": "REPEATED"
+      },
+      {
+        "name": "payload_sha256",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "breach_timestamp",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_batch_id",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_loaded_at",
+        "type": "TIMESTAMP",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_source",
+        "type": "STRING",
+        "mode": "REQUIRED"
+      },
+      {
+        "name": "_tenant_id",
+        "type": "STRING",
+        "mode": "NULLABLE"
+      }
+    ]
+  }
+]
