@@ -18,6 +18,11 @@ module "secret_store" {
     cashier_webhook_secret = {
       accessors = { cockpit_api = module.identity_cockpit_api.member }
     }
+    # Keys the token vault's pseudonyms. A deployed API refuses to start without it (src/eios/ingestion/vault.py).
+    # The value is added out of band, never through Terraform: openssl rand -hex 32 | gcloud secrets versions add hmac_salt --data-file=-
+    hmac_salt = {
+      accessors = { cockpit_api = module.identity_cockpit_api.member }
+    }
   }
 
   depends_on = [module.project_baseline]

@@ -104,6 +104,7 @@ module "service_cockpit_api" {
 
   secret_env = {
     EIOS_CASHIER_WEBHOOK_SECRET = { secret_id = "cashier_webhook_secret" }
+    EIOS_HMAC_SALT              = { secret_id = "hmac_salt" }
   }
 
   depends_on = [module.artifact_registry, module.state_stores, module.secret_store]

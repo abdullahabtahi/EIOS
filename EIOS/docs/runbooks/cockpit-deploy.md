@@ -15,7 +15,7 @@ the hash-chained decision ledger in Firestore (database `eios-state`).
 2. State bucket and CI federation pool exist in the control project (see `docs/runbooks/bootstrap.md`).
 3. `cd EIOS/infra/envs/prod-like`, create `terraform.tfvars` (git-ignored; see the example), then
    `terraform init -backend-config=bucket=<state bucket>` and `terraform apply`.
-4. Create the webhook secret value: `openssl rand -hex 32 | gcloud secrets versions add cashier_webhook_secret --data-file=-`.
+4. Create the HMAC salt value once (the API refuses to start without it): `openssl rand -hex 32 | gcloud secrets versions add hmac_salt --data-file=-`. Then the webhook secret value: `openssl rand -hex 32 | gcloud secrets versions add cashier_webhook_secret --data-file=-`.
 5. Provision operators: `uv run python -m tools.seed_demo_operators --project <id> --credentials-file <new file>`.
 
 ## Release
