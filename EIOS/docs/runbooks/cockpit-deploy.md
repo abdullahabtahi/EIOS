@@ -90,3 +90,6 @@ Only the copilot route is limited, because it is the only path that calls the mo
 - `EIOS_RATE_COPILOT_PER_USER`: default `20/minute;600/day` per operator. `EIOS_RATE_COPILOT_GLOBAL`: default `3000/day` per instance. Both are `limits` rate strings; an invalid value is logged as an error and the default is used.
 - `EIOS_RATE_LIMITS=off` disables them (local work only). Counters reset when an instance restarts, and with several instances the real ceiling is that many times the figure; `max_instances` and the budget alert are the outer bound. If instances multiply, point `limits` at a shared store (Memorystore for Redis).
 - To see a refusal without spending anything, send questions with an empty `query`: they are counted, then refused with 422, and the 21st in a minute is a 429.
+
+## Private deploy files
+The prod-like variables, the reviewer password and the build key are kept out of the repo, on the owner's machine in `~/eios-private/` (owner-only; its `README.md` has the exact plan, apply and build commands). They are never committed. After each build, update the two image digests in `prodlike.tfvars`.
