@@ -14,8 +14,10 @@ from eios.cockpit.compliance import ComplianceExplorerService
 from eios.cockpit.executive import ExecutiveCockpitService
 from eios.cockpit.executive_readmodel import ExecutiveReadModel
 from eios.cockpit.operations import DataPlatformOperationsService
+from eios.cockpit.operations_readmodel import OperationsReadModel
 from eios.cockpit.partner import PartnerWorkstationService
 from eios.cockpit.partner_readmodel import PartnerReadModel
+from eios.dataplane.ops_calibration import CalibrationSample
 from eios.flywheel.diagnostics import CalibrationDiagnosticsEngine
 from eios.flywheel.ledger import DecisionOutcomesLedger
 from eios.hardening.runbooks import RunbookVerificationEngine
@@ -36,7 +38,7 @@ class ReadModels:
     partner: PartnerReadModel
     executive: ExecutiveReadModel
     compliance: ComplianceExplorerService
-    operations: DataPlatformOperationsService
+    operations: OperationsReadModel
     directory: EntityDirectory
     slo_engine: SLOMonitoringEngine
     runbooks: RunbookVerificationEngine
@@ -47,6 +49,12 @@ class ReadModels:
     partner_origin: DataOrigin = (
         DataOrigin.FIXTURE
     )  # where the partner read model's numbers come from
+    operations_origin: DataOrigin = (
+        DataOrigin.FIXTURE
+    )  # where the operations read model's numbers come from
+    calibration_sample: CalibrationSample | None = (
+        None  # predictions with observed outcomes, when a plane has them
+    )
     executive_origin: DataOrigin = (
         DataOrigin.FIXTURE
     )  # where the executive read model's numbers come from
@@ -61,7 +69,7 @@ class ReadModels:
         return cls.over(AMLWorkstationService())
 
     @classmethod
-    def over(
+    def over(  # noqa: PLR0913
         cls,
         aml: AmlReadModel,
         clock: Callable[[], datetime] = _utc_now,
@@ -70,6 +78,8 @@ class ReadModels:
         partner: PartnerReadModel | None = None,
         knowledge: RegulationIndex | None = None,
         executive: ExecutiveReadModel | None = None,
+        operations: OperationsReadModel | None = None,
+        calibration_sample: CalibrationSample | None = None,
     ) -> ReadModels:
         """Read models over the given AML plane (and partner plane and ledger, when given); the rest is built fresh."""
         partners: PartnerReadModel = partner or PartnerWorkstationService()
@@ -78,7 +88,7 @@ class ReadModels:
             partner=partners,
             executive=executive or ExecutiveCockpitService(),
             compliance=compliance or ComplianceExplorerService(),
-            operations=DataPlatformOperationsService(),
+            operations=operations or DataPlatformOperationsService(),
             directory=build_directory(aml, partners),
             slo_engine=SLOMonitoringEngine(),
             runbooks=RunbookVerificationEngine(),
@@ -88,5 +98,7 @@ class ReadModels:
             aml_origin=aml_origin,
             partner_origin=DataOrigin.ENGINE if partner is not None else DataOrigin.FIXTURE,
             executive_origin=DataOrigin.ENGINE if executive is not None else DataOrigin.FIXTURE,
+            operations_origin=DataOrigin.ENGINE if operations is not None else DataOrigin.FIXTURE,
+            calibration_sample=calibration_sample,
             knowledge=knowledge,
         )

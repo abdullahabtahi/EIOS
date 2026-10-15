@@ -15,6 +15,7 @@ import time
 from collections.abc import Iterable, Mapping
 from dataclasses import replace
 from enum import StrEnum
+from typing import NamedTuple
 
 from eios.cockpit.compliance import ComplianceExplorerService
 from eios.cockpit.governance_runtime import GovernanceRuntime, build_governance_runtime
@@ -23,6 +24,8 @@ from eios.dataplane.aml_engine import AmlSnapshot, run_aml_engine
 from eios.dataplane.aml_service import EngineAMLService
 from eios.dataplane.executive_engine import run_executive_engine
 from eios.dataplane.executive_service import EngineExecutiveService
+from eios.dataplane.ops_calibration import calibration_sample
+from eios.dataplane.ops_service import EngineOperationsService
 from eios.dataplane.partner_engine import PartnerSnapshot, run_partner_engine
 from eios.dataplane.partner_service import EnginePartnerService
 from eios.foundry.scenarios.aml_config import STORY_PARTNER, AmlWorldConfig
@@ -64,6 +67,7 @@ _models: ReadModels | None = None
 _engine: EngineAMLService | None = None
 _partner: EnginePartnerService | None = None
 _executive: EngineExecutiveService | None = None
+_operations: EngineOperationsService | None = None
 _governance: GovernanceRuntime | None = None
 
 
@@ -135,7 +139,38 @@ def _build_executive(
     return service
 
 
-def _build_engines() -> tuple[EngineAMLService, EnginePartnerService, EngineExecutiveService]:
+class _Engines(NamedTuple):
+    aml: EngineAMLService
+    partner: EnginePartnerService
+    executive: EngineExecutiveService
+    operations: EngineOperationsService
+    aml_snapshot: AmlSnapshot
+
+
+def _build_operations(
+    snapshot: AmlSnapshot, partner: EnginePartnerService, executive: EngineExecutiveService
+) -> EngineOperationsService:
+    started = time.perf_counter()
+    service = EngineOperationsService.build(
+        snapshot, partner, executive.snapshot.world, partner.as_of
+    )
+    r, d = service.replay, service.drill
+    logger.info(
+        "operations engine built in %.1fs: %d events replayed through the ingestion pipeline, %d of %d planted "
+        "breaches quarantined, %d healthy events refused, restore drill %d of %d rows verified %s [MEASURED]",
+        time.perf_counter() - started,
+        r.offered,
+        r.caught,
+        r.planted,
+        r.false_rejects,
+        d.rows_restored,
+        d.rows_exported,
+        d.verified,
+    )
+    return service
+
+
+def _build_engines() -> _Engines:
     partner = _build_partner()
     started = time.perf_counter()
     snapshot = run_aml_engine(build_aml_world(_aml_config(partner.scored.index.astype(str))))
@@ -153,10 +188,13 @@ def _build_engines() -> tuple[EngineAMLService, EnginePartnerService, EngineExec
         q.ring_recovery,
     )
     partner_service = EnginePartnerService(partner, snapshot)
-    return (
+    executive = _build_executive(partner_service, snapshot)
+    return _Engines(
         EngineAMLService(snapshot),
         partner_service,
-        _build_executive(partner_service, snapshot),
+        executive,
+        _build_operations(snapshot, partner_service, executive),
+        snapshot,
     )
 
 
@@ -176,12 +214,18 @@ def knowledge_index(env: Mapping[str, str] | None = None) -> RegulationIndex | N
 
 def read_models() -> ReadModels:
     """The process-wide read models; every route and the assistant share these objects."""
-    global _models, _engine, _partner, _executive
+    global _models, _engine, _partner, _executive, _operations
     ledger = governance()
     with _lock:
         if _models is None:
             if plane_kind() is PlaneKind.ENGINE:
-                _engine, _partner, _executive = _build_engines()
+                built = _build_engines()
+                _engine, _partner, _executive, _operations = (
+                    built.aml,
+                    built.partner,
+                    built.executive,
+                    built.operations,
+                )
                 engine = _engine
                 _models = ReadModels.over(
                     engine,
@@ -189,11 +233,14 @@ def read_models() -> ReadModels:
                     aml_origin=DataOrigin.ENGINE,
                     partner=_partner,
                     executive=_executive,
+                    operations=_operations,
+                    calibration_sample=calibration_sample(built.partner.snapshot),
                     compliance=ComplianceExplorerService.over_ledger(
                         ledger.sequencer, ledger.worm, ledger.hub
                     ),
                     knowledge=knowledge_index(),
                 )
+                _operations.measure(_models, built.aml_snapshot)
             else:
                 _models = replace(ReadModels.default(), knowledge=knowledge_index())
         return _models
@@ -217,12 +264,25 @@ def executive_engine_service() -> EngineExecutiveService | None:
     return _executive
 
 
+def operations_engine_service() -> EngineOperationsService | None:
+    """The engine-backed operations service, or None on the fixture plane."""
+    read_models()
+    return _operations
+
+
 def aml_data_origin() -> str:
     """`engine` when the AML read model is computed from the world, `fixture` otherwise."""
     return PlaneKind.ENGINE.value if engine_service() is not None else PlaneKind.FIXTURE.value
 
 
 def reset_for_testing() -> None:
-    global _models, _engine, _partner, _executive, _governance
+    global _models, _engine, _partner, _executive, _operations, _governance
     with _lock:
-        _models, _engine, _partner, _executive, _governance = None, None, None, None, None
+        _models, _engine, _partner, _executive, _operations, _governance = (
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+        )

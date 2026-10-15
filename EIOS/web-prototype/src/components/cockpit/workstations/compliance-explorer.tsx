@@ -7,7 +7,6 @@
  */
 
 import * as React from 'react';
-import { DrProofCard } from '../common/dr-proof-card';
 import { formatUtcTimestamp } from '@/lib/utils';
 import type { ComplianceLedger, IntentSignOffs, LedgerRow } from '../state/cockpit-types';
 import { type AuditWalk, useComplianceLedger, walkLedger } from './use-compliance-ledger';
@@ -201,9 +200,6 @@ export function ComplianceExplorerView() {
         </section>
       </div>
 
-      <div role="tabpanel" id="panel-dr" aria-label="Disaster Recovery Proofs" className="block">
-        <DrProofCard />
-      </div>
     </div>
   );
 }

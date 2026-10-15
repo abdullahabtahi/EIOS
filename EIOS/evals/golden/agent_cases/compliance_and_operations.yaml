@@ -6,3 +6,5 @@
    turns: [{turn_index: 1, user_query: "What is the data quality status of the pipeline?", expected_capabilities: [{capability: ops.dq_board, order_index: 0}], allowed_extra_capabilities: [ops.reliability]}]}
 - {scenario_id: ops_reliability, workstation: data_operations, split: dev, description: "Is it healthy.",
    turns: [{turn_index: 1, user_query: "Is the platform meeting its reliability targets?", expected_capabilities: [{capability: ops.reliability, order_index: 0}], allowed_extra_capabilities: [ops.dq_board]}]}
+- {scenario_id: ops_red_lines, workstation: data_operations, split: dev, description: "A gate nothing measured is not reported as passing.",
+   turns: [{turn_index: 1, user_query: "Are the red lines passing?", expected_capabilities: [{capability: ops.red_lines, order_index: 0}], allowed_extra_capabilities: [ops.reliability]}]}

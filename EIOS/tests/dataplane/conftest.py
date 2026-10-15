@@ -39,3 +39,33 @@ def executive_service(
     )
     partners = EnginePartnerService(partner_snapshot, aml_snapshot)
     return EngineExecutiveService(run_executive_engine(world), partners, aml_snapshot)
+
+
+@pytest.fixture(scope="session")
+def ops_models(
+    partner_snapshot: PartnerSnapshot,
+    aml_snapshot: AmlSnapshot,
+    executive_service: EngineExecutiveService,
+):
+    """Read models over every engine, with the operations service built, probed and measured."""
+    from eios.dataplane.aml_service import EngineAMLService
+    from eios.dataplane.ops_calibration import calibration_sample
+    from eios.dataplane.ops_service import EngineOperationsService
+    from eios.ontology.omcp.port.readmodels import ReadModels
+
+    partners = EnginePartnerService(partner_snapshot, aml_snapshot)
+    as_of = partner_snapshot.world.config.as_of
+    ops = EngineOperationsService.build(
+        aml_snapshot, partners, executive_service.snapshot.world, as_of
+    )
+    engine = EngineAMLService(aml_snapshot)
+    models = ReadModels.over(
+        engine,
+        clock=lambda: engine.as_of,
+        partner=partners,
+        executive=executive_service,
+        operations=ops,
+        calibration_sample=calibration_sample(partner_snapshot),
+    )
+    ops.measure(models, aml_snapshot)
+    return models, ops

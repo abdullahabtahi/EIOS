@@ -42,14 +42,15 @@ describe('Operations Board reflects the real payload (no hard-coded HEALTHY)', (
     expect(screen.queryByText(/\[ILLUSTRATIVE\] baseline/i)).not.toBeInTheDocument();
   });
 
-  it('flags the baseline as [ILLUSTRATIVE] when no usable payload arrives', async () => {
+  it('says no data was received, and shows no stand-in, when no usable payload arrives', async () => {
     mockFetchWith({ ...getMockWorkstationState('executive') });
     render(
       <CockpitProvider>
         <OperationsBoardView />
       </CockpitProvider>,
     );
-    await waitFor(() => expect(screen.getByText(/\[ILLUSTRATIVE\] baseline/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/No operations data was received/i));
+    expect(screen.queryByText(/Raw Ingestion Pipeline/i)).not.toBeInTheDocument();
   });
 });
 

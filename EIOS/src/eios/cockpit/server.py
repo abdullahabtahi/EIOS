@@ -34,7 +34,7 @@ from starlette.responses import JSONResponse
 from eios.assistant.config import AssistantConfigError
 from eios.assistant.sessions import valid_entity_id
 from eios.cockpit import aml_engine_view as aml_view
-from eios.cockpit import compliance_view
+from eios.cockpit import compliance_view, operations_view
 from eios.cockpit import executive_view as exec_view
 from eios.cockpit import partner_engine_view as partner_view
 from eios.cockpit.aml_engine_view import default_entity
@@ -55,10 +55,12 @@ from eios.cockpit.governance_shelf import GovernedActionCard
 from eios.cockpit.session import SessionManager
 from eios.cockpit.shell import CockpitShellPresenter
 from eios.dataplane.aml_service import EngineAMLService, UnknownAccountError
+from eios.dataplane.ops_service import EngineOperationsService
 from eios.dataplane.partner_service import EnginePartnerService
 from eios.dataplane.plane import (
     engine_service,
     executive_engine_service,
+    operations_engine_service,
     partner_engine_service,
     read_models,
 )
@@ -263,6 +265,8 @@ def _data_badge(role_enum: str) -> str:
         return ENGINE_DATA_BADGE
     if role_enum == "executive" and executive_engine_service() is not None:
         return ENGINE_DATA_BADGE
+    if role_enum == "data_operations" and operations_engine_service() is not None:
+        return ENGINE_DATA_BADGE
     if role_enum == "compliance_auditor" and compliance_svc.sequencer is not None:
         return LIVE_DATA_BADGE
     return FIXTURE_DATA_BADGE
@@ -320,7 +324,28 @@ def _ensure_default_staged_cards() -> None:
     governance.seed_demo_intents()
 
 
-def _build_contract_state(  # noqa: PLR0915
+def _flywheel_status() -> dict[str, Any]:
+    """Feedback and calibration state. On the engine plane the drift flag is measured; what has no count says so."""
+    models = read_models()
+    sample = models.calibration_sample
+    if sample is None:
+        return {
+            "total_feedback_events": outcomes_ledger.count(),
+            "uncalibrated_discrepancies": 2,
+            "calibration_drift_detected": False,
+        }
+    report = models.calibration.evaluate_calibration(
+        list(sample.probabilities), [float(x) for x in sample.labels], sample.model_id
+    )
+    return {
+        "total_feedback_events": outcomes_ledger.count(),
+        "uncalibrated_discrepancies": None,
+        "shadow_model_brier_score": report.brier_score,
+        "calibration_drift_detected": report.is_drift_detected,
+    }
+
+
+def _build_contract_state(  # noqa: C901, PLR0912, PLR0915
     role_str: str, operator_id: str | None = None, entity_id: str | None = None
 ) -> dict[str, Any]:
     """Compiles the full CockpitUiContract JSON structure for a role (read-only, side-effect free)."""
@@ -640,6 +665,14 @@ def _build_contract_state(  # noqa: PLR0915
             compliance_svc, now_iso
         )
 
+    elif (
+        operations_engine_service() is not None
+    ):  # data_operations / platform_ops on the engine plane
+        role_enum = "data_operations"
+        triage_items, active_dossier, kinetic_canvas = operations_view.workstation(
+            cast(EngineOperationsService, operations_engine_service()), now_iso
+        )
+
     else:  # data_operations / platform_ops
         role_enum = "data_operations"
         products = operations_svc.get_data_products()
@@ -862,11 +895,7 @@ def _build_contract_state(  # noqa: PLR0915
             "active_query": "",
             "last_auditor_status": "PASS",
         },
-        "flywheel_status": {
-            "total_feedback_events": outcomes_ledger.count(),
-            "uncalibrated_discrepancies": 2,
-            "calibration_drift_detected": False,
-        },
+        "flywheel_status": _flywheel_status(),
         "dr_proofs": [
             {
                 "runbook_id": "DR-KMS-ROT-001",
@@ -930,6 +959,11 @@ def _build_contract_state(  # noqa: PLR0915
             },
         ],
     }
+
+    ops_engine = operations_engine_service()
+    if ops_engine is not None:
+        contract_payload["dr_proofs"] = operations_view.dr_proofs(ops_engine)
+        contract_payload["red_line_gates"] = operations_view.red_line_payload(ops_engine)
 
     return contract_payload
 

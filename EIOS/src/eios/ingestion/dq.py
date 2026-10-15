@@ -90,9 +90,10 @@ class DQMonitor:
         product: DataProductEnum,
         breach_count_1h: int = 0,
         health_status: ProductHealthStatus = ProductHealthStatus.HEALTHY,
+        as_of: datetime | None = None,
     ) -> ProductDQStatus:
-        """Calculate real-time SLA metrics for a product."""
-        now = datetime.now(UTC)
+        """Calculate SLA metrics for a product as of `as_of` (the wall clock when none is given)."""
+        now = as_of or datetime.now(UTC)
         sla_seconds = FRESHNESS_SLAS.get(product, 300.0)
 
         with self._lock:
@@ -121,7 +122,9 @@ class DQMonitor:
             null_rates=null_rates,
         )
 
-    def get_all_statuses(self, circuit_breaker: Any = None) -> dict[str, Any]:
+    def get_all_statuses(
+        self, circuit_breaker: Any = None, as_of: datetime | None = None
+    ) -> dict[str, Any]:
         """Generate structured status snapshot across all 14 data products."""
         statuses = {}
         for product in DataProductEnum:
@@ -136,6 +139,7 @@ class DQMonitor:
                 product,
                 breach_count_1h=breach_count,
                 health_status=status,
+                as_of=as_of,
             )
             statuses[product.value] = {
                 "freshness_lag_seconds": dq_status.freshness_lag_seconds,

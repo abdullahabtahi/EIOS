@@ -14,9 +14,12 @@ import type {
   CaseExtras,
   CopilotDossier,
   DataOrigin,
+  DisasterRecoveryProof,
+  FlywheelDiagnosticStatus,
   MetricProvenance,
   PersonaRole,
   ProvenanceCitation,
+  RedLineGateStatus,
   SarDraftDocument,
   StageRequest,
   WorkstationApiResponse,
@@ -242,5 +245,52 @@ export function normalizeCanvas(
   return {
     type: rawCanvas.canvas_type || rawCanvas.type || fallback.type,
     data: rawCanvas.payload || rawCanvas.data || fallback.data,
+  };
+}
+
+/** The recovery proofs the backend measured. A malformed row is dropped, never filled in. */
+export function normalizeDrProofs(raw: unknown): DisasterRecoveryProof[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((r): r is Raw => !!r && typeof r === 'object' && typeof (r as Raw).runbook_id === 'string')
+    .map((r) => ({
+      runbookId: text(r.runbook_id),
+      runbookName: text(r.runbook_name),
+      lastExecutedTimestamp: text(r.last_executed),
+      verificationStatus: r.verification_status === 'PASS' ? 'PASS' : 'FAIL',
+      kmsKeyringRotationStatus: text(r.kms_keyring_rotation_status, 'NOT_ASSESSED'),
+      backupCheckpointHash: text(r.backup_checkpoint_hash),
+      warmStartCacheState: text(r.warm_start_cache_state, 'COLD'),
+      rowsExported: typeof r.rows_exported === 'number' ? r.rows_exported : undefined,
+      rowsRestored: typeof r.rows_restored === 'number' ? r.rows_restored : undefined,
+      restoreMs: typeof r.restore_ms === 'number' ? r.restore_ms : undefined,
+    }));
+}
+
+/** The measured red lines. A gate nothing measured stays NOT_MEASURED; it is never read as a pass. */
+export function normalizeRedLines(raw: unknown, asOf: string): RedLineGateStatus[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((g): g is Raw => !!g && typeof g === 'object' && typeof (g as Raw).gate_id === 'string')
+    .map((g) => ({
+      gateId: g.gate_id as RedLineGateStatus['gateId'],
+      name: text(g.name),
+      status: g.status === 'PASS' ? 'PASS' : g.status === 'NOT_MEASURED' ? 'NOT_MEASURED' : 'FAIL',
+      marginDelta: typeof g.margin_delta === 'number' ? g.margin_delta : null,
+      evaluatedOn: asOf,
+      basis: typeof g.basis === 'string' ? g.basis : undefined,
+    }));
+}
+
+/** Calibration status from the backend; counts the backend did not send stay null. */
+export function normalizeFlywheel(raw: unknown): FlywheelDiagnosticStatus | null {
+  if (!raw || typeof raw !== 'object') return null;
+  const f = raw as Raw;
+  return {
+    totalFeedbackEvents: typeof f.total_feedback_events === 'number' ? f.total_feedback_events : 0,
+    uncalibratedDiscrepancies: typeof f.uncalibrated_discrepancies === 'number' ? f.uncalibrated_discrepancies : null,
+    shadowModelBrierScore: typeof f.shadow_model_brier_score === 'number' ? f.shadow_model_brier_score : null,
+    calibrationDriftDetected: Boolean(f.calibration_drift_detected),
+    lastRetrainingTimestamp: null,
   };
 }

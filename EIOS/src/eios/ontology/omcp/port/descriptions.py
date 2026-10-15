@@ -82,7 +82,20 @@ DESCRIPTIONS: dict[str, str] = {
     "compliance.audit_status": "The latest audit checkpoint: chain head, retention and immutability lock.",
     "compliance.verify_chain": "Check that the decision ledger's hash chain is unbroken and anchored.",
     "ops.dq_board": "Data-quality status of every data product: healthy, degraded or breached, with alerts.",
-    "ops.reliability": "Service level objectives and the overall health of the platform.",
-    "ops.drill_status": "Which recovery runbooks are registered and when each was last drilled.",
-    "ops.calibration": "How well a model's probabilities are calibrated and whether drift was detected.",
+    "ops.reliability": (
+        "Service level objectives and the overall health of the platform. An objective with no events reads "
+        "NO_DATA and has no compliance figure: say it was not observed, never that it is healthy."
+    ),
+    "ops.red_lines": (
+        "The governance red lines and what measuring each one found: PASS, FAIL, or NOT_MEASURED with the reason. "
+        "A line that was not measured is not a line that passed."
+    ),
+    "ops.drill_status": (
+        "Which recovery runbooks are registered and the result of the warm-start restore drill that was actually run. "
+        "The other runbooks are catalogue only."
+    ),
+    "ops.calibration": (
+        "How well the churn hazards predicted what partners then did: calibration error, Brier score and whether "
+        "drift was detected, with the basis the labels came from."
+    ),
 }

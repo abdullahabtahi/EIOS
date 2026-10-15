@@ -147,6 +147,7 @@ ROUTES: tuple[Route, ...] = (
     _r(r"data quality|pipeline", ("get_dq_board", _none)),
     _r(r"reliab", ("get_reliability", _none)),
     _r(r"drill|runbook", ("get_drill_status", _none)),
+    _r(r"red.?line|governance gate", ("get_red_lines", _none)),
 )
 
 

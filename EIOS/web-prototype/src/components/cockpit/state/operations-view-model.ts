@@ -3,11 +3,10 @@
  * Adapts either the backend payload (sla_statuses / error_budgets / red_line_gates)
  * or the fixture shape (SloHealthItem[]) into one render model. Nothing is invented:
  * values the source does not provide stay null. When there is no usable payload the
- * board shows an explicitly flagged [ILLUSTRATIVE] baseline instead of a silent
- * "everything is healthy" claim.
+ * view is `unavailable`: the board says so and shows nothing in its place.
  */
 
-export type OpsStatus = 'HEALTHY' | 'DEGRADED' | 'BREACHED';
+export type OpsStatus = 'HEALTHY' | 'DEGRADED' | 'BREACHED' | 'NO_DATA';
 export type OpsTone = 'ok' | 'warn' | 'bad';
 
 export interface OpsCard {
@@ -23,7 +22,8 @@ export interface OpsCard {
 export interface OpsGate {
   readonly id: string;
   readonly name: string;
-  readonly status: 'PASS' | 'FAIL';
+  readonly status: 'PASS' | 'FAIL' | 'NOT_MEASURED';
+  readonly basis: string;
 }
 
 export interface OpsSummary {
@@ -32,7 +32,7 @@ export interface OpsSummary {
 }
 
 export interface OperationsView {
-  readonly source: 'live' | 'baseline';
+  readonly source: 'live' | 'unavailable';
   readonly cards: readonly OpsCard[];
   readonly gates: readonly OpsGate[];
   readonly summary: OpsSummary;
@@ -46,7 +46,7 @@ const str = (v: unknown, fallback = ''): string => (typeof v === 'string' ? v : 
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
 function toStatus(v: unknown): OpsStatus {
-  return v === 'HEALTHY' || v === 'DEGRADED' || v === 'BREACHED' ? v : 'DEGRADED';
+  return v === 'HEALTHY' || v === 'DEGRADED' || v === 'BREACHED' || v === 'NO_DATA' ? v : 'DEGRADED';
 }
 
 function formatUtc(iso: unknown): string {
@@ -69,9 +69,30 @@ function productCard(raw: Rec): OpsCard {
     details: [
       { label: 'SLA', value: sla === null ? '—' : `${sla}s` },
       { label: 'Last ingest', value: formatUtc(raw.last_ingestion_timestamp) },
+      ...productExtras(raw),
     ],
     budgetRemainingPct: null,
   };
+}
+
+function age(seconds: number): string {
+  if (seconds < 120) return `${Math.round(seconds)} s`;
+  if (seconds < 7200) return `${Math.round(seconds / 60)} min`;
+  return seconds < 172800 ? `${(seconds / 3600).toFixed(1)} h` : `${Math.round(seconds / 86400)} days`;
+}
+
+/** What the engine-plane profile adds: whether freshness was judged, contract breaches and quarantine. */
+function productExtras(raw: Rec): { label: string; value: string }[] {
+  const out: { label: string; value: string }[] = [];
+  const newest = num(raw.newest_event_age_seconds);
+  if (raw.freshness_judged === false) {
+    out.push({ label: 'Freshness', value: newest === null ? 'not judged' : `not judged (newest event ${age(newest)} old)` });
+  }
+  const breach = num(raw.contract_breach_rate);
+  if (breach !== null) out.push({ label: 'Contract breaches', value: `${(breach * 100).toFixed(2)}%` });
+  const held = num(raw.quarantined_records);
+  if (held) out.push({ label: 'Quarantined', value: String(held) });
+  return out;
 }
 
 function budgetCard(raw: Rec): OpsCard {
@@ -83,10 +104,15 @@ function budgetCard(raw: Rec): OpsCard {
     name: str(raw.name, id),
     status: toStatus(raw.status),
     primaryLabel: 'Error budget left',
-    primary: remaining === null ? '—' : `${remaining.toFixed(1)}%`,
-    details: [],
+    primary: remaining === null ? 'no data' : `${remaining.toFixed(1)}%`,
+    details: observed(raw),
     budgetRemainingPct: remaining,
   };
+}
+
+function observed(raw: Rec): { label: string; value: string }[] {
+  const events = num(raw.total_events);
+  return events === null ? [] : [{ label: 'Observed events', value: events === 0 ? 'none' : events.toLocaleString('en-US') }];
 }
 
 function fixtureCard(raw: Rec): OpsCard {
@@ -106,64 +132,42 @@ function toGates(raw: unknown): OpsGate[] {
   return raw.filter(isRec).map((g) => ({
     id: str(g.gate_id, str(g.gateId, 'RL-?')),
     name: str(g.name),
-    status: g.status === 'PASS' ? 'PASS' : 'FAIL',
+    status: g.status === 'PASS' ? 'PASS' : g.status === 'NOT_MEASURED' ? 'NOT_MEASURED' : 'FAIL',
+    basis: str(g.basis),
   }));
 }
 
 function summarizeCards(cards: readonly OpsCard[]): OpsSummary {
   const total = cards.length;
+  const unobserved = cards.filter((c) => c.status === 'NO_DATA').length;
   const breached = cards.filter((c) => c.status === 'BREACHED').length;
   const degraded = cards.filter((c) => c.status === 'DEGRADED').length;
   if (breached > 0) return { tone: 'bad', label: `${breached} OF ${total} BREACHED` };
   if (degraded > 0) return { tone: 'warn', label: `${degraded} OF ${total} DEGRADED` };
+  if (unobserved > 0) return { tone: 'warn', label: `${total - unobserved} OF ${total} OBSERVED` };
   return { tone: 'ok', label: `ALL ${total} HEALTHY` };
 }
 
 function summarizeGates(gates: readonly OpsGate[]): OpsSummary {
   const pass = gates.filter((g) => g.status === 'PASS').length;
-  return { tone: pass === gates.length ? 'ok' : 'bad', label: `${pass}/${gates.length} PASSING` };
+  const failed = gates.filter((g) => g.status === 'FAIL').length;
+  const unmeasured = gates.length - pass - failed;
+  const label = `${pass}/${gates.length} PASSING${unmeasured > 0 ? `, ${unmeasured} NOT MEASURED` : ''}`;
+  return { tone: failed > 0 ? 'bad' : unmeasured > 0 ? 'warn' : 'ok', label };
 }
 
-/** [ILLUSTRATIVE] baseline shown only when the backend supplied no usable payload. */
-const BASELINE_CARDS: readonly OpsCard[] = [
-  ['DP-01', 'Raw Ingestion Pipeline', '< 30s', '18.4s', 82.5],
-  ['DP-02', 'DuckDB Semantic Metrics Engine', '100.0%', '100.0%', 100],
-  ['DP-03', 'DoWhy Refuter Causal Matrix', '>= 0.80', '0.88', 91],
-  ['DP-04', 'CGNAT Proxy Suppression Filter', '< 1.0%', '0.05%', 95],
-  ['DP-05', 'WORM Immutable Decision Ledger', '100.0%', '100.0%', 100],
-  ['DP-06', 'What-If Sub-200ms Propagation', '< 200ms', '48.2ms', 88],
-].map(([id, name, target, current, budget]) => ({
-  id: id as string,
-  name: name as string,
-  status: 'HEALTHY' as const,
-  primaryLabel: 'Current Value',
-  primary: current as string,
-  details: [{ label: 'Target', value: target as string }],
-  budgetRemainingPct: budget as number,
-}));
-
-const BASELINE_GATES: readonly OpsGate[] = [
-  ['RL-1', 'Zero LLM Metric Calculation'],
-  ['RL-2', 'No Autonomous Write-Back Four-Eyes Gate'],
-  ['RL-3', 'Causal Refuter Placebo Threshold p > 0.05'],
-  ['RL-4', 'CGNAT Proxy Hub Suppression k > 100 (Feature 010)'],
-  ['RL-5', 'WORM Cryptographic SHA-256 Hash Chaining'],
-  ['RL-6', 'Sub-200ms Parametric Propagation & 100% Attribution'],
-  ['RL-7', 'Deterministic Offline Replay Fallback'],
-].map(([id, name]) => ({ id, name, status: 'PASS' as const }));
-
-function baselineView(): OperationsView {
+function unavailableView(): OperationsView {
   return {
-    source: 'baseline',
-    cards: BASELINE_CARDS,
-    gates: BASELINE_GATES,
-    summary: summarizeCards(BASELINE_CARDS),
-    gateSummary: summarizeGates(BASELINE_GATES),
+    source: 'unavailable',
+    cards: [],
+    gates: [],
+    summary: { tone: 'warn', label: 'NO DATA' },
+    gateSummary: { tone: 'warn', label: 'NO DATA' },
   };
 }
 
 export function buildOperationsView(canvasPayload: unknown): OperationsView {
-  if (!isRec(canvasPayload) || canvasPayload.type !== 'OPERATIONS_SLO') return baselineView();
+  if (!isRec(canvasPayload) || canvasPayload.type !== 'OPERATIONS_SLO') return unavailableView();
   const data = canvasPayload.data;
 
   let cards: OpsCard[] = [];
@@ -178,8 +182,8 @@ export function buildOperationsView(canvasPayload: unknown): OperationsView {
     gates = toGates(data.red_line_gates);
   }
 
-  if (cards.length === 0) return baselineView();
-  const finalGates = gates.length > 0 ? gates : BASELINE_GATES;
+  if (cards.length === 0) return unavailableView();
+  const finalGates = gates;
 
   return {
     source: 'live',
