@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import type { BasisId } from './geo-basis';
+import { GeoAddressCheck } from './geo-address-check';
 import { GeoBasisSwitcher } from './geo-basis-switcher';
 import { describeSelection } from './geo-format';
 import { GeoAccountDetail } from './geo-account-detail';
@@ -66,6 +67,19 @@ export function GeoPanel({ view, flows, reference, visible, onToggle, selected, 
           <h2 className="text-balance text-sm font-semibold leading-snug text-cx-ink">{view.question}</h2>
           {view.id === 'jurisdictions' && ref && <GeoBasisSwitcher current={basis} onChange={onBasis} />}
           {waiting.length === 0 && <GeoSummary view={view.id} flows={fl} reference={ref} basis={basis} />}
+          {view.id === 'logins' && (
+            <details className="border border-cx-line bg-cx-sub">
+              <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-cx-ink-soft outline-none hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent">
+                Check an IP address
+              </summary>
+              <div className="px-3 pb-3">
+                <GeoAddressCheck
+                  onShowCountry={(iso2) => onSelect({ kind: 'country', id: iso2 })}
+                  knownCountries={ref ? new Set(ref.countries.map((c) => c.iso2)) : undefined}
+                />
+              </div>
+            </details>
+          )}
         </header>
 
         {waiting.length > 0 ? (

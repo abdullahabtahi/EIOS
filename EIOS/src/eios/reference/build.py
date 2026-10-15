@@ -120,7 +120,7 @@ def _load(client: Any, project: str, table: str, rows: list[dict[str, Any]]) -> 
     return len(rows)
 
 
-def _ensure_dataset(client: Any, project: str) -> None:
+def ensure_dataset(client: Any, project: str) -> None:
     from google.cloud import bigquery
 
     dataset = bigquery.Dataset(f"{project}.{REFERENCE_DATASET}")
@@ -133,7 +133,7 @@ def build_lists(project: str, *, client: Any = None) -> dict[str, int]:
     from google.cloud import bigquery
 
     client = client or bigquery.Client(project=project)
-    _ensure_dataset(client, project)
+    ensure_dataset(client, project)
     tables = {"jurisdiction_risk": [*FATF_ROWS, *EU_ROWS], "risk_scores": BASEL_ROWS}
     summary = {name: _load(client, project, name, rows) for name, rows in tables.items()}
     _LOG.info("reference lists reloaded: %s", summary)
@@ -146,7 +146,7 @@ def build_reference(
     from google.cloud import bigquery
 
     client = client or bigquery.Client(project=project)
-    _ensure_dataset(client, project)
+    ensure_dataset(client, project)
 
     overture = f"Overture Maps division_area, release {OVERTURE_RELEASE}"
     jurisdictions = [

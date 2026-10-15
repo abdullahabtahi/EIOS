@@ -162,3 +162,22 @@ export interface GeoSummary {
   readonly exposure: Readonly<Record<RiskTier, number>> | null;
   readonly flaggedAccounts: number;
 }
+
+/** What the network reference says about one IP address (`POST /api/cockpit/geo/address`). */
+export type AddressVerdict = 'tor_exit' | 'vpn' | 'cloud' | 'datacenter' | 'none_listed' | 'not_public';
+export type AddressListName = 'tor_exit' | 'vpn' | 'cloud' | 'datacenter';
+
+export interface GeoAddress {
+  readonly address: string;
+  readonly version: 4 | 6;
+  /** `public`, or why the address is not looked up (private, loopback, link_local, multicast, unspecified, reserved). */
+  readonly scope: string;
+  /** null: the database does not know this address. Where it is registered, not where its user is. */
+  readonly country: { readonly iso2: string; readonly name: string } | null;
+  readonly network: { readonly asn: number; readonly name: string; readonly domain: string } | null;
+  readonly verdict: AddressVerdict;
+  readonly lists: readonly { readonly list: AddressListName; readonly detail: string }[];
+  /** Lists that hold no network of this address family: they cannot rule it out. */
+  readonly uncovered: readonly AddressListName[];
+  readonly sources: readonly { readonly name: string; readonly as_of: string }[];
+}

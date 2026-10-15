@@ -30,6 +30,20 @@ HEALTH_PATH = "/health"
 API_HEALTH_PATH = "/api/health"
 
 
+async def _warm_up_address_check() -> None:
+    """Read the address-check snapshot into memory in the background, so the first lookup does not wait for it.
+
+    It is not part of readiness: an instance answers everything else while this runs, and a lookup that arrives first
+    simply waits for the same single read."""
+    reader = geo_routes.get_net_reader()
+    if reader is None:
+        return
+    try:
+        await asyncio.to_thread(reader.snapshot)
+    except Exception:
+        _LOG.warning("the address-check snapshot could not be read at start-up; lookups will retry")
+
+
 @asynccontextmanager
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Build the data plane before serving, then warm the assistant in the background.
@@ -43,10 +57,12 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     except Exception:
         _LOG.exception("the data plane could not be built at start-up; requests will retry")
     task = asyncio.create_task(warm_up_assistant())
+    address_task = asyncio.create_task(_warm_up_address_check())
     try:
         yield
     finally:
         task.cancel()
+        address_task.cancel()
 
 
 def create_app() -> FastAPI:
