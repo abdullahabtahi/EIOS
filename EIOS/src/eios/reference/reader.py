@@ -12,24 +12,36 @@ import re
 import threading
 from typing import Any
 
+from eios.reference.basel import BASEL_TOTAL, SCORE_NAME, band
 from eios.reference.build import REFERENCE_DATASET
+from eios.reference.eu_list import LIST_NAME as EU_LIST
 
 _MAX_BYTES_BILLED = 1024**3
 _PROJECT_ID = re.compile(r"[a-z][a-z0-9-]{4,28}[a-z0-9]")
 
 # The project id is operator config, validated below against the GCP id format; BigQuery cannot bind identifiers.
 _SQL = f"""
-WITH ind AS (
+WITH lists AS (
+  SELECT iso2,
+         MAX(IF(list_name IN ('call_for_action', 'increased_monitoring'), list_name, NULL)) AS fatf_list,
+         MAX(IF(list_name IN ('call_for_action', 'increased_monitoring'), as_of, NULL)) AS fatf_as_of,
+         LOGICAL_OR(list_name = '{EU_LIST}') AS eu_listed,
+         MAX(IF(list_name = '{EU_LIST}', as_of, NULL)) AS eu_as_of
+  FROM `{{project}}.{REFERENCE_DATASET}.jurisdiction_risk` GROUP BY iso2
+), ind AS (
   SELECT iso2, ARRAY_AGG(STRUCT(indicator_code AS code, indicator_name AS name, year, value) ORDER BY indicator_code) AS indicators
   FROM `{{project}}.{REFERENCE_DATASET}.country_indicators` GROUP BY iso2
 )
 SELECT j.iso2, j.name, ST_ASGEOJSON(j.boundary) AS boundary, ST_X(j.centroid) AS lng, ST_Y(j.centroid) AS lat,
-       r.list_name AS fatf_list, p.entities_incorporated, p.entities_linked,
-       j.as_of AS boundary_as_of, r.as_of AS fatf_as_of, p.as_of AS precedent_as_of, ind.indicators
+       l.fatf_list, l.eu_listed, s.value AS basel_score, s.rank AS basel_rank,
+       p.entities_incorporated, p.entities_linked,
+       j.as_of AS boundary_as_of, l.fatf_as_of, l.eu_as_of, s.as_of AS basel_as_of, p.as_of AS precedent_as_of,
+       ind.indicators
 FROM `{{project}}.{REFERENCE_DATASET}.jurisdictions` j
-LEFT JOIN `{{project}}.{REFERENCE_DATASET}.jurisdiction_risk` r USING (iso2)
-LEFT JOIN `{{project}}.{REFERENCE_DATASET}.offshore_precedent` p USING (iso2)
-LEFT JOIN ind USING (iso2)
+LEFT JOIN lists l ON l.iso2 = j.iso2
+LEFT JOIN `{{project}}.{REFERENCE_DATASET}.risk_scores` s ON s.iso2 = j.iso2 AND s.score_name = '{SCORE_NAME}'
+LEFT JOIN `{{project}}.{REFERENCE_DATASET}.offshore_precedent` p ON p.iso2 = j.iso2
+LEFT JOIN ind ON ind.iso2 = j.iso2
 ORDER BY j.iso2
 """  # noqa: S608
 
@@ -38,6 +50,14 @@ _SOURCES = {
     "fatf": (
         "FATF plenary statement, June 2026 (secondary summary; verify against fatf-gafi.org)",
         "fatf_as_of",
+    ),
+    "eu_list": (
+        "EU high-risk third countries, Delegated Regulation (EU) 2016/1675 as amended (European Commission)",
+        "eu_as_of",
+    ),
+    "basel_aml": (
+        "Basel AML Index 2025, Public Edition (Basel Institute on Governance)",
+        "basel_as_of",
     ),
     "offshore_precedent": ("ICIJ Offshore Leaks Database (entities)", "precedent_as_of"),
     "indicators": ("World Bank WDI (latest year per country)", None),
@@ -84,6 +104,8 @@ def _payload(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "boundary": json.loads(r["boundary"]),
             "position": [r["lng"], r["lat"]],
             "fatf_list": r["fatf_list"],
+            "eu_high_risk": bool(r["eu_listed"]),
+            "basel": _basel(r),
             "entities_incorporated": r["entities_incorporated"],
             "entities_linked": r["entities_linked"],
             "indicators": [dict(i) for i in (r["indicators"] or [])],
@@ -98,6 +120,14 @@ def _payload(rows: list[dict[str, Any]]) -> dict[str, Any]:
         for layer, (source, column) in _SOURCES.items()
     }
     return {"countries": countries, "sources": sources}
+
+
+def _basel(row: dict[str, Any]) -> dict[str, Any] | None:
+    """The score with its rank and the Institute's band; None when the jurisdiction is not in the public edition."""
+    score = row["basel_score"]
+    if score is None:
+        return None
+    return {"score": score, "rank": row["basel_rank"], "of": BASEL_TOTAL, "band": band(score)}
 
 
 def reader_from_env() -> ReferenceReader | None:

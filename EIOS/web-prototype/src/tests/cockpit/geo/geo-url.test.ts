@@ -5,8 +5,8 @@ describe('geo URL state', () => {
   it('round-trips a view and a pick, keeping other parameters', () => {
     const search = formatGeoUrl('?foo=1', 'logins', { kind: 'mismatch', id: 'ID>NG' });
     expect(search).toContain('foo=1');
-    expect(parseGeoUrl(search)).toEqual({ view: 'logins', selection: { kind: 'mismatch', id: 'ID>NG' } });
-    expect(parseGeoUrl(formatGeoUrl(search, 'corridors', null))).toEqual({ view: 'corridors', selection: null });
+    expect(parseGeoUrl(search)).toEqual({ view: 'logins', selection: { kind: 'mismatch', id: 'ID>NG' }, basis: null });
+    expect(parseGeoUrl(formatGeoUrl(search, 'corridors', null))).toEqual({ view: 'corridors', selection: null, basis: null });
   });
 
   it('reads every kind of pick the map can make', () => {
@@ -16,9 +16,9 @@ describe('geo URL state', () => {
   });
 
   it('ignores anything it does not recognise instead of guessing', () => {
-    expect(parseGeoUrl('?view=nope&sel=planet:Mars')).toEqual({ view: null, selection: null });
-    expect(parseGeoUrl('?sel=account:<script>')).toEqual({ view: null, selection: null });
-    expect(parseGeoUrl('?sel=account')).toEqual({ view: null, selection: null });
-    expect(parseGeoUrl('')).toEqual({ view: null, selection: null });
+    expect(parseGeoUrl('?view=nope&sel=planet:Mars')).toEqual({ view: null, selection: null, basis: null });
+    expect(parseGeoUrl('?sel=account:<script>')).toEqual({ view: null, selection: null, basis: null });
+    expect(parseGeoUrl('?sel=account')).toEqual({ view: null, selection: null, basis: null });
+    expect(parseGeoUrl('')).toEqual({ view: null, selection: null, basis: null });
   });
 });

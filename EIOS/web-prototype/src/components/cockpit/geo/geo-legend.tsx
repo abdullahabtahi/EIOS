@@ -1,10 +1,13 @@
 import * as React from 'react';
 import { OFFSHORE_NOTICE } from './geo-format';
+import { BASEL_BREAKS, type BasisId } from './geo-basis';
 import { drawnKinds, rankedCorridors, rankedPairs, shownCorridors, shownPairs } from './geo-rank';
 import type { GeoFlows, LayerId } from './geo-types';
 
 interface Key {
   readonly layer: LayerId;
+  /** For risk-area keys: the list that colours the map, so the legend names only the marks in use. */
+  readonly basis?: BasisId;
   /** For corridor keys: the kind of arc, so a colour that is not on the map is not in the legend. */
   readonly kind?: 'high' | 'medium' | 'other';
   readonly swatch: string;
@@ -12,8 +15,13 @@ interface Key {
 }
 
 const KEYS: readonly Key[] = [
-  { layer: 'risk', swatch: 'h-3 bg-cx-bad/30 border border-cx-bad', label: 'FATF call for action' },
-  { layer: 'risk', swatch: 'h-3 bg-cx-warn/30 border border-cx-warn', label: 'FATF increased monitoring' },
+  { layer: 'risk', basis: 'fatf', swatch: 'h-3 bg-cx-bad/30 border border-cx-bad', label: 'FATF call for action' },
+  { layer: 'risk', basis: 'fatf', swatch: 'h-3 bg-cx-warn/30 border border-cx-warn', label: 'FATF increased monitoring' },
+  { layer: 'risk', basis: 'eu', swatch: 'h-3 bg-cx-warn/30 border border-cx-warn', label: 'On the EU high-risk list' },
+  { layer: 'risk', basis: 'basel', swatch: 'h-3 bg-cx-bad/30 border border-cx-bad', label: `Higher risk (above ${BASEL_BREAKS.higher})` },
+  { layer: 'risk', basis: 'basel', swatch: 'h-3 bg-cx-warn/30 border border-cx-warn', label: `Medium risk (${BASEL_BREAKS.medium} to ${BASEL_BREAKS.higher})` },
+  { layer: 'risk', basis: 'basel', swatch: 'h-3 bg-slate-400/30 border border-slate-400', label: `Lower risk (below ${BASEL_BREAKS.medium})` },
+  { layer: 'risk', basis: 'basel', swatch: 'h-3 border border-dashed border-cx-line', label: 'No fill: not in the public index' },
   { layer: 'offshore', swatch: 'h-3 bg-cx-accent/60 rounded-full', label: 'Offshore entities (size = count)' },
   { layer: 'corridors', kind: 'high', swatch: 'h-0.5 bg-cx-bad', label: 'High-risk corridor' },
   { layer: 'corridors', kind: 'medium', swatch: 'h-0.5 bg-cx-warn-solid', label: 'Medium-risk corridor' },
@@ -31,9 +39,9 @@ export function drawnCounts(flows: GeoFlows | null, visible: ReadonlySet<LayerId
 }
 
 /** Only the marks of the layers that are on, in the colours the layers use. */
-export function GeoLegend({ visible, flows }: { readonly visible: ReadonlySet<LayerId>; readonly flows: GeoFlows | null }) {
+export function GeoLegend({ visible, flows, basis = 'fatf' }: { readonly visible: ReadonlySet<LayerId>; readonly flows: GeoFlows | null; readonly basis?: BasisId }) {
   const kinds = flows ? drawnKinds(flows) : new Set<string>();
-  const keys = KEYS.filter((k) => visible.has(k.layer) && (k.kind === undefined || kinds.has(k.kind)));
+  const keys = KEYS.filter((k) => visible.has(k.layer) && (k.basis === undefined || k.basis === basis) && (k.kind === undefined || kinds.has(k.kind)));
   const notes = drawnCounts(flows, visible);
   if (keys.length === 0) return null;
   return (

@@ -10,6 +10,16 @@ export type LayerId = 'risk' | 'offshore' | 'corridors' | 'mismatches';
 
 export type FatfList = 'call_for_action' | 'increased_monitoring';
 
+export type BaselBand = 'higher' | 'medium' | 'lower';
+
+/** A country's Basel AML Index score (0 lowest risk to 10) with its place among the rated countries. */
+export interface BaselScore {
+  readonly score: number;
+  readonly rank: number;
+  readonly of: number;
+  readonly band: BaselBand;
+}
+
 /** Reference layer: real public data from `warm_reference`, one row per country or dependency. */
 export interface ReferenceIndicator {
   readonly code: string;
@@ -25,6 +35,9 @@ export interface ReferenceCountry {
   readonly boundary: { readonly type: string; readonly coordinates: unknown };
   readonly position: LngLat;
   readonly fatf_list: FatfList | null;
+  readonly eu_high_risk: boolean;
+  /** null: not in the Public Edition, so unrated (never low). */
+  readonly basel: BaselScore | null;
   /** null means nothing was measured for this country, never zero. */
   readonly entities_incorporated: number | null;
   readonly entities_linked: number | null;
@@ -38,7 +51,7 @@ export interface ReferenceSource {
 
 export interface GeoReference {
   readonly countries: readonly ReferenceCountry[];
-  readonly sources: Readonly<Record<'boundaries' | 'fatf' | 'offshore_precedent' | 'indicators', ReferenceSource>>;
+  readonly sources: Readonly<Record<'boundaries' | 'fatf' | 'eu_list' | 'basel_aml' | 'offshore_precedent' | 'indicators', ReferenceSource>>;
 }
 
 /** [longitude, latitude] */

@@ -1,4 +1,5 @@
-import type { FatfList, GeoFlows, GeoReference, GeoSelection, ReferenceIndicator } from './geo-types';
+import { BAND_LABEL } from './geo-basis';
+import type { BaselScore, FatfList, GeoFlows, GeoReference, GeoSelection, ReferenceIndicator } from './geo-types';
 
 // Digits are pinned: the default minimum differs between ICU versions ($900K here, $900.0K on another Node).
 const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 });
@@ -18,6 +19,9 @@ const INDICATOR_LABEL: Readonly<Record<string, string>> = {
   'BN.CAB.XOKA.GD.ZS': 'Current account, % of GDP',
 };
 const NOT_RECORDED = 'Not recorded';
+const NOT_IN_INDEX = 'Not in the public index';
+
+const baselText = (b: BaselScore | null): string => (b ? `${b.score.toFixed(2)} of 10 · ${BAND_LABEL[b.band]} · rank ${b.rank} of ${b.of}` : NOT_IN_INDEX);
 
 /** P-4: the offshore counts come from a leak database; being in it says nothing about the entity. Said once, in the legend of the offshore layer. */
 export const OFFSHORE_NOTICE = 'Counts of entities in the ICIJ Offshore Leaks Database. Appearing there is not evidence of wrongdoing.';
@@ -72,6 +76,8 @@ export function describeSelection(
       title: c.name,
       rows: [
         ['FATF list', c.fatf_list ? FATF_LABEL[c.fatf_list] : 'Not listed'],
+        ['EU high-risk list', c.eu_high_risk ? 'Listed' : 'Not listed'],
+        ['Basel AML Index', baselText(c.basel)],
         ['Offshore entities incorporated', c.entities_incorporated === null ? NOT_RECORDED : COUNT.format(c.entities_incorporated)],
         ['Offshore entities linked', c.entities_linked === null ? NOT_RECORDED : COUNT.format(c.entities_linked)],
         ...c.indicators.map(indicatorRow),

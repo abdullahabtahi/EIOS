@@ -17,6 +17,11 @@ ROWS = [
         "lng": -80.1,
         "lat": 8.5,
         "fatf_list": None,
+        "eu_listed": None,
+        "eu_as_of": None,
+        "basel_score": 5.83,
+        "basel_rank": 51,
+        "basel_as_of": "2025-12-08",
         "entities_incorporated": 48692,
         "entities_linked": 18345,
         "boundary_as_of": "2026-09-23",
@@ -33,6 +38,11 @@ ROWS = [
         "lng": 53.7,
         "lat": 32.4,
         "fatf_list": "call_for_action",
+        "eu_listed": True,
+        "eu_as_of": "2026-01-29",
+        "basel_score": None,
+        "basel_rank": None,
+        "basel_as_of": None,
         "entities_incorporated": None,
         "entities_linked": None,
         "boundary_as_of": "2026-09-23",
@@ -63,6 +73,23 @@ def test_payload_has_countries_with_parsed_geometry_and_sources() -> None:
     assert by["IR"]["fatf_list"] == "call_for_action"
     assert payload["sources"]["fatf"]["as_of"] == "2026-06-19"
     assert payload["sources"]["offshore_precedent"]["as_of"] == "2026-09-09"
+
+
+def test_eu_listing_and_basel_score_ride_with_each_country() -> None:
+    payload = ReferenceReader("test-project", client=_Client(ROWS)).world()
+    by = {c["iso2"]: c for c in payload["countries"]}
+    assert by["IR"]["eu_high_risk"] is True and by["PA"]["eu_high_risk"] is False
+    assert by["PA"]["basel"] == {"score": 5.83, "rank": 51, "of": 177, "band": "medium"}
+    assert payload["sources"]["eu_list"]["as_of"] == "2026-01-29"
+    assert payload["sources"]["basel_aml"]["as_of"] == "2025-12-08"
+
+
+def test_a_country_outside_the_basel_public_edition_is_unrated_not_zero() -> None:
+    by = {
+        c["iso2"]: c
+        for c in ReferenceReader("test-project", client=_Client(ROWS)).world()["countries"]
+    }
+    assert by["IR"]["basel"] is None
 
 
 def test_a_country_with_no_measurement_reports_none_not_zero() -> None:
@@ -130,6 +157,12 @@ def test_live_reference_layer_reads_from_the_warehouse() -> None:
     assert by["IR"]["fatf_list"] == "call_for_action"
     assert (by["BS"]["entities_incorporated"] or 0) > 100_000
     assert any(i["code"] == "NY.GDP.PCAP.CD" for i in by["BS"]["indicators"])
+    assert by["IR"]["eu_high_risk"] is True and by["NO"]["eu_high_risk"] is False
+    assert by["MM"]["basel"] == {"score": 8.18, "rank": 1, "of": 177, "band": "higher"}
+    assert by["VG"]["basel"] is None  # outside the public edition: unrated, not low
+    assert len(by) == len(
+        {c["iso2"] for c in payload["countries"]}
+    )  # the joins add no duplicate rows
 
 
 def test_a_malformed_project_id_is_refused_before_it_reaches_sql() -> None:

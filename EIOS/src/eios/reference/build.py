@@ -1,4 +1,4 @@
-"""Build the `warm_reference` dataset: jurisdictions (Overture), FATF lists, offshore precedent (ICIJ), indicators (World Bank).
+"""Build the `warm_reference` dataset: jurisdictions (Overture), FATF and EU lists, Basel AML scores, offshore precedent (ICIJ), indicators (World Bank).
 
 The public datasets live in BigQuery's US location and the warm datasets in us-central1, and BigQuery cannot join across
 locations, so the small simplified results are read out and loaded into a us-central1 dataset where corridor queries can
@@ -12,6 +12,8 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from eios.reference.basel import BASEL_ROWS
+from eios.reference.eu_list import EU_ROWS
 from eios.reference.fatf import FATF_ROWS
 from eios.reference.icij import aggregate_precedent
 
@@ -72,6 +74,14 @@ _SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("source", "STRING"),
         ("as_of", "STRING"),
     ],
+    "risk_scores": [
+        ("iso2", "STRING"),
+        ("score_name", "STRING"),
+        ("value", "FLOAT64"),
+        ("rank", "INT64"),
+        ("source", "STRING"),
+        ("as_of", "STRING"),
+    ],
     "country_indicators": [
         ("iso2", "STRING"),
         ("indicator_code", "STRING"),
@@ -110,15 +120,33 @@ def _load(client: Any, project: str, table: str, rows: list[dict[str, Any]]) -> 
     return len(rows)
 
 
+def _ensure_dataset(client: Any, project: str) -> None:
+    from google.cloud import bigquery
+
+    dataset = bigquery.Dataset(f"{project}.{REFERENCE_DATASET}")
+    dataset.location = WARM_LOCATION
+    client.create_dataset(dataset, exists_ok=True)
+
+
+def build_lists(project: str, *, client: Any = None) -> dict[str, int]:
+    """Reload only the hand-held tables (FATF and EU lists, Basel scores): no public-dataset extract, no ICIJ file."""
+    from google.cloud import bigquery
+
+    client = client or bigquery.Client(project=project)
+    _ensure_dataset(client, project)
+    tables = {"jurisdiction_risk": [*FATF_ROWS, *EU_ROWS], "risk_scores": BASEL_ROWS}
+    summary = {name: _load(client, project, name, rows) for name, rows in tables.items()}
+    _LOG.info("reference lists reloaded: %s", summary)
+    return summary
+
+
 def build_reference(
     project: str, icij_entities_csv: Path, icij_as_of: str, *, client: Any = None
 ) -> dict[str, int]:
     from google.cloud import bigquery
 
     client = client or bigquery.Client(project=project)
-    dataset = bigquery.Dataset(f"{project}.{REFERENCE_DATASET}")
-    dataset.location = WARM_LOCATION
-    client.create_dataset(dataset, exists_ok=True)
+    _ensure_dataset(client, project)
 
     overture = f"Overture Maps division_area, release {OVERTURE_RELEASE}"
     jurisdictions = [
@@ -139,7 +167,8 @@ def build_reference(
     ]
     tables = {
         "jurisdictions": jurisdictions,
-        "jurisdiction_risk": FATF_ROWS,
+        "jurisdiction_risk": [*FATF_ROWS, *EU_ROWS],
+        "risk_scores": BASEL_ROWS,
         "offshore_precedent": aggregate_precedent(icij_entities_csv, as_of=icij_as_of),
         "country_indicators": indicators,
     }

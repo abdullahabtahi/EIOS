@@ -1,6 +1,8 @@
 'use client';
 
 import * as React from 'react';
+import type { BasisId } from './geo-basis';
+import { GeoBasisSwitcher } from './geo-basis-switcher';
 import { describeSelection } from './geo-format';
 import { GeoAccountDetail } from './geo-account-detail';
 import { GeoDetail } from './geo-detail';
@@ -27,6 +29,9 @@ export interface GeoPanelProps {
   readonly onPickAccount: (id: string) => void;
   /** The picked account's evidence, when the pick is an account. */
   readonly account: ResourceState<GeoAccount> | null;
+  /** Which list colours the Jurisdictions map, and the way to change it. */
+  readonly basis: BasisId;
+  readonly onBasis: (id: BasisId) => void;
 }
 
 /** Lenses that cannot draw without their data: a flow needs the engine and the reference layer (which places the countries). */
@@ -41,10 +46,10 @@ export function disabledLayers(flows: GeoFlows | null, reference: GeoReference |
  * The right-hand panel, read top to bottom: the question this view answers, how big the picture is, the picked
  * mark in full, then where to look first. Layers and sources sit below, collapsed.
  */
-export function GeoPanel({ view, flows, reference, visible, onToggle, selected, onSelect, onClear, onPickAccount, account }: GeoPanelProps) {
+export function GeoPanel({ view, flows, reference, visible, onToggle, selected, onSelect, onClear, onPickAccount, account, basis, onBasis }: GeoPanelProps) {
   const ref = dataOf(reference);
   const fl = dataOf(flows);
-  const leads = leadsFor(view.id, fl, ref);
+  const leads = leadsFor(view.id, fl, ref, basis);
   const detail = describeSelection(fl, ref, selected);
   const needs: readonly { readonly label: string; readonly state: ResourceState<unknown> }[] =
     view.id === 'jurisdictions'
@@ -59,7 +64,8 @@ export function GeoPanel({ view, flows, reference, visible, onToggle, selected, 
       <div className="space-y-5 p-4">
         <header className="space-y-3">
           <h2 className="text-balance text-sm font-semibold leading-snug text-cx-ink">{view.question}</h2>
-          {waiting.length === 0 && <GeoSummary view={view.id} flows={fl} reference={ref} />}
+          {view.id === 'jurisdictions' && ref && <GeoBasisSwitcher current={basis} onChange={onBasis} />}
+          {waiting.length === 0 && <GeoSummary view={view.id} flows={fl} reference={ref} basis={basis} />}
         </header>
 
         {waiting.length > 0 ? (

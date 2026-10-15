@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { summarize, summarizeReference } from '@/components/cockpit/geo/geo-aggregates';
-import { buildLayers, tierOf, MIN_OFFSHORE_ENTITIES } from '@/components/cockpit/geo/geo-layers';
+import { buildLayers, MIN_OFFSHORE_ENTITIES } from '@/components/cockpit/geo/geo-layers';
+import { areaTier } from '@/components/cockpit/geo/geo-basis';
 import { ARC_BUDGET, MAX_MISMATCH_PAIRS, drawnKinds, rankedCorridors, shownCorridors, shownPairs } from '@/components/cockpit/geo/geo-rank';
 import type { FlowCorridor } from '@/components/cockpit/geo/geo-types';
 import type { LayerId } from '@/components/cockpit/geo/geo-types';
@@ -39,9 +40,9 @@ describe('summarizeReference', () => {
   });
 });
 
-describe('tierOf', () => {
+describe('FATF area tier', () => {
   it('maps FATF lists to risk tiers and leaves unlisted countries unrated', () => {
-    const by = Object.fromEntries(REFERENCE.countries.map((c) => [c.iso2, tierOf(c)]));
+    const by = Object.fromEntries(REFERENCE.countries.map((c) => [c.iso2, areaTier(c, 'fatf')]));
     expect(by).toMatchObject({ IR: 'high', KE: 'medium', BS: null, NO: null });
   });
 });
