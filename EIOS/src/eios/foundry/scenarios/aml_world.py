@@ -53,6 +53,9 @@ class AmlWorld:
     edges: pd.DataFrame
     truth: AmlTruth
     geo_flows: pd.DataFrame | None = None
+    geo_sessions: pd.DataFrame | None = (
+        None  # login sessions (aml_sessions.SESSION_COLUMNS); geo only
+    )
 
 
 @dataclass(frozen=True)
@@ -86,14 +89,17 @@ def build_aml_world(config: AmlWorldConfig) -> AmlWorld:
     txns = [*behaviour[0], *planted.txns]
     trades = [*behaviour[1], *planted.trades]
     transactions = transactions_frame(txns)
-    geo_flows, geo_truth = aml_geo.build_geo(
+    geo_flows, geo_sessions, geo_truth = aml_geo.build_geo(
         config,
         clients,
         transactions,
-        story_rings=roles.rings[:2],
-        structuring=roles.structuring,
-        wash=(*roles.wash, STORY_WASH),
-        rng=streams.get_generator("aml.geo"),
+        aml_geo.GeoRoles(
+            rings=roles.rings,
+            cgnat=roles.cgnat,
+            structuring=roles.structuring,
+            wash=(*roles.wash, STORY_WASH),
+        ),
+        streams.get_generator("aml.geo"),
     )
     return AmlWorld(
         config=config,
@@ -103,6 +109,7 @@ def build_aml_world(config: AmlWorldConfig) -> AmlWorld:
         edges=edges_frame(planted.edges),
         truth=AmlTruth(tags=planted.tags, rings=planted.rings, geo=geo_truth),
         geo_flows=geo_flows,
+        geo_sessions=geo_sessions,
     )
 
 

@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import binom
 
+from eios.dataplane.aml_geo_sessions import LngLat, SessionLenses, run_session_lenses
 from eios.foundry.scenarios.aml_geo import GeoTruth
 from eios.foundry.scenarios.aml_world import AmlWorld
 
@@ -26,10 +27,31 @@ ALPHA = 1e-3  # chance of a pattern this extreme at the base rate; about 6 chanc
 MIN_HITS = 2  # a single foreign login or elevated payment never flags a client on its own
 SCORE_CAP = 6.0  # -log10(p) is capped here when normalised into a 0..1 score
 TOP_K = 50
+EXIT_WEIGHT = 1.0  # [ASSUMPTION] a shared foreign exit adds as much to the geo score as a fully significant lens
+JUMP_WEIGHT = 0.5  # [ASSUMPTION] impossible travel adds half: its precision is lower (geolocation error, hubs)
 _TIER_RANK = {"low": 0, "medium": 1, "high": 2}
 _TIER_WEIGHT = {"high": 1.0, "medium": 0.5}
 _MONEY_STATUSES = ("COMPLETED", "PENDING")
 _DEPOSIT = "DEPOSIT"
+
+
+@dataclass(frozen=True)
+class SessionQuality:
+    """How the session lenses did against the planted rings `[MEASURED]`."""
+
+    ring_members: int
+    exit_flagged: int
+    exit_precision: float
+    exit_recall: float
+    jump_flagged: int | None  # None when no country positions were given
+    jump_precision: float | None
+    jump_recall: float | None
+    jump_flagged_naive: int | None  # without discounting jumps through a hub (RL-4)
+    jump_precision_naive: float | None
+    benign_flagged_by_jumps: int | None
+    benign_flagged_by_jumps_naive: int | None
+    rings_not_assessable_per_client: int  # ring members the per-client lens cannot judge
+    recovered_by_exit: int  # of those, how many the shared-exit lens flags
 
 
 @dataclass(frozen=True)
@@ -54,6 +76,7 @@ class GeoQuality:
     base_rate: float
     lift_at_k: float
     build_seconds: float
+    sessions: SessionQuality | None = None
 
 
 @dataclass(frozen=True)
@@ -63,6 +86,7 @@ class GeoSnapshot:
     corridors: pd.DataFrame
     tiers: Mapping[str, str]
     quality: GeoQuality | None
+    sessions: SessionLenses | None = None
 
 
 def _events(world: AmlWorld, tiers: Mapping[str, str]) -> pd.DataFrame:
@@ -160,6 +184,58 @@ def _corridor_table(events: pd.DataFrame, tiers: Mapping[str, str]) -> pd.DataFr
     return table.sort_values("volume_usd", ascending=False, ignore_index=True)
 
 
+def _with_sessions(clients: pd.DataFrame, lenses: SessionLenses | None) -> pd.DataFrame:
+    """Join the session lenses onto the client table and add them to the geo score."""
+    if lenses is None:
+        return clients
+    cols = [
+        "client_id",
+        "sessions",
+        "exit_gateway",
+        "exit_sessions",
+        "exit_flag",
+        "jumps",
+        "hub_jumps",
+        "jump_flag",
+        "travel_assessable",
+    ]
+    out = clients.merge(lenses.clients[cols], on="client_id", how="left")
+    out["geo_risk_score"] = (
+        out["geo_risk_score"] + EXIT_WEIGHT * out["exit_flag"] + JUMP_WEIGHT * out["jump_flag"]
+    )
+    return out
+
+
+def _session_quality(
+    truth: GeoTruth, clients: pd.DataFrame, lenses: SessionLenses
+) -> SessionQuality:
+    bad = truth.mismatch_malicious
+    benign = truth.mismatch_benign | (frozenset(clients["client_id"]) - bad)
+    exit_ = _ids(clients, "exit_flag")
+    jump = _ids(clients, "jump_flag") if lenses.travel_assessable else None
+    naive = (
+        frozenset(clients.loc[(clients["jumps"] + clients["hub_jumps"]) >= 2, "client_id"])
+        if lenses.travel_assessable
+        else None
+    )
+    sparse = bad - _ids(clients, "mismatch_assessable")
+    return SessionQuality(
+        ring_members=len(bad),
+        exit_flagged=len(exit_),
+        exit_precision=_ratio(len(exit_ & bad), len(exit_)),
+        exit_recall=_ratio(len(exit_ & bad), len(bad)),
+        jump_flagged=None if jump is None else len(jump),
+        jump_precision=None if jump is None else _ratio(len(jump & bad), len(jump)),
+        jump_recall=None if jump is None else _ratio(len(jump & bad), len(bad)),
+        jump_flagged_naive=None if naive is None else len(naive),
+        jump_precision_naive=None if naive is None else _ratio(len(naive & bad), len(naive)),
+        benign_flagged_by_jumps=None if jump is None else len(jump & benign),
+        benign_flagged_by_jumps_naive=None if naive is None else len(naive & benign),
+        rings_not_assessable_per_client=len(sparse),
+        recovered_by_exit=len(sparse & exit_),
+    )
+
+
 def _ratio(num: int, den: int) -> float:
     return round(num / den, 4) if den else 0.0
 
@@ -175,6 +251,7 @@ def _quality(
     corridors: pd.DataFrame,
     tiers: Mapping[str, str],
     seconds: float,
+    lenses: SessionLenses | None = None,
 ) -> GeoQuality:
     flagged, can_assess = _ids(clients, "mismatch_flag"), _ids(clients, "mismatch_assessable")
     planted = truth.mismatch_malicious | truth.mismatch_benign
@@ -218,21 +295,32 @@ def _quality(
         base_rate=base,
         lift_at_k=round(precision_k / base, 2) if base else 0.0,
         build_seconds=round(seconds, 2),
+        sessions=_session_quality(truth, clients, lenses) if lenses is not None else None,
     )
 
 
-def run_geo_engine(world: AmlWorld, tiers: Mapping[str, str]) -> GeoSnapshot:
+def run_geo_engine(
+    world: AmlWorld, tiers: Mapping[str, str], positions: Mapping[str, LngLat] | None = None
+) -> GeoSnapshot:
+    """The geo engine over a world. `positions` (country centroids) enable the impossible-travel lens; without them it
+    is not assessable. Session lenses run only when the world carries login sessions."""
     started = time.perf_counter()
     events = _events(world, tiers)
-    clients = _client_table(world, events)
+    home = world.clients.set_index("client_id")["country"]
+    lenses = (
+        run_session_lenses(world.geo_sessions, home, positions)
+        if world.geo_sessions is not None
+        else None
+    )
+    clients = _with_sessions(_client_table(world, events), lenses)
     corridors = _corridor_table(events, tiers)
     truth = world.truth.geo
     quality = (
-        _quality(world, truth, clients, corridors, tiers, time.perf_counter() - started)
+        _quality(world, truth, clients, corridors, tiers, time.perf_counter() - started, lenses)
         if truth
         else None
     )
-    return GeoSnapshot(world, clients, corridors, dict(tiers), quality)
+    return GeoSnapshot(world, clients, corridors, dict(tiers), quality, lenses)
 
 
-__all__ = ["TOP_K", "GeoQuality", "GeoSnapshot", "run_geo_engine"]
+__all__ = ["TOP_K", "GeoQuality", "GeoSnapshot", "SessionQuality", "run_geo_engine"]

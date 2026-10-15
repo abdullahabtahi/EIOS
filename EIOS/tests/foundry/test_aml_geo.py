@@ -67,24 +67,26 @@ def _share_foreign_ip(world: AmlWorld, members: frozenset[str]) -> float:
     return float((rows["ip_country"] != rows["client_id"].map(country)).mean())
 
 
-def test_planted_malicious_mismatch_is_the_two_story_rings_and_mostly_foreign(
+def test_planted_malicious_mismatch_is_every_mule_ring_and_mostly_foreign(world: AmlWorld) -> None:
+    geo = world.truth.geo
+    assert geo is not None
+    assert {STORY_RING_HEAD, "CR73491"} <= geo.mismatch_malicious
+    assert geo.mismatch_malicious == frozenset(
+        c for ring in world.truth.rings.values() for c in ring
+    )
+    assert _share_foreign_ip(world, geo.mismatch_malicious) >= 0.7
+
+
+def test_benign_travellers_and_vpn_users_mismatch_too_but_are_not_malicious(
     world: AmlWorld,
 ) -> None:
     geo = world.truth.geo
     assert geo is not None
-    assert {STORY_RING_HEAD, "CR73491"} <= geo.mismatch_malicious
-    assert geo.mismatch_malicious <= {
-        c for c, tags in world.truth.tags.items() if "MULE_RING" in tags
-    }
-    assert _share_foreign_ip(world, geo.mismatch_malicious) >= 0.8
-
-
-def test_benign_travellers_mismatch_too_but_are_not_malicious(world: AmlWorld) -> None:
-    geo = world.truth.geo
-    assert geo is not None
-    assert len(geo.mismatch_benign) >= 40
+    assert len(geo.travellers) >= 40 and len(geo.privacy_vpn) >= 100
+    assert geo.mismatch_benign == geo.travellers | geo.privacy_vpn
     assert not (geo.mismatch_benign & world.truth.malicious())
-    assert _share_foreign_ip(world, geo.mismatch_benign) >= 0.7
+    # far less foreign than the rings: a trip is a few days, a privacy VPN is used now and then
+    assert 0.2 <= _share_foreign_ip(world, geo.mismatch_benign) <= 0.5
 
 
 def test_everyone_else_rarely_logs_in_from_abroad(world: AmlWorld) -> None:
