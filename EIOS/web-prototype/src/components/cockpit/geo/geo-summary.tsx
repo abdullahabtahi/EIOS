@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Chip } from '../ui/chip';
 import { summarize, summarizeReference } from './geo-aggregates';
+import type { BasisId } from './geo-basis';
 import { formatUsd } from './geo-format';
 import type { GeoFlows, GeoReference, RiskTier } from './geo-types';
 import type { ViewId } from './geo-views';
@@ -49,10 +50,25 @@ function ExposureBar({ exposure, total }: { readonly exposure: Readonly<Record<R
 }
 
 /** One line or one bar that says how big the picture is for the open view; absent data is NO_DATA, never zero. */
-export function GeoSummary({ view, flows, reference }: { readonly view: ViewId; readonly flows: GeoFlows | null; readonly reference: GeoReference | null }) {
+export function GeoSummary({ view, flows, reference, basis = 'fatf' }: { readonly view: ViewId; readonly flows: GeoFlows | null; readonly reference: GeoReference | null; readonly basis?: BasisId }) {
   if (view === 'jurisdictions') {
     const r = summarizeReference(reference);
     if (!r) return <Chip>NO_DATA</Chip>;
+    if (basis === 'eu') {
+      return (
+        <p className="text-xs text-cx-ink-soft">
+          <Strong>{r.eu.listed}</Strong> on the EU list · <Strong>{r.eu.alsoFatf}</Strong> also on a FATF list · <Strong>{r.eu.euOnly}</Strong> only the EU names
+        </p>
+      );
+    }
+    if (basis === 'basel') {
+      return (
+        <p className="text-xs text-cx-ink-soft">
+          <Strong>{r.basel.rated}</Strong> countries scored: <Strong>{r.basel.higher}</Strong> higher risk, <Strong>{r.basel.medium}</Strong> medium,{' '}
+          <Strong>{r.basel.lower}</Strong> lower. The rest are not in the public index.
+        </p>
+      );
+    }
     return (
       <p className="text-xs text-cx-ink-soft">
         <Strong>{r.fatf.call_for_action}</Strong> on the call-for-action list · <Strong>{r.fatf.increased_monitoring}</Strong> under increased monitoring

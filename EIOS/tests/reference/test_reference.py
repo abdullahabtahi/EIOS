@@ -112,7 +112,7 @@ class _FakeClient:
         return _FakeJob()
 
 
-def test_build_rebuilds_four_tables_idempotently_in_the_warm_location(entities_csv: Path) -> None:
+def test_build_rebuilds_five_tables_idempotently_in_the_warm_location(entities_csv: Path) -> None:
     from eios.reference.build import REFERENCE_DATASET, WARM_LOCATION, build_reference
 
     client = _FakeClient()
@@ -123,10 +123,24 @@ def test_build_rebuilds_four_tables_idempotently_in_the_warm_location(entities_c
         "jurisdiction_risk",
         "offshore_precedent",
         "country_indicators",
+        "risk_scores",
     }
     assert all(f"p.{REFERENCE_DATASET}.{t}" in client.loads for t in summary)
+    assert client.loads[f"p.{REFERENCE_DATASET}.jurisdiction_risk"][0] == len(FATF_ROWS) + 26
+    assert client.loads[f"p.{REFERENCE_DATASET}.risk_scores"][0] == 177
     assert all(d == "WRITE_TRUNCATE" for _, d in client.loads.values())
     assert all(
         loc == "US" for _, loc in client.queries
     )  # the public datasets live in US; results move to WARM_LOCATION
     assert WARM_LOCATION == "us-central1"
+
+
+def test_the_lists_alone_can_be_reloaded_without_the_big_extracts() -> None:
+    from eios.reference.build import REFERENCE_DATASET, build_lists
+
+    client = _FakeClient()
+    summary = build_lists("p", client=client)
+    assert set(summary) == {"jurisdiction_risk", "risk_scores"}
+    assert summary["jurisdiction_risk"] == len(FATF_ROWS) + 26 and summary["risk_scores"] == 177
+    assert client.queries == []  # nothing is extracted from the public datasets
+    assert all(f"p.{REFERENCE_DATASET}.{t}" in client.loads for t in summary)

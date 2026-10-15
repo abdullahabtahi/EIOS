@@ -27,7 +27,7 @@ export const VIEWS: readonly GeoView[] = [
   {
     id: 'jurisdictions',
     label: 'Jurisdictions',
-    question: 'Which countries are on FATF lists, and where are offshore entities incorporated?',
+    question: 'Which countries do the published risk lists and scores flag, and where are offshore entities incorporated?',
     layers: new Set<LayerId>(['risk', 'offshore']),
   },
 ];

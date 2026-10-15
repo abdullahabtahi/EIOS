@@ -1,5 +1,12 @@
 import * as React from 'react';
 import { ICIJ_URL } from './geo-format';
+
+// Where each reference source is credited. The Basel Institute asks for a credit and a link; the ICIJ asks for attribution.
+const SOURCE_LINK: Readonly<Record<string, string>> = {
+  offshore_precedent: ICIJ_URL,
+  basel_aml: 'https://index.baselgovernance.org',
+  eu_list: 'https://finance.ec.europa.eu/financial-crime/high-risk-third-countries-and-international-context-content-anti-money-laundering-and-countering_en',
+};
 import type { GeoFlows, GeoReference } from './geo-types';
 
 /** Where every figure comes from, one click away; the as-of date stays visible on the closed row. */
@@ -21,8 +28,8 @@ export function GeoSources({ flows, reference }: { readonly flows: GeoFlows | nu
         {reference &&
           Object.entries(reference.sources).map(([key, s]) => (
             <li key={s.source}>
-              {key === 'offshore_precedent' ? (
-                <a href={ICIJ_URL} target="_blank" rel="noopener noreferrer" className="text-cx-accent underline underline-offset-2 outline-none hover:text-cx-accent-strong focus-visible:ring-2 focus-visible:ring-cx-accent">
+              {SOURCE_LINK[key] ? (
+                <a href={SOURCE_LINK[key]} target="_blank" rel="noopener noreferrer" className="text-cx-accent underline underline-offset-2 outline-none hover:text-cx-accent-strong focus-visible:ring-2 focus-visible:ring-cx-accent">
                   {s.source}
                 </a>
               ) : (

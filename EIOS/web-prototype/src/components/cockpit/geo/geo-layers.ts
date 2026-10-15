@@ -9,6 +9,7 @@ import type {
   ReferenceCountry,
   RiskTier,
 } from './geo-types';
+import { areaTier, DEFAULT_BASIS, type BasisId } from './geo-basis';
 import { corridorId, pairId, shownCorridors, shownPairs } from './geo-rank';
 
 type Rgba = [number, number, number, number];
@@ -66,13 +67,6 @@ const SELECTED_EXTRA_WIDTH = 1.5;
 const widthFor = (value: number, max: number): number =>
   MIN_ARC_WIDTH + ARC_WIDTH_RANGE * Math.sqrt(max > 0 ? value / max : 0);
 const countryRef = (c: ReferenceCountry): NonNullable<GeoSelection> => ({ kind: 'country', id: c.iso2 });
-
-/** FATF list to risk tier; an unlisted country is unrated (null), not low. */
-export function tierOf(country: ReferenceCountry): RiskTier | null {
-  if (country.fatf_list === 'call_for_action') return 'high';
-  if (country.fatf_list === 'increased_monitoring') return 'medium';
-  return null;
-}
 
 function positions(reference: GeoReference): ReadonlyMap<string, LngLat> {
   return new Map(reference.countries.map((c) => [c.iso2, c.position]));
@@ -149,7 +143,7 @@ function areaFeatures(reference: GeoReference): readonly AreaFeature[] {
   return built;
 }
 
-function riskAreaLayer(reference: GeoReference, selection: GeoSelection, handlers: LayerHandlers): GeoJsonLayer<AreaFeature['properties']> {
+function riskAreaLayer(reference: GeoReference, selection: GeoSelection, handlers: LayerHandlers, basis: BasisId): GeoJsonLayer<AreaFeature['properties']> {
   const picked = (c: ReferenceCountry) => selection?.kind === 'country' && selection.id === c.iso2;
   return new GeoJsonLayer<AreaFeature['properties']>({
     id: 'geo-risk',
@@ -160,14 +154,14 @@ function riskAreaLayer(reference: GeoReference, selection: GeoSelection, handler
     lineWidthMinPixels: 1,
     lineWidthUnits: 'pixels',
     getFillColor: (f) => {
-      const tier = tierOf((f as unknown as AreaFeature).properties.country);
+      const tier = areaTier((f as unknown as AreaFeature).properties.country, basis);
       if (!tier) return NO_FILL;
       const [r, g, b] = TIER_COLOR[tier];
       return [r, g, b, AREA_FILL_ALPHA];
     },
     getLineColor: (f) => (picked((f as unknown as AreaFeature).properties.country) ? SELECTED_COLOR : OUTLINE_COLOR),
     getLineWidth: (f) => (picked((f as unknown as AreaFeature).properties.country) ? 3 : 1),
-    updateTriggers: { getLineColor: [selection?.kind, selection?.id], getLineWidth: [selection?.kind, selection?.id] },
+    updateTriggers: { getFillColor: [basis], getLineColor: [selection?.kind, selection?.id], getLineWidth: [selection?.kind, selection?.id] },
     onHover: (info) => handlers.onHover?.(info.object ? countryRef((info.object as unknown as AreaFeature).properties.country) : null, point(info)),
     onClick: (info) => handlers.onSelect?.(info.object ? countryRef((info.object as unknown as AreaFeature).properties.country) : null),
   });
@@ -227,9 +221,10 @@ export function buildLayers(
   selection: GeoSelection,
   handlers: LayerHandlers = {},
   highlight: readonly HighlightArc[] = [],
+  basis: BasisId = DEFAULT_BASIS,
 ): Layer[] {
   const layers: Layer[] = [];
-  if (reference && visible.has('risk')) layers.push(riskAreaLayer(reference, selection, handlers));
+  if (reference && visible.has('risk')) layers.push(riskAreaLayer(reference, selection, handlers, basis));
   if (reference && visible.has('offshore')) layers.push(offshoreLayer(reference, handlers));
   if (flows && reference && visible.has('corridors')) {
     layers.push(arcLayer('geo-corridors', corridorRows(flows, reference, selection), handlers));

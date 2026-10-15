@@ -1,4 +1,5 @@
-import { formatUsd, nameOf } from './geo-format';
+import type { BasisId } from './geo-basis';
+import { FATF_TEXT, formatUsd, nameOf } from './geo-format';
 import { corridorId, pairId, rankedCorridors, rankedPairs } from './geo-rank';
 import type { GeoFlows, GeoReference, GeoSelection, RiskTier } from './geo-types';
 import type { ViewId } from './geo-views';
@@ -17,6 +18,7 @@ export interface Lead {
 const COUNT = new Intl.NumberFormat('en-US');
 const plural = (n: number, one: string, many: string = `${one}s`): string => `${COUNT.format(n)} ${n === 1 ? one : many}`;
 const TOP_OFFSHORE = 5;
+const TOP_BASEL = 10;
 
 function corridorLeads(flows: GeoFlows, reference: GeoReference | null): readonly Lead[] {
   return rankedCorridors(flows).map((c) => ({
@@ -53,8 +55,7 @@ function loginLeads(flows: GeoFlows, reference: GeoReference | null): readonly L
 }
 
 function jurisdictionLeads(reference: GeoReference): readonly Lead[] {
-  const named = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
-  const callForAction = reference.countries.filter((c) => c.fatf_list === 'call_for_action').sort(named);
+  const callForAction = reference.countries.filter((c) => c.fatf_list === 'call_for_action').sort(byName);
   const offshore = reference.countries
     .filter((c) => (c.entities_incorporated ?? 0) > 0)
     .sort((a, b) => (b.entities_incorporated ?? 0) - (a.entities_incorporated ?? 0))
@@ -79,12 +80,48 @@ function jurisdictionLeads(reference: GeoReference): readonly Lead[] {
   ];
 }
 
+const byName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
+
+function euLeads(reference: GeoReference): readonly Lead[] {
+  const listed = reference.countries.filter((c) => c.eu_high_risk).sort(byName);
+  const lead = (c: GeoReference['countries'][number], group: string): Lead => ({
+    key: `eu:${c.iso2}`,
+    selection: { kind: 'country', id: c.iso2 },
+    title: c.name,
+    detail: c.fatf_list ? `EU list · FATF ${FATF_TEXT[c.fatf_list].toLowerCase()}` : 'EU list only',
+    tier: 'medium',
+    group,
+  });
+  return [
+    ...listed.filter((c) => !c.fatf_list).map((c) => lead(c, 'On the EU list, not on the FATF lists')),
+    ...listed.filter((c) => c.fatf_list).map((c) => lead(c, 'On the EU list and a FATF list')),
+  ];
+}
+
+function baselLeads(reference: GeoReference): readonly Lead[] {
+  return reference.countries
+    .flatMap((c) => (c.basel ? [{ c, b: c.basel }] : []))
+    .sort((x, y) => x.b.rank - y.b.rank)
+    .slice(0, TOP_BASEL)
+    .map(({ c, b }): Lead => ({
+      key: `basel:${c.iso2}`,
+      selection: { kind: 'country', id: c.iso2 },
+      title: c.name,
+      detail: `${b.score.toFixed(2)} of 10 · rank ${b.rank} of ${b.of}`,
+      tier: b.band === 'higher' ? 'high' : b.band === 'medium' ? 'medium' : null,
+      group: 'Highest Basel AML Index scores',
+    }));
+}
+
 /**
  * The ranked list for a view, from the same data and order the map draws. Null when the data the view needs is
  * absent (no data, not an empty list); an empty array means it was measured and there is nothing to list.
  */
-export function leadsFor(view: ViewId, flows: GeoFlows | null, reference: GeoReference | null): readonly Lead[] | null {
-  if (view === 'jurisdictions') return reference ? jurisdictionLeads(reference) : null;
+export function leadsFor(view: ViewId, flows: GeoFlows | null, reference: GeoReference | null, basis: BasisId = 'fatf'): readonly Lead[] | null {
+  if (view === 'jurisdictions') {
+    if (!reference) return null;
+    return basis === 'eu' ? euLeads(reference) : basis === 'basel' ? baselLeads(reference) : jurisdictionLeads(reference);
+  }
   if (!flows) return null;
   return view === 'corridors' ? corridorLeads(flows, reference) : loginLeads(flows, reference);
 }

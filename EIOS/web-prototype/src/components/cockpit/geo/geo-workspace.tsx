@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { DEFAULT_BASIS, type BasisId } from './geo-basis';
 import { buildLayers, type HighlightArc, type HoverPoint } from './geo-layers';
 import { cameraFor, cameraForCodes, type CameraTarget } from './geo-camera';
 import { useGeoAccount } from './geo-account';
@@ -36,6 +37,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   );
   const [view, setView] = React.useState<ViewId>(initial.view ?? DEFAULT_VIEW);
   const [visible, setVisible] = React.useState<ReadonlySet<LayerId>>(viewOf(initial.view ?? DEFAULT_VIEW).layers);
+  const [basis, setBasis] = React.useState<BasisId>(initial.basis ?? DEFAULT_BASIS);
   const [hover, setHover] = React.useState<Hover | null>(null);
   const [selected, setSelected] = React.useState<GeoSelection>(initial.selection);
   const [target, setTarget] = React.useState<CameraTarget | null>(null);
@@ -83,9 +85,9 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   );
 
   React.useEffect(() => {
-    const next = formatGeoUrl(window.location.search, view, selected);
+    const next = formatGeoUrl(window.location.search, view, selected, basis);
     if (next !== window.location.search) window.history.replaceState(window.history.state, '', `${window.location.pathname}${next}`);
-  }, [view, selected]);
+  }, [view, selected, basis]);
 
   // A pick that came in with the URL is flown to once its data can place it.
   const initialTarget = React.useMemo(
@@ -121,8 +123,8 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
     return () => observer.disconnect();
   }, []);
   const layers = React.useMemo(
-    () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }, highlight),
-    [flowData, referenceData, visible, selected, onHover, highlight],
+    () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }, highlight, basis),
+    [flowData, referenceData, visible, selected, onHover, highlight, basis],
   );
   const focus = React.useMemo(() => focusFor(view, flowData, referenceData), [view, flowData, referenceData]);
 
@@ -143,7 +145,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
           </p>
         )}
         <div className="pointer-events-none absolute bottom-6 left-3 z-10">
-          <GeoLegend visible={visible} flows={flowData} />
+          <GeoLegend visible={visible} flows={flowData} basis={basis} />
         </div>
         {tip && hover && <GeoTooltip view={tip} point={hover.point} bounds={box} />}
       </div>
@@ -159,6 +161,8 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
           onClear={clear}
           onPickAccount={pickAccount}
           account={account}
+          basis={basis}
+          onBasis={setBasis}
         />
       </div>
     </div>
