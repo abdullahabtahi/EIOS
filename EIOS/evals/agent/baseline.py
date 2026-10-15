@@ -334,7 +334,9 @@ def _git_sha() -> str:
     return out.stdout.strip() or "unknown"
 
 
-def _port(runtime: str, live: bool, records: Path | None = None) -> AgentPort:
+def _port(
+    runtime: str, live: bool, records: Path | None = None, model_key: str | None = None
+) -> AgentPort:
     if runtime == "recorded":
         from eios.agent_gates.adapters.recorded import RecordedRuntime
 
@@ -348,7 +350,7 @@ def _port(runtime: str, live: bool, records: Path | None = None) -> AgentPort:
     if runtime == "adk":
         from eios.agent_gates.adapters.adk import AdkRuntime
 
-        return AdkRuntime(offline=not live)
+        return AdkRuntime(offline=not live, model_key=model_key)
     from eios.agent_gates.adapters.standin import AlwaysAnswerStandin
 
     return AlwaysAnswerStandin("42")
@@ -387,6 +389,7 @@ def main(argv: Sequence[str]) -> int:
     ap.add_argument(
         "--records", type=Path, help="records.jsonl of an earlier run, with --runtime recorded"
     )
+    ap.add_argument("--model", help="a registry key for a live run (default: the registry default)")
     ap.add_argument("--repeats", type=int, default=3)
     ap.add_argument("--out", type=Path, default=Path("evals/reports/agent_baseline"))
     ap.add_argument("--compare", type=Path)
@@ -414,7 +417,7 @@ def main(argv: Sequence[str]) -> int:
         print(f"refused: {exc}", file=sys.stderr)
         return 2
     report, records = run_baseline(
-        _port(args.runtime, args.live, args.records), golden, attacks, args.repeats
+        _port(args.runtime, args.live, args.records, args.model), golden, attacks, args.repeats
     )
     report["meta"]["thresholds_version"] = thresholds.get("version")
     markdown = render_markdown(report)

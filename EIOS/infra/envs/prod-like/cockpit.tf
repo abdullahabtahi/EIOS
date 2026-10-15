@@ -51,8 +51,6 @@ module "model_armor" {
   environment      = local.environment
   location         = var.region
   sanitize_members = [module.identity_cockpit_api.member]
-
-  depends_on = [module.project_baseline]
 }
 
 module "identity_cockpit_web" {
