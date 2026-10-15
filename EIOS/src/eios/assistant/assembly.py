@@ -7,6 +7,12 @@ same way, with `{{quote:<passage id>}}`: the text and its page come from the res
 threshold in a rule reaches the operator exactly as the regulator wrote it and is never retyped. After the
 placeholders are removed, any number left in the text is a figure the model typed itself and the draft is rejected. The reasons go
 back to the model for another attempt; after `MAX_ATTEMPTS` the answer fails closed with no figure at all.
+
+Traced mode (`trace_typed=True`, the default of the assistant) relaxes only the last step. A figure the model wrote
+itself, "61.67%" or "$1.09M", is shown when a governed tool returned a matching value in this turn, to the precision it
+was written at and in the unit it was written in; the answer then cites that value like a placeholder would. A figure
+that matches nothing is rejected exactly as before, so nothing reaches an operator without a source, and a correct
+answer is no longer sent back only because it was not written as a placeholder.
 """
 
 from __future__ import annotations
@@ -21,7 +27,9 @@ from eios.knowledge.highlight import body_sentences
 from eios.ontology.auditor.normalizer import MONTH_PATTERN, NumericTokenNormalizer
 from eios.ontology.omcp.port.contracts import DataOrigin
 
-MAX_ATTEMPTS = 3
+MAX_ATTEMPTS = (
+    2  # one draft and one redraft: a draft that fails twice is not going to be fixed by a third
+)
 FAIL_CLOSED_TEXT = (
     "I could not put together an answer I can fully support from the governed data, "
     "so I am not showing any figures."
@@ -176,19 +184,137 @@ def render_quote(passage: TurnPassage) -> str:
     return f"\n\n{body}\n{credit}\n\n"
 
 
-def _typed_figures(draft: str, identifiers: frozenset[str]) -> list[str]:
-    """Every figure the model typed itself. The draft is read with each placeholder removed, so a resolved figure or a
-    quoted passage is never mistaken for one."""
+@dataclass(frozen=True)
+class _Typed:
+    """A number the model wrote itself: how it is reported back, and how it was written (to check it against a result)."""
+
+    report: str
+    value: float
+    decimals: int  # digits after the point as written
+    scale: float  # 1, or 1e3 / 1e6 / 1e9 for K, M, B
+    symbol: str  # "", "$", "%" or "x"
+
+
+_WRITTEN = re.compile(
+    r"(?P<usd>\$)?\s*(?P<int>\d[\d,]*)(?:\.(?P<dec>\d+))?\s*"
+    r"(?P<suffix>%|pct\b|percent\b|usd\b|dollars?\b|x\b|×|bn\b|billion\b|million\b|thousand\b|[kmb]\b)?",
+    re.IGNORECASE,
+)
+_SCALES = {"k": 1e3, "thousand": 1e3, "m": 1e6, "million": 1e6, "b": 1e9, "bn": 1e9, "billion": 1e9}
+
+
+def _written(prose: str, at: int, report: str) -> _Typed | None:
+    """Read how the number at `at` was written: its value, decimals, scale suffix and unit symbol."""
+    match = _WRITTEN.search(prose, max(0, at))
+    if match is None or match.group("int") is None:
+        return None
+    suffix = (match.group("suffix") or "").lower()
+    symbol = (
+        "$"
+        if match.group("usd") or suffix in {"usd", "dollar", "dollars"}
+        else "%"
+        if suffix in {"%", "pct", "percent"}
+        else "x"
+        if suffix in {"x", "×"}
+        else ""
+    )
+    scale = _SCALES.get(suffix, 1.0)
+    whole, dec = match.group("int").replace(",", ""), match.group("dec") or ""
+    return _Typed(report, float(f"{whole}.{dec or '0'}"), len(dec), scale, symbol)
+
+
+def _typed_numbers(draft: str, identifiers: frozenset[str]) -> list[_Typed | str]:
+    """Every figure the model typed itself, as read (or, when it cannot be read, as a report to reject). The draft is
+    read with each placeholder removed, so a resolved figure or a quoted passage is never mistaken for one."""
     prose = _without_identifiers(
         _DAY_FIRST_DATE.sub(" ", _PLACEHOLDER.sub(" ", _QUOTE.sub(" ", draft))), identifiers
     )
-    disguised = [m.group(0) for m in _DISGUISED_FIGURE.finditer(prose)]
+    disguised = [(m.start(), m.group(0)) for m in _DISGUISED_FIGURE.finditer(prose)]
     prose = _DIGEST.sub(" ", _IDENTIFIER.sub(" ", prose))
     prose = _LIST_MARKER.sub("", _ISO_TIMESTAMP.sub(" ", prose))
-    typed = [_where(prose, t) for t in disguised]
-    typed += [_where(prose, m.group(0), m.start()) for m in _RANK_LABEL.finditer(prose)]
-    typed += [_where(prose, n.raw_string, n.start_char) for n in _NORMALIZER.extract_numbers(prose)]
-    return typed
+    found: list[_Typed | str] = []
+    for _, token in disguised:
+        report = _where(prose, token)
+        at = prose.find(token)
+        found.append((at >= 0 and _written(prose, at + (token.find("-") + 1), report)) or report)
+    for m in _RANK_LABEL.finditer(prose):
+        report = _where(prose, m.group(0), m.start())
+        found.append(
+            _written(prose, m.start() + len(m.group(0)) - len(m.group(0).split()[-1]), report)
+            or report
+        )
+    for n in _NORMALIZER.extract_numbers(prose):
+        report = _where(prose, n.raw_string, n.start_char)
+        found.append(_written(prose, n.start_char, report) or report)
+    return found
+
+
+def _typed_figures(draft: str, identifiers: frozenset[str]) -> list[str]:
+    """Every figure the model typed itself, reported with the words around it."""
+    return [t if isinstance(t, str) else t.report for t in _typed_numbers(draft, identifiers)]
+
+
+def _near(shown: float, decimals: int, scale: float, candidate: float) -> bool:
+    """Does `candidate` round to what was written? 0.62 and 61.67% and $1.09M are all roundings of what a tool returned."""
+    tolerance = 0.5 * 10.0**-decimals * scale
+    return abs(shown * scale - candidate) <= tolerance * (1 + 1e-9)
+
+
+def _fits(typed: _Typed, fact: TurnFact) -> bool:
+    """A typed figure matches a returned fact when the value agrees at the precision written and the unit agrees."""
+    unit, value = fact.unit, fact.value
+    if typed.symbol == "$":
+        return unit == "USD" and _near(typed.value, typed.decimals, typed.scale, value)
+    if typed.symbol == "%":
+        return (unit == "percent" and _near(typed.value, typed.decimals, 1.0, value)) or (
+            unit == "ratio" and _near(typed.value, typed.decimals, 0.01, value)
+        )
+    if typed.symbol == "x":
+        return unit in {"multiplier", "x"} and _near(
+            typed.value, typed.decimals, typed.scale, value
+        )
+    if typed.scale != 1.0:
+        return _near(typed.value, typed.decimals, typed.scale, value)
+    return _near(typed.value, typed.decimals, 1.0, value)
+
+
+def _figure_for(typed: _Typed, fact: TurnFact) -> FigureRef:
+    text = typed.report.split(" (in ", 1)[0]
+    return FigureRef(
+        fact_id=fact.fact_id,
+        value=fact.value,
+        unit=fact.unit,
+        as_of=fact.as_of,
+        data_origin=fact.data_origin,
+        source=fact.source,
+        text=text,
+    )
+
+
+def _trace(
+    typed: list[_Typed | str], facts: Mapping[str, TurnFact], numbers: frozenset[float]
+) -> tuple[list[FigureRef], list[str]]:
+    """Each typed figure against what the tools returned: the figures it cites, and the ones that match nothing.
+
+    A figure with a unit sign ($, %, x, K, M, B) can only match a returned fact of that unit. A bare number may also
+    match a number a result held that is not a figure with a unit (days left, a window, a count): it is allowed, and
+    has no figure chip because no unit-bearing fact stands behind it."""
+    cited: dict[str, FigureRef] = {}
+    unmatched: list[str] = []
+    for item in typed:
+        if isinstance(item, str):
+            unmatched.append(item)
+            continue
+        fact = next((f for f in facts.values() if _fits(item, f)), None)
+        if fact is not None:
+            cited.setdefault(fact.fact_id, _figure_for(item, fact))
+        elif not (item.symbol or item.scale != 1.0) and any(
+            _near(item.value, item.decimals, 1.0, n) for n in numbers
+        ):
+            continue
+        else:
+            unmatched.append(item.report)
+    return list(cited.values()), unmatched
 
 
 def _sources_of(quoted: list[TurnPassage]) -> tuple[SourceRef, ...]:
@@ -270,6 +396,8 @@ def assemble_draft(
     facts: Mapping[str, TurnFact],
     identifiers: frozenset[str] = frozenset(),
     passages: Mapping[str, TurnPassage] | None = None,
+    numbers: frozenset[float] = frozenset(),
+    trace_typed: bool = False,
 ) -> Assembled | Rejected:
     if not draft.strip():
         return Rejected(("the draft is empty",))
@@ -282,14 +410,22 @@ def assemble_draft(
         problems.append(
             "a placeholder is malformed; use exactly {{fact:<fact id>}} or {{quote:<passage id>}}"
         )
-    if typed := _typed_figures(draft, identifiers):
+    traced: list[FigureRef] = []
+    if trace_typed:
+        traced, unmatched = _trace(_typed_numbers(draft, identifiers), facts, numbers)
+        if unmatched:
+            problems.append(
+                "this figure matches no figure a tool returned this turn; write only figures from tool results "
+                "(rounded sensibly) or leave it out: " + ", ".join(unmatched)
+            )
+    elif typed := _typed_figures(draft, identifiers):
         problems.append(
             "write no figure yourself, use a {{fact:<id>}} placeholder instead of: "
             + ", ".join(typed)
         )
     if problems:
         return Rejected(tuple(problems))
-    shown = tuple(state.figures.values())
+    shown = tuple(dict.fromkeys([*state.figures.values(), *traced]))
     for index, passage in enumerate(state.quoted):
         text = text.replace(f"{_SENTINEL}{index}{_SENTINEL}", render_quote(passage))
     return Assembled(

@@ -69,7 +69,7 @@ def test_a_regulation_question_is_searched_first_and_quoted_in_one_model_call() 
 
 
 def test_a_retried_draft_keeps_the_prefetched_result_and_does_not_run_the_tool_again() -> None:
-    rt, llm = runtime([draft("The discrepancy is 16x."), draft(f"It is {FIGURE}.")])
+    rt, llm = runtime([draft("The discrepancy is 17x."), draft(f"It is {FIGURE}.")])
     out = turn(rt, "What is the discrepancy?")
     assert out.answer.attempts == 2 and out.steps == ("get_aml_dossier",)
     assert out.model_calls == 2

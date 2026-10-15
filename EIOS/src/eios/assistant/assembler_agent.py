@@ -29,6 +29,7 @@ from eios.assistant.assembly import (
 from eios.assistant.tools import (
     FACTS_KEY,
     IDENTIFIERS_KEY,
+    NUMBERS_KEY,
     ORIGINS_KEY,
     PASSAGES_KEY,
     PROPOSALS_KEY,
@@ -101,6 +102,8 @@ def final_event(author: str, answer: Answer, *, escalate: bool = True) -> Event:
 
 
 class AnswerAssembler(BaseAgent):
+    trace_typed: bool = False
+
     async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event]:
         state = ctx.session.state
         attempt = int(state.get(ATTEMPT_KEY, 0)) + 1
@@ -110,6 +113,8 @@ class AnswerAssembler(BaseAgent):
             facts=_turn_facts(state.get(FACTS_KEY, {})),
             identifiers=frozenset(state.get(IDENTIFIERS_KEY, [])),
             passages=_turn_passages(state.get(PASSAGES_KEY, {})),
+            numbers=frozenset(state.get(NUMBERS_KEY, [])),
+            trace_typed=self.trace_typed,
         )
         if isinstance(result, Assembled):
             answer = Answer(

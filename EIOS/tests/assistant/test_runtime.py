@@ -34,9 +34,9 @@ def test_a_grounded_answer_carries_the_governed_figure_and_its_source() -> None:
     assert out.answer.attempts == 1
 
 
-def test_a_typed_figure_is_sent_back_and_the_second_draft_is_shown() -> None:
+def test_a_figure_no_tool_returned_is_sent_back_and_the_second_draft_is_shown() -> None:
     runtime, llm = make_runtime(
-        [DOSSIER, draft("The discrepancy is 16x."), draft(f"It is {FIGURE}.")]
+        [DOSSIER, draft("The discrepancy is 17x."), draft(f"It is {FIGURE}.")]
     )
     out = _turn(runtime)
     assert out.answer.attempts == 2
@@ -51,13 +51,13 @@ def test_a_typed_figure_is_sent_back_and_the_second_draft_is_shown() -> None:
     assert "still valid" in retry_instruction
 
 
-def test_three_bad_drafts_fail_closed_with_no_figure() -> None:
-    bad = draft("The discrepancy is 16x.")
-    runtime, _ = make_runtime([DOSSIER, bad, bad, bad])
+def test_two_bad_drafts_fail_closed_with_no_figure() -> None:
+    bad = draft("The discrepancy is 17x.")
+    runtime, _ = make_runtime([DOSSIER, bad, bad])
     out = _turn(runtime)
     assert out.answer.text.startswith(FAIL_CLOSED_TEXT)
     assert out.answer.figures == ()
-    assert out.answer.attempts == 3
+    assert out.answer.attempts == 2
     assert "16" not in out.answer.text.split("(Reason")[0]
 
 
@@ -118,7 +118,7 @@ def test_the_second_turn_continues_the_same_thread() -> None:
 def test_a_tool_the_role_is_not_offered_cannot_produce_a_figure() -> None:
     partner = principal_for("alice", "partner_manager")
     attempt = draft(f"It is {FIGURE}.")
-    runtime, llm = make_runtime([DOSSIER, attempt, attempt, attempt])
+    runtime, llm = make_runtime([DOSSIER, attempt, attempt])
     out = _turn(runtime, principal=partner)
     assert out.status == "ok"  # ADK told the model the tool does not exist; the turn went on
     assert [t.error_code for t in out.tool_calls] == [
@@ -127,7 +127,7 @@ def test_a_tool_the_role_is_not_offered_cannot_produce_a_figure() -> None:
     assert any(r.tool == "get_aml_dossier" for r in runtime._port.refusals.entries)
     assert out.answer.figures == ()
     assert out.answer.text.startswith(FAIL_CLOSED_TEXT)
-    assert llm.cursor == 4
+    assert llm.cursor == 3
 
 
 def test_a_malformed_entity_id_is_refused_before_any_model_call() -> None:
@@ -204,3 +204,25 @@ def test_the_assistant_is_told_to_keep_answers_short() -> None:
         "Never state how many" in text
     )  # a count the model writes is a figure the judge will flag
     assert "in digits or in words" in text
+
+
+def test_a_plainly_written_figure_a_tool_returned_is_shown_on_the_first_draft() -> None:
+    runtime, llm = make_runtime([DOSSIER, draft("The discrepancy is 16x.")])
+    out = _turn(runtime)
+    assert (
+        out.status == "ok" and out.answer.attempts == 1 and len(llm.seen) == 2
+    )  # a tool call, then one draft
+    assert [f.fact_id for f in out.answer.figures] == ["aml.dossier:CR84920:discrepancy_multiplier"]
+    assert "16x" in out.answer.text
+
+
+def test_with_plain_figures_off_every_figure_must_still_be_a_placeholder() -> None:
+    from dataclasses import replace
+
+    from .conftest import SETTINGS
+
+    runtime, _ = make_runtime(
+        [DOSSIER, draft("The discrepancy is 16x."), draft(f"It is {FIGURE}.")],
+        settings=replace(SETTINGS, plain_figures=False),
+    )
+    assert _turn(runtime).answer.attempts == 2
