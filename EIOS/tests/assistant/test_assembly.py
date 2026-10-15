@@ -116,7 +116,7 @@ def test_fail_closed_answer_has_no_figure_and_none_of_the_models_numbers() -> No
     assert answer.figures == ()
     assert answer.failed_closed is True
     assert not any(ch.isdigit() for ch in answer.text)
-    assert MAX_ATTEMPTS == 3
+    assert MAX_ATTEMPTS == 2
 
 
 @pytest.mark.parametrize(

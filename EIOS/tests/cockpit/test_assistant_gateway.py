@@ -151,10 +151,10 @@ def test_the_body_names_the_assistant_status_and_each_figures_provenance(
 
 
 def test_a_failed_closed_answer_says_so_explicitly(client: TestClient) -> None:
-    bad = draft("The discrepancy is 16x.")
+    bad = draft("The discrepancy is 17x.")
     body = _ask(
         client,
-        [call("get_aml_dossier", entity_id="CR84920"), bad, bad, bad],
+        [call("get_aml_dossier", entity_id="CR84920"), bad, bad],
         "aml_investigator",
         "CR84920",
         "What is the discrepancy?",

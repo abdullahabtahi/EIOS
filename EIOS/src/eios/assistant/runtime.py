@@ -36,6 +36,7 @@ from eios.assistant.timing import TimedSessionService, TimingPlugin, TurnTimer, 
 from eios.assistant.tools import (
     FACTS_KEY,
     IDENTIFIERS_KEY,
+    NUMBERS_KEY,
     ORIGINS_KEY,
     PASSAGES_KEY,
     PROPOSALS_KEY,
@@ -136,6 +137,7 @@ def _fresh_turn_state(
         PASSAGES_KEY: {},
         ORIGINS_KEY: [],
         IDENTIFIERS_KEY: [],
+        NUMBERS_KEY: [],
         PROPOSALS_KEY: [],
         "entity_id": entity_id,
         "entity_context": entity_context or {},
@@ -245,6 +247,7 @@ class AssistantRuntime:
             model=self._model or self._llm(model_id),
             prefetch=self._settings.prefetch,
             hedge_after_s=self._settings.hedge_after_s,
+            plain_figures=self._settings.plain_figures,
         )
         app = App(name=APP_NAME, root_agent=agent, plugins=list(self._plugins))
         runner = Runner(app=app, session_service=self._sessions, auto_create_session=True)

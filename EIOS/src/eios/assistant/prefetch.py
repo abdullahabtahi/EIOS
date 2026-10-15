@@ -25,6 +25,7 @@ from google.adk.events.event_actions import EventActions
 from eios.assistant.tools import (
     FACTS_KEY,
     IDENTIFIERS_KEY,
+    NUMBERS_KEY,
     ORIGINS_KEY,
     PASSAGES_KEY,
     PROPOSALS_KEY,
@@ -109,6 +110,7 @@ class Prefetcher(BaseAgent):
                     SOURCES_KEY,
                     ORIGINS_KEY,
                     IDENTIFIERS_KEY,
+                    NUMBERS_KEY,
                     PROPOSALS_KEY,
                 )
             }
@@ -149,6 +151,7 @@ class _Defaulting(dict[str, Any]):
         SOURCES_KEY: [],
         ORIGINS_KEY: [],
         IDENTIFIERS_KEY: [],
+        NUMBERS_KEY: [],
         PROPOSALS_KEY: [],
     }
 
