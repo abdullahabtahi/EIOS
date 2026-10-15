@@ -12,6 +12,7 @@ const CANVAS_FILES = new Set([
   'components/cockpit/common/topological-graph.tsx',
   'components/cockpit/common/churn-radar-scatter.tsx',
   'components/cockpit/common/causal-dag-canvas.tsx',
+  'components/cockpit/geo/geo-map-style.ts',
 ]);
 const ALLOWED_HUES = new Set(['slate', 'gray', 'zinc', 'neutral', 'stone', 'red', 'green', 'amber', 'blue']);
 const PREFIX = '(?:text|bg|border|ring|fill|stroke|from|to|via|divide|outline|decoration|shadow|accent|caret|placeholder)';

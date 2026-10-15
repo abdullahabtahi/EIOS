@@ -29,6 +29,8 @@ dependencies = [
     "uvicorn>=0.54.0",
     "google-cloud-bigquery>=3.25.0",
     "limits>=3.13",
+    "pycountry>=26.2.16",
+    "scipy>=1.18.1",
 ]
 
 [project.optional-dependencies]

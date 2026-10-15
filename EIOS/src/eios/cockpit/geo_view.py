@@ -1,0 +1,115 @@
+"""The geo engine's results shaped for the map: corridors, flagged IP-versus-KYC country pairs and tier exposure.
+
+Pure: a snapshot in, a JSON-ready dict out. The planted truth and the evaluation against it never reach this payload, and a corridor whose tier is
+unknown (no reference layer) carries `null`, never `low`.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from eios.dataplane.aml_geo import GeoSnapshot
+
+SOURCE = (
+    "AML engine over the seeded world (IP country, payment-instrument country, transaction amounts)"
+)
+_SAMPLE_ACCOUNTS = 5
+
+
+def _corridors(snap: GeoSnapshot) -> list[dict[str, Any]]:
+    known = bool(snap.tiers)
+    return [
+        {
+            "origin": r.origin,
+            "destination": r.destination,
+            "volume_usd": round(float(r.volume_usd), 2),
+            "accounts": int(r.accounts),
+            "events": int(r.events),
+            "tier": r.tier if known else None,
+        }
+        for r in snap.corridors.itertuples()
+    ]
+
+
+def _mismatch_pairs(snap: GeoSnapshot) -> list[dict[str, Any]]:
+    home = snap.world.clients.set_index("client_id")["country"]
+    flagged = snap.clients[snap.clients["mismatch_flag"]].copy()
+    flagged["kyc_country"] = flagged["client_id"].map(home)
+    pairs: list[dict[str, Any]] = []
+    for (kyc, ip), group in flagged.groupby(["kyc_country", "top_foreign_ip"]):
+        ranked = group.sort_values(["mismatch_p", "client_id"])
+        pairs.append(
+            {
+                "kyc_country": kyc,
+                "ip_country": ip,
+                "accounts": len(group),
+                "events": int(group["events"].sum()),
+                "foreign_events": int(group["foreign_ip_events"].sum()),
+                "volume_usd": round(float(group["volume_usd"].sum()), 2),
+                "sample_accounts": ranked["client_id"].head(_SAMPLE_ACCOUNTS).tolist(),
+            }
+        )
+    return sorted(pairs, key=lambda p: (-p["accounts"], p["kyc_country"], p["ip_country"]))
+
+
+def _gateways(snap: GeoSnapshot) -> list[dict[str, Any]]:
+    """Shared foreign exits with at least one flagged account: where they are, who uses them and from where."""
+    lenses = snap.sessions
+    if lenses is None:
+        return []
+    home = snap.world.clients.set_index("client_id")["country"]
+    flagged = snap.clients[snap.clients["exit_flag"].fillna(False).astype(bool)]
+    jumps = snap.clients.set_index("client_id")["jumps"]
+    rows: list[dict[str, Any]] = []
+    for g in lenses.gateways[lenses.gateways["shared_exit"]].itertuples():
+        users = flagged[flagged["exit_gateway"] == g.gateway_id]
+        if users.empty:
+            continue
+        homes = users["client_id"].map(home).value_counts()
+        rows.append(
+            {
+                "gateway_id": g.gateway_id,
+                "country": g.country,
+                "accounts": len(users),
+                "home_countries": [{"iso2": c, "accounts": int(n)} for c, n in homes.items()],
+                "impossible_jumps": int(users["client_id"].map(jumps).fillna(0).sum()),
+                "sample_accounts": sorted(users["client_id"])[:_SAMPLE_ACCOUNTS],
+            }
+        )
+    return sorted(rows, key=lambda r: (-r["accounts"], r["gateway_id"]))
+
+
+def _hubs_suppressed(snap: GeoSnapshot) -> int | None:
+    return None if snap.sessions is None else int(snap.sessions.gateways["hub"].sum())
+
+
+def _coverage(snap: GeoSnapshot) -> dict[str, int | None]:
+    """How many clients each lens can judge at all. Computed from the engine's own statistics, never from the truth."""
+    clients = snap.clients
+    return {
+        "clients": len(clients),
+        "mismatch_assessable": int(clients["mismatch_assessable"].sum()),
+        "corridor_assessable": int(clients["corridor_assessable"].sum()) if snap.tiers else None,
+    }
+
+
+def flows_payload(snap: GeoSnapshot) -> dict[str, Any]:
+    corridors = _corridors(snap)
+    known = bool(snap.tiers)
+    exposure: dict[str, float] | None = None
+    if known:
+        exposure = {"low": 0.0, "medium": 0.0, "high": 0.0}
+        for row in corridors:
+            exposure[row["tier"]] += row["volume_usd"]
+        exposure = {tier: round(volume, 2) for tier, volume in exposure.items()}
+    return {
+        "source": SOURCE,
+        "as_of": snap.world.config.as_of.isoformat(),
+        "tiers_known": known,
+        "corridors": corridors,
+        "mismatch_pairs": _mismatch_pairs(snap),
+        "exposure": exposure,
+        "coverage": _coverage(snap),
+        "gateways": _gateways(snap),
+        "hubs_suppressed": _hubs_suppressed(snap),
+    }

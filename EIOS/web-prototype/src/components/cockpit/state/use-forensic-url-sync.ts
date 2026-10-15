@@ -13,6 +13,8 @@ import { PersonaRole, normalizePersonaRole } from './cockpit-types';
 export function useForensicUrlSync() {
   const { state, setRole, selectTriageItem, selectEntity, setWhatIfParams } = useCockpit();
   const isInitialized = React.useRef(false);
+  // The workstation's first load selects its own first case; an entity asked for in the URL is applied after that load.
+  const requestedEntity = React.useRef<string | null>(null);
 
   // 1. Initial Deserialization from URL Search Params
   React.useEffect(() => {
@@ -35,6 +37,7 @@ export function useForensicUrlSync() {
     }
 
     if (urlEntity) {
+      requestedEntity.current = urlEntity;
       selectEntity(urlEntity);
     }
 
@@ -45,6 +48,14 @@ export function useForensicUrlSync() {
       }
     }
   }, [setRole, selectTriageItem, selectEntity, setWhatIfParams]);
+
+  // 1b. Re-apply the URL's entity once the workstation has loaded, so a deep link opens that account's case
+  React.useEffect(() => {
+    const wanted = requestedEntity.current;
+    if (!wanted || state.isLoading || state.caseStatus !== 'ready') return;
+    requestedEntity.current = null;
+    if (state.activeEntityId !== wanted) selectEntity(wanted);
+  }, [state.isLoading, state.caseStatus, state.activeEntityId, selectEntity]);
 
   // 2. Serializing Active Cockpit State back to URL
   React.useEffect(() => {

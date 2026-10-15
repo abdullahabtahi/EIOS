@@ -146,17 +146,22 @@ describe('AppNavRail: always-visible icon strip that expands on hover', () => {
 });
 
 describe('AppNavRail: content', () => {
-  it('lists a single Workstations entry plus Geospatial and OpenBB flagged SOON', () => {
+  it('lists Workstations, a Geospatial link, and OpenBB flagged SOON', () => {
     renderRail();
     const nav = screen.getByRole('navigation', { name: 'Primary' });
-    expect(within(nav).getAllByRole('button')).toHaveLength(3);
     expect(within(nav).getByRole('button', { name: /Workstations/ })).toBeInTheDocument();
-    const geo = within(nav).getByRole('button', { name: /Geospatial/ });
+    const geo = within(nav).getByRole('link', { name: /Geospatial/ });
+    expect(geo).toHaveAttribute('href', '/cockpit/geospatial');
+    expect(within(geo).queryByText('SOON')).not.toBeInTheDocument();
     const bb = within(nav).getByRole('button', { name: /OpenBB/ });
-    expect(geo).toHaveAttribute('aria-disabled', 'true');
     expect(bb).toHaveAttribute('aria-disabled', 'true');
-    expect(within(geo).getByText('SOON')).toBeInTheDocument();
     expect(within(bb).getByText('SOON')).toBeInTheDocument();
+  });
+
+  it('marks the section it is told is current, and links back to the cockpit from elsewhere', () => {
+    renderRail({ currentId: 'geospatial' });
+    expect(screen.getByTestId('nav-app-geospatial')).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByTestId('nav-app-workstations')).toHaveAttribute('href', '/cockpit');
   });
 
   it('does not duplicate the header persona switcher (no per-persona rows)', () => {
@@ -177,7 +182,7 @@ describe('AppNavRail: content', () => {
 
   it('does nothing when a SOON section is clicked', () => {
     renderRail();
-    fireEvent.click(screen.getByRole('button', { name: /Geospatial/ }));
+    fireEvent.click(screen.getByRole('button', { name: /OpenBB/ }));
     expect(screen.getByTestId('active-role')).toHaveTextContent('executive');
   });
 
