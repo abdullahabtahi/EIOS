@@ -78,3 +78,9 @@ confidence and blocking. Sensitive Data Protection is off on purpose: answers ca
   `orgpolicy.policyAdmin`. Re-enable once granted. [ASSUMPTION: hackathon project]
 - **Public invocation** is allowed for cockpit_web only (`allow_public_invocation`); the API stays private.
 - **Evidence bucket retention lock** disabled (`evidence_lock_retention = false`) to avoid an irreversible lock.
+
+## Reviewer access (hackathon review)
+Shared accounts for reviewers and judges, shown on the login page. The password is public by design, so the accounts only see the demo's synthetic data; rotate or remove them when the review ends.
+1. Create the accounts: `EIOS_REVIEWER_PASSWORD=<12+ characters> uv run python -m tools.seed_demo_operators --project <id> --credentials-file <new file> --reviewers --skip-demo-operators`. Add `--owner-email you@example.com` to authorise a real mailbox as a `compliance_head` (its generated password goes to the credentials file). `--skip-demo-operators` keeps the three standard accounts' passwords unchanged.
+2. Publish the card: set `demo_access` in the local tfvars (JSON, see `variables.tf`) and apply the web service. The web service reads it at run time from `EIOS_DEMO_ACCESS`; nothing is in git or in the image.
+3. Take it down: remove `demo_access`, apply, then disable or rotate the accounts (reset their password with the same tool, or disable them in Identity Platform).

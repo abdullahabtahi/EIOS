@@ -90,3 +90,49 @@ def test_credentials_file_is_owner_only_and_never_overwritten(tmp_path) -> None:
     assert stat.S_IMODE(os.stat(path).st_mode) == 0o600
     with pytest.raises(FileExistsError):
         write_credentials(path, ["other"])
+
+
+def test_the_reviewer_accounts_share_one_password_and_cover_the_four_eyes_flow() -> None:
+    from tools.seed_demo_operators import planned_operators
+
+    plan = planned_operators(
+        include_demo=False, reviewers=True, env={"EIOS_REVIEWER_PASSWORD": "judge-demo-2026"}
+    )
+    assert {p.password for p in plan} == {"judge-demo-2026"} and not any(p.generated for p in plan)
+    roles = [p.role for p in plan]
+    assert roles.count("approver") == 2 and roles.count("analyst") == 1  # two different approvers
+    assert len({p.email for p in plan}) == 3
+
+
+@pytest.mark.parametrize("password", [None, "", "short", "   "])
+def test_a_shared_reviewer_password_that_is_missing_or_weak_is_refused(
+    password: str | None,
+) -> None:
+    from tools.seed_demo_operators import planned_operators
+
+    env = {} if password is None else {"EIOS_REVIEWER_PASSWORD": password}
+    with pytest.raises(ValueError):
+        planned_operators(include_demo=False, reviewers=True, env=env)
+
+
+def test_the_owner_mailbox_becomes_a_compliance_head_with_a_generated_password() -> None:
+    from eios.cockpit.auth import ALL_ROLES
+    from tools.seed_demo_operators import planned_operators
+
+    (owner,) = planned_operators(include_demo=False, owner_email="  Person@Gmail.com ", env={})
+    assert owner.email == "person@gmail.com" and owner.role == "compliance_head"
+    assert owner.role in ALL_ROLES and owner.generated and len(owner.password) >= 16
+
+
+def test_an_owner_value_that_is_not_an_email_is_refused() -> None:
+    from tools.seed_demo_operators import planned_operators
+
+    with pytest.raises(ValueError):
+        planned_operators(include_demo=False, owner_email="not-an-email", env={})
+
+
+def test_skipping_the_standard_operators_leaves_them_out_of_the_plan() -> None:
+    from tools.seed_demo_operators import planned_operators
+
+    assert planned_operators(include_demo=False, env={}) == []
+    assert len(planned_operators(include_demo=True, env={})) == len(DEMO_OPERATORS)
