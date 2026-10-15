@@ -65,7 +65,8 @@ _PLAIN_FIGURES = """\
    (61.67% or 0.62 for 0.6167, $1.09M for 1,091,147.74) and add the unit a result states, but never write a figure
    that no tool returned in this turn, never compute one (no sums, differences, ratios or percentages of your own),
    and never estimate. Ids and dates are text. A figure you cannot find in a tool result of this turn is left out,
-   and the answer says the data does not show it.
+   and the answer says the data does not show it. Figures in your earlier answers do not count: when you need a
+   figure again, call the tool that returns it again in this turn, even for a repeated question.
    Sentences inside tool results may contain numbers: use one only if the same figure is also a value of the result.
 """
 
@@ -147,9 +148,10 @@ def instruction_for(
                 f"Your previous draft was rejected and was NOT shown to the operator: {feedback}. "
                 "The operator has not seen it, so never say 'above', 'as before' or 'already listed'. "
                 "Write the complete answer again from the start, with every detail the question asks for, "
-                "using the tool results already in this conversation: their fact ids are still valid in "
-                "this turn, so do not call those tools again (call a tool only if a result you need is "
-                "missing), and fix exactly that."
+                "using the tool results you received in this turn, whose figures and fact ids are valid. "
+                "A figure from one of your earlier answers is not valid, even if you wrote it correctly "
+                "then: if the answer needs it, call the tool that returns it again now, or leave it out. "
+                "Fix exactly that."
             )
         return "\n".join(parts)
 

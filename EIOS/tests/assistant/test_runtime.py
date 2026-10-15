@@ -44,11 +44,11 @@ def test_a_figure_no_tool_returned_is_sent_back_and_the_second_draft_is_shown() 
     retry_instruction = str(llm.seen[-1].config.system_instruction)
     assert "rejected" in retry_instruction
     # The ids of this turn's results are still valid after a rejection, so the model must not re-call its tools.
-    assert "still valid" in retry_instruction
+    assert "call the tool that returns it again now" in retry_instruction
     # The operator never saw the rejected draft, so the retry must not point back at it ("listed above").
     assert "has not seen" in retry_instruction
     # The ids of this turn's results are still valid after a rejection, so the model must not re-call its tools.
-    assert "still valid" in retry_instruction
+    assert "call the tool that returns it again now" in retry_instruction
 
 
 def test_two_bad_drafts_fail_closed_with_no_figure() -> None:
