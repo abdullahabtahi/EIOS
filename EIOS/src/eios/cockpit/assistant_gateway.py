@@ -53,6 +53,22 @@ async def warm_up() -> None:
         _LOG.warning("assistant warm-up skipped", exc_info=True)
 
 
+SHUTDOWN_DRAIN_S = 8.0  # Cloud Run gives a stopping instance 10 s after SIGTERM
+
+
+async def drain_sessions(timeout_s: float = SHUTDOWN_DRAIN_S) -> None:
+    """Write the conversation events still held in memory before the process exits (write-behind sessions)."""
+    runtime = _runtime
+    if runtime is None:
+        return
+    try:
+        await asyncio.wait_for(runtime.flush(), timeout=timeout_s)
+    except TimeoutError:
+        _LOG.error("assistant sessions: some events were not written before shutdown")
+    except Exception:
+        _LOG.exception("assistant sessions could not be drained at shutdown")
+
+
 def set_runtime_for_testing(runtime: AssistantRuntime | None) -> None:
     global _runtime
     with _lock:

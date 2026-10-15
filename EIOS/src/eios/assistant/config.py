@@ -15,6 +15,10 @@ DEFAULT_HEDGE_AFTER_S = 3.0  # [ASSUMPTION] the default model answers in about 2
 DEFAULT_MAX_LLM_CALLS = 12  # [ASSUMPTION] tool rounds plus up to three assembly attempts
 
 
+def _on(value: str) -> bool:
+    return value.strip().lower() not in {"0", "false", "no", "off"}
+
+
 class AssistantConfigError(RuntimeError):
     """The assistant refuses to start: a required setting is missing for this environment."""
 
@@ -31,6 +35,8 @@ class AssistantSettings:
     max_llm_calls: int
     history_turns: int
     hedge_after_s: float = DEFAULT_HEDGE_AFTER_S
+    # the turn reads and writes its session in memory and the durable store catches up after (session_cache.py)
+    session_write_behind: bool = True
     prefetch: bool = (
         True  # run the obvious tool before the model's first turn (one model call instead of two)
     )
@@ -55,6 +61,6 @@ class AssistantSettings:
             max_llm_calls=int(source.get("EIOS_ASSISTANT_MAX_LLM_CALLS", DEFAULT_MAX_LLM_CALLS)),
             history_turns=int(source.get("EIOS_ASSISTANT_HISTORY_TURNS", DEFAULT_HISTORY_TURNS)),
             hedge_after_s=float(source.get("EIOS_ASSISTANT_HEDGE_AFTER_S", DEFAULT_HEDGE_AFTER_S)),
-            prefetch=source.get("EIOS_ASSISTANT_PREFETCH", "1").strip().lower()
-            not in {"0", "false", "no", "off"},
+            prefetch=_on(source.get("EIOS_ASSISTANT_PREFETCH", "1")),
+            session_write_behind=_on(source.get("EIOS_ASSISTANT_SESSION_WRITE_BEHIND", "1")),
         )

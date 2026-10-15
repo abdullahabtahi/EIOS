@@ -14,6 +14,7 @@ from google.adk.sessions.base_session_service import BaseSessionService
 from google.adk.sessions.in_memory_session_service import InMemorySessionService
 
 from eios.assistant.config import AssistantConfigError, AssistantSettings
+from eios.assistant.session_cache import WriteBehindSessionService
 
 APP_NAME = "eios-assistant"
 NO_ENTITY = "-"
@@ -53,7 +54,8 @@ def build_session_service(
             FirestoreSessionService,
         )
 
-        return FirestoreSessionService(client=client_factory(settings.firestore_database))
+        durable = FirestoreSessionService(client=client_factory(settings.firestore_database))
+        return WriteBehindSessionService(durable) if settings.session_write_behind else durable
     if not settings.local:
         raise AssistantConfigError(
             f"EIOS_PERSISTENCE=firestore must be set in the '{settings.environment}' environment; "
