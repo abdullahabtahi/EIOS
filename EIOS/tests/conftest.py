@@ -22,3 +22,10 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
         for marker, flag in _OPT_IN_FLAGS.items():
             if marker in item.keywords and os.environ.get(flag) != "1":
                 item.add_marker(pytest.mark.skip(reason=f"{marker}: set {flag}=1 to run"))
+
+
+import os as _os  # noqa: E402
+
+_os.environ.setdefault(
+    "EIOS_RATE_LIMITS", "off"
+)  # rate limits are tested on their own, with small limits

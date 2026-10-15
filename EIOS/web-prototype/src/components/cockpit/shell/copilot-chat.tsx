@@ -24,6 +24,7 @@ export function describeCopilotFailure(status: number | null, reason?: string): 
   if (status === null) return 'The Copilot could not be reached. No answer was generated.';
   if (status === 401) return 'Your session is not authorized for the Copilot (HTTP 401). Sign in again.';
   if (status === 403) return 'Your role is not permitted to use the Copilot (HTTP 403).';
+  if (status === 429) return 'Too many questions in a short time. Wait a moment and ask again. No answer was generated.';
   if (status === 503) return 'The EIOS backend is offline. No answer was generated.';
   return `The Copilot request failed (HTTP ${status}). No answer was generated.`;
 }

@@ -53,6 +53,7 @@ from eios.cockpit.auth import (
 )
 from eios.cockpit.executive_view import format_metric
 from eios.cockpit.governance_shelf import GovernedActionCard
+from eios.cockpit.ratelimit import limit_copilot
 from eios.cockpit.session import SessionManager
 from eios.cockpit.shell import CockpitShellPresenter
 from eios.dataplane.aml_service import EngineAMLService, UnknownAccountError
@@ -183,12 +184,15 @@ class AuthorizeActionResponse(BaseModel):
     )
 
 
+MAX_QUERY_CHARS = 2000  # [ASSUMPTION] a long prompt is a cheap way to spend model budget; no real question needs more
+
+
 class CopilotQueryRequest(BaseModel):
     """`activeEntityId` is the name the browser sends today; both names are accepted until the browser is aligned."""
 
     model_config = ConfigDict(populate_by_name=True)
 
-    query: str
+    query: str = Field(min_length=1, max_length=MAX_QUERY_CHARS)
     context_entity_id: str | None = Field(
         default=None, validation_alias=AliasChoices("context_entity_id", "activeEntityId")
     )
@@ -1181,7 +1185,7 @@ async def copilot_models() -> dict[str, Any]:
     return {"models": runtime.registry.public()}
 
 
-@router.post(COPILOT_QUERY_PATH)
+@router.post(COPILOT_QUERY_PATH, dependencies=[Depends(limit_copilot)])
 async def query_copilot(
     req: CopilotQueryRequest, operator: Operator | None = Depends(current_operator)
 ) -> dict[str, Any]:
