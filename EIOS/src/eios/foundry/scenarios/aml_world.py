@@ -14,13 +14,14 @@ import numpy as np
 import pandas as pd
 
 from eios.foundry.rng import RNGManager
-from eios.foundry.scenarios import aml_hubs, aml_rings, aml_wash
+from eios.foundry.scenarios import aml_geo, aml_hubs, aml_rings, aml_wash
 from eios.foundry.scenarios.aml_behaviour import NORMAL, SCALPER, WEALTHY, client_activity
 from eios.foundry.scenarios.aml_config import (
     STORY_DEVICE_RING,
     STORY_IDS,
     STORY_PARTNER,
     STORY_RING_HEAD,
+    STORY_WASH,
     AmlWorldConfig,
 )
 from eios.foundry.scenarios.aml_planted import Planted, merge
@@ -37,6 +38,7 @@ class AmlTruth:
 
     tags: dict[str, tuple[str, ...]]
     rings: dict[str, tuple[str, ...]]
+    geo: aml_geo.GeoTruth | None = None
 
     def malicious(self) -> frozenset[str]:
         return frozenset(c for c, found in self.tags.items() if MALICIOUS_TAGS & set(found))
@@ -50,6 +52,7 @@ class AmlWorld:
     trades: pd.DataFrame
     edges: pd.DataFrame
     truth: AmlTruth
+    geo_flows: pd.DataFrame | None = None
 
 
 @dataclass(frozen=True)
@@ -82,13 +85,24 @@ def build_aml_world(config: AmlWorldConfig) -> AmlWorld:
     behaviour = _behaviour(config, clients, roles, streams.get_generator("aml.behaviour"))
     txns = [*behaviour[0], *planted.txns]
     trades = [*behaviour[1], *planted.trades]
+    transactions = transactions_frame(txns)
+    geo_flows, geo_truth = aml_geo.build_geo(
+        config,
+        clients,
+        transactions,
+        story_rings=roles.rings[:2],
+        structuring=roles.structuring,
+        wash=(*roles.wash, STORY_WASH),
+        rng=streams.get_generator("aml.geo"),
+    )
     return AmlWorld(
         config=config,
         clients=clients,
-        transactions=transactions_frame(txns),
+        transactions=transactions,
         trades=trades_frame(trades),
         edges=edges_frame(planted.edges),
-        truth=AmlTruth(tags=planted.tags, rings=planted.rings),
+        truth=AmlTruth(tags=planted.tags, rings=planted.rings, geo=geo_truth),
+        geo_flows=geo_flows,
     )
 
 
