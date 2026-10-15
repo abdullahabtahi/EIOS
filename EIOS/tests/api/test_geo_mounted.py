@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from eios.api.app import app
-from eios.cockpit.geo import GEO_ACCOUNT_PATH, GEO_FLOWS_PATH, GEO_REFERENCE_PATH
+from eios.cockpit.geo import GEO_ACCOUNT_PATH, GEO_ADDRESS_PATH, GEO_FLOWS_PATH, GEO_REFERENCE_PATH
 
 
 def _paths() -> set[str]:
@@ -11,7 +11,7 @@ def _paths() -> set[str]:
 
 
 def test_the_production_api_app_serves_every_geo_route() -> None:
-    assert {GEO_REFERENCE_PATH, GEO_FLOWS_PATH, GEO_ACCOUNT_PATH} <= _paths()
+    assert {GEO_REFERENCE_PATH, GEO_FLOWS_PATH, GEO_ACCOUNT_PATH, GEO_ADDRESS_PATH} <= _paths()
 
 
 def test_the_aml_graph_route_the_workstation_calls_is_on_the_same_app() -> None:

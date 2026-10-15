@@ -12,17 +12,22 @@ import re
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 
 from eios.cockpit.auth import current_operator
 from eios.cockpit.geo_account import account_payload
+from eios.cockpit.geo_address import address_payload
 from eios.cockpit.geo_view import flows_payload
 from eios.dataplane.geo_plane import geo_snapshot, graph_store
+from eios.netintel.store import NetUnavailable, SnapshotReader
+from eios.netintel.store import reader_from_env as net_reader_from_env
 from eios.reference.reader import ReferenceReader, ReferenceUnavailable, reader_from_env
 
 _LOG = logging.getLogger("eios.cockpit.geo")
 GEO_REFERENCE_PATH = "/api/cockpit/geo/reference"
 GEO_FLOWS_PATH = "/api/cockpit/geo/flows"
 GEO_ACCOUNT_PATH = "/api/cockpit/geo/accounts/{account_id}"
+GEO_ADDRESS_PATH = "/api/cockpit/geo/address"
 _ACCOUNT_ID = re.compile(r"^[A-Z]{2}[0-9]{3,8}$")
 
 router = APIRouter(tags=["Cockpit Geo"], dependencies=[Depends(current_operator)])
@@ -80,3 +85,42 @@ def geo_account(account_id: str) -> dict[str, Any]:
     if payload is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="unknown_account")
     return payload
+
+
+class AddressQuery(BaseModel):
+    address: str = Field(max_length=64)
+
+
+@functools.cache
+def get_net_reader() -> SnapshotReader | None:
+    return net_reader_from_env()
+
+
+@router.post(GEO_ADDRESS_PATH)
+def geo_address(
+    query: AddressQuery, reader: SnapshotReader | None = Depends(get_net_reader)
+) -> dict[str, Any]:
+    """What the network reference says about one address. It is a POST so the address stays out of URLs and access
+    logs, and nothing on this path logs it: an investigator may be typing a suspect's address."""
+    if reader is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="address_check_unavailable")
+    try:
+        snapshot = reader.snapshot()
+    except NetUnavailable as exc:
+        _LOG.warning("address-check snapshot unavailable: %s", exc)
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, detail="address_check_unavailable"
+        ) from exc
+    except Exception as exc:
+        _LOG.exception("address-check snapshot could not be read")
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, detail="address_check_unavailable"
+        ) from exc
+    try:
+        return address_payload(snapshot.lookup(query.address))
+    except (
+        ValueError
+    ):  # not an IP address; the message would repeat the input, so it is not passed on
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_CONTENT, detail="not_an_ip_address"
+        ) from None
