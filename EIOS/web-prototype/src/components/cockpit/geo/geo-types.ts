@@ -44,48 +44,47 @@ export interface GeoReference {
 /** [longitude, latitude] */
 export type LngLat = readonly [number, number];
 
-export interface Jurisdiction {
-  readonly code: string;
-  readonly name: string;
-  readonly position: LngLat;
-  readonly riskTier: RiskTier;
-  readonly volumeUsd: number;
-}
-
-export interface Corridor {
-  readonly id: string;
+/** Customer flows from the geo engine (`/api/cockpit/geo/flows`). Countries are placed using the reference layer. */
+export interface FlowCorridor {
   readonly origin: string;
   readonly destination: string;
-  readonly volumeUsd: number;
-  readonly riskTier: RiskTier;
-  readonly accountCount: number;
+  readonly volume_usd: number;
+  readonly accounts: number;
+  readonly events: number;
+  /** null when jurisdiction tiers are unknown: never "low". */
+  readonly tier: RiskTier | null;
 }
 
-export interface Mismatch {
-  readonly accountId: string;
-  readonly kycCountry: string;
-  readonly ipCountry: string;
-  readonly volumeUsd: number;
+export interface MismatchPair {
+  readonly kyc_country: string;
+  readonly ip_country: string;
+  readonly accounts: number;
+  readonly events: number;
+  readonly foreign_events: number;
+  readonly volume_usd: number;
+  readonly sample_accounts: readonly string[];
 }
 
-export interface GeoEvidence {
+export interface GeoFlows {
   readonly source: string;
-  readonly asOf: string;
-  readonly jurisdictions: readonly Jurisdiction[];
-  readonly corridors: readonly Corridor[];
-  readonly mismatches: readonly Mismatch[];
+  readonly as_of: string;
+  readonly tiers_known: boolean;
+  readonly corridors: readonly FlowCorridor[];
+  readonly mismatch_pairs: readonly MismatchPair[];
+  /** Corridor volume by tier; null when tiers are unknown. */
+  readonly exposure: Readonly<Record<RiskTier, number>> | null;
 }
 
 export type GeoSelection =
   | { readonly kind: 'country'; readonly id: string }
-  | { readonly kind: 'corridor'; readonly id: string }
-  | { readonly kind: 'mismatch'; readonly id: string }
+  | { readonly kind: 'corridor'; readonly id: string } // `${origin}>${destination}`
+  | { readonly kind: 'mismatch'; readonly id: string } // `${kyc_country}>${ip_country}`
   | null;
 
 export interface GeoSummary {
   /** null when no corridor was measured: never zero, never healthy. */
   readonly corridorVolumeUsd: number | null;
-  readonly volumeByTier: Readonly<Record<RiskTier, number>>;
-  readonly topCorridors: readonly Corridor[];
-  readonly mismatchCount: number;
+  readonly exposure: Readonly<Record<RiskTier, number>> | null;
+  readonly topCorridors: readonly FlowCorridor[];
+  readonly flaggedAccounts: number;
 }

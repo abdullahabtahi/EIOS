@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import React from 'react';
+import { FLOWS } from './flows-fixture';
 import { REFERENCE } from './reference-fixture';
 
 vi.mock('@vis.gl/react-google-maps', () => ({
@@ -19,16 +20,23 @@ const authFetch = vi.fn();
 vi.mock('@/lib/auth/token', () => ({ authFetch: (...args: unknown[]) => authFetch(...args) }));
 
 import { GeoWorkspace } from '@/components/cockpit/geo/geo-workspace';
-import { GEO_FIXTURE } from '@/components/cockpit/geo/geo-fixture';
 import { describeSelection } from '@/components/cockpit/geo/geo-format';
 
-const respond = (status: number, body: unknown = {}) =>
-  authFetch.mockResolvedValue({ ok: status >= 200 && status < 300, status, json: async () => body });
+type Reply = { status: number; body?: unknown };
+/** Route the two endpoints independently, as the backend does. */
+function serve(reference: Reply, flows: Reply) {
+  authFetch.mockImplementation(async (url: string) => {
+    const r = url.includes('/geo/flows') ? flows : reference;
+    return { ok: r.status >= 200 && r.status < 300, status: r.status, json: async () => r.body ?? {} };
+  });
+}
+const OK = (body: unknown): Reply => ({ status: 200, body });
+const DOWN: Reply = { status: 503 };
 
 beforeEach(() => {
   vi.unstubAllEnvs();
   authFetch.mockReset();
-  respond(200, REFERENCE);
+  serve(OK(REFERENCE), OK(FLOWS));
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -57,62 +65,87 @@ describe('GeoWorkspace', () => {
     render(<GeoWorkspace />);
     const panel = screen.getByRole('complementary', { name: 'Geo copilot' });
     expect(within(panel).getByText('Not connected')).toBeInTheDocument();
+    expect(within(panel).queryByLabelText('Message geo copilot')).not.toBeInTheDocument(); // collapsed by default
+    fireEvent.click(within(panel).getByRole('button', { name: /Geo copilot/ }));
     expect(within(panel).getByLabelText('Message geo copilot')).toBeDisabled();
   });
 
-  it('shows reference figures with their sources once the reference layer loads', async () => {
+  it('shows reference and engine figures with their sources once both load', async () => {
     render(<GeoWorkspace />);
-    expect(await screen.findByText('Overture Maps division_area · as of', { exact: false })).toBeInTheDocument();
-    const fatf = screen.getByRole('region', { name: 'FATF lists' });
-    expect(fatf).toHaveTextContent('1 call for action');
-    expect(fatf).toHaveTextContent('1 increased monitoring');
-    const offshore = screen.getByRole('region', { name: 'Offshore centres' });
-    expect(within(offshore).getByText('The Bahamas')).toBeInTheDocument();
-    expect(within(offshore).getByText('209,713')).toBeInTheDocument();
+    expect(await screen.findByText(/AML engine over the seeded world/)).toBeInTheDocument();
+    expect(screen.getByText(/Overture Maps division_area/)).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'FATF lists' })).toHaveTextContent('1 call for action');
+    const top = screen.getByRole('region', { name: 'Top corridors' });
+    expect(within(top).getByText('NO → IR')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Corridor volume by risk tier' })).toHaveTextContent('25');
   });
 
-  it('says the reference layer is unavailable on a 503, shows NO_DATA, and disables the reference lenses', async () => {
-    respond(503, { detail: 'reference_unavailable' });
+  it('with the reference layer down, disables every lens (flows need it to be placed) and says so', async () => {
+    serve(DOWN, OK(FLOWS));
     render(<GeoWorkspace />);
     expect(await screen.findByText(/Reference layer unavailable \(HTTP 503\)/)).toBeInTheDocument();
-    expect(screen.getAllByText('NO_DATA').length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByLabelText(/FATF risk areas/)).toBeDisabled();
-    expect(screen.getByLabelText(/Offshore entity centres/)).toBeDisabled();
-    expect(screen.getByLabelText(/Cross-border corridors/)).not.toBeDisabled();
+    for (const name of [/FATF risk areas/, /Offshore entity centres/, /Cross-border corridors/, /IP vs KYC country/]) {
+      expect(screen.getByLabelText(name)).toBeDisabled();
+    }
   });
 
-  it('keeps the customer-flow lenses togglable and labels them as fixture', async () => {
+  it('with the flows down, keeps the reference lenses and disables the flow lenses', async () => {
+    serve(OK(REFERENCE), DOWN);
     render(<GeoWorkspace />);
+    expect(await screen.findByText(/Customer flows unavailable \(HTTP 503\)/)).toBeInTheDocument();
     await waitFor(() => expect(screen.getByLabelText(/FATF risk areas/)).not.toBeDisabled());
+    expect(screen.getByLabelText(/Cross-border corridors/)).toBeDisabled();
+    expect(within(screen.getByRole('region', { name: 'Top corridors' })).getByText('NO_DATA')).toBeInTheDocument();
+  });
+
+  it('lets an analyst turn each evidence lens off and on', async () => {
+    render(<GeoWorkspace />);
+    await waitFor(() => expect(screen.getByLabelText(/Cross-border corridors/)).not.toBeDisabled());
     const box = screen.getByLabelText(/Cross-border corridors/) as HTMLInputElement;
     expect(box.checked).toBe(true);
     fireEvent.click(box);
     expect(box.checked).toBe(false);
-    expect(screen.getAllByText('Fixture').length).toBeGreaterThanOrEqual(2);
   });
 
-  it('shows NO_DATA, not zero, for corridor volume when the flows are empty', async () => {
-    render(<GeoWorkspace evidence={{ ...GEO_FIXTURE, corridors: [] }} />);
-    expect(await screen.findAllByText('NO_DATA')).not.toHaveLength(0);
+  it('shows NO_DATA, not zero, for corridor volume when the engine reports no corridors', async () => {
+    serve(OK(REFERENCE), OK({ ...FLOWS, corridors: [], exposure: null }));
+    render(<GeoWorkspace />);
+    const region = await screen.findByRole('region', { name: 'Corridor volume by risk tier' });
+    await waitFor(() => expect(within(region).getByText('NO_DATA')).toBeInTheDocument());
   });
 });
 
 describe('describeSelection', () => {
   it('describes a country from the reference layer, with unmeasured values stated as such', () => {
-    const view = describeSelection(GEO_FIXTURE, REFERENCE, { kind: 'country', id: 'BS' });
+    const view = describeSelection(FLOWS, REFERENCE, { kind: 'country', id: 'BS' });
     expect(view?.title).toBe('The Bahamas');
     expect(view?.rows).toContainEqual(['Offshore entities incorporated', '209,713']);
     expect(view?.rows).toContainEqual(['GDP per capita', '$25.2K (2020)']);
-    const iran = describeSelection(GEO_FIXTURE, REFERENCE, { kind: 'country', id: 'IR' });
+    const iran = describeSelection(FLOWS, REFERENCE, { kind: 'country', id: 'IR' });
     expect(iran?.rows).toContainEqual(['FATF list', 'Call for action']);
     expect(iran?.rows).toContainEqual(['Offshore entities incorporated', 'Not recorded']);
   });
 
-  it('describes flows from the fixture and returns null for an unknown id or no reference', () => {
-    expect(describeSelection(GEO_FIXTURE, null, null)).toBeNull();
-    expect(describeSelection(GEO_FIXTURE, REFERENCE, { kind: 'corridor', id: 'C-CY-PA' })?.title).toBe('Cyprus → Panama');
-    expect(describeSelection(GEO_FIXTURE, REFERENCE, { kind: 'mismatch', id: 'CR84920' })?.rows[1]).toEqual(['IP country', 'Nigeria']);
-    expect(describeSelection(GEO_FIXTURE, REFERENCE, { kind: 'corridor', id: 'nope' })).toBeNull();
-    expect(describeSelection(GEO_FIXTURE, null, { kind: 'country', id: 'BS' })).toBeNull();
+  it('describes a corridor with country names and an unrated tier as unrated, never low', () => {
+    const view = describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'NO>IR' });
+    expect(view?.title).toBe('Norway → Iran');
+    expect(view?.rows).toContainEqual(['Risk tier', 'High']);
+    const unrated = { ...FLOWS, corridors: [{ ...FLOWS.corridors[0], tier: null }] };
+    expect(describeSelection(unrated, REFERENCE, { kind: 'corridor', id: 'NO>IR' })?.rows).toContainEqual(['Risk tier', 'Unrated']);
+  });
+
+  it('describes a flagged country pair with its account count and examples', () => {
+    const view = describeSelection(FLOWS, REFERENCE, { kind: 'mismatch', id: 'NO>KE' });
+    expect(view?.title).toBe('Registered in Norway, logging in from Kenya');
+    expect(view?.rows).toContainEqual(['Flagged accounts', '23']);
+    expect(view?.rows).toContainEqual(['Foreign logins', '80 of 90']);
+    expect(view?.rows).toContainEqual(['Examples', 'CR84920, CR11111']);
+  });
+
+  it('returns null for an unknown id, missing data, or no selection', () => {
+    expect(describeSelection(FLOWS, REFERENCE, null)).toBeNull();
+    expect(describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'nope' })).toBeNull();
+    expect(describeSelection(null, REFERENCE, { kind: 'mismatch', id: 'NO>KE' })).toBeNull();
+    expect(describeSelection(FLOWS, null, { kind: 'country', id: 'BS' })).toBeNull();
   });
 });

@@ -13,10 +13,13 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from eios.cockpit.auth import current_operator
+from eios.cockpit.geo_view import flows_payload
+from eios.dataplane.geo_plane import geo_snapshot
 from eios.reference.reader import ReferenceReader, ReferenceUnavailable, reader_from_env
 
 _LOG = logging.getLogger("eios.cockpit.geo")
 GEO_REFERENCE_PATH = "/api/cockpit/geo/reference"
+GEO_FLOWS_PATH = "/api/cockpit/geo/flows"
 
 router = APIRouter(tags=["Cockpit Geo"], dependencies=[Depends(current_operator)])
 
@@ -42,3 +45,16 @@ def geo_reference(reader: ReferenceReader | None = Depends(get_reader)) -> dict[
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE, detail="reference_unavailable"
         ) from exc
+
+
+@router.get(GEO_FLOWS_PATH)
+def geo_flows() -> dict[str, Any]:
+    """Customer flows from the geo engine. No engine plane (fixture mode) or a failed build is a plain 503."""
+    try:
+        snapshot = geo_snapshot()
+    except Exception as exc:  # never serve a partial or guessed picture
+        _LOG.exception("geo engine build failed")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="geo_unavailable") from exc
+    if snapshot is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="geo_unavailable")
+    return flows_payload(snapshot)

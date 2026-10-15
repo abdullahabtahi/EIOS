@@ -1,13 +1,11 @@
 import { ArcLayer, GeoJsonLayer, ScatterplotLayer } from '@deck.gl/layers';
 import type { Layer } from '@deck.gl/core';
 import type {
-  Corridor,
-  GeoEvidence,
+  GeoFlows,
   GeoReference,
   GeoSelection,
   LayerId,
   LngLat,
-  Mismatch,
   ReferenceCountry,
   RiskTier,
 } from './geo-types';
@@ -22,6 +20,7 @@ export const TIER_COLOR: Readonly<Record<RiskTier, Rgba>> = {
 const MISMATCH_COLOR: Rgba = [57, 75, 89, 230];
 const OFFSHORE_COLOR: Rgba = [16, 107, 163, 170];
 const SELECTED_COLOR: Rgba = [17, 17, 17, 255];
+const UNRATED_COLOR: Rgba = [138, 155, 168, 200];
 const OUTLINE_COLOR: Rgba = [120, 134, 148, 90];
 const NO_FILL: Rgba = [0, 0, 0, 0];
 
@@ -30,7 +29,10 @@ export const MIN_OFFSHORE_ENTITIES = 500;
 const AREA_FILL_ALPHA = 70;
 // Arcs lift out of the map plane; on a flat (untilted) map that is invisible, so lay the arc in the plane to read as a curve.
 const ARC_TILT_DEG = 90;
-const ARC_HEIGHT = 0.2;
+const ARC_HEIGHT = 0.06;
+/** Arcs drawn: every elevated-tier corridor plus this many of the largest others, and this many flagged country pairs. */
+export const MAX_PLAIN_CORRIDORS = 6;
+export const MAX_MISMATCH_PAIRS = 10;
 
 export interface LayerHandlers {
   readonly onHover?: (selection: GeoSelection) => void;
@@ -46,7 +48,11 @@ interface ArcRow {
 }
 
 const toLngLat = (p: LngLat): [number, number] => [p[0], p[1]];
-const widthFor = (volumeUsd: number, scale: number): number => Math.max(1.5, Math.sqrt(volumeUsd) / scale);
+const MIN_ARC_WIDTH = 1.5;
+const ARC_WIDTH_RANGE = 6;
+/** Arc width grows with the square root of the value relative to the largest, so every dataset reads the same. */
+const widthFor = (value: number, max: number): number =>
+  MIN_ARC_WIDTH + ARC_WIDTH_RANGE * Math.sqrt(max > 0 ? value / max : 0);
 const countryRef = (c: ReferenceCountry): NonNullable<GeoSelection> => ({ kind: 'country', id: c.iso2 });
 
 /** FATF list to risk tier; an unlisted country is unrated (null), not low. */
@@ -56,29 +62,46 @@ export function tierOf(country: ReferenceCountry): RiskTier | null {
   return null;
 }
 
-function positions(evidence: GeoEvidence): ReadonlyMap<string, LngLat> {
-  return new Map(evidence.jurisdictions.map((j) => [j.code, j.position]));
+function positions(reference: GeoReference): ReadonlyMap<string, LngLat> {
+  return new Map(reference.countries.map((c) => [c.iso2, c.position]));
 }
 
-function corridorRows(evidence: GeoEvidence, selection: GeoSelection): readonly ArcRow[] {
-  const at = positions(evidence);
-  return evidence.corridors.flatMap((c: Corridor) => {
+/** Every elevated corridor, plus the largest of the rest; the full list stays in the widgets. */
+export function shownCorridors(flows: GeoFlows): GeoFlows['corridors'] {
+  const byVolume = [...flows.corridors].sort((a, b) => b.volume_usd - a.volume_usd);
+  const elevated = byVolume.filter((c) => c.tier === 'high' || c.tier === 'medium');
+  const plain = byVolume.filter((c) => c.tier !== 'high' && c.tier !== 'medium').slice(0, MAX_PLAIN_CORRIDORS);
+  return [...elevated, ...plain];
+}
+
+export function shownPairs(flows: GeoFlows): GeoFlows['mismatch_pairs'] {
+  return [...flows.mismatch_pairs].sort((a, b) => b.accounts - a.accounts).slice(0, MAX_MISMATCH_PAIRS);
+}
+
+function corridorRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly ArcRow[] {
+  const at = positions(reference);
+  const max = Math.max(0, ...flows.corridors.map((c) => c.volume_usd));
+  return shownCorridors(flows).flatMap((c) => {
     const source = at.get(c.origin);
     const target = at.get(c.destination);
     if (!source || !target) return [];
-    const picked = selection?.kind === 'corridor' && selection.id === c.id;
-    return [{ source, target, width: widthFor(c.volumeUsd, 220), color: picked ? SELECTED_COLOR : TIER_COLOR[c.riskTier], ref: { kind: 'corridor', id: c.id } as const }];
+    const id = `${c.origin}>${c.destination}`;
+    const picked = selection?.kind === 'corridor' && selection.id === id;
+    const color = picked ? SELECTED_COLOR : c.tier ? TIER_COLOR[c.tier] : UNRATED_COLOR;
+    return [{ source, target, width: widthFor(c.volume_usd, max), color, ref: { kind: 'corridor', id } as const }];
   });
 }
 
-function mismatchRows(evidence: GeoEvidence, selection: GeoSelection): readonly ArcRow[] {
-  const at = positions(evidence);
-  return evidence.mismatches.flatMap((m: Mismatch) => {
-    const source = at.get(m.kycCountry);
-    const target = at.get(m.ipCountry);
+function mismatchRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly ArcRow[] {
+  const at = positions(reference);
+  const max = Math.max(0, ...flows.mismatch_pairs.map((p) => p.accounts));
+  return shownPairs(flows).flatMap((p) => {
+    const source = at.get(p.kyc_country);
+    const target = at.get(p.ip_country);
     if (!source || !target) return [];
-    const picked = selection?.kind === 'mismatch' && selection.id === m.accountId;
-    return [{ source, target, width: widthFor(m.volumeUsd, 160), color: picked ? SELECTED_COLOR : MISMATCH_COLOR, ref: { kind: 'mismatch', id: m.accountId } as const }];
+    const id = `${p.kyc_country}>${p.ip_country}`;
+    const picked = selection?.kind === 'mismatch' && selection.id === id;
+    return [{ source, target, width: widthFor(p.accounts, max), color: picked ? SELECTED_COLOR : MISMATCH_COLOR, ref: { kind: 'mismatch', id } as const }];
   });
 }
 
@@ -159,11 +182,12 @@ function offshoreLayer(reference: GeoReference, handlers: LayerHandlers): Scatte
 }
 
 /**
- * Pure: evidence plus view state in, deck.gl layers out. The model never writes layer specs (RL-1). The reference
- * lenses (FATF areas, offshore centres) draw only when the reference layer is present; without it they are absent.
+ * Pure: data plus view state in, deck.gl layers out. The model never writes layer specs (RL-1). Reference lenses (FATF
+ * areas, offshore centres) draw only when the reference layer is present; flow lenses only when both the flows and
+ * the reference layer (which places the countries) are present. Absent data draws nothing.
  */
 export function buildLayers(
-  evidence: GeoEvidence,
+  flows: GeoFlows | null,
   reference: GeoReference | null,
   visible: ReadonlySet<LayerId>,
   selection: GeoSelection,
@@ -172,7 +196,11 @@ export function buildLayers(
   const layers: Layer[] = [];
   if (reference && visible.has('risk')) layers.push(riskAreaLayer(reference, selection, handlers));
   if (reference && visible.has('offshore')) layers.push(offshoreLayer(reference, handlers));
-  if (visible.has('corridors')) layers.push(arcLayer('geo-corridors', corridorRows(evidence, selection), handlers));
-  if (visible.has('mismatches')) layers.push(arcLayer('geo-mismatches', mismatchRows(evidence, selection), handlers));
+  if (flows && reference && visible.has('corridors')) {
+    layers.push(arcLayer('geo-corridors', corridorRows(flows, reference, selection), handlers));
+  }
+  if (flows && reference && visible.has('mismatches')) {
+    layers.push(arcLayer('geo-mismatches', mismatchRows(flows, reference, selection), handlers));
+  }
   return layers;
 }

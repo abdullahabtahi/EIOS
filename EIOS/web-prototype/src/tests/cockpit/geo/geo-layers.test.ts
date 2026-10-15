@@ -1,57 +1,34 @@
 import { describe, it, expect } from 'vitest';
-import { GEO_FIXTURE } from '@/components/cockpit/geo/geo-fixture';
 import { summarize, summarizeReference } from '@/components/cockpit/geo/geo-aggregates';
-import { buildLayers, tierOf, MIN_OFFSHORE_ENTITIES } from '@/components/cockpit/geo/geo-layers';
+import { buildLayers, shownCorridors, shownPairs, tierOf, MAX_MISMATCH_PAIRS, MAX_PLAIN_CORRIDORS, MIN_OFFSHORE_ENTITIES } from '@/components/cockpit/geo/geo-layers';
 import type { LayerId } from '@/components/cockpit/geo/geo-types';
+import { FLOWS } from './flows-fixture';
 import { REFERENCE } from './reference-fixture';
 
 const ALL: ReadonlySet<LayerId> = new Set(['risk', 'offshore', 'corridors', 'mismatches']);
 
-describe('geo fixture integrity', () => {
-  it('every corridor and mismatch references a known jurisdiction', () => {
-    const codes = new Set(GEO_FIXTURE.jurisdictions.map((j) => j.code));
-    for (const c of GEO_FIXTURE.corridors) {
-      expect(codes.has(c.origin)).toBe(true);
-      expect(codes.has(c.destination)).toBe(true);
-    }
-    for (const m of GEO_FIXTURE.mismatches) {
-      expect(codes.has(m.kycCountry)).toBe(true);
-      expect(codes.has(m.ipCountry)).toBe(true);
-      expect(m.kycCountry).not.toBe(m.ipCountry);
-    }
+describe('summarize (engine flows)', () => {
+  it('ranks corridors by volume, descending, capped at n', () => {
+    const top = summarize(FLOWS, 2)!.topCorridors;
+    expect(top.map((c) => c.volume_usd)).toEqual([900_000, 400_000]);
   });
 
-  it('carries provenance (source and as-of) so nothing is drawn without a stated origin', () => {
-    expect(GEO_FIXTURE.source).toBeTruthy();
-    expect(GEO_FIXTURE.asOf).toMatch(/^\d{4}-\d{2}-\d{2}/);
-  });
-});
-
-describe('summarize', () => {
-  it('splits corridor volume by tier and the parts sum to the total', () => {
-    const s = summarize(GEO_FIXTURE);
-    const parts = s.volumeByTier.low + s.volumeByTier.medium + s.volumeByTier.high;
-    expect(parts).toBe(s.corridorVolumeUsd);
-    expect(s.corridorVolumeUsd).toBe(GEO_FIXTURE.corridors.reduce((t, c) => t + c.volumeUsd, 0));
+  it('passes the engine exposure through and counts flagged accounts across pairs', () => {
+    const s = summarize(FLOWS)!;
+    expect(s.exposure).toEqual(FLOWS.exposure);
+    expect(s.flaggedAccounts).toBe(25);
+    expect(s.corridorVolumeUsd).toBe(1_400_000);
   });
 
-  it('ranks top corridors by volume, descending, capped at n', () => {
-    const top = summarize(GEO_FIXTURE, 3).topCorridors;
-    expect(top).toHaveLength(3);
-    expect(top[0].volumeUsd).toBeGreaterThanOrEqual(top[1].volumeUsd);
-    expect(top[1].volumeUsd).toBeGreaterThanOrEqual(top[2].volumeUsd);
+  it('is null without flows, and reports no corridor volume (not zero) for an empty set', () => {
+    expect(summarize(null)).toBeNull();
+    expect(summarize({ ...FLOWS, corridors: [] })!.corridorVolumeUsd).toBeNull();
   });
 
-  it('counts IP-versus-KYC mismatches and does not mutate its input', () => {
-    const before = JSON.stringify(GEO_FIXTURE);
-    expect(summarize(GEO_FIXTURE).mismatchCount).toBe(GEO_FIXTURE.mismatches.length);
-    expect(JSON.stringify(GEO_FIXTURE)).toBe(before);
-  });
-
-  it('reports NO_DATA, not zero, for an empty evidence set', () => {
-    const empty = { ...GEO_FIXTURE, jurisdictions: [], corridors: [], mismatches: [] };
-    expect(summarize(empty).corridorVolumeUsd).toBeNull();
-    expect(summarize(empty).topCorridors).toEqual([]);
+  it('does not mutate its input', () => {
+    const before = JSON.stringify(FLOWS);
+    summarize(FLOWS);
+    expect(JSON.stringify(FLOWS)).toBe(before);
   });
 });
 
@@ -75,37 +52,94 @@ describe('tierOf', () => {
 });
 
 describe('buildLayers', () => {
+  const ids = (...args: Parameters<typeof buildLayers>) => buildLayers(...args).map((l) => l.id);
+
   it('builds one layer per visible lens with stable ids', () => {
-    const ids = buildLayers(GEO_FIXTURE, REFERENCE, ALL, null).map((l) => l.id);
-    expect(ids).toEqual(['geo-risk', 'geo-offshore', 'geo-corridors', 'geo-mismatches']);
+    expect(ids(FLOWS, REFERENCE, ALL, null)).toEqual(['geo-risk', 'geo-offshore', 'geo-corridors', 'geo-mismatches']);
   });
 
   it('omits hidden lenses and returns nothing when none is visible', () => {
-    expect(buildLayers(GEO_FIXTURE, REFERENCE, new Set<LayerId>(['corridors']), null).map((l) => l.id)).toEqual(['geo-corridors']);
-    expect(buildLayers(GEO_FIXTURE, REFERENCE, new Set<LayerId>(), null)).toEqual([]);
+    expect(ids(FLOWS, REFERENCE, new Set<LayerId>(['corridors']), null)).toEqual(['geo-corridors']);
+    expect(ids(FLOWS, REFERENCE, new Set<LayerId>(), null)).toEqual([]);
   });
 
-  it('draws no reference lens when the reference layer is absent, and keeps the customer-flow lenses', () => {
-    const ids = buildLayers(GEO_FIXTURE, null, ALL, null).map((l) => l.id);
-    expect(ids).toEqual(['geo-corridors', 'geo-mismatches']);
+  it('draws no flow lens without the reference layer, since it places the countries', () => {
+    expect(ids(FLOWS, null, ALL, null)).toEqual([]);
+  });
+
+  it('draws only the reference lenses when the flows are absent', () => {
+    expect(ids(null, REFERENCE, ALL, null)).toEqual(['geo-risk', 'geo-offshore']);
   });
 
   it('is deterministic and does not mutate its inputs', () => {
-    const before = JSON.stringify([GEO_FIXTURE, REFERENCE]);
-    const a = buildLayers(GEO_FIXTURE, REFERENCE, ALL, null).map((l) => l.id);
-    const b = buildLayers(GEO_FIXTURE, REFERENCE, ALL, null).map((l) => l.id);
-    expect(a).toEqual(b);
-    expect(JSON.stringify([GEO_FIXTURE, REFERENCE])).toBe(before);
+    const before = JSON.stringify([FLOWS, REFERENCE]);
+    expect(ids(FLOWS, REFERENCE, ALL, null)).toEqual(ids(FLOWS, REFERENCE, ALL, null));
+    expect(JSON.stringify([FLOWS, REFERENCE])).toBe(before);
   });
 
-  it('feeds each layer exactly the evidence rows (no invented marks)', () => {
-    const layers = buildLayers(GEO_FIXTURE, REFERENCE, ALL, null);
+  it('feeds each layer exactly the data rows (no invented marks)', () => {
+    const layers = buildLayers(FLOWS, REFERENCE, ALL, null);
     const rows = (id: string) => (layers.find((l) => l.id === id)!.props.data as unknown[]).length;
     expect(rows('geo-risk')).toBe(REFERENCE.countries.length);
     expect(rows('geo-offshore')).toBe(
       REFERENCE.countries.filter((c) => (c.entities_incorporated ?? 0) >= MIN_OFFSHORE_ENTITIES).length,
     );
-    expect(rows('geo-corridors')).toBe(GEO_FIXTURE.corridors.length);
-    expect(rows('geo-mismatches')).toBe(GEO_FIXTURE.mismatches.length);
+    expect(rows('geo-corridors')).toBe(FLOWS.corridors.length);
+    expect(rows('geo-mismatches')).toBe(FLOWS.mismatch_pairs.length);
+  });
+
+  it('skips a flow whose country the reference layer cannot place, instead of guessing a position', () => {
+    const stray = { ...FLOWS, corridors: [...FLOWS.corridors, { origin: 'ZZ', destination: 'NO', volume_usd: 1, accounts: 1, events: 1, tier: null }] };
+    const rows = (buildLayers(stray, REFERENCE, ALL, null).find((l) => l.id === 'geo-corridors')!.props.data as unknown[]).length;
+    expect(rows).toBe(FLOWS.corridors.length);
+  });
+});
+
+describe('which arcs are drawn', () => {
+  const many = {
+    ...FLOWS,
+    corridors: [
+      ...FLOWS.corridors,
+      ...Array.from({ length: 20 }, (_, i) => ({ origin: 'NO', destination: 'BS', volume_usd: 10 + i, accounts: 1, events: 1, tier: 'low' as const })),
+    ],
+    mismatch_pairs: Array.from({ length: 30 }, (_, i) => ({ ...FLOWS.mismatch_pairs[0], ip_country: `X${i}`, accounts: i + 1 })),
+  };
+
+  it('always draws every elevated corridor, plus only the largest of the rest', () => {
+    const shown = shownCorridors(many);
+    const elevated = many.corridors.filter((c) => c.tier === 'high' || c.tier === 'medium');
+    expect(elevated.every((c) => shown.includes(c))).toBe(true);
+    expect(shown.length).toBe(elevated.length + MAX_PLAIN_CORRIDORS);
+    const plain = shown.filter((c) => c.tier === 'low').map((c) => c.volume_usd);
+    expect(Math.min(...plain)).toBeGreaterThanOrEqual(Math.max(...many.corridors.filter((c) => c.tier === 'low' && !shown.includes(c)).map((c) => c.volume_usd)));
+  });
+
+  it('draws the largest flagged pairs first, capped', () => {
+    const shown = shownPairs(many);
+    expect(shown).toHaveLength(MAX_MISMATCH_PAIRS);
+    expect(shown[0].accounts).toBe(30);
+  });
+
+  it('never drops an unrated corridor silently into the elevated set', () => {
+    const unrated = { ...FLOWS, corridors: FLOWS.corridors.map((c) => ({ ...c, tier: null })) };
+    expect(shownCorridors(unrated).length).toBe(FLOWS.corridors.length);
+  });
+});
+
+describe('focusOf', () => {
+  it('opens on the volume-weighted centre of the corridor end countries', async () => {
+    const { focusOf, REGION_ZOOM } = await import('@/components/cockpit/geo/geo-focus');
+    const f = focusOf(FLOWS, REFERENCE)!;
+    expect(f.zoom).toBe(REGION_ZOOM);
+    const lngs = REFERENCE.countries.map((c) => c.position[0]);
+    expect(f.center.lng).toBeGreaterThan(Math.min(...lngs));
+    expect(f.center.lng).toBeLessThan(Math.max(...lngs));
+  });
+
+  it('is null without flows, without the reference layer, or when no country can be placed', async () => {
+    const { focusOf } = await import('@/components/cockpit/geo/geo-focus');
+    expect(focusOf(null, REFERENCE)).toBeNull();
+    expect(focusOf(FLOWS, null)).toBeNull();
+    expect(focusOf({ ...FLOWS, corridors: [{ ...FLOWS.corridors[0], origin: 'ZZ', destination: 'YY' }] }, REFERENCE)).toBeNull();
   });
 });

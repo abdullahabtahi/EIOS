@@ -1,4 +1,4 @@
-import type { FatfList, GeoEvidence, GeoReference, GeoSelection, ReferenceIndicator } from './geo-types';
+import type { FatfList, GeoFlows, GeoReference, GeoSelection, ReferenceIndicator } from './geo-types';
 
 const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 });
 
@@ -31,14 +31,14 @@ export interface SelectionView {
   readonly rows: readonly (readonly [label: string, value: string])[];
 }
 
-/** Resolves a selection to display text from the evidence itself; an unknown id yields null, never a guess. */
+/** Resolves a selection to display text from the data itself; an unknown id yields null, never a guess. */
 export function describeSelection(
-  evidence: GeoEvidence,
+  flows: GeoFlows | null,
   reference: GeoReference | null,
   selection: GeoSelection,
 ): SelectionView | null {
   if (!selection) return null;
-  const name = (code: string) => evidence.jurisdictions.find((j) => j.code === code)?.name ?? code;
+  const name = (code: string) => reference?.countries.find((c) => c.iso2 === code)?.name ?? code;
   if (selection.kind === 'country') {
     const c = reference?.countries.find((x) => x.iso2 === selection.id);
     if (!c) return null;
@@ -53,19 +53,29 @@ export function describeSelection(
     };
   }
   if (selection.kind === 'corridor') {
-    const c = evidence.corridors.find((x) => x.id === selection.id);
+    const c = flows?.corridors.find((x) => `${x.origin}>${x.destination}` === selection.id);
     return c
       ? {
           title: `${name(c.origin)} → ${name(c.destination)}`,
-          rows: [['Risk tier', capitalise(c.riskTier)], ['Volume', formatUsd(c.volumeUsd)], ['Accounts', String(c.accountCount)]],
+          rows: [
+            ['Risk tier', c.tier ? capitalise(c.tier) : 'Unrated'],
+            ['Volume', formatUsd(c.volume_usd)],
+            ['Accounts', COUNT.format(c.accounts)],
+            ['Payments', COUNT.format(c.events)],
+          ],
         }
       : null;
   }
-  const m = evidence.mismatches.find((x) => x.accountId === selection.id);
-  return m
+  const p = flows?.mismatch_pairs.find((x) => `${x.kyc_country}>${x.ip_country}` === selection.id);
+  return p
     ? {
-        title: `Account ${m.accountId}`,
-        rows: [['KYC country', name(m.kycCountry)], ['IP country', name(m.ipCountry)], ['Volume', formatUsd(m.volumeUsd)]],
+        title: `Registered in ${name(p.kyc_country)}, logging in from ${name(p.ip_country)}`,
+        rows: [
+          ['Flagged accounts', COUNT.format(p.accounts)],
+          ['Foreign logins', `${COUNT.format(p.foreign_events)} of ${COUNT.format(p.events)}`],
+          ['Volume', formatUsd(p.volume_usd)],
+          ['Examples', p.sample_accounts.join(', ')],
+        ],
       }
     : null;
 }

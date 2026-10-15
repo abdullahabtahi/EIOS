@@ -1,20 +1,21 @@
 'use client';
 
 import * as React from 'react';
-import { GEO_FIXTURE } from './geo-fixture';
 import { buildLayers } from './geo-layers';
 import { GeoMap } from './geo-map';
 import { GeoWidgets } from './geo-widgets';
 import { GeoCopilotPanel } from './geo-copilot-panel';
 import { GeoLegend } from './geo-legend';
-import { useGeoReference } from './use-geo-reference';
-import type { GeoEvidence, GeoSelection, LayerId } from './geo-types';
+import { focusOf } from './geo-focus';
+import { dataOf, useGeoResource } from './use-geo-resource';
+import type { GeoFlows, GeoReference, GeoSelection, LayerId } from './geo-types';
 
 const ALL_LAYERS: ReadonlySet<LayerId> = new Set(['risk', 'offshore', 'corridors', 'mismatches']);
 
 /** Map-first workspace: Google basemap with deck.gl evidence, copilot placeholder on the left, widgets on the right. */
-export function GeoWorkspace({ evidence = GEO_FIXTURE }: { readonly evidence?: GeoEvidence }) {
-  const reference = useGeoReference();
+export function GeoWorkspace() {
+  const reference = useGeoResource<GeoReference>('/api/cockpit/geo/reference');
+  const flows = useGeoResource<GeoFlows>('/api/cockpit/geo/flows');
   const [visible, setVisible] = React.useState<ReadonlySet<LayerId>>(ALL_LAYERS);
   const [hovered, setHovered] = React.useState<GeoSelection>(null);
   const [selected, setSelected] = React.useState<GeoSelection>(null);
@@ -23,19 +24,19 @@ export function GeoWorkspace({ evidence = GEO_FIXTURE }: { readonly evidence?: G
     setVisible((prev) => (prev.has(id) ? new Set([...prev].filter((x) => x !== id)) : new Set([...prev, id])));
   }, []);
 
+  const referenceData = dataOf(reference);
+  const flowData = dataOf(flows);
   const layers = React.useMemo(
-    () =>
-      buildLayers(evidence, reference.status === 'ready' ? reference.reference : null, visible, selected, {
-        onHover: setHovered,
-        onSelect: setSelected,
-      }),
-    [evidence, reference, visible, selected],
+    () => buildLayers(flowData, referenceData, visible, selected, { onHover: setHovered, onSelect: setSelected }),
+    [flowData, referenceData, visible, selected],
   );
+
+  const focus = React.useMemo(() => focusOf(flowData, referenceData), [flowData, referenceData]);
 
   return (
     <div className="flex h-full min-h-0">
       <div className="relative min-w-0 flex-1">
-        <GeoMap layers={layers} />
+        <GeoMap layers={layers} focus={focus} />
         <div className="pointer-events-none absolute left-3 top-3 z-10">
           <div className="pointer-events-auto">
             <GeoCopilotPanel />
@@ -46,7 +47,7 @@ export function GeoWorkspace({ evidence = GEO_FIXTURE }: { readonly evidence?: G
         </div>
       </div>
       <div className="w-80 shrink-0 border-l border-cx-line bg-white">
-        <GeoWidgets evidence={evidence} reference={reference} visible={visible} onToggle={toggle} hovered={hovered} selected={selected} />
+        <GeoWidgets flows={flows} reference={reference} visible={visible} onToggle={toggle} hovered={hovered} selected={selected} />
       </div>
     </div>
   );

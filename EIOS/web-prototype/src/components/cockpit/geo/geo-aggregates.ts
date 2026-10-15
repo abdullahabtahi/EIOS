@@ -1,19 +1,15 @@
-import type { FatfList, GeoEvidence, GeoReference, GeoSummary, ReferenceCountry } from './geo-types';
+import type { FatfList, GeoFlows, GeoReference, GeoSummary, ReferenceCountry } from './geo-types';
 
 const DEFAULT_TOP_N = 5;
 
-/** Deterministic roll-ups for the widgets; the same numbers the map draws, never a second source. */
-export function summarize(evidence: GeoEvidence, topN: number = DEFAULT_TOP_N): GeoSummary {
-  const { corridors, mismatches } = evidence;
-  const volumeByTier = corridors.reduce(
-    (acc, c) => ({ ...acc, [c.riskTier]: acc[c.riskTier] + c.volumeUsd }),
-    { low: 0, medium: 0, high: 0 },
-  );
+/** Roll-ups of the engine flows for the widgets: the same numbers the map draws, never a second source. Null without flows. */
+export function summarize(flows: GeoFlows | null, topN: number = DEFAULT_TOP_N): GeoSummary | null {
+  if (!flows) return null;
   return {
-    corridorVolumeUsd: corridors.length === 0 ? null : corridors.reduce((t, c) => t + c.volumeUsd, 0),
-    volumeByTier,
-    topCorridors: [...corridors].sort((a, b) => b.volumeUsd - a.volumeUsd).slice(0, topN),
-    mismatchCount: mismatches.length,
+    corridorVolumeUsd: flows.corridors.length === 0 ? null : flows.corridors.reduce((t, c) => t + c.volume_usd, 0),
+    exposure: flows.exposure,
+    topCorridors: [...flows.corridors].sort((a, b) => b.volume_usd - a.volume_usd).slice(0, topN),
+    flaggedAccounts: flows.mismatch_pairs.reduce((t, p) => t + p.accounts, 0),
   };
 }
 
