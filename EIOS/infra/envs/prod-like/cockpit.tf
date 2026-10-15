@@ -97,6 +97,8 @@ module "service_cockpit_api" {
     GOOGLE_CLOUD_LOCATION    = "global"
     # Vertex AI with the service identity instead of an API key. The assistant's models come from the registry in
     # the image (llm_gateway/providers/assistant_models.yaml), not from an environment variable.
+    EIOS_WARM_BACKEND                  = var.warm_backend
+    EIOS_WARM_PROJECT                  = var.project_id
     GOOGLE_GENAI_USE_ENTERPRISE        = "true"
     EIOS_MODEL_ARMOR_PROMPT_TEMPLATE   = module.model_armor.prompt_template_name
     EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE = module.model_armor.response_template_name

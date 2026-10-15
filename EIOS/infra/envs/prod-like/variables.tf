@@ -131,3 +131,20 @@ variable "demo_access" {
   type        = string
   default     = null
 }
+
+variable "warm_writer_members" {
+  description = "IAM members that may load history into the warm tier, for example user:you@example.com. Supply from a tfvars file that is not committed."
+  type        = list(string)
+  default     = []
+}
+
+variable "warm_backend" {
+  description = "Which warm tier the API reads: local (a double filled from the world) or bigquery. Switch to bigquery only after python -m eios.warm load has filled the warehouse."
+  type        = string
+  default     = "local"
+
+  validation {
+    condition     = contains(["local", "bigquery", "off"], var.warm_backend)
+    error_message = "warm_backend must be local, bigquery or off."
+  }
+}
