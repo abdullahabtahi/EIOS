@@ -14,6 +14,17 @@ def test_the_data_plane_is_built_during_start_up(monkeypatch: pytest.MonkeyPatch
         assert built == [True]
 
 
+def test_tracing_is_configured_before_the_first_turn_can_run(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    order: list[str] = []
+    monkeypatch.setattr(app_module, "configure_cloud_trace", lambda: order.append("trace"))
+    monkeypatch.setattr(app_module, "read_models", lambda: order.append("plane"))
+    monkeypatch.setattr(app_module, "warm_up_assistant", lambda: _noop())
+    with TestClient(app_module.create_app()):
+        assert order == ["trace", "plane"]
+
+
 def test_a_failed_build_does_not_stop_the_service_from_starting(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

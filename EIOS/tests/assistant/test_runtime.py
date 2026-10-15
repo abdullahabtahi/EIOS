@@ -226,3 +226,14 @@ def test_with_plain_figures_off_every_figure_must_still_be_a_placeholder() -> No
         settings=replace(SETTINGS, plain_figures=False),
     )
     assert _turn(runtime).answer.attempts == 2
+
+
+def test_every_turn_runs_with_message_content_kept_off_spans_and_events() -> None:
+    from google.adk.telemetry.context import ContentCapturingMode
+
+    runtime, _ = make_runtime([draft("hello")])
+    config = runtime._run_config()
+    assert config.max_llm_calls == SETTINGS.max_llm_calls
+    assert config.telemetry is not None
+    assert config.telemetry.capture_message_content is ContentCapturingMode.NO_CONTENT
+    assert not config.telemetry.should_add_content_to_legacy_spans

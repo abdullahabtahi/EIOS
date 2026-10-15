@@ -25,6 +25,7 @@ from eios.cockpit.auth import cors_origins, current_operator
 from eios.cockpit.server import public_router as cockpit_public_router
 from eios.cockpit.server import router as cockpit_router
 from eios.dataplane.plane import read_models
+from eios.observability.cloud_trace import configure_cloud_trace
 
 _LOG = logging.getLogger(__name__)
 HEALTH_PATH = "/health"
@@ -53,6 +54,7 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     deploy or a scale-up waited for it, and the web proxy's short timeout turned that wait into a labelled replay. Built
     here, an instance is not ready until it can answer, and Cloud Run keeps sending traffic to the old revision until then.
     A failed build is logged and retried by the next request, so a start-up fault shows as real errors, not a crash loop."""
+    configure_cloud_trace()  # before the first turn, so ADK's spans have a tracer provider; content stays off
     try:
         await asyncio.to_thread(read_models)
     except Exception:

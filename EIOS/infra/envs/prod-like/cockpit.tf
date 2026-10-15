@@ -17,6 +17,7 @@ locals {
     "aiplatform.googleapis.com",
     "apikeys.googleapis.com",
     "cloudbuild.googleapis.com",
+    "cloudtrace.googleapis.com",
     "identitytoolkit.googleapis.com",
   ]
 }
@@ -95,6 +96,10 @@ module "service_cockpit_api" {
     EIOS_KMS_KEY_VERSION     = "${module.secret_store.signing_key_id}/cryptoKeyVersions/1"
     GOOGLE_CLOUD_PROJECT     = var.project_id
     GOOGLE_CLOUD_LOCATION    = "global"
+    # ADK's turn, model and tool spans go to Cloud Trace; prompt and answer text is kept off them in code
+    # (observability/cloud_trace.py). The runtime identity already holds roles/cloudtrace.agent.
+    EIOS_TRACE_EXPORT = "cloud_trace"
+    EIOS_SERVICE_NAME = "eios-api"
     # Vertex AI with the service identity instead of an API key. The assistant's models come from the registry in
     # the image (llm_gateway/providers/assistant_models.yaml), not from an environment variable.
     EIOS_WARM_BACKEND                  = var.warm_backend
