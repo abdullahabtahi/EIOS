@@ -11,7 +11,7 @@ DEFAULT_TURN_DEADLINE_S = 30.0  # [ASSUMPTION] bounds a turn well under the 60 s
 DEFAULT_HISTORY_TURNS = (
     6  # [ASSUMPTION] earlier turns the model sees; older ones stay stored but out of context
 )
-DEFAULT_HEDGE_AFTER_S = 5.0  # [ASSUMPTION] a model call that has not answered by now is probably stalled; 0 turns hedging off
+DEFAULT_HEDGE_AFTER_S = 3.0  # [ASSUMPTION] the default model answers in about 2 s [MEASURED]; a call still silent at 3 s is probably stalled; 0 turns hedging off
 DEFAULT_MAX_LLM_CALLS = 12  # [ASSUMPTION] tool rounds plus up to three assembly attempts
 
 

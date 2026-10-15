@@ -66,6 +66,7 @@ from eios.dataplane.plane import (
 )
 from eios.dataplane.plane import governance as plane_governance
 from eios.flywheel.ledger import DecisionOutcomeRecord
+from eios.llm_gateway.providers.registry import UnknownModelError
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import (
     CANONICAL_ACTION_SPECS,
@@ -191,6 +192,9 @@ class CopilotQueryRequest(BaseModel):
         default=None, validation_alias=AliasChoices("context_entity_id", "activeEntityId")
     )
     role: str = "executive"
+    model: str | None = (
+        None  # a registry key from GET /api/cockpit/copilot/models; None runs the default
+    )
 
 
 class FlywheelFeedbackRequest(BaseModel):
@@ -978,6 +982,7 @@ AUTHORIZE_ACTION_PATH = "/api/cockpit/actions/authorize"
 PARTNER_CASE_PATH = "/api/cockpit/partners/{entity_id}"
 AML_CASE_PATH = "/api/cockpit/aml/cases/{entity_id}"
 COPILOT_QUERY_PATH = "/api/cockpit/copilot/query"
+COPILOT_MODELS_PATH = "/api/cockpit/copilot/models"
 FLYWHEEL_FEEDBACK_PATH = "/api/cockpit/flywheel/feedback"
 AUDIT_VERIFY_PATH = "/api/cockpit/audit/verify"
 COMPLIANCE_LEDGER_PATH = "/api/cockpit/compliance/ledger"
@@ -1164,6 +1169,17 @@ def authorize_governed_action(
     )
 
 
+@router.get(COPILOT_MODELS_PATH)
+async def copilot_models() -> dict[str, Any]:
+    """The models an operator may pick for the assistant: key, label, note, and which one is the default. No ids."""
+    try:
+        runtime = await run_in_threadpool(get_runtime)
+    except AssistantConfigError as exc:
+        logging.getLogger(__name__).error("assistant is not configured: %s", exc)
+        raise HTTPException(status_code=503, detail="offline") from exc
+    return {"models": runtime.registry.public()}
+
+
 @router.post(COPILOT_QUERY_PATH)
 async def query_copilot(
     req: CopilotQueryRequest, operator: Operator | None = Depends(current_operator)
@@ -1185,9 +1201,15 @@ async def query_copilot(
     except AssistantConfigError as exc:
         logging.getLogger(__name__).error("assistant is not configured: %s", exc)
         raise HTTPException(status_code=503, detail="offline") from exc
-    outcome = await runtime.run_turn(
-        principal=principal, question=req.query, entity_id=req.context_entity_id
-    )
+    try:
+        outcome = await runtime.run_turn(
+            principal=principal,
+            question=req.query,
+            entity_id=req.context_entity_id,
+            model_key=req.model,
+        )
+    except UnknownModelError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     if outcome.status != "ok":  # an outage is offline, never a 200 that looks like an answer
         return JSONResponse(  # type: ignore[return-value]
             status_code=503,

@@ -135,6 +135,8 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
             for source in answer.sources
         ],
         "turn_latency_ms": outcome.latency_ms,
+        "model": outcome.model_key,
+        "timing_ms": outcome.timing,
         "blocked": answer.blocked,
         "block_reason": answer.block_reason,
         "steps": list(outcome.steps),

@@ -28,10 +28,11 @@ from eios.assistant.assembler_agent import (
     ATTEMPT_KEY,
     FEEDBACK_KEY,
 )
-from eios.assistant.config import AssistantConfigError, AssistantSettings
+from eios.assistant.config import AssistantSettings
 from eios.assistant.prefetch import PLATFORM_CALL, PREFETCH_KEY
 from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED
 from eios.assistant.sessions import APP_NAME, session_key, valid_entity_id
+from eios.assistant.timing import TimingPlugin, TurnTimer, start_turn_timer
 from eios.assistant.tools import (
     FACTS_KEY,
     IDENTIFIERS_KEY,
@@ -41,6 +42,7 @@ from eios.assistant.tools import (
     SOURCES_KEY,
 )
 from eios.llm_gateway.providers.adk_types import text_of, user_message
+from eios.llm_gateway.providers.registry import ModelRegistry, load_registry
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
 
@@ -69,6 +71,12 @@ class TurnOutcome:
     status: str = "ok"  # ok | timeout | error
     error: str | None = None
     model_calls: int = 0
+    model_key: str | None = (
+        None  # the registry key the turn ran on; None when a model was injected (tests)
+    )
+    timing: dict[str, Any] = field(
+        default_factory=dict
+    )  # model, tools, other (ms) and each model call
     events: tuple[Any, ...] = field(default=(), repr=False)
 
 
@@ -78,6 +86,8 @@ class _TurnLog:
 
     traces: list[ToolCallTrace] = field(default_factory=list)
     events: list[Any] = field(default_factory=list)
+    timer: TurnTimer = field(default_factory=TurnTimer)
+    model_key: str | None = None
 
     def outcome(
         self, answer: Answer, *, status: str, error: str | None, latency_ms: float
@@ -90,6 +100,8 @@ class _TurnLog:
             status=status,
             error=error,
             model_calls=_model_calls(self.events),
+            model_key=self.model_key,
+            timing=self.timer.breakdown(latency_ms),
             events=tuple(self.events),
         )
 
@@ -136,21 +148,26 @@ class AssistantRuntime:
         port: GovernedToolPort,
         settings: AssistantSettings,
         session_service: BaseSessionService,
-        model: str | BaseLlm | None = None,
+        model: BaseLlm | None = None,
+        registry: ModelRegistry | None = None,
         plugins: tuple[BasePlugin, ...] = (),
     ) -> None:
-        chosen = model or settings.model
-        if chosen is None:
-            raise AssistantConfigError(
-                "EIOS_GEMINI_MODEL must name the model; no model id lives in source"
-            )
         self._port, self._settings = port, settings
-        self._sessions, self._model = session_service, chosen
+        self._sessions, self._model = (
+            session_service,
+            model,
+        )  # an injected model wins over the registry (tests)
+        self._registry = registry or load_registry()
         # ADK's own filter bounds what the model reads; the stored thread keeps everything.
         self._plugins = (
             ContextFilterPlugin(num_invocations_to_keep=settings.history_turns),
+            TimingPlugin(),
             *plugins,
         )
+
+    @property
+    def registry(self) -> ModelRegistry:
+        return self._registry
 
     async def warm_up(self) -> None:
         """Let each plugin that can open its connection ahead of the first turn do so (best effort)."""
@@ -166,14 +183,16 @@ class AssistantRuntime:
         question: str,
         entity_id: str | None = None,
         entity_context: dict[str, Any] | None = None,
+        model_key: str | None = None,
     ) -> TurnOutcome:
         if not valid_entity_id(entity_id):
             raise ValueError("entity id is not a valid identifier")
+        choice = self._registry.resolve(model_key)  # raises UnknownModelError before any work
         started = time.perf_counter()
-        log = _TurnLog()
+        log = _TurnLog(model_key=None if self._model else choice.key, timer=start_turn_timer())
         try:
             outcome = await asyncio.wait_for(
-                self._consume(principal, question, entity_id, entity_context, log),
+                self._consume(principal, question, entity_id, entity_context, log, choice.id),
                 timeout=self._settings.turn_deadline_s,
             )
         except TimeoutError:
@@ -195,7 +214,10 @@ class AssistantRuntime:
                 error=f"{type(exc).__name__}: {exc}",
                 latency_ms=_ms(started),
             )
-        return TurnOutcome(**{**outcome.__dict__, "latency_ms": _ms(started)})
+        wall = _ms(started)
+        return TurnOutcome(
+            **{**outcome.__dict__, "latency_ms": wall, "timing": log.timer.breakdown(wall)}
+        )
 
     async def _consume(
         self,
@@ -204,11 +226,12 @@ class AssistantRuntime:
         entity_id: str | None,
         entity_context: dict[str, Any] | None,
         log: _TurnLog,
+        model_id: str,
     ) -> TurnOutcome:
         agent = build_agent(
             port=self._port,
             principal=principal,
-            model=self._model,
+            model=self._model or model_id,
             prefetch=self._settings.prefetch,
             hedge_after_s=self._settings.hedge_after_s,
         )

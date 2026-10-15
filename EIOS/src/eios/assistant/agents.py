@@ -18,6 +18,7 @@ from google.adk.models.base_llm import BaseLlm
 from eios.assistant.assembler_agent import DRAFT_KEY, FEEDBACK_KEY, AnswerAssembler
 from eios.assistant.assembly import MAX_ATTEMPTS
 from eios.assistant.prefetch import Prefetcher
+from eios.assistant.timing import timed
 from eios.assistant.tools import build_toolset
 from eios.llm_gateway.providers.adk_types import (
     HttpRetryOptions,
@@ -130,9 +131,11 @@ def build_agent(
     workstation = principal.workstation
     drafter = Agent(
         name="drafter",
-        model=hedged(retrying_gemini(model, MODEL_RETRY), hedge_after_s)
-        if isinstance(model, str)
-        else model,
+        model=timed(
+            hedged(retrying_gemini(model, MODEL_RETRY), hedge_after_s)
+            if isinstance(model, str)
+            else model
+        ),
         instruction=instruction_for(workstation),
         tools=list(build_toolset(port, principal)),
         output_key=DRAFT_KEY,
