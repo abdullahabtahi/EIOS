@@ -52,6 +52,16 @@ def _mismatch_pairs(snap: GeoSnapshot) -> list[dict[str, Any]]:
     return sorted(pairs, key=lambda p: (-p["accounts"], p["kyc_country"], p["ip_country"]))
 
 
+def _coverage(snap: GeoSnapshot) -> dict[str, int | None]:
+    """How many clients each lens can judge at all. Computed from the engine's own statistics, never from the truth."""
+    clients = snap.clients
+    return {
+        "clients": len(clients),
+        "mismatch_assessable": int(clients["mismatch_assessable"].sum()),
+        "corridor_assessable": int(clients["corridor_assessable"].sum()) if snap.tiers else None,
+    }
+
+
 def flows_payload(snap: GeoSnapshot) -> dict[str, Any]:
     corridors = _corridors(snap)
     known = bool(snap.tiers)
@@ -68,4 +78,5 @@ def flows_payload(snap: GeoSnapshot) -> dict[str, Any]:
         "corridors": corridors,
         "mismatch_pairs": _mismatch_pairs(snap),
         "exposure": exposure,
+        "coverage": _coverage(snap),
     }

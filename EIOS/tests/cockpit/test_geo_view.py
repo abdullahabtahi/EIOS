@@ -55,6 +55,16 @@ def test_the_payload_carries_no_planted_truth(snap: GeoSnapshot) -> None:
         assert forbidden not in text
 
 
+def test_coverage_states_how_many_clients_each_lens_can_judge(snap: GeoSnapshot) -> None:
+    cov = flows_payload(snap)["coverage"]
+    assert cov["clients"] == len(snap.clients)
+    assert 0 < cov["mismatch_assessable"] < cov["clients"]  # some clients have too few events to judge
+    assert cov["mismatch_assessable"] == int(snap.clients["mismatch_assessable"].sum())
+    assert 0 < cov["corridor_assessable"] <= cov["clients"]
+    unrated = flows_payload(run_geo_engine(snap.world, {}))
+    assert unrated["coverage"]["corridor_assessable"] is None  # no tiers: the corridor lens judged nobody
+
+
 def test_unknown_tiers_are_null_never_low(snap: GeoSnapshot) -> None:
     blind = run_geo_engine(snap.world, {})
     payload = flows_payload(blind)

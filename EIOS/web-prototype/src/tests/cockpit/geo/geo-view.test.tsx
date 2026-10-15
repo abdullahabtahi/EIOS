@@ -34,6 +34,7 @@ const OK = (body: unknown): Reply => ({ status: 200, body });
 const DOWN: Reply = { status: 503 };
 
 beforeEach(() => {
+  window.history.replaceState(null, '', '/'); // the workspace keeps its state in the URL; each test starts clean
   vi.unstubAllEnvs();
   authFetch.mockReset();
   serve(OK(REFERENCE), OK(FLOWS));
@@ -224,6 +225,25 @@ describe('GeoWorkspace', () => {
     serve(OK(REFERENCE), OK({ ...FLOWS, corridors: [], exposure: null }));
     render(<GeoWorkspace />);
     await waitFor(() => expect(within(screen.getByRole('tabpanel')).getByText('NO_DATA')).toBeInTheDocument());
+  });
+
+  it('opens on the view and pick in the address bar, and writes changes back to it', async () => {
+    window.history.replaceState(null, '', '/cockpit/geospatial?view=logins&sel=mismatch%3ANO%3EKE');
+    render(<GeoWorkspace />);
+    expect(tab('Login vs KYC')).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('region', { name: 'Selection' })).toHaveTextContent('Registered in Norway, logging in from Kenya');
+    fireEvent.click(tab('Corridors'));
+    expect(window.location.search).toBe('?view=corridors');
+    window.history.replaceState(null, '', '/');
+  });
+
+  it('says how many clients the lens can judge, so an unflagged client is not read as clean', async () => {
+    serve(OK(REFERENCE), OK({ ...FLOWS, coverage: { clients: 6000, mismatch_assessable: 3341, corridor_assessable: 2100 } }));
+    render(<GeoWorkspace />);
+    await screen.findByRole('region', { name: 'Where to look first' });
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('This lens can judge 2,100 of 6,000 clients');
+    fireEvent.click(tab('Login vs KYC'));
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('This lens can judge 3,341 of 6,000 clients');
   });
 
   it('says tiers are unavailable, rather than drawing a bar, when the engine could not rate corridors', async () => {

@@ -4,7 +4,8 @@ import * as React from 'react';
 import { buildLayers, type HoverPoint } from './geo-layers';
 import { cameraFor, type CameraTarget } from './geo-camera';
 import { describeSelection } from './geo-format';
-import { focusFor, focusOf } from './geo-focus';
+import { focusFor } from './geo-focus';
+import { formatGeoUrl, parseGeoUrl } from './geo-url';
 import { GeoLegend } from './geo-legend';
 import { GeoMap } from './geo-map';
 import { GeoPanel } from './geo-panel';
@@ -27,11 +28,14 @@ interface Hover {
 export function GeoWorkspace() {
   const reference = useGeoResource<GeoReference>('/api/cockpit/geo/reference');
   const flows = useGeoResource<GeoFlows>('/api/cockpit/geo/flows');
-  const [view, setView] = React.useState<ViewId>(DEFAULT_VIEW);
-  const [visible, setVisible] = React.useState<ReadonlySet<LayerId>>(viewOf(DEFAULT_VIEW).layers);
+  // The address bar is the state's home: a shared link opens on the same view and pick.
+  const [initial] = React.useState(() => parseGeoUrl(typeof window === 'undefined' ? '' : window.location.search));
+  const [view, setView] = React.useState<ViewId>(initial.view ?? DEFAULT_VIEW);
+  const [visible, setVisible] = React.useState<ReadonlySet<LayerId>>(viewOf(initial.view ?? DEFAULT_VIEW).layers);
   const [hover, setHover] = React.useState<Hover | null>(null);
-  const [selected, setSelected] = React.useState<GeoSelection>(null);
+  const [selected, setSelected] = React.useState<GeoSelection>(initial.selection);
   const [target, setTarget] = React.useState<CameraTarget | null>(null);
+  const flownToInitial = React.useRef(false);
   const mapBox = React.useRef<HTMLDivElement>(null);
 
   const referenceData = dataOf(reference);
@@ -61,6 +65,22 @@ export function GeoWorkspace() {
   );
 
   React.useEffect(() => {
+    const next = formatGeoUrl(window.location.search, view, selected);
+    if (next !== window.location.search) window.history.replaceState(window.history.state, '', `${window.location.pathname}${next}`);
+  }, [view, selected]);
+
+  // A pick that came in with the URL is flown to once its data can place it.
+  const initialTarget = React.useMemo(
+    () => (initial.selection ? cameraFor(initial.selection, flowData, referenceData) : null),
+    [initial.selection, flowData, referenceData],
+  );
+  React.useEffect(() => {
+    if (flownToInitial.current || !initialTarget) return;
+    flownToInitial.current = true;
+    setTarget(initialTarget);
+  }, [initialTarget]);
+
+  React.useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSelected(null);
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -86,7 +106,7 @@ export function GeoWorkspace() {
     () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }),
     [flowData, referenceData, visible, selected, onHover],
   );
-  const focus = React.useMemo(() => focusOf(flowData, referenceData), [flowData, referenceData]);
+  const focus = React.useMemo(() => focusFor(view, flowData, referenceData), [view, flowData, referenceData]);
 
   const tip = hover ? describeSelection(flowData, referenceData, hover.selection) : null;
   const waitingOnFlows = view !== 'jurisdictions' && flows.status === 'loading';

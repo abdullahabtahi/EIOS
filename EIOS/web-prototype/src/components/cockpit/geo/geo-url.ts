@@ -1,0 +1,35 @@
+import type { GeoSelection } from './geo-types';
+import { VIEWS, type ViewId } from './geo-views';
+
+/** What the address bar holds, so a view and a pick can be shared, bookmarked, cited in a SAR or opened by the copilot. */
+export interface GeoUrlState {
+  readonly view: ViewId | null;
+  readonly selection: GeoSelection;
+}
+
+const KINDS = new Set(['country', 'corridor', 'mismatch', 'gateway', 'account']);
+// A selection id is a country code, an `A>B` pair, a gateway id or an account id; nothing else is accepted from a URL.
+const ID = /^[A-Za-z0-9>_-]{1,64}$/;
+
+export function parseGeoUrl(search: string): GeoUrlState {
+  const params = new URLSearchParams(search);
+  const rawView = params.get('view');
+  const view = VIEWS.some((v) => v.id === rawView) ? (rawView as ViewId) : null;
+  const raw = params.get('sel');
+  if (!raw) return { view, selection: null };
+  const cut = raw.indexOf(':');
+  const kind = raw.slice(0, cut);
+  const id = raw.slice(cut + 1);
+  if (cut < 1 || !KINDS.has(kind) || !ID.test(id)) return { view, selection: null };
+  return { view, selection: { kind, id } as NonNullable<GeoSelection> };
+}
+
+/** The query string for a state; other parameters already in the URL are kept. */
+export function formatGeoUrl(current: string, view: ViewId, selection: GeoSelection): string {
+  const params = new URLSearchParams(current);
+  params.set('view', view);
+  if (selection) params.set('sel', `${selection.kind}:${selection.id}`);
+  else params.delete('sel');
+  const out = params.toString();
+  return out ? `?${out}` : '';
+}

@@ -73,12 +73,22 @@ export interface GeoFlows {
   readonly mismatch_pairs: readonly MismatchPair[];
   /** Corridor volume by tier; null when tiers are unknown. */
   readonly exposure: Readonly<Record<RiskTier, number>> | null;
+  /** How many clients each lens can judge at all; the rest have too few events and are not assessable, never clean. */
+  readonly coverage?: GeoCoverage;
+}
+
+export interface GeoCoverage {
+  readonly clients: number;
+  readonly mismatch_assessable: number;
+  readonly corridor_assessable: number | null;
 }
 
 export type GeoSelection =
   | { readonly kind: 'country'; readonly id: string }
   | { readonly kind: 'corridor'; readonly id: string } // `${origin}>${destination}`
   | { readonly kind: 'mismatch'; readonly id: string } // `${kyc_country}>${ip_country}`
+  | { readonly kind: 'gateway'; readonly id: string } // a login gateway (egress) id
+  | { readonly kind: 'account'; readonly id: string } // a client id
   | null;
 
 export interface GeoSummary {

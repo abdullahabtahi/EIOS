@@ -14,6 +14,17 @@ const TIERS: readonly { readonly id: RiskTier; readonly label: string; readonly 
 
 const Strong = ({ children }: { children: React.ReactNode }) => <span className="font-mono font-semibold tabular-nums text-cx-ink">{children}</span>;
 
+/** Who the lens can judge at all: a client with too few events is not assessable, and saying so is part of the answer. */
+export function Coverage({ assessable, clients }: { readonly assessable: number | null | undefined; readonly clients: number | undefined }) {
+  if (assessable == null || !clients) return null;
+  return (
+    <p className="text-label text-cx-muted">
+      This lens can judge <span className="font-mono tabular-nums text-cx-ink-soft">{COUNT.format(assessable)}</span> of{' '}
+      <span className="font-mono tabular-nums text-cx-ink-soft">{COUNT.format(clients)}</span> clients; the rest have too few events to tell.
+    </p>
+  );
+}
+
 function ExposureBar({ exposure, total }: { readonly exposure: Readonly<Record<RiskTier, number>>; readonly total: number }) {
   return (
     <div className="space-y-2">
@@ -54,12 +65,20 @@ export function GeoSummary({ view, flows, reference }: { readonly view: ViewId; 
     return s.flaggedAccounts === 0 && flows!.mismatch_pairs.length === 0 ? (
       <Chip>NO_DATA</Chip>
     ) : (
-      <p className="text-xs text-cx-ink-soft">
-        <Strong>{COUNT.format(s.flaggedAccounts)}</Strong> accounts flagged across <Strong>{COUNT.format(flows!.mismatch_pairs.length)}</Strong> country pairs
-      </p>
+      <div className="space-y-1.5">
+        <p className="text-xs text-cx-ink-soft">
+          <Strong>{COUNT.format(s.flaggedAccounts)}</Strong> accounts flagged across <Strong>{COUNT.format(flows!.mismatch_pairs.length)}</Strong> country pairs
+        </p>
+        <Coverage assessable={flows!.coverage?.mismatch_assessable} clients={flows!.coverage?.clients} />
+      </div>
     );
   }
   if (s.corridorVolumeUsd === null) return <Chip>NO_DATA</Chip>;
   if (!s.exposure) return <p className="text-xs text-cx-muted">Tiers unavailable: the reference layer is needed to rate corridors.</p>;
-  return <ExposureBar exposure={s.exposure} total={s.corridorVolumeUsd} />;
+  return (
+    <div className="space-y-2">
+      <ExposureBar exposure={s.exposure} total={s.corridorVolumeUsd} />
+      <Coverage assessable={flows!.coverage?.corridor_assessable} clients={flows!.coverage?.clients} />
+    </div>
+  );
 }

@@ -72,6 +72,7 @@ export function describeSelection(
         }
       : null;
   }
+  if (selection.kind !== 'mismatch') return null;
   const p = flows?.mismatch_pairs.find((x) => `${x.kyc_country}>${x.ip_country}` === selection.id);
   return p
     ? {

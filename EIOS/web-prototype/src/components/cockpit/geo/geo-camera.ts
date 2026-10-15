@@ -29,7 +29,7 @@ export function cameraFor(selection: GeoSelection, flows: GeoFlows | null, refer
     const p = at(selection.id);
     return p ? { kind: 'point', center: { lat: p[1], lng: p[0] }, zoom: COUNTRY_ZOOM } : null;
   }
-  if (!flows) return null;
+  if (!flows || (selection.kind !== 'corridor' && selection.kind !== 'mismatch')) return null;
   const [from, to] = selection.id.split('>');
   const a = at(from);
   const b = at(to);
