@@ -1,7 +1,7 @@
 """Write the warm tier's table layout for Terraform, generated from the contracts (docs/warm-tier.md).
 
-    PYTHONPATH=src uv run python -m tools.gen_warm_tables          # rewrite the file
-    PYTHONPATH=src uv run python -m tools.gen_warm_tables --check  # fail if it is out of date (CI and tests)
+PYTHONPATH=src uv run python -m tools.gen_warm_tables          # rewrite the file
+PYTHONPATH=src uv run python -m tools.gen_warm_tables --check  # fail if it is out of date (CI and tests)
 """
 
 from __future__ import annotations
