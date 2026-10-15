@@ -262,3 +262,28 @@ def test_the_answer_reports_its_stage_timings(client: TestClient) -> None:
     assistant_gateway.set_runtime_for_testing(runtime)
     body = client.post(PATH, json=BODY).json()
     assert set(body["timing_ms"]) == {"model", "tools", "other", "model_calls"}
+
+
+def test_a_served_turn_moves_the_agent_objectives_on_the_operations_board(
+    client: TestClient,
+) -> None:
+    from eios.dataplane.plane import read_models
+    from eios.observability.slo_catalog import SLICategory
+
+    engine = read_models().slo_engine
+    before = next(
+        s.total_events
+        for s in engine.evaluate_all_slos()
+        if s.sli_name == SLICategory.AGENT_TURN_FULL_ANSWER
+    )
+    runtime, _ = make_runtime(
+        [call("get_aml_dossier", entity_id="CR84920"), draft(f"It is {FIGURE}.")]
+    )
+    assistant_gateway.set_runtime_for_testing(runtime)
+    assert client.post(PATH, json=BODY).status_code == 200
+    after = next(
+        s.total_events
+        for s in engine.evaluate_all_slos()
+        if s.sli_name == SLICategory.AGENT_TURN_FULL_ANSWER
+    )
+    assert after == before + 1
