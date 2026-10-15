@@ -12,7 +12,8 @@
 import * as React from 'react';
 import { Icon } from '@/components/ui/icon';
 import { useCockpit } from '../state/cockpit-context';
-import { APP_NAV_ITEMS, CURRENT_APP_NAV_ID } from './app-nav-items';
+import Link from 'next/link';
+import { APP_NAV_ITEMS, DEFAULT_APP_NAV_ID, type AppNavId } from './app-nav-items';
 import { useNavReveal } from './use-nav-reveal';
 import { getPipelineStatus, type PipelineTone } from '../state/pipeline-status';
 
@@ -37,45 +38,61 @@ function isTypingTarget(target: EventTarget | null): boolean {
   return el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.isContentEditable;
 }
 
-function NavRows({ onSelectCurrent }: { onSelectCurrent: () => void }) {
+function NavRows({ currentId, onSelect }: { currentId: AppNavId; onSelect: () => void }) {
   return (
     <ul className="py-2">
       {APP_NAV_ITEMS.map((item) => {
-        const isCurrent = item.id === CURRENT_APP_NAV_ID;
+        const isCurrent = item.id === currentId;
+        const className = `${ROW} h-11 ${
+          !item.available
+            ? 'cursor-not-allowed text-slate-400'
+            : isCurrent
+              ? 'bg-chrome-active text-white font-semibold cursor-pointer'
+              : 'cursor-pointer text-slate-200 hover:bg-chrome-hover hover:text-white'
+        }`;
+        const body = (
+          <>
+            <span className={ICON_COL}>
+              <Icon
+                icon={item.icon}
+                size="sm"
+                className={isCurrent ? 'text-chrome-accent' : item.available ? 'text-slate-300' : 'text-slate-500'}
+              />
+            </span>
+            <span className={`${LABEL} flex items-center gap-2`}>
+              <span className="flex-1 min-w-0">
+                <span className="block truncate">{item.label}</span>
+                <span className="block truncate text-label font-normal text-slate-400">{item.description}</span>
+              </span>
+              {!item.available && (
+                <span className="px-1 py-0.5 border border-white/20 text-label font-mono font-bold tracking-wider text-slate-300 leading-none">
+                  SOON
+                </span>
+              )}
+            </span>
+          </>
+        );
         return (
           <li key={item.id}>
-            <button
-              type="button"
-              data-testid={`nav-app-${item.id}`}
-              aria-current={isCurrent ? 'page' : undefined}
-              aria-disabled={item.available ? undefined : true}
-              onClick={item.available ? onSelectCurrent : undefined}
-              className={`${ROW} h-11 ${
-                !item.available
-                  ? 'cursor-not-allowed text-slate-400'
-                  : isCurrent
-                    ? 'bg-chrome-active text-white font-semibold cursor-pointer'
-                    : 'cursor-pointer text-slate-200 hover:bg-chrome-hover hover:text-white'
-              }`}>
-              <span className={ICON_COL}>
-                <Icon
-                  icon={item.icon}
-                  size="sm"
-                  className={isCurrent ? 'text-chrome-accent' : item.available ? 'text-slate-300' : 'text-slate-500'}
-                />
-              </span>
-              <span className={`${LABEL} flex items-center gap-2`}>
-                <span className="flex-1 min-w-0">
-                  <span className="block truncate">{item.label}</span>
-                  <span className="block truncate text-label font-normal text-slate-400">{item.description}</span>
-                </span>
-                {!item.available && (
-                  <span className="px-1 py-0.5 border border-white/20 text-label font-mono font-bold tracking-wider text-slate-300 leading-none">
-                    SOON
-                  </span>
-                )}
-              </span>
-            </button>
+            {item.available && item.href && !isCurrent ? (
+              <Link
+                href={item.href}
+                data-testid={`nav-app-${item.id}`}
+                onClick={onSelect}
+                className={className}>
+                {body}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                data-testid={`nav-app-${item.id}`}
+                aria-current={isCurrent ? 'page' : undefined}
+                aria-disabled={item.available ? undefined : true}
+                onClick={item.available ? onSelect : undefined}
+                className={className}>
+                {body}
+              </button>
+            )}
           </li>
         );
       })}
@@ -143,7 +160,10 @@ function RailFooter({ onCommandBar, onShortcuts }: { onCommandBar: () => void; o
   );
 }
 
-export function AppNavRail({ onOpenShortcuts }: { onOpenShortcuts?: () => void } = {}) {
+export function AppNavRail({
+  onOpenShortcuts,
+  currentId = DEFAULT_APP_NAV_ID,
+}: { onOpenShortcuts?: () => void; currentId?: AppNavId } = {}) {
   const { openChat } = useCockpit();
   const { open, openNow, closeNow, toggle, scheduleOpen, scheduleClose, cancelScheduled } = useNavReveal();
   const rootRef = React.useRef<HTMLDivElement>(null);
@@ -228,7 +248,7 @@ export function AppNavRail({ onOpenShortcuts }: { onOpenShortcuts?: () => void }
         </div>
 
         <nav aria-label="Primary" className="flex-1 overflow-y-auto overflow-x-hidden">
-          <NavRows onSelectCurrent={closeNow} />
+          <NavRows currentId={currentId} onSelect={closeNow} />
         </nav>
 
         <RailFooter

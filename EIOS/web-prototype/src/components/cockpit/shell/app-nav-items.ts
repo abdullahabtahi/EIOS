@@ -1,8 +1,8 @@
 /**
  * Top-level sections of the EIOS global navigation rail.
  * `workstations` is the live tripartite cockpit (its personas are switched from
- * the header strip, so the rail lists it once). The others are planned modules
- * whose pages are not built yet and render as disabled entries flagged SOON.
+ * the header strip, so the rail lists it once). `geospatial` is its own route. The rest
+ * are planned modules whose pages are not built yet and render as disabled entries flagged SOON.
  */
 
 export type AppNavId = 'workstations' | 'geospatial' | 'openbb';
@@ -13,6 +13,8 @@ export interface AppNavItem {
   readonly icon: string;
   readonly description: string;
   readonly available: boolean;
+  /** Route of the section's page; absent for planned sections. */
+  readonly href?: string;
 }
 
 export const APP_NAV_ITEMS: readonly AppNavItem[] = [
@@ -22,13 +24,15 @@ export const APP_NAV_ITEMS: readonly AppNavItem[] = [
     icon: 'dashboard',
     description: 'Role-based analytics',
     available: true,
+    href: '/cockpit',
   },
   {
     id: 'geospatial',
     label: 'Geospatial',
     icon: 'map',
     description: 'Maps & AI analytics',
-    available: false,
+    available: true,
+    href: '/cockpit/geospatial',
   },
   {
     id: 'openbb',
@@ -39,5 +43,5 @@ export const APP_NAV_ITEMS: readonly AppNavItem[] = [
   },
 ];
 
-/** The section whose view the shell currently renders. */
-export const CURRENT_APP_NAV_ID: AppNavId = 'workstations';
+/** The section rendered when a shell does not name one (the workstations cockpit). */
+export const DEFAULT_APP_NAV_ID: AppNavId = 'workstations';
