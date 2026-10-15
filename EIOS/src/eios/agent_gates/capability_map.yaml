@@ -11,6 +11,7 @@ capabilities:
   - {id: aml.dossier, kind: evidence, copilot: inspect_aml_entity, target: get_aml_dossier}
   - {id: aml.network, kind: evidence, copilot: query_graph_topology, target: get_network_evidence}
   - {id: aml.timeline, kind: evidence, copilot: null, target: get_activity_timeline}
+  - {id: aml.history, kind: evidence, copilot: null, target: get_account_history}
   - {id: aml.withdrawal_risk, kind: evidence, copilot: null, target: check_withdrawal_risk}
   - {id: aml.sar_draft, kind: draft, copilot: null, target: draft_sar}
   - {id: knowledge.regulation, kind: knowledge, copilot: query_policy_search, target: search_regulations, copilot_fixture_only: true}
@@ -38,7 +39,7 @@ capabilities:
   - {id: ops.calibration, kind: evidence, copilot: null, target: get_calibration_status}
   - {id: ops.red_lines, kind: evidence, copilot: null, target: get_red_lines}
 roles:
-  aml_investigator: [metric.get, entity.resolve, causal.evidence, calc.compare, aml.alerts, aml.dossier, aml.network, aml.timeline, aml.withdrawal_risk, knowledge.regulation, aml.sar_draft, action.propose_hold]
+  aml_investigator: [metric.get, entity.resolve, causal.evidence, calc.compare, aml.alerts, aml.dossier, aml.network, aml.timeline, aml.history, aml.withdrawal_risk, knowledge.regulation, aml.sar_draft, action.propose_hold]
   partner_manager: [metric.get, entity.resolve, calc.compare, partner.worklist, partner.signals, partner.integrity, partner.client_quality, partner.comms, knowledge.policy, action.propose_partner]
   executive: [metric.get, entity.resolve, causal.evidence, calc.compare, exec.briefing, exec.forecast, exec.what_if, exec.cohort_trend, exec.market_context]
   compliance_auditor: [metric.get, knowledge.regulation, compliance.ledger, compliance.intent_status, compliance.audit_status, compliance.verify_chain]

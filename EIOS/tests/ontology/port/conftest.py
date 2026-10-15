@@ -9,12 +9,17 @@ from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.principal import Principal, principal_for
 from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.service import GovernedToolPort
+from eios.warm.sink import LocalWarmSink
+from eios.warm.store import LocalWarmStore
 from tests.knowledge.passages import ALL
 
 
 @pytest.fixture
 def port() -> GovernedToolPort:
-    return build_port(replace(ReadModels.default(), knowledge=StaticIndex(ALL)))
+    warm = LocalWarmStore(
+        LocalWarmSink().connection
+    )  # the real tables, empty: a history answer is an honest empty one
+    return build_port(replace(ReadModels.default(), knowledge=StaticIndex(ALL), warm=warm))
 
 
 def who(workstation: str) -> Principal:

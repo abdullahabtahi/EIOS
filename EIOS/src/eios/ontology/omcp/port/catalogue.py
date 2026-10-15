@@ -11,6 +11,7 @@ from eios.ontology.omcp.port import (
     partner_tools,
     proposals,
     shared_tools,
+    warm_tools,
 )
 from eios.ontology.omcp.port.descriptions import DESCRIPTIONS
 from eios.ontology.omcp.port.readmodels import ReadModels
@@ -28,6 +29,7 @@ def all_specs() -> tuple[ToolSpec, ...]:
         *compliance_tools.TOOLS,
         *knowledge_tools.TOOLS,
         *ops_tools.TOOLS,
+        *warm_tools.TOOLS,
     )
     return tuple(
         replace(s, description=DESCRIPTIONS.get(s.capability, s.description)) for s in declared

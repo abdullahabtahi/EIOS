@@ -63,15 +63,18 @@ def _payload(row: Any) -> dict[str, Any]:
     }
 
 
-def replay_transactions(world: AmlWorld, as_of: datetime) -> ReplayOutcome:
+def replay_transactions(
+    world: AmlWorld,
+    as_of: datetime,
+    hours: int = REPLAY_HOURS,
+    breach_share: float = BREACH_SHARE,
+) -> ReplayOutcome:
     tx = world.transactions
-    window = tx[
-        (tx["timestamp"] <= as_of) & (tx["timestamp"] > as_of - timedelta(hours=REPLAY_HOURS))
-    ]
+    window = tx[(tx["timestamp"] <= as_of) & (tx["timestamp"] > as_of - timedelta(hours=hours))]
     rows = [(_payload(r), r.timestamp.to_pydatetime()) for r in window.itertuples()]
     rng = np.random.default_rng(world.config.seed ^ _SEED_SALT)
     planted_at = set(
-        rng.choice(len(rows), size=round(len(rows) * BREACH_SHARE), replace=False).tolist()
+        rng.choice(len(rows), size=round(len(rows) * breach_share), replace=False).tolist()
     )
     injector = BreachInjector(RNGManager(world.config.seed ^ _SEED_SALT))
     pipeline = IngestionPipeline(
@@ -96,7 +99,7 @@ def replay_transactions(world: AmlWorld, as_of: datetime) -> ReplayOutcome:
     dlq = tuple(pipeline.dlq_dispatcher.flush())
     return ReplayOutcome(
         pipeline=pipeline,
-        window_start=as_of - timedelta(hours=REPLAY_HOURS),
+        window_start=as_of - timedelta(hours=hours),
         window_end=as_of,
         offered=len(rows),
         accepted=len(accepted),
