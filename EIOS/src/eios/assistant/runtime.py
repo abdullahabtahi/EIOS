@@ -29,6 +29,7 @@ from eios.assistant.assembler_agent import (
     FEEDBACK_KEY,
 )
 from eios.assistant.config import AssistantSettings
+from eios.assistant.intent import BROAD_KEY, ON_SCREEN_KEY, is_broad, resolve_entity
 from eios.assistant.prefetch import PLATFORM_CALL, PREFETCH_KEY
 from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED, SCREENED_KEY
 from eios.assistant.sessions import APP_NAME, session_key, valid_entity_id
@@ -125,9 +126,15 @@ def _unavailable(text: str, reason: str) -> Answer:
 
 
 def _fresh_turn_state(
-    entity_id: str | None, entity_context: dict[str, Any] | None
+    entity_id: str | None,
+    entity_context: dict[str, Any] | None,
+    *,
+    on_screen: str | None = None,
+    broad: bool = False,
 ) -> dict[str, Any]:
     return {
+        ON_SCREEN_KEY: on_screen,  # set when the question names another entity than the one on screen
+        BROAD_KEY: broad,
         ATTEMPT_KEY: 0,
         FEEDBACK_KEY: "",
         PREFETCH_KEY: False,
@@ -252,6 +259,7 @@ class AssistantRuntime:
         app = App(name=APP_NAME, root_agent=agent, plugins=list(self._plugins))
         runner = Runner(app=app, session_service=self._sessions, auto_create_session=True)
         offered = {spec.name for spec in self._port.list_tools(principal)}
+        subject, _ = resolve_entity(principal.workstation, question, entity_id)
         answer: Answer | None = None
         blocked: str | None = None
         calls: dict[str, dict[str, Any]] = {}
@@ -260,7 +268,12 @@ class AssistantRuntime:
             user_id=principal.uid,
             session_id=session_key(principal.workstation.value, entity_id),
             new_message=user_message(question),
-            state_delta=_fresh_turn_state(entity_id, entity_context),
+            state_delta=_fresh_turn_state(
+                subject,
+                entity_context,
+                on_screen=entity_id if subject != entity_id else None,
+                broad=is_broad(question),
+            ),
             run_config=RunConfig(max_llm_calls=self._settings.max_llm_calls),
         ):
             events.append(event)

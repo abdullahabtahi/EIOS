@@ -17,6 +17,7 @@ from google.adk.models.base_llm import BaseLlm
 
 from eios.assistant.assembler_agent import DRAFT_KEY, FEEDBACK_KEY, AnswerAssembler
 from eios.assistant.assembly import MAX_ATTEMPTS
+from eios.assistant.intent import BROAD_KEY, ON_SCREEN_KEY
 from eios.assistant.prefetch import Prefetcher
 from eios.assistant.timing import TimedLlm, timed
 from eios.assistant.tools import build_toolset
@@ -123,6 +124,21 @@ You are the {title} assistant in the Enterprise Intelligence cockpit. Answer in 
 """
 
 
+_BROAD_ANSWER = """\
+This question asks for the full picture, so rule 8 (keep it short) does not apply. Write one short paragraph per
+heading, using every part of the tool results that bears on it:
+ - Where it stands: what the entity is and its standing (tier, region, quadrant, exposure, deadline, status).
+ - Why: the drivers the data names, with their figures.
+ - What can be done: each action or playbook a result offers, with its cost, expected effect and who must approve it
+   (you may propose one with a propose tool if asked; you never approve). Say where a result gives no effect figure.
+ - What to check next: the evidence a tool did not return or was not asked for, as a question the operator can ask
+   you about something this entity's tools cover, never as a tool name.
+When a result states what it checked (referred clients, sub-affiliates, rings found or none, its own caveat), say
+so under "Where it stands", including when it found nothing. Show a figure once, in the form it reads best. Never
+show an internal id such as a playbook id; name the thing by its title.
+Do not pad: leave out a heading the data does not support, and never fill it with a guess."""
+
+
 def instruction_for(
     workstation: Workstation, plain_figures: bool = False
 ) -> Callable[[ReadonlyContext], str]:
@@ -142,6 +158,13 @@ def instruction_for(
         parts = [base]
         entity = state.get("entity_id")
         parts.append(f"Entity on screen: {entity}." if entity else "No entity is on screen.")
+        if elsewhere := state.get(ON_SCREEN_KEY):
+            parts.append(
+                f"The question names {entity}, not {elsewhere} which is on screen: answer about {entity}, "
+                "and say which entity you answered about."
+            )
+        if state.get(BROAD_KEY):
+            parts.append(_BROAD_ANSWER)
         feedback = state.get(FEEDBACK_KEY)
         if feedback:
             parts.append(

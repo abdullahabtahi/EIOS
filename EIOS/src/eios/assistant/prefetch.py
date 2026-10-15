@@ -22,6 +22,7 @@ from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
 
+from eios.assistant.intent import is_broad
 from eios.assistant.tools import (
     FACTS_KEY,
     IDENTIFIERS_KEY,
@@ -77,6 +78,10 @@ def plan(workstation: Workstation, question: str, entity_id: str | None) -> list
         steps.append(("get_aml_dossier", {"entity_id": entity_id}))
     elif workstation is Workstation.PARTNER_MANAGER and entity_id and _PARTNER.match(entity_id):
         steps.append(("get_partner_signals", {"entity_id": entity_id}))
+        if is_broad(
+            question
+        ):  # the full picture: the integrity check runs in parallel, costing no model call
+            steps.append(("get_partner_integrity", {"entity_id": entity_id}))
     elif workstation is Workstation.EXECUTIVE and _BRIEFING.search(question):
         steps.append(("get_briefing", {}))
     return steps
