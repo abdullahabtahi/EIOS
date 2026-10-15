@@ -135,31 +135,52 @@ describe('Every interactive control has an accessible name in every workstation'
   );
 });
 
+const quarantined = {
+  dlq_id: 'f3a1c2d4-0000-4000-8000-000000000001',
+  source_stream: 'eios.l1.transactions_aml.v1',
+  error_message: 'amount: Input should be greater than 0',
+  status: 'QUARANTINED',
+  payload: { txn_id: 'TX-0000042', amount: '-500.00' },
+};
+const opsState = () => ({
+  ...getMockWorkstationState('data_operations'),
+  canvasPayload: {
+    type: 'OPERATIONS_SLO' as const,
+    data: { sla_statuses: [], error_budgets: [{ slo_id: 'x', name: 'x', consumed_pct: 0, status: 'HEALTHY' }], red_line_gates: [], dlq: [quarantined] },
+  },
+});
+
 describe('DLQ redrive reports the real outcome', () => {
-  it('shows an inline failure (no alert, no fake success) when the redrive service is unreachable', async () => {
+  it('shows the backend\'s reason inline, and no fake success, when the record still breaks its contract', async () => {
     const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
     global.fetch = vi.fn().mockImplementation((url: string) =>
       String(url).includes('/dlq/redrive')
-        ? Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({}) })
-        : Promise.resolve({ ok: true, json: () => Promise.resolve(getMockWorkstationState('data_operations')) }),
+        ? Promise.resolve({ ok: false, status: 422, json: () => Promise.resolve({ detail: 'still breaks its contract: amount: Input should be greater than 0' }) })
+        : Promise.resolve({ ok: true, json: () => Promise.resolve(opsState()) }),
     ) as unknown as typeof fetch;
     render(<CockpitProvider><OperationsBoardView /></CockpitProvider>);
-    fireEvent.click(screen.getAllByRole('button', { name: /Redrive Pipeline/i })[0]);
-    expect(await screen.findByText(/Redrive failed/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Redrive dispatched/i)).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('button', { name: /Redrive/i }));
+    expect(await screen.findByText(/Still quarantined: still breaks its contract/i)).toBeInTheDocument();
+    expect(screen.queryByText(/accepted/i)).not.toBeInTheDocument();
     expect(alertSpy).not.toHaveBeenCalled();
   });
 
-  it('confirms inline only when the service accepts the request', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+  it('confirms inline, and stops offering the record, only when the pipeline accepts it', async () => {
     global.fetch = vi.fn().mockImplementation((url: string) =>
       String(url).includes('/dlq/redrive')
         ? Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({}) })
-        : Promise.resolve({ ok: true, json: () => Promise.resolve(getMockWorkstationState('data_operations')) }),
+        : Promise.resolve({ ok: true, json: () => Promise.resolve(opsState()) }),
     ) as unknown as typeof fetch;
     render(<CockpitProvider><OperationsBoardView /></CockpitProvider>);
-    fireEvent.click(screen.getAllByRole('button', { name: /Redrive Pipeline/i })[0]);
-    expect(await screen.findByText(/Redrive dispatched/i)).toBeInTheDocument();
-    expect(alertSpy).not.toHaveBeenCalled();
+    fireEvent.click(await screen.findByRole('button', { name: /Redrive/i }));
+    expect(await screen.findByText(/Redriven through the pipeline and accepted/i)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole('button', { name: /Redrive/i })).not.toBeInTheDocument());
+  });
+
+  it('says nothing is quarantined when the backend sent no records', async () => {
+    global.fetch = vi.fn().mockResolvedValue({ ok: true, json: () => Promise.resolve(getMockWorkstationState('data_operations')) }) as unknown as typeof fetch;
+    render(<CockpitProvider><OperationsBoardView /></CockpitProvider>);
+    expect(await screen.findByText(/No records are quarantined/i)).toBeInTheDocument();
+    expect(screen.queryByText(/dlq_rec_90112/)).not.toBeInTheDocument();
   });
 });

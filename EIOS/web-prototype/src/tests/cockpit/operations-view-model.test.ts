@@ -51,8 +51,8 @@ describe('buildOperationsView', () => {
     expect(budget.status).toBe('HEALTHY');
 
     expect(view.gates).toEqual([
-      { id: 'RL-1', name: 'Metric Calculation Determinism', status: 'PASS' },
-      { id: 'RL-2', name: 'Four-Eyes Enforcement Integrity', status: 'FAIL' },
+      { id: 'RL-1', name: 'Metric Calculation Determinism', status: 'PASS', basis: '' },
+      { id: 'RL-2', name: 'Four-Eyes Enforcement Integrity', status: 'FAIL', basis: '' },
     ]);
   });
 
@@ -92,12 +92,12 @@ describe('buildOperationsView', () => {
     expect(view.cards[0]).toMatchObject({ id: 'SLO-1', primary: '18.4s', budgetRemainingPct: 75.8, status: 'HEALTHY' });
   });
 
-  it('falls back to a clearly flagged illustrative baseline when there is no usable payload', () => {
+  it('is unavailable, with nothing in its place, when there is no usable payload', () => {
     for (const bad of [null, undefined, {}, { type: 'CHURN_RADAR', data: [] }, { type: 'OPERATIONS_SLO', data: 'nope' }]) {
       const view = buildOperationsView(bad);
-      expect(view.source).toBe('baseline');
-      expect(view.cards).toHaveLength(6);
-      expect(view.gates).toHaveLength(7);
+      expect(view.source).toBe('unavailable');
+      expect(view.cards).toHaveLength(0);
+      expect(view.gates).toHaveLength(0);
     }
   });
 
@@ -111,5 +111,43 @@ describe('buildOperationsView', () => {
     });
     expect(view.cards[0].status).toBe('DEGRADED');
     expect(view.gates[0].status).toBe('FAIL');
+  });
+
+  it('keeps an unobserved objective and an unmeasured gate honest: no data is not healthy, not measured is not a pass', () => {
+    const view = buildOperationsView({
+      type: 'OPERATIONS_SLO',
+      data: {
+        sla_statuses: [],
+        error_budgets: [
+          { slo_id: 'a', name: 'Observed', consumed_pct: 0, status: 'HEALTHY', total_events: 25 },
+          { slo_id: 'b', name: 'Never probed', consumed_pct: null, status: 'NO_DATA', total_events: 0 },
+        ],
+        red_line_gates: [
+          { gate_id: 'RL-1', name: 'a', status: 'PASS', basis: 'recomputed twice' },
+          { gate_id: 'RL-2', name: 'b', status: 'NOT_MEASURED', basis: 'would write to the ledger' },
+        ],
+      },
+    });
+    const never = view.cards.find((c) => c.id === 'b')!;
+    expect(never).toMatchObject({ status: 'NO_DATA', primary: 'no data', budgetRemainingPct: null });
+    expect(never.details).toEqual([{ label: 'Observed events', value: 'none' }]);
+    expect(view.summary).toEqual({ tone: 'warn', label: '1 OF 2 OBSERVED' });
+    expect(view.gates[1]).toMatchObject({ status: 'NOT_MEASURED', basis: 'would write to the ledger' });
+    expect(view.gateSummary).toEqual({ tone: 'warn', label: '1/2 PASSING, 1 NOT MEASURED' });
+  });
+
+  it('reports that freshness was not judged, and the contract breach rate, for an engine-profiled product', () => {
+    const view = buildOperationsView({
+      type: 'OPERATIONS_SLO',
+      data: {
+        sla_statuses: [
+          { product_name: 'transactions_aml', status: 'DEGRADED', freshness_sla_seconds: 30, null_check_pass_rate: 1, last_ingestion_timestamp: '2026-10-14T06:35:00Z', freshness_judged: false, newest_event_age_seconds: 5104, contract_breach_rate: 0.0039, quarantined_records: 11 },
+        ],
+      },
+    });
+    const labels = Object.fromEntries(view.cards[0].details.map((d) => [d.label, d.value]));
+    expect(labels['Freshness']).toBe('not judged (newest event 85 min old)');
+    expect(labels['Contract breaches']).toBe('0.39%');
+    expect(labels['Quarantined']).toBe('11');
   });
 });

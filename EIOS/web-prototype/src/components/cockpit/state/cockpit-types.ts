@@ -509,10 +509,10 @@ export interface FlywheelFeedbackSubmission {
 
 export interface FlywheelDiagnosticStatus {
   totalFeedbackEvents: number;
-  uncalibratedDiscrepancies: number;
-  shadowModelBrierScore: number;
+  uncalibratedDiscrepancies: number | null; // null: nothing counts them on this plane
+  shadowModelBrierScore: number | null;
   calibrationDriftDetected: boolean;
-  lastRetrainingTimestamp: string;
+  lastRetrainingTimestamp: string | null;
 }
 
 export interface DisasterRecoveryProof {
@@ -523,14 +523,20 @@ export interface DisasterRecoveryProof {
   kmsKeyringRotationStatus: 'ACTIVE_ROTATED' | 'PENDING' | 'VERIFIED_VALID' | string;
   backupCheckpointHash: string;
   warmStartCacheState: 'WARMED' | 'COLD' | 'REHYDRATING' | string;
+  /** Set when the proof is a drill that was actually run: what it restored and how fast. */
+  rowsExported?: number;
+  rowsRestored?: number;
+  restoreMs?: number;
 }
 
 export interface RedLineGateStatus {
   gateId: 'RL-1' | 'RL-2' | 'RL-3' | 'RL-4' | 'RL-5' | 'RL-6' | 'RL-7';
   name: string;
-  status: 'PASS' | 'FAIL';
-  marginDelta: number;
+  status: 'PASS' | 'FAIL' | 'NOT_MEASURED';
+  marginDelta: number | null;
   evaluatedOn: string;
+  /** What was measured, or why nothing was. */
+  basis?: string;
 }
 
 /** One account's computed dossier and canvas, fetched when the operator selects a case. */

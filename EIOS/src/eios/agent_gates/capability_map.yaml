@@ -36,9 +36,10 @@ capabilities:
   - {id: ops.reliability, kind: evidence, copilot: null, target: get_reliability}
   - {id: ops.drill_status, kind: evidence, copilot: null, target: get_drill_status}
   - {id: ops.calibration, kind: evidence, copilot: null, target: get_calibration_status}
+  - {id: ops.red_lines, kind: evidence, copilot: null, target: get_red_lines}
 roles:
   aml_investigator: [metric.get, entity.resolve, causal.evidence, calc.compare, aml.alerts, aml.dossier, aml.network, aml.timeline, aml.withdrawal_risk, knowledge.regulation, aml.sar_draft, action.propose_hold]
   partner_manager: [metric.get, entity.resolve, calc.compare, partner.worklist, partner.signals, partner.integrity, partner.client_quality, partner.comms, knowledge.policy, action.propose_partner]
   executive: [metric.get, entity.resolve, causal.evidence, calc.compare, exec.briefing, exec.forecast, exec.what_if, exec.cohort_trend, exec.market_context]
   compliance_auditor: [metric.get, knowledge.regulation, compliance.ledger, compliance.intent_status, compliance.audit_status, compliance.verify_chain]
-  data_operations: [metric.get, ops.dq_board, ops.reliability, ops.drill_status, ops.calibration]
+  data_operations: [metric.get, ops.dq_board, ops.reliability, ops.drill_status, ops.calibration, ops.red_lines]

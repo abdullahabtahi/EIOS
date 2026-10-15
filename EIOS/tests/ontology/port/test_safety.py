@@ -57,9 +57,10 @@ SAMPLE_ARGS: dict[str, dict[str, object]] = {
     "get_dq_board": {},
     "get_reliability": {},
     "get_drill_status": {},
+    "get_red_lines": {},
 }
 # Capabilities that answer with a typed error today because the data does not exist yet (and say so).
-UNAVAILABLE_TODAY = {"get_client_quality", "get_calibration_status"}
+UNAVAILABLE_TODAY = {"get_client_quality", "get_calibration_status", "get_red_lines"}
 SAMPLE_ARGS["get_client_quality"] = {"entity_id": "PTR-882"}
 SAMPLE_ARGS["get_calibration_status"] = {}
 CALLER = {"compare_facts": "partner_manager"}  # its sample inputs are partner facts

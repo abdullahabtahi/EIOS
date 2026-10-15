@@ -8,7 +8,8 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 
-from eios.dataplane.plane import read_models
+from eios.dataplane.ops_service import RedriveRejectedError, UnknownRecordError
+from eios.dataplane.plane import operations_engine_service, read_models
 
 router = APIRouter(tags=["Data Operations"])
 ops_svc = read_models().operations
@@ -17,7 +18,7 @@ TELEMETRY_PATH = "/api/v1/ops/telemetry"
 DLQ_PATH = "/api/v1/ops/dlq"
 DLQ_REDRIVE_PATH = "/api/v1/ops/dlq/redrive"
 
-# Mock DLQ storage
+# The fixture plane's quarantine list. On the engine plane the ingestion pipeline's own records are served instead.
 _DLQ_STORE: list[dict[str, Any]] = [
     {
         "dlq_id": "dlq_rec_90112",
@@ -87,35 +88,60 @@ class RedriveResponse(BaseModel):
 @router.get(TELEMETRY_PATH, response_model=OpsTelemetryResponse)
 def get_ops_telemetry() -> OpsTelemetryResponse:
     """Returns operational health, SLAs, and active alerts across all 6 core data products."""
-    products = [p.to_contract_dict() for p in ops_svc.get_data_products()]
+    engine = operations_engine_service()
+    products = (
+        engine.product_cards()
+        if engine is not None
+        else [p.to_contract_dict() for p in ops_svc.get_data_products()]
+    )
     alerts = ops_svc.get_contract_breach_alerts()
     conflicts = ops_svc.get_identity_cluster_conflicts()
+    records = engine.dlq_records() if engine is not None else _DLQ_STORE
 
     return OpsTelemetryResponse(
         as_of=datetime.now(UTC).isoformat(),
         sla_freshness_target_seconds=30,
-        slo_met=True,
+        slo_met=all(p["status"] == "HEALTHY" for p in products),
         total_data_products=len(products),
         products=products,
         breach_alerts=alerts,
         identity_conflicts=conflicts,
-        quarantined_dlq_depth=len([r for r in _DLQ_STORE if r["status"] == "QUARANTINED"]),
+        quarantined_dlq_depth=len([r for r in records if r["status"] == "QUARANTINED"]),
     )
 
 
 @router.get(DLQ_PATH, response_model=DlqRecordsResponse)
 def get_dlq_records() -> DlqRecordsResponse:
     """Returns quarantined Dead Letter Queue records for operator inspection."""
+    engine = operations_engine_service()
+    records = engine.dlq_records() if engine is not None else _DLQ_STORE
     return DlqRecordsResponse(
         as_of=datetime.now(UTC).isoformat(),
-        total_quarantined=len(_DLQ_STORE),
-        records=_DLQ_STORE,
+        total_quarantined=len(records),
+        records=records,
     )
 
 
 @router.post(DLQ_REDRIVE_PATH, response_model=RedriveResponse)
 def redrive_dlq_record(req: RedriveRequest) -> RedriveResponse:
-    """Redrives quarantined DLQ record back into live processing pipeline after schema repair."""
+    """Redrives a quarantined record through the pipeline after schema repair; a record that still breaks stays put."""
+    engine = operations_engine_service()
+    if engine is not None:
+        try:
+            done = engine.redrive(req.dlq_id, req.sanitized_payload)
+        except UnknownRecordError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail=f"DLQ record '{req.dlq_id}' not found"
+            ) from exc
+        except RedriveRejectedError as exc:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+            ) from exc
+        return RedriveResponse(
+            dlq_id=req.dlq_id,
+            redrive_count=done["redrive_count"],
+            redriven_at=done["redriven_at"],
+        )
     target = next((r for r in _DLQ_STORE if r["dlq_id"] == req.dlq_id), None)
     if not target:
         raise HTTPException(

@@ -16,11 +16,26 @@ import { Chip, type ChipTone } from '../ui/chip';
 import { PanelHeader } from '../ui/panel-header';
 import { authFetch } from '@/lib/auth/token';
 
-const STATUS_TONE: Record<OpsStatus, ChipTone> = { HEALTHY: 'ok', DEGRADED: 'warn', BREACHED: 'bad' };
+interface DlqRecord {
+  dlq_id: string;
+  source_stream: string;
+  error_message: string;
+  status: string;
+  payload: unknown;
+}
+
+/** The quarantined records the backend sent with the board; none when it sent none. */
+function dlqRecords(canvas: unknown): DlqRecord[] {
+  const data = (canvas as { data?: { dlq?: unknown } } | null)?.data;
+  return Array.isArray(data?.dlq) ? (data.dlq as DlqRecord[]) : [];
+}
+
+const STATUS_TONE: Record<OpsStatus, ChipTone> = { HEALTHY: 'ok', DEGRADED: 'warn', BREACHED: 'bad', NO_DATA: 'neutral' };
 const STATUS_BAR: Record<OpsStatus, string> = {
   HEALTHY: 'bg-cx-ok-solid',
   DEGRADED: 'bg-cx-warn-solid',
   BREACHED: 'bg-cx-bad-solid',
+  NO_DATA: 'bg-cx-line',
 };
 const SUMMARY_TONE: Record<OpsTone, ChipTone> = { ok: 'ok', warn: 'warn', bad: 'bad' };
 
@@ -28,6 +43,12 @@ export function OperationsBoardView() {
   const { state, toggleSimulatedOutage } = useCockpit();
   const view = React.useMemo(() => buildOperationsView(state.canvasPayload), [state.canvasPayload]);
   const [redrive, setRedrive] = React.useState<Record<string, { ok: boolean; message: string }>>({});
+  const [done, setDone] = React.useState<Set<string>>(new Set());
+  const records = React.useMemo(
+    () => dlqRecords(state.canvasPayload).map((r) => (done.has(r.dlq_id) ? { ...r, status: 'REDRIVEN_COMMITTED' } : r)),
+    [state.canvasPayload, done],
+  );
+  const held = records.filter((r) => r.status === 'QUARANTINED');
 
   const redriveRecord = async (id: string) => {
     try {
@@ -36,14 +57,16 @@ export function OperationsBoardView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dlq_id: id }),
       });
+      const detail = res.ok ? '' : String((await res.json().catch(() => ({}))).detail ?? '');
       setRedrive((prev) => ({
         ...prev,
         [id]: res.ok
-          ? { ok: true, message: `Redrive dispatched for ${id}` }
-          : { ok: false, message: `Redrive failed for ${id}: DLQ service responded ${res.status}` },
+          ? { ok: true, message: 'Redriven through the pipeline and accepted' }
+          : { ok: false, message: detail ? `Still quarantined: ${detail}` : `Redrive failed: DLQ service responded ${res.status}` },
       }));
+      if (res.ok) setDone((prev) => new Set(prev).add(id));
     } catch {
-      setRedrive((prev) => ({ ...prev, [id]: { ok: false, message: `Redrive failed for ${id}: DLQ service unreachable` } }));
+      setRedrive((prev) => ({ ...prev, [id]: { ok: false, message: 'Redrive failed: DLQ service unreachable' } }));
     }
   };
 
@@ -62,12 +85,16 @@ export function OperationsBoardView() {
             title="Data Product SLA Freshness & Error Budget Burndowns"
             actions={
               <>
-                {view.source === 'baseline' && <Chip>[ILLUSTRATIVE] baseline</Chip>}
                 <Chip tone={SUMMARY_TONE[view.summary.tone]}>{view.summary.label}</Chip>
               </>
             }
           />
 
+          {view.source === 'unavailable' && (
+            <p role="alert" className="p-3 text-xs bg-cx-sub border border-cx-line text-cx-muted font-sans">
+              No operations data was received from the backend, so nothing is shown in its place.
+            </p>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
             {view.cards.map((card) => (
               <div key={card.id} className="p-3 bg-cx-sub border border-cx-line space-y-2">
@@ -129,12 +156,18 @@ export function OperationsBoardView() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-label">
             {view.gates.map((gate) => (
-              <div key={gate.id} className="p-2.5 bg-cx-sub border border-cx-line flex items-center justify-between">
+              <div
+                key={gate.id}
+                title={gate.basis || undefined}
+                className="p-2.5 bg-cx-sub border border-cx-line flex items-center justify-between"
+              >
                 <div>
                   <span className="font-bold text-cx-accent mr-2">{gate.id}:</span>
                   <span className="font-sans text-cx-ink font-medium">{gate.name}</span>
                 </div>
-                <Chip tone={gate.status === 'PASS' ? 'ok' : 'bad'}>{gate.status}</Chip>
+                <Chip tone={gate.status === 'PASS' ? 'ok' : gate.status === 'FAIL' ? 'bad' : 'neutral'}>
+                  {gate.status === 'NOT_MEASURED' ? 'NOT MEASURED' : gate.status}
+                </Chip>
               </div>
             ))}
           </div>
@@ -153,61 +186,51 @@ export function OperationsBoardView() {
             <div className="flex items-center gap-2">
               <span className="material-symbols-sharp text-base text-amber-600">report_problem</span>
               <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
-                Quarantined Dead Letter Queue (DLQ) &amp; Live Redrive Controls
+                Quarantined Dead Letter Queue (DLQ) &amp; Redrive
               </h3>
             </div>
             <span className="px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 text-label font-bold font-mono">
-              QUARANTINE DEPTH: 2 RECORDS [ILLUSTRATIVE]
+              QUARANTINE DEPTH: {held.length} {held.length === 1 ? 'RECORD' : 'RECORDS'}
             </span>
           </div>
 
+          {records.length === 0 && (
+            <p className="text-xs text-cx-muted font-sans">No records are quarantined.</p>
+          )}
           <div className="space-y-2">
-            {[
-              {
-                id: 'dlq_rec_90112',
-                stream: 'kafka.raw.trade_events.v2',
-                error: 'Missing required field execution_price_usd',
-                status: 'QUARANTINED',
-                payload: '{"account_id": "ACC-99210", "symbol": "XAUUSD", "volume_lots": 1.5}',
-              },
-              {
-                id: 'dlq_rec_90113',
-                stream: 'kafka.raw.kyc_profiles.v1',
-                error: 'IdP signature mismatch against public JWKS',
-                status: 'QUARANTINED',
-                payload: '{"client_id": "CR-SUSPECT-84920", "idp_provider": "SumSub"}',
-              },
-            ].map((item) => (
-              <div key={item.id} className="p-3 bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-900">{item.id}</span>
+            {records.map((item) => (
+              <div key={item.dlq_id} className="p-3 bg-slate-50 border border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="space-y-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-bold text-slate-900">{item.dlq_id.slice(0, 8)}</span>
                     <span className="px-1.5 py-0.2 bg-slate-200 text-slate-700 text-label font-mono">
-                      Stream: {item.stream}
+                      Stream: {item.source_stream}
                     </span>
                     <span className="px-1.5 py-0.2 bg-amber-100 text-amber-800 text-label font-mono font-bold">
                       {item.status}
                     </span>
                   </div>
-                  <p className="text-label text-red-600 font-sans">Reason: {item.error}</p>
+                  <p className="text-label text-red-600 font-sans">Reason: {item.error_message}</p>
                   <code className="text-label text-slate-500 block truncate max-w-lg bg-white p-1 border border-slate-200">
-                    {item.payload}
+                    {JSON.stringify(item.payload)}
                   </code>
-                  {redrive[item.id] && (
-                    <p role="status" className={`text-label font-mono font-semibold ${redrive[item.id].ok ? 'text-cx-ok' : 'text-cx-bad'}`}>
-                      {redrive[item.id].message}
+                  {redrive[item.dlq_id] && (
+                    <p role="status" className={`text-label font-mono font-semibold ${redrive[item.dlq_id].ok ? 'text-cx-ok' : 'text-cx-bad'}`}>
+                      {redrive[item.dlq_id].message}
                     </p>
                   )}
                 </div>
 
-                <button
-                  type="button"
-                  onClick={() => redriveRecord(item.id)}
-                  className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
-                >
-                  <span className="material-symbols-sharp text-sm">replay</span>
-                  Redrive Pipeline
-                </button>
+                {item.status === 'QUARANTINED' && (
+                  <button
+                    type="button"
+                    onClick={() => redriveRecord(item.dlq_id)}
+                    className="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-mono text-xs font-bold transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer"
+                  >
+                    <span className="material-symbols-sharp text-sm">replay</span>
+                    Redrive
+                  </button>
+                )}
               </div>
             ))}
           </div>
@@ -222,7 +245,7 @@ export function OperationsBoardView() {
         className="block"
       >
         <div className="space-y-4">
-          <DrProofCard />
+          <DrProofCard proof={state.activeDrProofs[0]} />
 
           <section aria-label="System Resilience Testing" className="bg-white border border-slate-200 p-4 shadow-sm space-y-3 font-sans">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">

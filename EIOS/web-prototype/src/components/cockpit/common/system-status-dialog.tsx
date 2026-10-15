@@ -27,6 +27,8 @@ export function SystemStatusDialog({
   const pipeline = getPipelineStatus(state);
   const gates = state.activeRedLineGates;
   const passing = gates.filter((g) => g.status === 'PASS').length;
+  const unmeasured = gates.filter((g) => g.status === 'NOT_MEASURED').length;
+  const measured = gates.some((g) => g.basis !== undefined);
   const fw = state.activeFlywheelStatus;
 
   return (
@@ -106,7 +108,7 @@ export function SystemStatusDialog({
               </span>
               {gates.length > 0 && (
                 <span className="text-label px-1.5 py-0.5 border bg-slate-50 border-slate-300 text-slate-700">
-                  {`${passing}/${gates.length} PASS`}
+                  {`${passing}/${gates.length} PASS${unmeasured > 0 ? `, ${unmeasured} not measured` : ''}`}
                 </span>
               )}
             </h3>
@@ -114,17 +116,25 @@ export function SystemStatusDialog({
               <p className="text-xs text-slate-500 font-sans">No gate evaluation received from the backend.</p>
             ) : (
               <>
-                <p className="text-label text-slate-500 font-mono">
-                  [ILLUSTRATIVE] contract fixture: live gate evaluation is not wired to this panel yet.
-                </p>
+                {!measured && (
+                  <p className="text-label text-slate-500 font-mono">
+                    [ILLUSTRATIVE] contract fixture: live gate evaluation is not wired to this panel yet.
+                  </p>
+                )}
                 <ul className="grid grid-cols-1 gap-1.5">
                   {gates.map((g) => (
-                    <li key={g.gateId} className="p-2 bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs">
+                    <li
+                      key={g.gateId}
+                      title={g.basis}
+                      className="p-2 bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs"
+                    >
                       <span className="min-w-0">
                         <span className="font-mono font-bold text-slate-900 mr-1.5">{g.gateId}</span>
                         <span className="text-slate-700">{g.name}</span>
                       </span>
-                      <Chip tone={g.status === 'PASS' ? 'ok' : 'bad'} className="shrink-0">{g.status}</Chip>
+                      <Chip tone={g.status === 'PASS' ? 'ok' : g.status === 'FAIL' ? 'bad' : 'neutral'} className="shrink-0">
+                        {g.status === 'NOT_MEASURED' ? 'NOT MEASURED' : g.status}
+                      </Chip>
                     </li>
                   ))}
                 </ul>

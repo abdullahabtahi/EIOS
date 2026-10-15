@@ -11,13 +11,26 @@ import {
 import { getMockWorkstationState } from '@/components/cockpit/state/fixtures';
 
 import { callBackend, relayError } from '@/lib/server/backend';
-import { normalizeActionCard, normalizeCanvas, normalizeCaseExtras, normalizeDossier } from '@/lib/server/normalize';
+import {
+  normalizeActionCard,
+  normalizeCanvas,
+  normalizeCaseExtras,
+  normalizeDossier,
+  normalizeDrProofs,
+  normalizeFlywheel,
+  normalizeRedLines,
+} from '@/lib/server/normalize';
 
 /** The backend labels its own data. Anything but an explicit [LIVE] or [ENGINE] badge is treated as fixture. */
 function originOfBadge(badge: unknown): DataOrigin {
   if (badge === '[LIVE]') return 'live';
   if (badge === '[ENGINE]') return 'engine';
   return 'fixture';
+}
+
+/** The platform panels (recovery proof, red lines, calibration) are measured when the backend ran the drill and probes. */
+function isMeasuredPlatform(raw: any): boolean {
+  return Array.isArray(raw?.dr_proofs) && raw.dr_proofs.some((p: any) => typeof p?.rows_restored === 'number');
 }
 
 function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationApiResponse {
@@ -82,9 +95,14 @@ function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationAp
     activeDossier,
     canvasPayload,
     stagedActionCards,
-    drProofs: mock.drProofs,
-    redLineGates: mock.redLineGates,
-    flywheelStatus: mock.flywheelStatus,
+    // A backend that ran the restore drill and the probes sends measured proofs, gates and calibration; otherwise the fixtures stand.
+    ...(isMeasuredPlatform(raw)
+      ? {
+          drProofs: normalizeDrProofs(raw.dr_proofs),
+          redLineGates: normalizeRedLines(raw.red_line_gates, raw.as_of_timestamp || new Date().toISOString()),
+          flywheelStatus: normalizeFlywheel(raw.flywheel_status) ?? undefined,
+        }
+      : { drProofs: mock.drProofs, redLineGates: mock.redLineGates, flywheelStatus: mock.flywheelStatus }),
   };
 }
 
