@@ -129,10 +129,14 @@ module "service_cockpit_web" {
   allow_public_invocation = true
 
   # The audience of the service-to-service ID token must be the API's own URL as Cloud Run reports it.
-  env_vars = {
-    EIOS_BACKEND_URL          = module.service_cockpit_api[0].uri
-    EIOS_BACKEND_IAM_AUDIENCE = module.service_cockpit_api[0].uri
-  }
+  env_vars = merge(
+    {
+      EIOS_BACKEND_URL          = module.service_cockpit_api[0].uri
+      EIOS_BACKEND_IAM_AUDIENCE = module.service_cockpit_api[0].uri
+    },
+    # Reviewer access shown on the login page, set only where the owner chose to publish it (see variables.tf).
+    var.demo_access == null ? {} : { EIOS_DEMO_ACCESS = var.demo_access },
+  )
 
   depends_on = [module.artifact_registry, module.service_cockpit_api]
 }

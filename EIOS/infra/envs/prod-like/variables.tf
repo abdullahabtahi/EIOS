@@ -121,3 +121,13 @@ variable "gemini_model" {
   type        = string
   default     = null
 }
+
+variable "demo_access" {
+  description = <<-EOT
+    JSON for the reviewer card on the login page: {"password": "...", "accounts": [{"label": "...", "email": "..."}], "note": "..."}.
+    The password is deliberately public (reviewers and judges read it off the page), so the accounts hold only synthetic data.
+    Supply it from a tfvars file that is not committed; null (the default) shows no card. Remove it and apply to take the card down.
+  EOT
+  type        = string
+  default     = null
+}
