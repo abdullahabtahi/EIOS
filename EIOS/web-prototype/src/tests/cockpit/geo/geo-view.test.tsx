@@ -20,7 +20,7 @@ const authFetch = vi.fn();
 vi.mock('@/lib/auth/token', () => ({ authFetch: (...args: unknown[]) => authFetch(...args) }));
 
 import { GeoWorkspace } from '@/components/cockpit/geo/geo-workspace';
-import { describeSelection } from '@/components/cockpit/geo/geo-format';
+import { describeSelection, OFFSHORE_NOTICE } from '@/components/cockpit/geo/geo-format';
 
 type Reply = { status: number; body?: unknown };
 /** Route the two endpoints independently, as the backend does. */
@@ -147,6 +147,8 @@ describe('GeoWorkspace', () => {
     expect(within(groups).getByText('Largest offshore centres')).toBeInTheDocument();
     expect(screen.getByRole('tabpanel')).toHaveTextContent('1 on the call-for-action list');
     expect(within(screen.getByRole('list', { name: 'Map legend' })).getByText(/Offshore entities/)).toBeInTheDocument();
+    // P-4: the offshore layer carries the non-implication line, once
+    expect(screen.getAllByText(OFFSHORE_NOTICE)).toHaveLength(1);
   });
 
   it('moves between views with the arrow keys, like the persona strip', async () => {

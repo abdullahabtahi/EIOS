@@ -18,6 +18,11 @@ const INDICATOR_LABEL: Readonly<Record<string, string>> = {
   'BN.CAB.XOKA.GD.ZS': 'Current account, % of GDP',
 };
 const NOT_RECORDED = 'Not recorded';
+
+/** P-4: the offshore counts come from a leak database; being in it says nothing about the entity. Said once, in the legend of the offshore layer. */
+export const OFFSHORE_NOTICE = 'Counts of entities in the ICIJ Offshore Leaks Database. Appearing there is not evidence of wrongdoing.';
+export const ICIJ_URL = 'https://offshoreleaks.icij.org';
+
 const TIER_LABEL = { high: 'High', medium: 'Medium', low: 'Low' } as const;
 
 /** A country's display name from the reference layer; its code when the layer is absent or does not know it. */
