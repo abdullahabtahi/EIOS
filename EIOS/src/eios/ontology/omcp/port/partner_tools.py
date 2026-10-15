@@ -163,6 +163,7 @@ def get_partner_signals(ctx: ReadModels, _who: Principal, args: PartnerArgs) -> 
 class RingObservation(StrictModel):
     ring_id: str
     scheme: str
+    market: str = ""  # the instrument, as a name of its own, so its digits ("Boom 1000") are not read as a figure
     paired_accounts: list[str]
     matched_timing_seconds: float
     unearned_commission_liability_usd: float
@@ -206,7 +207,7 @@ def get_partner_integrity(ctx: ReadModels, _who: Principal, args: PartnerArgs) -
         referred_client_count=tree["referred_client_count"],
         active_sub_affiliates_count=tree["active_sub_affiliates_count"],
         rings=[
-            RingObservation(**{k: r[k] for k in _RING_FIELDS})
+            RingObservation(**{k: r[k] for k in _RING_FIELDS if k in r})
             for r in tree["detected_abusive_rings"]
         ],
     )

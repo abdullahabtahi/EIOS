@@ -158,6 +158,18 @@ def test_text_marked_untrusted_never_contributes_an_identifier(port: GovernedToo
     assert identifiers_of({"narrative_summary": "case_x_12345 is here", "note_id": "a b"}) == set()
 
 
+def test_names_with_digits_in_a_name_field_are_not_figures() -> None:
+    from eios.assistant.tools import identifiers_of
+
+    payload = {
+        "products": [{"product_name": "client_360"}],
+        "rings": [{"market": "Boom 1000", "scheme": "Opposite trading on Boom 1000"}],
+    }
+    assert {"client_360", "Boom 1000"} <= identifiers_of(payload)
+    # free text beside the name is still not a name
+    assert "Opposite trading on Boom 1000" not in identifiers_of(payload)
+
+
 def test_every_capability_tells_the_model_what_it_is_for() -> None:
     from eios.ontology.omcp.port.catalogue import all_specs
     from eios.ontology.omcp.port.descriptions import DESCRIPTIONS

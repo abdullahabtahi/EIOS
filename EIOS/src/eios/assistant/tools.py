@@ -38,7 +38,7 @@ _IDENTIFIER_VALUE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:\-]{2,79}$")
 
 # Short labels a trusted result names things with. Their wording is the platform's, so a digit inside one ("P2P",
 # "Volatility 100") belongs to the name. Narrative fields are never in this list.
-_NAME_FIELD = re.compile(r"^(?:name|title|label|primary_root_cause)$")
+_NAME_FIELD = re.compile(r"^(?:name|title|label|market|primary_root_cause|[a-z]+_name)$")
 _MAX_NAME = 80
 _DIGIT_WORD = re.compile(r"\d")
 
@@ -72,7 +72,7 @@ def _walk(node: Any) -> Iterator[tuple[str, str]]:
 def identifiers_of(payload: dict[str, Any]) -> set[str]:
     """The names and identifier strings a trusted result returns in its own id, key and name fields.
 
-    Only `*_id`, `*_key`, `*_ref`, `name`, `title`, `label` and `primary_root_cause` fields count (in a nested row as
+    Only `*_id`, `*_key`, `*_ref`, `name`, `*_name`, `title`, `label`, `market` and `primary_root_cause` fields count (in a nested row as
     well as at the top), and never a result marked untrusted, so free text (a narrative, an injected sentence)
     cannot smuggle a number past the assembler as if it were a name. A bare number is never a name.
     """
