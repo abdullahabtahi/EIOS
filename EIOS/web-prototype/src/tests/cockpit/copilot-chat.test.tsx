@@ -208,3 +208,45 @@ describe('the chat view', () => {
     expect(screen.queryByText('Sources for 2 figures')).not.toBeInTheDocument();
   });
 });
+
+describe('the model choice', () => {
+  const models = [
+    { key: 'fast', label: '3.5 Flash-Lite', note: 'Fastest answers', default: true },
+    { key: 'deep', label: '3.8 Flash', note: 'All-around help', default: false },
+  ];
+  const bodies = () =>
+    (global.fetch as ReturnType<typeof vi.fn>).mock.calls
+      .filter(([url]) => String(url).includes('/api/cockpit/copilot/query'))
+      .map(([, init]) => JSON.parse(String((init as RequestInit).body)));
+
+  it('asks on the default model, and on the one the operator picks after that', async () => {
+    const fn = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/copilot/models')) return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ models }) });
+      if (url.includes('/copilot/query')) return ok(answer('hi'))();
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(workstationBody) });
+    });
+    global.fetch = fn as unknown as typeof fetch;
+    window.localStorage.clear();
+    await renderColumn();
+    fireEvent.click(screen.getByRole('tab', { name: /Chat/ }));
+    const picker = await screen.findByRole('combobox', { name: 'Model' });
+    send('first');
+    await waitFor(() => expect(bodies()).toHaveLength(1));
+    expect(bodies()[0].model).toBe('fast');
+    await screen.findByText('hi');
+    fireEvent.change(picker, { target: { value: 'deep' } });
+    send('second');
+    await waitFor(() => expect(bodies()).toHaveLength(2));
+    expect(bodies()[1].model).toBe('deep');
+    window.localStorage.clear();
+  });
+
+  it('names no model when the list could not be read', async () => {
+    mockBackend(ok(answer('hi')));
+    await renderColumn();
+    fireEvent.click(screen.getByRole('tab', { name: /Chat/ }));
+    send('first');
+    await waitFor(() => expect(bodies()).toHaveLength(1));
+    expect(bodies()[0]).not.toHaveProperty('model');
+  });
+});
