@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { ICIJ_URL } from './geo-format';
 import type { GeoFlows, GeoReference } from './geo-types';
 
 /** Where every figure comes from, one click away; the as-of date stays visible on the closed row. */
@@ -18,9 +19,15 @@ export function GeoSources({ flows, reference }: { readonly flows: GeoFlows | nu
           </li>
         )}
         {reference &&
-          Object.values(reference.sources).map((s) => (
+          Object.entries(reference.sources).map(([key, s]) => (
             <li key={s.source}>
-              {s.source}
+              {key === 'offshore_precedent' ? (
+                <a href={ICIJ_URL} target="_blank" rel="noopener noreferrer" className="text-cx-accent underline underline-offset-2 outline-none hover:text-cx-accent-strong focus-visible:ring-2 focus-visible:ring-cx-accent">
+                  {s.source}
+                </a>
+              ) : (
+                s.source
+              )}
               {s.as_of && <> · as of <span className="font-mono">{s.as_of}</span></>}
             </li>
           ))}

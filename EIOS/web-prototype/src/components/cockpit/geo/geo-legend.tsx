@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { OFFSHORE_NOTICE } from './geo-format';
 import { drawnKinds, rankedCorridors, rankedPairs, shownCorridors, shownPairs } from './geo-rank';
 import type { GeoFlows, LayerId } from './geo-types';
 
@@ -45,6 +46,7 @@ export function GeoLegend({ visible, flows }: { readonly visible: ReadonlySet<La
           </li>
         ))}
       </ul>
+      {visible.has('offshore') && <p className="mt-2 border-t border-cx-line-soft pt-1.5 text-cx-muted">{OFFSHORE_NOTICE}</p>}
       {notes.length > 0 && <p className="mt-2 border-t border-cx-line-soft pt-1.5 text-cx-muted">Showing {notes.join(' · ')}</p>}
     </div>
   );
