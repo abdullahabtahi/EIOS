@@ -1,0 +1,4 @@
+## 2024-10-15 - [CRITICAL] Arbitrary code execution via `eval()` in infrastructure checks
+**Vulnerability:** The infrastructure check for budget thresholds (`EIOS/tools/infra_checks/budget.py`) used `eval(thresh_raw)` to evaluate threshold configurations read from HCL string literals. This allows arbitrary code execution if an attacker manages to inject malicious strings.
+**Learning:** `eval()` is inherently unsafe when evaluating any input that might be influenced by external sources, even seemingly benign infrastructure configuration files. It should not be used to parse literals or configuration.
+**Prevention:** Always use safe alternatives like `ast.literal_eval()` when there is a need to evaluate strings into Python data structures (like lists or dicts), which safely parses strings containing only Python literals.
