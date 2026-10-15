@@ -157,10 +157,11 @@ class InMemPropertyGraph:
             return [set(c) for c in nx.connected_components(self.graph)]
 
         # Mask edges incident to hub nodes for clustering
-        masked_graph = self.graph.copy()
-        for node_id, data in self.graph.nodes(data=True):
-            if data.get("is_shared_context", False):
-                edges_to_remove = list(masked_graph.edges(node_id))
-                masked_graph.remove_edges_from(edges_to_remove)
+        # Optimization: use a subgraph of non-hub nodes rather than a costly deep copy and edge removal.
+        # Since hub nodes would have their edges removed, they'd be filtered out by `len(c) > 1` anyway.
+        non_hub_nodes = [
+            n for n, d in self.graph.nodes(data=True) if not d.get("is_shared_context", False)
+        ]
+        masked_graph = self.graph.subgraph(non_hub_nodes)
 
         return [set(c) for c in nx.connected_components(masked_graph) if len(c) > 1]
