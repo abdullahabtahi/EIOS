@@ -63,14 +63,16 @@ DESCRIPTIONS: dict[str, str] = {
     ),
     "exec.briefing": "The executive briefing: top risks and opportunities across horizons. One call answers it.",
     "exec.forecast": (
-        "The projected net revenue 28 days ahead with an interval measured by backtesting, and how it compares "
-        "with carrying today's value forward. It is a projection, not an actual."
+        "The projected net revenue 28 days ahead, with the interval backtesting measured around it, how often "
+        "that interval held on held-out forecasts, and this model's error as a multiple of the error of carrying "
+        "today's value forward (below 1 is better). It is a projection, not an actual."
     ),
     "exec.what_if": (
         "Simulate a competitor raising its payout (competitor_payout_increase, size in percent of today's "
         "payout) and return the effect on partner churn, first-time deposits and net revenue, an interval, which "
         "regions bear it, and the retention playbooks that would defend it. A shock with no tested causal path "
-        "is refused. It is a simulation, not an actual."
+        "is refused. Changes are signed: a negative change is already a fall, so state the direction once and "
+        "never write a minus sign after a word such as decrease. It is a simulation, not an actual."
     ),
     "compliance.ledger": "The decision ledger entries in order, with their sequence numbers.",
     "compliance.intent_status": (

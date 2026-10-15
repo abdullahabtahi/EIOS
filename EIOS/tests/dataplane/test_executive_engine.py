@@ -152,7 +152,7 @@ def test_tools_carry_the_engine_origin_and_equal_the_screen(
     ]
     fc = _ok(port, "get_forecast", {"metric_id": "net_revenue_usd"})
     assert fc["interval_low"] < fc["point_estimate"] < fc["interval_high"]
-    assert fc["skill_vs_persistence"] < 1.0 and fc["data_origin"] == DataOrigin.ENGINE.value
+    assert fc["error_vs_persistence"] < 1.0 and fc["data_origin"] == DataOrigin.ENGINE.value
 
 
 def test_what_if_tool_labels_causality_and_refuses_the_spread_shock(port: GovernedToolPort) -> None:

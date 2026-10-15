@@ -1,6 +1,7 @@
 """Executive capabilities (spec 023 US4): the briefing, the projection, the simulation, all from the screen's service."""
 
 from enum import StrEnum
+from typing import Any
 
 from pydantic import Field
 
@@ -110,9 +111,15 @@ class Forecast(ToolResult):
     horizon_days: int | None = None
     interval_low: float | None = None
     interval_high: float | None = None
-    interval_nominal: float | None = None
-    interval_coverage: float | None = None
-    skill_vs_persistence: float | None = None
+    interval_nominal_pct: float | None = (
+        None  # e.g. 90: the interval is meant to hold 90% of the time
+    )
+    interval_coverage_pct: float | None = (
+        None  # how often it held on forecasts held out from its calibration
+    )
+    error_vs_persistence: float | None = (
+        None  # this model's error over the error of carrying today's value forward
+    )
     backtest_origins: int | None = None
     assumption: str | None = None
 
@@ -123,11 +130,27 @@ _FORECAST_UNITS = {
     "horizon_days": "days",
     "interval_low": "USD",
     "interval_high": "USD",
-    "interval_nominal": "ratio",
-    "interval_coverage": "ratio",
-    "skill_vs_persistence": "ratio",
+    "interval_nominal_pct": "percent",
+    "interval_coverage_pct": "percent",
+    "error_vs_persistence": "ratio",
     "backtest_origins": "forecasts",
 }
+
+
+def _forecast_fields(view: ForecastView) -> dict[str, Any]:
+    """The view in the tool's units: ratios read as percentages, the way a person quotes them."""
+    fields = view.model_dump(
+        exclude={"interval_nominal", "interval_coverage", "skill_vs_persistence"}
+    )
+
+    def pct(v: float | None) -> float | None:
+        return None if v is None else round(v * 100.0, 1)
+
+    return fields | {
+        "interval_nominal_pct": pct(view.interval_nominal),
+        "interval_coverage_pct": pct(view.interval_coverage),
+        "error_vs_persistence": view.skill_vs_persistence,
+    }
 
 
 def get_forecast(ctx: ReadModels, _who: Principal, args: ForecastArgs) -> Forecast:
@@ -148,7 +171,7 @@ def get_forecast(ctx: ReadModels, _who: Principal, args: ForecastArgs) -> Foreca
             origin=ctx.executive_origin,
         ),
         is_projection=True,
-        **view.model_dump(),
+        **_forecast_fields(view),
     )
 
 
