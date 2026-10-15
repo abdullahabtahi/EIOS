@@ -27,8 +27,21 @@ Through the runtime (3 questions twice): `fast` median 2.0 s, max 2.4 s, every t
 3. **Prefetch and hedge** (parked work, now on this branch). The platform runs the obvious tool before the model's first turn, and a model call still silent after `EIOS_ASSISTANT_HEDGE_AFTER_S` (default 3 s `[ASSUMPTION]`, was 5 s) is sent once more; the first answer wins. The cost is one extra call, only on a call that was already slow.
 4. **Picker** in the chat header, remembered per browser, absent if the list cannot be read.
 
+## Live quality baseline on the current code (83 turns each, 1 repeat, engine data plane)
+
+| | `fast` (new default) | `deep` (old default) |
+|---|---|---|
+| pass / fail / inconclusive | 77 / 6 / 0 `[MEASURED]` | 69 / 4 / 10 `[MEASURED]` |
+| faithfulness | 94.6% `[MEASURED]` | 88.2% `[MEASURED]` |
+| p95 turn latency | 6.9 s `[MEASURED]` | 24.6 s `[MEASURED]` |
+
+All 10 inconclusive turns on `deep` hit the 30 s turn deadline. `fast` had none. Both runs were started together, so absolute latencies are a little pessimistic for both; the gap is not.
+
+`fast` failures (5 cases): three are trajectory (`ops_data_quality.t1`, `partner_integrity.t1`, `exec_causal_label.t1` took more model rounds than the bound; the last also has precision 0.67), plus `ops_red_lines.t1` and `partner_open_ended.t1` (a figure the model typed that no tool result carried; one consistency mismatch, 19.3% against 29.0 on the screen). `deep` failed `aml_timeline.t1`, `ops_red_lines.t1` and `partner_open_ended.t1`. The two shared ones are not about the model. The earlier run (`docs/agent-baseline.md` section 7, 62 turns: 43 / 7 / 12) is not comparable: the case set has since grown and the data plane moved onto engines.
+
 ## Not done, and why
 
-- No live quality baseline on the new default yet. The six live turns above are grounded, but `docs/agent-baseline.md` section 7 predates the ADK runtime; re-measure with `python -m evals.agent.baseline --runtime adk --live --repeats 1` when the owner approves the spend.
+- The `fast` failures are not fixed. The extra-rounds ones suggest a smaller model picks its tools less tightly; worth a look at the prompt rules before the next live run, not a reason to go back to the slower model.
 - Hedging is unproven against a real stall: none occurred in the 12 live turns after the change. Per-call timing will show the first one.
-- Deploy: the registry reaches production only with the next image. Model Armor templates and `GOOGLE_GENAI_USE_ENTERPRISE` are a separate step.
+- Model Armor: the prod-like templates exist (applied 2026-10-15, templates and the `eios-api` grant only; the service is not pointed at them yet). Screening adds p50 375 ms and p95 652 ms per turn `[MEASURED]`, 0 false positives on 32 golden questions, 1 of 15 attack questions blocked (the tool port and four-eyes are the real controls). The probe's p95 limit was re-based from 400 to 800 ms on this evidence.
+- Deploy: the registry reaches production only with the next image, together with the service env vars (`GOOGLE_GENAI_USE_ENTERPRISE`, the two template names). A full prod-like apply is not safe yet: it would also lock the evidence bucket retention (irreversible), enable four org-policy guardrails and drop a phone sign-in block. Keep `evidence_lock_retention = false` and `enforce_guardrails = false` in the local tfvars until that is decided.
