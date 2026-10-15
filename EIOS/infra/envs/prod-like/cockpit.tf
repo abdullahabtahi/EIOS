@@ -41,6 +41,20 @@ module "identity_cockpit_api" {
   depends_on = [module.project_baseline, google_project_service.cockpit]
 }
 
+# Screening templates for the assistant (spec 021 FR-015): what the operator asks and what the assistant answers. The
+# API's own identity is the only caller granted `roles/modelarmor.user`. Sanitize logging stays off: it can carry
+# operator text, and this environment is where real data would flow.
+module "model_armor" {
+  source = "../../modules/model_armor"
+
+  project_id       = var.project_id
+  environment      = local.environment
+  location         = var.region
+  sanitize_members = [module.identity_cockpit_api.member]
+
+  depends_on = [module.project_baseline]
+}
+
 module "identity_cockpit_web" {
   source = "../../modules/service_identity"
 
@@ -83,7 +97,11 @@ module "service_cockpit_api" {
     EIOS_KMS_KEY_VERSION     = "${module.secret_store.signing_key_id}/cryptoKeyVersions/1"
     GOOGLE_CLOUD_PROJECT     = var.project_id
     GOOGLE_CLOUD_LOCATION    = "global"
-    EIOS_GEMINI_MODEL        = var.gemini_model
+    # Vertex AI with the service identity instead of an API key. The assistant's models come from the registry in
+    # the image (llm_gateway/providers/assistant_models.yaml), not from an environment variable.
+    GOOGLE_GENAI_USE_ENTERPRISE        = "true"
+    EIOS_MODEL_ARMOR_PROMPT_TEMPLATE   = module.model_armor.prompt_template_name
+    EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE = module.model_armor.response_template_name
   }
 
   secret_env = {
