@@ -12,6 +12,7 @@ from eios.cockpit.aml import AMLWorkstationService
 from eios.cockpit.aml_readmodel import AmlReadModel
 from eios.cockpit.compliance import ComplianceExplorerService
 from eios.cockpit.executive import ExecutiveCockpitService
+from eios.cockpit.executive_readmodel import ExecutiveReadModel
 from eios.cockpit.operations import DataPlatformOperationsService
 from eios.cockpit.partner import PartnerWorkstationService
 from eios.cockpit.partner_readmodel import PartnerReadModel
@@ -33,7 +34,7 @@ def _utc_now() -> datetime:
 class ReadModels:
     aml: AmlReadModel
     partner: PartnerReadModel
-    executive: ExecutiveCockpitService
+    executive: ExecutiveReadModel
     compliance: ComplianceExplorerService
     operations: DataPlatformOperationsService
     directory: EntityDirectory
@@ -46,6 +47,9 @@ class ReadModels:
     partner_origin: DataOrigin = (
         DataOrigin.FIXTURE
     )  # where the partner read model's numbers come from
+    executive_origin: DataOrigin = (
+        DataOrigin.FIXTURE
+    )  # where the executive read model's numbers come from
     facts: FactResolver = field(default_factory=FactResolver)
     knowledge: RegulationIndex | None = (
         None  # the regulatory corpus; None until an index is configured
@@ -65,13 +69,14 @@ class ReadModels:
         compliance: ComplianceExplorerService | None = None,
         partner: PartnerReadModel | None = None,
         knowledge: RegulationIndex | None = None,
+        executive: ExecutiveReadModel | None = None,
     ) -> ReadModels:
         """Read models over the given AML plane (and partner plane and ledger, when given); the rest is built fresh."""
         partners: PartnerReadModel = partner or PartnerWorkstationService()
         return cls(
             aml=aml,
             partner=partners,
-            executive=ExecutiveCockpitService(),
+            executive=executive or ExecutiveCockpitService(),
             compliance=compliance or ComplianceExplorerService(),
             operations=DataPlatformOperationsService(),
             directory=build_directory(aml, partners),
@@ -82,5 +87,6 @@ class ReadModels:
             clock=clock,
             aml_origin=aml_origin,
             partner_origin=DataOrigin.ENGINE if partner is not None else DataOrigin.FIXTURE,
+            executive_origin=DataOrigin.ENGINE if executive is not None else DataOrigin.FIXTURE,
             knowledge=knowledge,
         )

@@ -35,6 +35,7 @@ from eios.assistant.config import AssistantConfigError
 from eios.assistant.sessions import valid_entity_id
 from eios.cockpit import aml_engine_view as aml_view
 from eios.cockpit import compliance_view
+from eios.cockpit import executive_view as exec_view
 from eios.cockpit import partner_engine_view as partner_view
 from eios.cockpit.aml_engine_view import default_entity
 from eios.cockpit.assistant_gateway import (
@@ -49,12 +50,18 @@ from eios.cockpit.auth import (
     current_operator,
     require_roles,
 )
+from eios.cockpit.executive_view import format_metric
 from eios.cockpit.governance_shelf import GovernedActionCard
 from eios.cockpit.session import SessionManager
 from eios.cockpit.shell import CockpitShellPresenter
 from eios.dataplane.aml_service import EngineAMLService, UnknownAccountError
 from eios.dataplane.partner_service import EnginePartnerService
-from eios.dataplane.plane import engine_service, partner_engine_service, read_models
+from eios.dataplane.plane import (
+    engine_service,
+    executive_engine_service,
+    partner_engine_service,
+    read_models,
+)
 from eios.dataplane.plane import governance as plane_governance
 from eios.flywheel.ledger import DecisionOutcomeRecord
 from eios.ontology.actions.audit import ContinuousAuditWalker
@@ -111,7 +118,7 @@ outcomes_ledger = _models.outcomes
 
 # Request/Response Models
 class SimulateRequest(BaseModel):
-    shock_param: str = "competitor_commission_bps"
+    shock_param: str = "competitor_payout_increase"
     magnitude_pct: float = 25.0
 
 
@@ -120,6 +127,11 @@ class WhatIfSimulationResponse(BaseModel):
     magnitude_pct: float = Field(..., description="Shock magnitude percentage")
     latency_ms: float = Field(..., description="Simulation latency in milliseconds")
     projected_changes: dict[str, float] = Field(..., description="Projected KPI impact deltas")
+    mitigations: list[dict[str, Any]] = Field(default_factory=list, description="Ranked defences")
+    mitigation_basis: str | None = None
+    extrapolates_beyond_history: bool = False
+    causal_label: str | None = None
+    causal_reason: str | None = None
     attribution_waterfall: list[dict[str, Any]] = Field(..., description="Attribution breakdown")
     attribution_sum_pct: float = Field(..., description="Attribution sum percentage")
     confidence_interval: list[float] = Field(..., description="Lower and upper bounds")
@@ -249,6 +261,8 @@ def _data_badge(role_enum: str) -> str:
         return ENGINE_DATA_BADGE
     if role_enum == "partner_manager" and partner_engine_service() is not None:
         return ENGINE_DATA_BADGE
+    if role_enum == "executive" and executive_engine_service() is not None:
+        return ENGINE_DATA_BADGE
     if role_enum == "compliance_auditor" and compliance_svc.sequencer is not None:
         return LIVE_DATA_BADGE
     return FIXTURE_DATA_BADGE
@@ -319,54 +333,61 @@ def _build_contract_state(  # noqa: PLR0915
         briefing = executive_svc.get_morning_briefing()
         dag = executive_svc.get_causal_dag()
 
-        triage_items = [
-            {
-                "id": "item_comp_1",
-                "title": "Spread Shock LatAm Indices",
-                "subtitle": "18 bps widening on top 3 brokers",
-                "entity_id": "COMP-LATAM-01",
-                "priority_score": 0.94,
-                "severity": "HIGH",
-                "status": "OPEN",
-                "timestamp": now_iso,
-            },
-            {
-                "id": "item_part_2",
-                "title": "Partner AP-1029 Decay Alert",
-                "subtitle": "Login decay 68% following rival bonus",
-                "entity_id": "AP-1029",
-                "priority_score": 0.88,
-                "severity": "CRITICAL",
-                "status": "OPEN",
-                "timestamp": now_iso,
-            },
-            {
-                "id": "item_aml_3",
-                "title": "Syndicate Micro-Turnover Flag",
-                "subtitle": "23 accounts matched micro-timing",
-                "entity_id": "SYN-MULE-14",
-                "priority_score": 0.79,
-                "severity": "MEDIUM",
-                "status": "INVESTIGATING",
-                "timestamp": now_iso,
-            },
-            {
-                "id": "item_fin_4",
-                "title": "Monthly EBITDA Forecast Pacing",
-                "subtitle": "$3.82M projected vs $3.75M target",
-                "entity_id": "EBITDA-2026-10",
-                "priority_score": 0.65,
-                "severity": "LOW",
-                "status": "RESOLVED",
-                "timestamp": now_iso,
-            },
-        ]
+        engine_exec = executive_engine_service()
+        triage_items = (
+            engine_exec.triage_items(now_iso)
+            if engine_exec is not None
+            else [
+                {
+                    "id": "item_comp_1",
+                    "title": "Spread Shock LatAm Indices",
+                    "subtitle": "18 bps widening on top 3 brokers",
+                    "entity_id": "COMP-LATAM-01",
+                    "priority_score": 0.94,
+                    "severity": "HIGH",
+                    "status": "OPEN",
+                    "timestamp": now_iso,
+                },
+                {
+                    "id": "item_part_2",
+                    "title": "Partner AP-1029 Decay Alert",
+                    "subtitle": "Login decay 68% following rival bonus",
+                    "entity_id": "AP-1029",
+                    "priority_score": 0.88,
+                    "severity": "CRITICAL",
+                    "status": "OPEN",
+                    "timestamp": now_iso,
+                },
+                {
+                    "id": "item_aml_3",
+                    "title": "Syndicate Micro-Turnover Flag",
+                    "subtitle": "23 accounts matched micro-timing",
+                    "entity_id": "SYN-MULE-14",
+                    "priority_score": 0.79,
+                    "severity": "MEDIUM",
+                    "status": "INVESTIGATING",
+                    "timestamp": now_iso,
+                },
+                {
+                    "id": "item_fin_4",
+                    "title": "Monthly EBITDA Forecast Pacing",
+                    "subtitle": "$3.82M projected vs $3.75M target",
+                    "entity_id": "EBITDA-2026-10",
+                    "priority_score": 0.65,
+                    "severity": "LOW",
+                    "status": "RESOLVED",
+                    "timestamp": now_iso,
+                },
+            ]
+        )
 
         active_dossier = {
             "dossier_id": briefing.briefing_id,
             "entity_id": "ENTERPRISE-GLOBAL",
             "headline": "Executive Morning Briefing & Cross-Horizon Causal Propagation",
-            "executive_summary": "4-horizon synthesis indicating stable revenue pacing with elevated partner poaching risks in LatAm.",
+            "executive_summary": engine_exec.summary()
+            if engine_exec is not None
+            else "4-horizon synthesis indicating stable revenue pacing with elevated partner poaching risks in LatAm.",
             "sections": [
                 {
                     "section_id": f"sec_{h.horizon_name.lower()}",
@@ -376,15 +397,13 @@ def _build_contract_state(  # noqa: PLR0915
                     "metrics": [
                         {
                             "metric_id": h.primary_metric_id,
-                            "formatted_value": f"${h.observed_value:,.0f}"
-                            if "usd" in h.primary_metric_id
-                            else f"{h.observed_value:,.1f}%",
+                            "formatted_value": format_metric(h.primary_metric_id, h.observed_value),
                             "raw_value": h.observed_value,
                             "semantic_definition_version": h.provenance.definition_version,
                             "as_of_timestamp": h.provenance.as_of_timestamp.isoformat(),
                             "origin_engine": h.provenance.computation_source,
                             "steward_role": h.provenance.owner_role,
-                            "citation": "[BRIEF]",
+                            "citation": "[COMPUTED]" if engine_exec is not None else "[BRIEF]",
                         }
                     ],
                 }
@@ -919,6 +938,7 @@ HEALTH_PATH = "/health"
 API_HEALTH_PATH = "/api/health"
 WORKSTATIONS_PATH = "/api/cockpit/workstations/{role}"
 SIMULATE_PATH = "/api/cockpit/simulate"
+EXECUTIVE_BOARD_PATH = "/api/cockpit/executive"
 STAGE_ACTION_PATH = "/api/cockpit/actions/stage"
 AUTHORIZE_ACTION_PATH = "/api/cockpit/actions/authorize"
 PARTNER_CASE_PATH = "/api/cockpit/partners/{entity_id}"
@@ -1002,11 +1022,23 @@ def get_partner_case(entity_id: str) -> dict[str, Any]:
 @router.post(SIMULATE_PATH, response_model=WhatIfSimulationResponse)
 def simulate_what_if_shock(req: SimulateRequest) -> WhatIfSimulationResponse:
     """Parametric propagation across structural causal model equations."""
-    result = executive_svc.simulate_what_if_shock(
-        shock_param=req.shock_param,
-        magnitude_pct=req.magnitude_pct,
-    )
+    try:
+        result = executive_svc.simulate_what_if_shock(
+            shock_param=req.shock_param,
+            magnitude_pct=req.magnitude_pct,
+        )
+    except ValueError as exc:  # a shock with no tested causal path is refused, not simulated
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)
+        ) from exc
     return WhatIfSimulationResponse(**result)
+
+
+@router.get(EXECUTIVE_BOARD_PATH)
+def get_executive_board() -> dict[str, Any]:
+    """The executive board: briefing, forecast with its measured interval, causal graph and the shocks on offer."""
+    origin = "engine" if executive_engine_service() is not None else "fixture"
+    return exec_view.board_payload(executive_svc, origin)
 
 
 # The cockpit and the cards contract use some names the ontology spells differently.

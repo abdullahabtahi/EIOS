@@ -1,6 +1,7 @@
 """PortTool: ADK sees only the verified role's tools, every call goes through the governed port (spec 021 FR-006, FR-009)."""
 
 import asyncio
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import Any
 
@@ -143,7 +144,8 @@ def test_identifiers_a_result_returned_are_remembered_for_the_assembler(
     ctx = _context()
     _run(tools["draft_sar"], {"entity_id": "CR84920"}, ctx)
     ids = set(ctx.state[IDENTIFIERS_KEY])
-    assert {"case_aml_84920", "sar_20261014_CR84920"} <= ids
+    today = datetime.now(UTC).strftime("%Y%m%d")  # the draft id carries the day it was drafted
+    assert {"case_aml_84920", f"sar_{today}_CR84920"} <= ids
     assert not any(" " in i for i in ids)  # prose such as the narrative is never an identifier
 
 

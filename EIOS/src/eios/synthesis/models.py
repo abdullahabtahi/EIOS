@@ -45,6 +45,7 @@ class RefutationReport(BaseModel):
 
     edge_id: str
     placebo_p_value: float
+    placebo_effect: float = 0.0  # the permuted-treatment effect the p-value tests against zero
     random_cause_delta_pct: float
     subset_stability_delta_pct: float
     ci_excludes_zero: bool

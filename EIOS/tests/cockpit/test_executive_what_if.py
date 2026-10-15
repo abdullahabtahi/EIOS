@@ -67,4 +67,4 @@ def test_what_if_shock_sub_200ms_latency_and_100_percent_attribution():
 
     # Directional correctness
     assert res["projected_changes"]["partner_churn_delta_pct"] > 0
-    assert res["projected_changes"]["projected_ebitda_impact_usd"] < 0
+    assert res["projected_changes"]["projected_revenue_impact_usd"] < 0

@@ -146,6 +146,33 @@ class CausalDAGGraph(BaseModel):
         return data
 
 
+class ForecastView(BaseModel):
+    """One projection as the screen and the tool show it. An interval is present only when one was measured."""
+
+    metric_id: str
+    point_estimate: float
+    delta_period_pct: float
+    headline: str
+    horizon_days: int | None = None
+    interval_low: float | None = None
+    interval_high: float | None = None
+    interval_nominal: float | None = None  # e.g. 0.90
+    interval_coverage: float | None = None  # measured on origins held out from the calibration
+    skill_vs_persistence: float | None = (
+        None  # model error over persistence error; below 1 is better
+    )
+    backtest_origins: int | None = None
+    assumption: str | None = None
+
+
+# The chain the fixture's structural equations propagate a competitor shock along.
+FIXTURE_SHOCK_PATH = (
+    ("competitor_payout_rate", "partner_churn_rate"),
+    ("partner_churn_rate", "client_volume_decay"),
+    ("client_volume_decay", "net_pnl_usd"),
+)
+
+
 class ExecutiveCockpitService:
     """Service providing executive briefing, causal DAG, and parametric shock simulation."""
 
@@ -321,6 +348,38 @@ class ExecutiveCockpitService:
 
         return CausalDAGGraph(nodes=nodes, edges=edges)
 
+    def get_forecast(self, metric_id: str) -> ForecastView:
+        """The Financial horizon's projection; no interval is modelled here, so none is returned."""
+        if metric_id != "net_revenue_usd":
+            raise KeyError(f"no projection exists for {metric_id}")
+        h = next(h for h in self.get_morning_briefing().horizons if h.horizon_name == "Financial")
+        return ForecastView(
+            metric_id=metric_id,
+            point_estimate=h.observed_value,
+            delta_period_pct=h.delta_period_pct,
+            headline=h.headline,
+        )
+
+    def stage_requests(self) -> dict[str, dict[str, Any]]:
+        return {}  # the fixture's opportunities name no partner, so there is nothing to stage
+
+    def shocks(self) -> list[dict[str, Any]]:
+        return [
+            {
+                "id": "competitor_spread_cut",
+                "label": "Competitor spread cut",
+                "driver": "Competitor spread, % change",
+            }
+        ]
+
+    def current_net_revenue(self) -> float:
+        return next(
+            h for h in self.get_morning_briefing().horizons if h.horizon_name == "Financial"
+        ).observed_value
+
+    def shock_path(self, shock_param: str) -> tuple[tuple[str, str], ...]:
+        return FIXTURE_SHOCK_PATH
+
     def simulate_what_if_shock(
         self,
         shock_param: str,
@@ -358,8 +417,8 @@ class ExecutiveCockpitService:
             "latency_ms": round(elapsed_ms, 2),
             "projected_changes": {
                 "partner_churn_delta_pct": delta_churn,
-                "client_turnover_delta_pct": delta_volume,
-                "projected_ebitda_impact_usd": delta_ebitda_usd,
+                "first_deposit_delta_pct": delta_volume,
+                "projected_revenue_impact_usd": delta_ebitda_usd,
             },
             "attribution_waterfall": [
                 {"driver": "Competitor Spread Shock", "contribution_pct": attr_comp},

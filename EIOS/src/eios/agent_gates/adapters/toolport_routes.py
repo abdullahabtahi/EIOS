@@ -88,11 +88,12 @@ def _cheapest_deal(f: Found) -> dict[str, Any] | None:
 
 
 def _what_if(f: Found) -> dict[str, Any] | None:
-    return (
-        {"shock": "competitor_spread_cut", "magnitude_pct": f.percent}
-        if f.percent is not None
-        else None
+    if f.percent is None:
+        return None
+    shock = (
+        "competitor_spread_cut" if "spread" in f.question.lower() else "competitor_payout_increase"
     )
+    return {"shock": shock, "magnitude_pct": f.percent}
 
 
 def _revenue(_f: Found) -> dict[str, Any]:

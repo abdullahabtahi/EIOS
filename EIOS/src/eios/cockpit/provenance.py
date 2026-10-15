@@ -86,6 +86,12 @@ class ProvenanceResolver:
             "source": "PartnerHotState.DuckDB",
             "formula": "sum(affiliate_client_turnover_usd) over 30d",
         },
+        "competitor_payout_rate": {
+            "owner_role": "Head of Competitive Intelligence",
+            "version": "1.0.0",
+            "source": "ExecutiveEngine.Series",
+            "formula": "competitor payout per dollar of referred volume, daily",
+        },
         "unearned_commission_liability_usd": {
             "owner_role": "Fraud Sentinel Lead",
             "version": "2.0.0",

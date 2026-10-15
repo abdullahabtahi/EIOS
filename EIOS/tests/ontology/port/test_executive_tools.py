@@ -161,15 +161,15 @@ def test_what_if_sums_to_100_is_labelled_a_simulation_and_never_crashes(
     assert sum(a["contribution_pct"] for a in got["attribution"]) == pytest.approx(100.0, abs=1e-9)
     assert got["causal_label"] in {"VERIFIED_CAUSAL", "CORRELATION_ONLY"} and got["causal_reason"]
     assert (
-        got["projected_ebitda_impact_usd"]
+        got["projected_revenue_impact_usd"]
         == ExecutiveCockpitService().simulate_what_if_shock("competitor_spread_cut", 20.0)[
             "projected_changes"
-        ]["projected_ebitda_impact_usd"]
+        ]["projected_revenue_impact_usd"]
     )
     assert (
-        got["ebitda_interval_low_usd"]
-        <= got["projected_ebitda_impact_usd"]
-        <= got["ebitda_interval_high_usd"]
+        got["revenue_interval_low_usd"]
+        <= got["projected_revenue_impact_usd"]
+        <= got["revenue_interval_high_usd"]
     )
 
 

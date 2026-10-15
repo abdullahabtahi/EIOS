@@ -4,10 +4,30 @@ Decomposes forecast variances into constituent driver contributions along SCM DA
 paths, strictly guaranteeing that percentage shares sum to 100.0% +- 0.001%.
 """
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 from eios.synthesis.models import DriverAttribution
 from eios.synthesis.scm import CausalDAG
+
+
+def largest_remainder_shares(weights: Mapping[str, float]) -> dict[str, float]:
+    """Each key's share of the total as a percentage to two decimals, summing to exactly 100.00 (Hare-Niemeyer).
+
+    All-zero weights are split evenly. The remainder goes to the keys with the largest fractional parts.
+    """
+    if not weights:
+        return {}
+    total = sum(weights.values())
+    scaled = (
+        {d: w / total * 10000.0 for d, w in weights.items()}
+        if total > 1e-12
+        else {d: 10000.0 / len(weights) for d in weights}
+    )
+    floored = {d: int(v) for d, v in scaled.items()}
+    by_remainder = sorted(scaled, key=lambda d: scaled[d] - floored[d], reverse=True)
+    for i in range(10000 - sum(floored.values())):
+        floored[by_remainder[i % len(by_remainder)]] += 1
+    return {d: floored[d] / 100.0 for d in weights}
 
 
 class DriverAttributionEngine:
@@ -64,25 +84,8 @@ class DriverAttributionEngine:
                 )
             return result
 
-        # 3. Compute fractional percentage shares
-        exact_shares: dict[str, float] = {}
-        for driver, impact in raw_impacts.items():
-            exact_shares[driver] = (abs(impact) / total_abs_impact) * 100.0
-
-        # 4. Hare-Niemeyer (Largest Remainder) Rounding to 2 decimal places
-        # Scale to integer basis points of 100% (10,000 units = 100.00%)
-        scaled = {d: s * 100.0 for d, s in exact_shares.items()}
-        floored = {d: int(val) for d, val in scaled.items()}
-        remainders = {d: scaled[d] - floored[d] for d in scaled}
-
-        diff = 10000 - sum(floored.values())
-        # Sort keys by largest remainder descending
-        sorted_by_remainder = sorted(remainders.keys(), key=lambda d: remainders[d], reverse=True)
-
-        for i in range(diff):
-            floored[sorted_by_remainder[i % len(sorted_by_remainder)]] += 1
-
-        final_pcts = {d: floored[d] / 100.0 for d in floored}
+        # 3-4. Percentage shares, rounded by the largest remainder so they close to exactly 100.00
+        final_pcts = largest_remainder_shares({d: abs(v) for d, v in raw_impacts.items()})
 
         # 5. Build DriverAttribution models
         attributions: list[DriverAttribution] = []
