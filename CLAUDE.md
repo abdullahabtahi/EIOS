@@ -124,5 +124,5 @@ Open items, in order of value:
 3. **Churn hazards rank well (AUC 0.974 `[MEASURED]`) but are miscalibrated** (ECE 0.22 against a 0.15 drift line `[MEASURED]`); the status dialog reads DRIFT DETECTED truthfully. Recalibrate against observed outcomes (flywheel).
 4. Assistant follow-ups: let the model repeat a number that appears in its own quote (needs adversarial tests); a 503 turn leaves an unanswered question and the next reply summarises the backlog; SAR drafts do not cite the licensing jurisdiction's rule; "Show in dossier" does not highlight the source card.
 5. RL-2 and RL-7 are `NOT_MEASURED` on the operations board by design; the nine runbooks other than warm-start restore are a catalogue only; identity conflicts are not computed on the engine plane.
-6. Product direction in `docs/financial_geospatial.md`: regulator-grade AML investigator, geography as an evidence lens. Verify GLEIF and labelled-data licences before ingesting; Dekart is AGPL.
+6. Product direction in `docs/financial_geospatial.md`: regulator-grade AML investigator, geography as an evidence lens.
 7. Deploy via GitHub Actions workload identity (pool `eios-ci`), apply Terraform to stage and dev, close ADR-002, re-enable org-policy guardrails. The bot PR #47 conflicts and is untouched.
