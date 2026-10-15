@@ -1,6 +1,7 @@
 import type { FatfList, GeoFlows, GeoReference, GeoSelection, ReferenceIndicator } from './geo-types';
 
-const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 1 });
+// Digits are pinned: the default minimum differs between ICU versions ($900K here, $900.0K on another Node).
+const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', notation: 'compact', minimumFractionDigits: 0, maximumFractionDigits: 1 });
 
 export const formatUsd = (value: number): string => USD.format(value);
 const COUNT = new Intl.NumberFormat('en-US');
