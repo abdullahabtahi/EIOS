@@ -53,6 +53,7 @@ def _ring(snap: PartnerSnapshot, p: TradingPairCorrelation) -> dict[str, Any]:
     return {
         "ring_id": p.pair_id,
         "scheme": f"Opposite trading on {p.symbol}",
+        "market": p.symbol,
         "paired_accounts": [p.account_a, p.account_b],
         "partners": [p.partner_a, p.partner_b],
         "matched_timing_seconds": _median_lag_seconds(snap.world.trades, p.account_a, p.account_b),

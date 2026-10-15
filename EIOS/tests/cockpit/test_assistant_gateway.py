@@ -236,3 +236,29 @@ def test_startup_warm_up_never_stops_the_app_from_starting(monkeypatch: pytest.M
 
     monkeypatch.setattr(assistant_gateway, "get_runtime", broken)
     asyncio.run(assistant_gateway.warm_up())  # logs, returns, does not raise
+
+
+def test_the_models_an_operator_may_pick_are_listed_without_ids(client: TestClient) -> None:
+    runtime, _ = make_runtime([])
+    assistant_gateway.set_runtime_for_testing(runtime)
+    models = client.get("/api/cockpit/copilot/models").json()["models"]
+    assert [m["key"] for m in models][0] == "fast"
+    assert sum(m["default"] for m in models) == 1
+    assert all("id" not in m for m in models)
+
+
+def test_an_unknown_model_key_is_refused_before_any_work(client: TestClient) -> None:
+    runtime, llm = make_runtime([])
+    assistant_gateway.set_runtime_for_testing(runtime)
+    res = client.post(PATH, json={**BODY, "model": "nope"})
+    assert res.status_code == 422
+    assert llm.seen == []
+
+
+def test_the_answer_reports_its_stage_timings(client: TestClient) -> None:
+    runtime, _ = make_runtime(
+        [call("get_aml_dossier", entity_id="CR84920"), draft(f"It is {FIGURE}.")]
+    )
+    assistant_gateway.set_runtime_for_testing(runtime)
+    body = client.post(PATH, json=BODY).json()
+    assert set(body["timing_ms"]) == {"model", "tools", "other", "model_calls"}

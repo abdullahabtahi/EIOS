@@ -16,7 +16,8 @@ DESCRIPTIONS: dict[str, str] = {
     ),
     "causal.evidence": (
         "Whether the causal link between two graph nodes survived the placebo refuter, with its confidence. "
-        "Use it to say if a cause is causal or only a correlation."
+        "Use it to say if a cause is causal or only a correlation. Both node ids are optional: with none it returns "
+        "every link, which is the way to answer when you do not know the ids."
     ),
     "calc.compare": (
         "Compare two figures you already hold by their fact ids (difference, ratio). Never type the result "

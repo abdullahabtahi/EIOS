@@ -14,6 +14,7 @@ import { authFetch } from '@/lib/auth/token';
 import { ChatDividerView, ChatItem, ChatTurn, ChatTurnView } from './chat-turn';
 import { suggestedQuestions } from './chat-suggestions';
 import type { ProposalState } from './copilot-proposals';
+import { ModelPicker, useModelChoice } from './model-picker';
 
 /** An operator-readable reason for a failed copilot request. Never an answer. */
 export function describeCopilotFailure(status: number | null, reason?: string): string {
@@ -56,6 +57,7 @@ export function CopilotChat() {
   const [threads, setThreads] = React.useState<Record<string, ChatItem[]>>({});
   const [proposalStates, setProposalStates] = React.useState<Record<string, ProposalState>>({});
   const [query, setQuery] = React.useState('');
+  const models = useModelChoice();
   const [pending, setPending] = React.useState(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const endRef = React.useRef<HTMLDivElement>(null);
@@ -93,7 +95,12 @@ export function CopilotChat() {
       const res = await authFetch('/api/cockpit/copilot/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: trimmed, role: askedAs, activeEntityId: entityId }),
+        body: JSON.stringify({
+          query: trimmed,
+          role: askedAs,
+          activeEntityId: entityId,
+          ...(models.selected ? { model: models.selected } : {}),
+        }),
       });
       if (!res.ok) {
         const failure = await res.json().catch(() => null);
@@ -144,16 +151,19 @@ export function CopilotChat() {
             <span className="text-cx-muted">No entity selected. Pick one from the triage rail, or ask in general.</span>
           )}
         </div>
-        {items.length > 0 && (
-          <button
-            type="button"
-            onClick={() => patch(role, () => [])}
-            className="text-label text-slate-500 hover:text-slate-900 underline cursor-pointer shrink-0"
-            title="Clear this conversation"
-          >
-            Clear
-          </button>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          <ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />
+          {items.length > 0 && (
+            <button
+              type="button"
+              onClick={() => patch(role, () => [])}
+              className="text-label text-slate-500 hover:text-slate-900 underline cursor-pointer shrink-0"
+              title="Clear this conversation"
+            >
+              Clear
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-4">

@@ -68,8 +68,9 @@ class _OverlayPort:
 class AdkRuntime:
     runtime_name = "adk"
 
-    def __init__(self, *, offline: bool = True, model: str | BaseLlm | None = None) -> None:
+    def __init__(self, *, offline: bool = True, model_key: str | None = None) -> None:
         self.offline = offline
+        self._model_key = model_key  # a registry key for a live run; None is the registry default
         models = (
             read_models()
         )  # the plane `EIOS_DATA_PLANE` names, so a plane is judged as the cockpit runs it
@@ -81,9 +82,7 @@ class AdkRuntime:
         self._settings = AssistantSettings.from_env(
             {**_live_env(), "EIOS_ENVIRONMENT": _EVAL_ENVIRONMENT}
         )
-        self._model: str | BaseLlm | None = (
-            RuleLlm() if offline else (model or self._settings.model)
-        )
+        self._model: BaseLlm | None = RuleLlm() if offline else None
         self._conversations: dict[str, InMemorySessionService] = {}
 
     def run_turn(self, request: TurnRequest) -> TurnRecord:
@@ -113,6 +112,7 @@ class AdkRuntime:
                 question=request.question,
                 entity_id=context.get("entity_id"),
                 entity_context=context,
+                model_key=self._model_key,
             )
         )
         logger.info("%s", trace_line(request, outcome))

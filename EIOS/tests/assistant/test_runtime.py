@@ -176,7 +176,11 @@ def test_the_drafter_caps_thinking_and_leaves_room_for_the_answer() -> None:
 
 def test_a_timed_out_turn_still_reports_what_it_did() -> None:
     settings = AssistantSettings.from_env(
-        {"EIOS_ENVIRONMENT": "test", "EIOS_ASSISTANT_TURN_DEADLINE_S": "1.0"}
+        {
+            "EIOS_ENVIRONMENT": "test",
+            "EIOS_ASSISTANT_TURN_DEADLINE_S": "1.0",
+            "EIOS_ASSISTANT_PREFETCH": "0",
+        }
     )
     runtime, llm = make_runtime([DOSSIER, draft(f"It is {FIGURE}.")], settings=settings)
     llm.delay_s = 0.6

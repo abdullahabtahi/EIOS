@@ -20,7 +20,7 @@ from eios.llm_gateway.providers.adk_types import FunctionDeclaration
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.proposals import Proposal, stage_request
 from eios.ontology.omcp.port.registry import ToolSpec
-from eios.ontology.omcp.port.service import GovernedToolPort
+from eios.ontology.omcp.port.service import CallOutcome, GovernedToolPort
 
 # `temp:` state lives for one invocation: the loop's attempts share it, the stored session does not keep it.
 FACTS_KEY = "temp:facts"  # fact id -> the figure, unit and envelope a tool returned this turn
@@ -38,7 +38,7 @@ _IDENTIFIER_VALUE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:\-]{2,79}$")
 
 # Short labels a trusted result names things with. Their wording is the platform's, so a digit inside one ("P2P",
 # "Volatility 100") belongs to the name. Narrative fields are never in this list.
-_NAME_FIELD = re.compile(r"^(?:name|title|label|primary_root_cause)$")
+_NAME_FIELD = re.compile(r"^(?:name|title|label|market|primary_root_cause|[a-z]+_name)$")
 _MAX_NAME = 80
 _DIGIT_WORD = re.compile(r"\d")
 
@@ -72,7 +72,7 @@ def _walk(node: Any) -> Iterator[tuple[str, str]]:
 def identifiers_of(payload: dict[str, Any]) -> set[str]:
     """The names and identifier strings a trusted result returns in its own id, key and name fields.
 
-    Only `*_id`, `*_key`, `*_ref`, `name`, `title`, `label` and `primary_root_cause` fields count (in a nested row as
+    Only `*_id`, `*_key`, `*_ref`, `name`, `*_name`, `title`, `label`, `market` and `primary_root_cause` fields count (in a nested row as
     well as at the top), and never a result marked untrusted, so free text (a narrative, an injected sentence)
     cannot smuggle a number past the assembler as if it were a name. A bare number is never a name.
     """
@@ -103,22 +103,31 @@ class PortTool(BaseTool):
 
     async def run_async(self, *, args: dict[str, Any], tool_context: ToolContext) -> dict[str, Any]:
         outcome = await asyncio.to_thread(self._port.call, self._principal, self.name, dict(args))
-        raw = outcome.payload()
-        if outcome.result is None:
-            return raw
-        payload = _model_view(
-            expand_fact_ids(raw)
-        )  # what the model sees; the facts are read from the result as the port gave it
-        state = tool_context.state
-        state[FACTS_KEY] = {**state.get(FACTS_KEY, {}), **_turn_facts(raw)}
-        state[PASSAGES_KEY] = {**state.get(PASSAGES_KEY, {}), **_turn_passages(raw)}
-        state[SOURCES_KEY] = [*state.get(SOURCES_KEY, []), payload["source"]]
-        state[ORIGINS_KEY] = [*state.get(ORIGINS_KEY, []), payload["data_origin"]]
-        state[IDENTIFIERS_KEY] = sorted({*state.get(IDENTIFIERS_KEY, []), *identifiers_of(raw)})
-        if self._spec.kind == _PROPOSAL_KIND and isinstance(outcome.result, Proposal):
-            kept = {**payload, "stage_request": stage_request(outcome.result, args)}
-            state[PROPOSALS_KEY] = [*state.get(PROPOSALS_KEY, []), kept]
-        return payload
+        return record_result(tool_context.state, self._spec, outcome, args)
+
+
+def record_result(
+    state: Any, spec: ToolSpec, outcome: CallOutcome, args: dict[str, Any]
+) -> dict[str, Any]:
+    """Keep what a tool returned in turn state, and return what the model is shown.
+
+    Used for a tool the model called and for one the platform ran before the model's first turn, so both kinds of result
+    can be cited the same way (their fact ids and passage ids are the ones the assembler accepts)."""
+    raw = outcome.payload()
+    if outcome.result is None:
+        return raw
+    payload = _model_view(
+        expand_fact_ids(raw)
+    )  # what the model sees; the facts are read from the result as the port gave it
+    state[FACTS_KEY] = {**state.get(FACTS_KEY, {}), **_turn_facts(raw)}
+    state[PASSAGES_KEY] = {**state.get(PASSAGES_KEY, {}), **_turn_passages(raw)}
+    state[SOURCES_KEY] = [*state.get(SOURCES_KEY, []), payload["source"]]
+    state[ORIGINS_KEY] = [*state.get(ORIGINS_KEY, []), payload["data_origin"]]
+    state[IDENTIFIERS_KEY] = sorted({*state.get(IDENTIFIERS_KEY, []), *identifiers_of(raw)})
+    if spec.kind == _PROPOSAL_KIND and isinstance(outcome.result, Proposal):
+        kept = {**payload, "stage_request": stage_request(outcome.result, args)}
+        state[PROPOSALS_KEY] = [*state.get(PROPOSALS_KEY, []), kept]
+    return payload
 
 
 # A list result names its facts with a template path (`events[].event_amount_usd`); each item gets its own id so a

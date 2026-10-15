@@ -117,6 +117,7 @@ variable "cockpit_web_image" {
 }
 
 variable "gemini_model" {
-  description = "Gemini model id served from the global Vertex AI endpoint. Set in terraform.tfvars; verified per project."
+  description = "Deprecated: the assistant reads its models from the registry in the image, so nothing uses this. Kept so an existing terraform.tfvars still validates; remove both together."
   type        = string
+  default     = null
 }

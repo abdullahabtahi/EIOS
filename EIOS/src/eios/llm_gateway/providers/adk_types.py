@@ -19,6 +19,27 @@ HttpRetryOptions = _types.HttpRetryOptions
 Schema = _types.Schema
 
 
+# The model rejects a function call in history that it did not generate unless the part carries a signature; this is the
+# documented placeholder for a call written by the platform (a tool the platform ran before the model's first turn).
+PLATFORM_CALL_SIGNATURE = b"skip_thought_signature_validator"
+
+
+def platform_tool_call(name: str, args: dict[str, Any], call_id: str) -> _types.Content:
+    """A tool call the platform made on the model's behalf, as the model-role message that precedes its result."""
+    part = _types.Part(
+        function_call=_types.FunctionCall(id=call_id, name=name, args=args),
+        thought_signature=PLATFORM_CALL_SIGNATURE,
+    )
+    return _types.Content(role="model", parts=[part])
+
+
+def platform_tool_result(name: str, response: dict[str, Any], call_id: str) -> _types.Content:
+    part = _types.Part(
+        function_response=_types.FunctionResponse(id=call_id, name=name, response=response)
+    )
+    return _types.Content(role="user", parts=[part])
+
+
 def user_message(text: str) -> _types.Content:
     return _types.Content(role="user", parts=[_types.Part.from_text(text=text)])
 

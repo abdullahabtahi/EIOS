@@ -197,7 +197,10 @@ def get_causal_evidence(ctx: ReadModels, _who: Principal, args: CausalArgs) -> C
     nodes = {n.node_id for n in dag.nodes}
     for wanted in (args.source_node_id, args.target_node_id):
         if wanted is not None and wanted not in nodes:
-            raise PortError(ToolErrorCode.NOT_FOUND, f"no causal node '{wanted}'")
+            raise PortError(
+                ToolErrorCode.NOT_FOUND,
+                f"no causal node '{wanted}'; the nodes are: {', '.join(sorted(nodes))}",
+            )
     edges = []
     for e in dag.edges:
         if args.source_node_id not in (None, e.source_node_id) or args.target_node_id not in (
