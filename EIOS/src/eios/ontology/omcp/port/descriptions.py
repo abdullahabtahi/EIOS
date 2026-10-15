@@ -31,6 +31,10 @@ DESCRIPTIONS: dict[str, str] = {
     ),
     "aml.network": "The linked-account graph around one account and how many hub nodes were suppressed.",
     "aml.timeline": "The dated events on one account: deposits, withdrawals and alerts, in order.",
+    "aml.history": (
+        "How one account's deposits and withdrawals trended day by day over a period of up to ninety days, from the "
+        "warehouse. Use it for any question about change over time; the dossier and the timeline cover only the recent past."
+    ),
     "aml.withdrawal_risk": "The pending withdrawal on one account with its risk score and the hold recommendation.",
     "aml.sar_draft": (
         "The SAR narrative and case identifiers for one account. It returns no figures to cite: call "

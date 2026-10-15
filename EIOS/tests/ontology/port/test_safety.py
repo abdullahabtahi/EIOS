@@ -23,7 +23,10 @@ PLANNED = {
 # that returns operator data, and the passages it brings back are untrusted text the assembler can only quote.
 FREE_TEXT_ARGUMENTS = {("search_regulations", "query")}
 # One managed-search round trip cannot meet the in-process budget; its own budget is bounded and measured on the index.
-SLOW_BUDGETS_MS = {"search_regulations": 5000}
+SLOW_BUDGETS_MS = {
+    "search_regulations": 5000,
+    "get_account_history": 3000,
+}  # remote retrieval and a warehouse query
 
 SAMPLE_ARGS: dict[str, dict[str, object]] = {
     "search_regulations": {"query": "when must a suspicious report be filed"},
@@ -39,6 +42,7 @@ SAMPLE_ARGS: dict[str, dict[str, object]] = {
     "get_aml_dossier": {"entity_id": "CR84920"},
     "get_network_evidence": {"entity_id": "CR84920"},
     "get_activity_timeline": {"entity_id": "CR84920"},
+    "get_account_history": {"entity_id": "CR84920"},
     "check_withdrawal_risk": {"entity_id": "CR84920"},
     "draft_sar": {"entity_id": "CR84920"},
     "propose_hold": {"entity_id": "CR84920"},
@@ -74,7 +78,9 @@ def test_no_role_can_be_offered_an_approve_or_execute_capability(port: GovernedT
             assert spec.name not in FORBIDDEN_AGENT_TOOLS
             assert not spec.capability.startswith(("action.approve", "action.execute"))
             assert spec.kind in {"evidence", "compute", "draft", "propose", "knowledge"}
-        assert len(offered) <= 12  # [ASSUMPTION] about twelve or fewer per role (FR-006)
+        assert (
+            len(offered) <= 13
+        )  # [ASSUMPTION] about a dozen per role (FR-006); raised from 12 for aml.history, watch tool choice in the live baseline
 
 
 def test_every_out_of_role_call_is_refused_and_recorded() -> None:

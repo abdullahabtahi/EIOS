@@ -37,6 +37,7 @@ from eios.knowledge.agent_search import AgentSearchIndex
 from eios.knowledge.passage import RegulationIndex
 from eios.ontology.omcp.port.contracts import DataOrigin
 from eios.ontology.omcp.port.readmodels import ReadModels
+from eios.warm.config import build_warm_store
 
 logger = logging.getLogger(__name__)
 PLANE_ENV = "EIOS_DATA_PLANE"
@@ -239,6 +240,7 @@ def read_models() -> ReadModels:
                         ledger.sequencer, ledger.worm, ledger.hub
                     ),
                     knowledge=knowledge_index(),
+                    warm=build_warm_store(built.aml_snapshot.world),
                 )
                 _operations.measure(_models, built.aml_snapshot)
             else:

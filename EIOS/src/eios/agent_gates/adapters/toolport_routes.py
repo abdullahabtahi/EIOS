@@ -115,6 +115,7 @@ def _r(pattern: str, *steps: tuple[str, ArgsFn], unless: str | None = None) -> R
 ROUTES: tuple[Route, ...] = (
     _r(r"\bhold\b", ("get_aml_dossier", _acct), ("propose_hold", _acct)),
     _r(r"withdrawal", ("check_withdrawal_risk", _acct), unless=r"\bhold\b|timeline|reconstruct"),
+    _r(r"trend|over time|history|last \d+ days|past \d+ days", ("get_account_history", _acct)),
     _r(r"timeline|reconstruct", ("get_activity_timeline", _acct)),
     _r(r"linked|connected|network", ("get_network_evidence", _acct)),
     _r(r"\bsar\b", ("get_aml_dossier", _acct), ("draft_sar", _acct)),

@@ -26,6 +26,7 @@ from eios.observability.slo_engine import SLOMonitoringEngine
 from eios.ontology.omcp.port.contracts import DataOrigin
 from eios.ontology.omcp.port.entities import EntityDirectory, build_directory
 from eios.ontology.omcp.port.facts import FactResolver
+from eios.warm.store import WarmStore
 
 
 def _utc_now() -> datetime:
@@ -62,6 +63,9 @@ class ReadModels:
     knowledge: RegulationIndex | None = (
         None  # the regulatory corpus; None until an index is configured
     )
+    warm: WarmStore | None = (
+        None  # the warm tier (BigQuery, or a local double); None where none is configured
+    )
 
     @classmethod
     def default(cls) -> ReadModels:
@@ -77,6 +81,7 @@ class ReadModels:
         compliance: ComplianceExplorerService | None = None,
         partner: PartnerReadModel | None = None,
         knowledge: RegulationIndex | None = None,
+        warm: WarmStore | None = None,
         executive: ExecutiveReadModel | None = None,
         operations: OperationsReadModel | None = None,
         calibration_sample: CalibrationSample | None = None,
@@ -101,4 +106,5 @@ class ReadModels:
             operations_origin=DataOrigin.ENGINE if operations is not None else DataOrigin.FIXTURE,
             calibration_sample=calibration_sample,
             knowledge=knowledge,
+            warm=warm,
         )

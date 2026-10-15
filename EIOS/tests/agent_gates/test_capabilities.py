@@ -36,4 +36,4 @@ def test_every_role_capability_exists_and_toolsets_stay_small() -> None:
     cmap = default_map()
     for role, caps in cmap.roles.items():
         assert set(caps) <= set(cmap.capabilities), role
-        assert len(caps) <= 12, f"{role} has {len(caps)} capabilities"
+        assert len(caps) <= 13, f"{role} has {len(caps)} capabilities"
