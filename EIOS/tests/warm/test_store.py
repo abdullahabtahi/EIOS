@@ -118,12 +118,19 @@ PARAMS = {
 }
 
 
-def test_a_query_over_the_byte_cap_is_refused_after_the_dry_run_and_never_runs() -> None:
-    client = _Client(estimate=10_000)
+def test_a_query_over_the_byte_cap_is_refused_by_the_warehouse_and_reported_as_refused() -> None:
+    from google.api_core.exceptions import BadRequest
+
+    client = _Client(
+        estimate=0,
+        fail=BadRequest(
+            "Query exceeded limit for bytes billed: 1000. 10485760 or higher required."
+        ),
+    )
     store = BigQueryWarmStore("proj", client=client, max_bytes=1_000)
     with pytest.raises(WarmQueryRefused):
         store.run("account_daily_activity", PARAMS)
-    assert len(client.configs) == 1 and client.configs[0][1].dry_run is True
+    assert len(client.configs) == 1 and client.configs[0][1].maximum_bytes_billed == 1_000
 
 
 def test_a_real_run_carries_the_cap_the_named_parameters_and_the_qualified_table() -> None:

@@ -1,7 +1,8 @@
 """Read the warm tier through named queries, with the cost guards in code (docs/warm-tier.md).
 
-`WarmStore.run` takes a catalogue query and its parameters, never SQL. BigQuery runs it after a dry run: a query over the
-byte cap is refused before it spends anything, and the real run carries the same cap. The local double runs the same
+`WarmStore.run` takes a catalogue query and its parameters, never SQL. BigQuery runs it with `maximum_bytes_billed` set: a
+query over the cap fails server-side without being charged, so there is no separate dry run (it cost a round trip, about
+a third of the query time, to learn what the cap already enforces). The local double runs the same
 query text over DuckDB tables with the same names, so offline results and warehouse results come from one definition.
 An unreachable warehouse is a labelled `WarmUnavailable`, never a silent fall-back to another tier.
 """
@@ -109,7 +110,7 @@ class BigQueryWarmStore:
         self._client, self._project, self._max_bytes = client, project, max_bytes
 
     def run(self, query: str, params: Mapping[str, Any]) -> WarmResult:
-        from google.api_core.exceptions import GoogleAPICallError
+        from google.api_core.exceptions import BadRequest, GoogleAPICallError
         from google.cloud import bigquery
 
         named = _lookup(query, params)
@@ -121,16 +122,6 @@ class BigQueryWarmStore:
             bigquery.ScalarQueryParameter(k, "STRING", str(params[k])) for k in named.params
         ]
         try:
-            dry = self._client.query(
-                sql,
-                job_config=bigquery.QueryJobConfig(
-                    query_parameters=parameters, dry_run=True, use_query_cache=False
-                ),
-            )
-            if dry.total_bytes_processed > self._max_bytes:
-                raise WarmQueryRefused(
-                    f"query {query!r} would scan {dry.total_bytes_processed} bytes, over the cap of {self._max_bytes}"
-                )
             job = self._client.query(
                 sql,
                 job_config=bigquery.QueryJobConfig(
@@ -138,6 +129,16 @@ class BigQueryWarmStore:
                 ),
             )
             rows = [_plain(dict(r.items())) for r in job.result()]
+        except BadRequest as exc:
+            # BigQuery enforces the cap itself: a query that would bill more fails without being charged.
+            if "bytes billed" in str(exc):
+                raise WarmQueryRefused(
+                    f"query {query!r} would bill more than the cap of {self._max_bytes} bytes"
+                ) from exc
+            _LOG.warning("warm query %s was rejected", query, exc_info=True)
+            raise WarmUnavailable(
+                f"the warehouse rejected the query: {type(exc).__name__}"
+            ) from exc
         except GoogleAPICallError as exc:
             _LOG.warning("warm query %s failed", query, exc_info=True)
             raise WarmUnavailable(f"the warehouse could not answer: {type(exc).__name__}") from exc
