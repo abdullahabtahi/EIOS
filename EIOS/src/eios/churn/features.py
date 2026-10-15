@@ -151,15 +151,19 @@ class PartnerFeatureExtractor:
 
     def build_person_period_df(self, raw_df: pd.DataFrame, num_weeks: int = 4) -> pd.DataFrame:
         """Expands snapshot feature DataFrame into person-period observations for discrete hazard modeling."""
-        records = []
-        for _, row in raw_df.iterrows():
-            for week in range(1, num_weeks + 1):
-                rec = row.to_dict()
-                rec["period_week"] = week
-                # Temporal baseline interaction
-                rec["week_baseline"] = week
-                records.append(rec)
-        return pd.DataFrame(records)
+        n_rows = len(raw_df)
+        if n_rows == 0:
+            return pd.DataFrame(columns=list(raw_df.columns) + ["period_week", "week_baseline"])
+
+        # Safely repeat using positional index to avoid issues if raw_df has duplicate indices
+        df_rep = raw_df.iloc[np.repeat(np.arange(n_rows), num_weeks)].copy()
+        weeks = np.tile(np.arange(1, num_weeks + 1), n_rows)
+
+        df_rep["period_week"] = weeks
+        # Temporal baseline interaction
+        df_rep["week_baseline"] = weeks
+
+        return df_rep.reset_index(drop=True)
 
     def extract_signal_contributions(self, row: pd.Series) -> list[SignalContribution]:
         """Calculates deterministic signal contributions for explainability."""
