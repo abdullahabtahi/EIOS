@@ -1,0 +1,44 @@
+"""Geospatial reference endpoint: real public layers (boundaries, FATF lists, offshore-structure counts, indicators).
+
+Served from the warm tier's `warm_reference` dataset. When the warehouse is not configured the answer is a plain 503
+`reference_unavailable`: a map with no data says so, it never invents any (docs/geospatial-milestones.md M1).
+"""
+
+from __future__ import annotations
+
+import functools
+import logging
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from eios.cockpit.auth import current_operator
+from eios.reference.reader import ReferenceReader, ReferenceUnavailable, reader_from_env
+
+_LOG = logging.getLogger("eios.cockpit.geo")
+GEO_REFERENCE_PATH = "/api/cockpit/geo/reference"
+
+router = APIRouter(tags=["Cockpit Geo"], dependencies=[Depends(current_operator)])
+
+
+@functools.cache
+def get_reader() -> ReferenceReader | None:
+    return reader_from_env()
+
+
+@router.get(GEO_REFERENCE_PATH)
+def geo_reference(reader: ReferenceReader | None = Depends(get_reader)) -> dict[str, Any]:
+    if reader is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="reference_unavailable")
+    try:
+        return reader.world()
+    except ReferenceUnavailable as exc:
+        _LOG.warning("reference layer unavailable: %s", exc)
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, detail="reference_unavailable"
+        ) from exc
+    except Exception as exc:  # the warehouse failed: say offline, never a partial map
+        _LOG.exception("reference layer read failed")
+        raise HTTPException(
+            status.HTTP_503_SERVICE_UNAVAILABLE, detail="reference_unavailable"
+        ) from exc

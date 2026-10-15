@@ -36,6 +36,7 @@ from eios.assistant.sessions import valid_entity_id
 from eios.assistant.telemetry import record_turn
 from eios.cockpit import aml_engine_view as aml_view
 from eios.cockpit import compliance_view, operations_view
+from eios.cockpit import geo as geo_routes
 from eios.cockpit import executive_view as exec_view
 from eios.cockpit import partner_engine_view as partner_view
 from eios.cockpit.aml_engine_view import default_entity
@@ -1288,6 +1289,7 @@ def compliance_ledger() -> dict[str, Any]:
 
 app.include_router(public_router)
 app.include_router(router)
+app.include_router(geo_routes.router)
 
 
 def main() -> None:
