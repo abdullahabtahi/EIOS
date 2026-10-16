@@ -12,10 +12,6 @@ import { signed, usd, type BoardForecast, type Horizon } from './board';
 
 export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
   const nominalPct = Math.round((forecast.nominal ?? 0.9) * 100);
-  const interval =
-    forecast.low !== null && forecast.high !== null
-      ? `${nominalPct}% interval ${usd(forecast.low)} to ${usd(forecast.high)}`
-      : 'No interval was measured for this projection.';
 
   const svgRef = React.useRef<SVGSVGElement | null>(null);
   const [hoverPoint, setHoverPoint] = React.useState<{
@@ -163,7 +159,7 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
                   <text
                     x="18"
                     y="18"
-                    className="fill-slate-400 font-mono text-[9px] font-semibold tracking-wider uppercase select-none pointer-events-none"
+                    className="fill-slate-400 font-mono text-label font-semibold tracking-wider uppercase select-none pointer-events-none"
                   >
                     {nominalPct}% Confidence Probability Density
                   </text>
@@ -188,9 +184,9 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
                   <circle cx={gaussian.x0} cy={gaussian.yPeak} r="3.5" className="fill-slate-900 stroke-white stroke-1 pointer-events-none" />
 
                   {/* Static Baseline Axis Markers */}
-                  <text x="50" y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-400 font-mono text-[9px] font-semibold pointer-events-none">P05</text>
-                  <text x={gaussian.x0} y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-700 font-mono text-[9px] font-bold pointer-events-none">MODE</text>
-                  <text x="450" y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-400 font-mono text-[9px] font-semibold pointer-events-none">P95</text>
+                  <text x="50" y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-400 font-mono text-label font-semibold pointer-events-none">P05</text>
+                  <text x={gaussian.x0} y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-700 font-mono text-label font-bold pointer-events-none">MODE</text>
+                  <text x="450" y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-400 font-mono text-label font-semibold pointer-events-none">P95</text>
 
                   {/* Dynamic Hover Indicator & Tooltip */}
                   {hoverPoint && (
@@ -225,7 +221,7 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
                           x="0"
                           y="1.5"
                           textAnchor="middle"
-                          className="fill-white font-mono text-[10px] font-semibold"
+                          className="fill-white font-mono text-label font-semibold"
                         >
                           {usd(hoverPoint.value)} · P{hoverPoint.pct.toString().padStart(2, '0')}
                         </text>
@@ -239,23 +235,23 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
               <div className="grid grid-cols-1 sm:grid-cols-3 @[480px]:grid-cols-3 gap-2.5 sm:gap-3 font-mono">
                 {/* 1. Floor */}
                 <div className="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 space-y-1 min-w-0">
-                  <div className="text-[10px] sm:text-label text-slate-500 uppercase font-semibold tracking-tight truncate">Floor (P05)</div>
+                  <div className="text-label text-slate-500 uppercase font-semibold tracking-tight truncate">Floor (P05)</div>
                   <div className="text-sm sm:text-base font-bold text-slate-900 tabular-nums truncate">{usd(forecast.low!)}</div>
-                  <div className="text-[10px] sm:text-label text-slate-500 font-sans leading-tight">Downside buffer</div>
+                  <div className="text-label text-slate-500 font-sans leading-tight">Downside buffer</div>
                 </div>
 
                 {/* 2. Mode Expected */}
                 <div className="p-2.5 sm:p-3 bg-blue-50/70 border border-blue-200 space-y-1 min-w-0">
-                  <div className="text-[10px] sm:text-label text-blue-800 uppercase font-bold tracking-tight truncate">Expected (Mode)</div>
+                  <div className="text-label text-blue-800 uppercase font-bold tracking-tight truncate">Expected (Mode)</div>
                   <div className="text-sm sm:text-base font-bold text-blue-950 tabular-nums truncate">{usd(forecast.point)}</div>
-                  <div className="text-[10px] sm:text-label text-blue-700/80 font-sans leading-tight">Peak forecast</div>
+                  <div className="text-label text-blue-700/80 font-sans leading-tight">Peak forecast</div>
                 </div>
 
                 {/* 3. Ceiling */}
                 <div className="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 space-y-1 min-w-0">
-                  <div className="text-[10px] sm:text-label text-slate-500 uppercase font-semibold tracking-tight truncate">Ceiling (P95)</div>
+                  <div className="text-label text-slate-500 uppercase font-semibold tracking-tight truncate">Ceiling (P95)</div>
                   <div className="text-sm sm:text-base font-bold text-slate-900 tabular-nums truncate">{usd(forecast.high!)}</div>
-                  <div className="text-[10px] sm:text-label text-slate-500 font-sans leading-tight">Upside threshold</div>
+                  <div className="text-label text-slate-500 font-sans leading-tight">Upside threshold</div>
                 </div>
               </div>
             </div>
