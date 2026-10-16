@@ -25,6 +25,7 @@ from eios.cockpit.assistant_gateway import warm_up as warm_up_assistant
 from eios.cockpit.auth import cors_origins, current_operator
 from eios.cockpit.server import public_router as cockpit_public_router
 from eios.cockpit.server import router as cockpit_router
+from eios.dataplane.geo_plane import warm_graph
 from eios.dataplane.plane import read_models
 from eios.observability.cloud_trace import configure_cloud_trace
 
@@ -72,12 +73,16 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
         _LOG.exception("the data plane could not be built at start-up; requests will retry")
     task = asyncio.create_task(warm_up_assistant())
     ambient_task = asyncio.create_task(_prepare_briefs_after(task))
+    graph_task = asyncio.create_task(
+        asyncio.to_thread(warm_graph)
+    )  # the first graph job is the slow one
     address_task = asyncio.create_task(_warm_up_address_check())
     try:
         yield
     finally:
         task.cancel()
         ambient_task.cancel()
+        graph_task.cancel()
         address_task.cancel()
         await drain_sessions()  # conversation events still held in memory are written before exit
 
