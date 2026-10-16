@@ -64,3 +64,38 @@ def test_the_real_manifest_loads_and_lists_the_acquired_documents_with_no_unveri
     }
     assert all(d.licence_state != "unverified" for d in every)
     assert all(d.jurisdiction in {"MT", "LB", "US", "INTL"} for d in every)
+
+
+def test_ingest_regulations_main_plan_and_execute(monkeypatch: pytest.MonkeyPatch) -> None:
+    from tools import ingest_regulations
+
+    dummy_plan = ingest.Plan((doc(pages=1),), "bkt", "store")
+    monkeypatch.setattr(ingest, "plan", lambda b, d: dummy_plan)
+    monkeypatch.setattr(ingest, "fetch", lambda d: Path("/tmp/dummy"))
+    monkeypatch.setattr(ingest, "upload", lambda p: None)
+
+    # Dry-run without execute returns 0
+    assert (
+        ingest_regulations.main(
+            ["--project", "p", "--data-store", "ds", "--bucket", "b"]
+        )
+        == 0
+    )
+
+    # Execute with successful operation returns 0
+    monkeypatch.setattr(ingest, "start_import", lambda p, prj: "operations/12345")
+    assert (
+        ingest_regulations.main(
+            ["--project", "p", "--data-store", "ds", "--bucket", "b", "--execute"]
+        )
+        == 0
+    )
+
+    # Execute with empty operation returns 1
+    monkeypatch.setattr(ingest, "start_import", lambda p, prj: "")
+    assert (
+        ingest_regulations.main(
+            ["--project", "p", "--data-store", "ds", "--bucket", "b", "--execute"]
+        )
+        == 1
+    )
