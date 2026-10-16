@@ -15,6 +15,7 @@ import { ModelPicker, useModelChoice } from '../shell/model-picker';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { authFetch } from '@/lib/auth/token';
 import { geoSuggestions, type MapContextPayload, moveLabel } from './geo-moves';
+
 import { GeoEvidence } from './geo-evidence';
 import { GeoVerify } from './geo-verify';
 import type { GeoSelection } from './geo-types';
@@ -50,6 +51,12 @@ export interface GeoAskProps {
   readonly selected: GeoSelection;
   /** Apply one of an answer's map moves; `auto` is true for the move applied when the answer arrives. */
   readonly onMove: (move: ViewCommand, auto: boolean) => void;
+  /** An answer is being waited for, or is not. */
+  readonly onPending?: (pending: boolean) => void;
+  /** An answer has arrived. */
+  readonly onAnswered?: () => void;
+  /** A request to be ready for a question: focus the box, and put the given text in it (not sent). The id changes with each request. */
+  readonly intent?: { readonly id: number; readonly text?: string } | null;
 }
 
 function selectionKey(selected: GeoSelection): string | null {
@@ -62,7 +69,7 @@ function TurnTrace({ response }: { readonly response: CopilotQueryResponse }) {
   if (read.length === 0) return null;
   const seconds = response.turnLatencyMs ? ` · ${(response.turnLatencyMs / 1000).toFixed(1)} s` : '';
   return (
-    <p className="text-label font-mono text-cx-muted" data-testid="geo-turn-trace">
+    <p className="text-label text-cx-muted" data-testid="geo-turn-trace">
       Read: {[...new Set(read)].join(' · ')}
       {seconds}
     </p>
@@ -91,18 +98,32 @@ function TurnMoves({ moves, onMove }: { readonly moves: readonly ViewCommand[]; 
   );
 }
 
-export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
+export function GeoAsk({ context, selected, onMove, onPending, onAnswered, intent }: GeoAskProps) {
   const [items, setItems] = React.useState<ChatItem[]>([]);
   const [proposalStates, setProposalStates] = React.useState<Record<string, ProposalState>>({});
   const [query, setQuery] = React.useState('');
   const [pending, setPending] = React.useState(false);
   const models = useModelChoice();
   const endRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  // A request to be ready for a question is answered once per id: the text lands in the box during the render that sees it.
+  const [seenIntent, setSeenIntent] = React.useState<number | null>(null);
   const onScreen = selectionKey(selected);
 
   React.useEffect(() => {
     if (typeof endRef.current?.scrollIntoView === 'function') endRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [items]);
+
+  React.useEffect(() => onPending?.(pending), [pending, onPending]);
+
+  if (intent && seenIntent !== intent.id) {
+    setSeenIntent(intent.id);
+    if (intent.text !== undefined) setQuery(intent.text);
+  }
+  const intentId = intent?.id;
+  React.useEffect(() => {
+    if (intentId !== undefined) inputRef.current?.focus();
+  }, [intentId]);
 
   const ask = async (text: string) => {
     const trimmed = text.trim();
@@ -130,6 +151,7 @@ export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
       }
       const data: CopilotQueryResponse = await res.json();
       settle({ response: data });
+      onAnswered?.();
       const first = data.viewCommands?.[0];
       if (first) onMove(first, true);
     } catch (err) {
@@ -152,33 +174,33 @@ export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
   };
 
   return (
-    <section aria-label="Ask about the map" className="flex h-full min-h-0 flex-col bg-cx-wash-0">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-cx-line bg-cx-sub px-3 py-2 text-xs">
-        <span className="min-w-0 truncate text-cx-muted" data-testid="geo-ask-context">
+    <section aria-label="Ask about the map" className="flex h-full min-h-0 flex-col bg-white">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-0.5 px-4 pb-2 text-label">
+        <span className="min-w-0 text-cx-muted" data-testid="geo-ask-context">
           {onScreen ? `About the ${onScreen} on the map` : 'Nothing selected: ask about the whole book'}
         </span>
-        <ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />
+        <ModelPicker quiet choices={models.choices} selected={models.selected} onSelect={models.select} />
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto p-3 scrollbar-thin">
+      <div className="flex-1 space-y-4 overflow-y-auto border-t border-cx-line-soft p-4 scrollbar-thin">
         {items.length === 0 ? (
-          <div className="space-y-3 py-6 text-center">
-            <p className="text-xs font-semibold text-cx-ink">Ask why the map shows what it shows</p>
+          <div className="space-y-2">
+            <h3 className="text-sm font-semibold leading-snug text-cx-ink">Ask why the map shows what it shows</h3>
             <p className="text-label text-cx-muted">
               Every figure is checked against what a tool returned, and the map moves only to what a tool found.
             </p>
-            <div className="flex flex-col items-stretch gap-2">
+            <ul className="-mx-4 divide-y divide-cx-line-soft pt-1">
               {geoSuggestions(selected).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => ask(s)}
-                  className="cursor-pointer border border-slate-300 bg-white px-2.5 py-1.5 text-left text-label text-slate-700 hover:border-cx-accent"
-                >
-                  {s}
-                </button>
+                <li key={s}>
+                  <button
+                    type="button"
+                    onClick={() => ask(s)}
+                    className="w-full cursor-pointer px-4 py-2 text-left text-xs text-cx-ink outline-none transition-colors hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent">
+                    {s}
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         ) : (
           items.map((item) =>
@@ -187,6 +209,7 @@ export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
             ) : (
               <div key={item.id} className="space-y-1.5">
                 <ChatTurnView
+                  variant="plain"
                   turn={{ ...item, entityId: null }}
                   proposalStates={proposalStates}
                   onStage={stage}
@@ -210,21 +233,22 @@ export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
           e.preventDefault();
           void ask(query);
         }}
-        className="shrink-0 border-t border-slate-200 bg-slate-50 p-2.5"
+        className="shrink-0 border-t border-cx-line bg-white p-3"
       >
         <div className="flex items-center gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={onScreen ? `Ask about the ${onScreen}…` : 'Ask about the map…'}
             aria-label="Ask the geospatial assistant"
-            className="min-w-0 flex-1 rounded-none border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-blue-600 focus:outline-none"
+            className="min-w-0 flex-1 rounded-none border border-cx-line bg-white px-3 py-2 text-xs text-cx-ink outline-none placeholder:text-cx-muted focus-visible:border-cx-accent focus-visible:ring-2 focus-visible:ring-cx-accent"
           />
           <button
             type="submit"
             disabled={pending || !query.trim()}
-            className="shrink-0 cursor-pointer rounded-none bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-black disabled:opacity-40"
+            className="shrink-0 cursor-pointer rounded-none bg-cx-ink px-3 py-2 text-xs font-medium text-white outline-none hover:bg-black focus-visible:ring-2 focus-visible:ring-cx-accent focus-visible:ring-offset-1 disabled:opacity-40"
           >
             {pending ? 'Working…' : 'Ask'}
           </button>

@@ -26,7 +26,7 @@ type Reply = { status: number; body?: unknown };
 /** Route the two endpoints independently, as the backend does. */
 function serve(reference: Reply, flows: Reply) {
   authFetch.mockImplementation(async (url: string) => {
-    const r = url.includes('/geo/flows') ? flows : reference;
+    const r = url.includes('/geo/flows') ? flows : url.includes('/geo/list-changes') ? DOWN : reference;
     return { ok: r.status >= 200 && r.status < 300, status: r.status, json: async () => r.body ?? {} };
   });
 }
@@ -45,7 +45,7 @@ const MANY_FLOWS = {
   ...FLOWS,
   corridors: [
     ...FLOWS.corridors,
-    ...Array.from({ length: 10 }, (_, i) => ({ origin: 'PA', destination: 'BS', volume_usd: 1_000 + i, accounts: 1, events: 1, tier: 'low' as const })),
+    ...Array.from({ length: 10 }, (_, i) => ({ origin: 'PA', destination: `D${i}`, volume_usd: 1_000 + i, accounts: 1, events: 1, tier: 'low' as const })),
   ],
 };
 
@@ -113,6 +113,15 @@ describe('GeoWorkspace', () => {
     expect(screen.getByRole('region', { name: 'Selection' })).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByRole('region', { name: 'Selection' })).not.toBeInTheDocument();
+  });
+
+  it('leaves Escape to the field being typed in, instead of putting the pick down', async () => {
+    render(<GeoWorkspace />);
+    const list = await screen.findByRole('region', { name: 'Where to look first' });
+    fireEvent.click(within(list).getByRole('button', { name: /Kenya → The Bahamas/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Ask the assistant/ }));
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'Ask the geospatial assistant' }), { key: 'Escape' });
+    expect(screen.getByRole('region', { name: 'Selection' })).toBeInTheDocument();
   });
 
   it('shows the first rows only, and all of them on request', async () => {
@@ -273,6 +282,23 @@ describe('describeSelection', () => {
     expect(view?.rows).toContainEqual(['Risk tier', 'High']);
     const unrated = { ...FLOWS, corridors: [{ ...FLOWS.corridors[0], tier: null }] };
     expect(describeSelection(unrated, REFERENCE, { kind: 'corridor', id: 'NO>IR' })?.rows).toContainEqual(['Risk tier', 'Unrated']);
+  });
+
+  it('lets a corridor open the accounts behind it and splits its payments into deposits and withdrawals', () => {
+    const view = describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'NO>IR' });
+    expect(view?.accounts).toEqual(['CR84920', 'CR33333']);
+    expect(view?.rows).toContainEqual(['Deposits', '9']);
+    expect(view?.rows).toContainEqual(['Withdrawals', '3']);
+    const older = describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'KE>BS' });
+    expect(older?.accounts).toBeUndefined();
+    expect(older?.rows.map(([l]) => l)).not.toContain('Deposits');
+  });
+
+  it('shows what comes back the other way when money runs both directions on a corridor', () => {
+    const both = { ...FLOWS, corridors: [...FLOWS.corridors, { origin: 'IR', destination: 'NO', volume_usd: 50_000, accounts: 2, events: 5, tier: 'high' as const }] };
+    const view = describeSelection(both, REFERENCE, { kind: 'corridor', id: 'NO>IR' });
+    expect(view?.rows).toContainEqual(['Returned', '$50K']);
+    expect(describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'NO>IR' })?.rows.map(([l]) => l)).not.toContain('Returned');
   });
 
   it('describes a flagged country pair with its account count and examples', () => {

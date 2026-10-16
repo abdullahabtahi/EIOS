@@ -105,11 +105,11 @@ export function GeoAccountFacts({ account, onPickAccount }: GeoAccountFactsProps
                     type="button"
                     title={`Shares ${r.via === 'gateway' ? `gateway ${r.link}` : `a ${r.detail.toLowerCase().replace(/_/g, ' ')}`}; registered in ${regionName(r.kyc_country)}`}
                     onClick={() => onPickAccount(r.account_id)}
-                    className="cursor-pointer border border-cx-line bg-white px-1.5 py-0.5 font-mono text-label text-cx-accent outline-none hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-cx-accent">
+                    className="cursor-pointer border border-cx-line bg-white px-1.5 py-0.5 text-label text-cx-accent outline-none hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-cx-accent">
                     {r.account_id}
                   </button>
                 ) : (
-                  <span className="border border-cx-line px-1.5 py-0.5 font-mono text-label text-cx-ink-soft">{r.account_id}</span>
+                  <span className="border border-cx-line px-1.5 py-0.5 text-label text-cx-ink-soft">{r.account_id}</span>
                 )}
               </li>
             ))}

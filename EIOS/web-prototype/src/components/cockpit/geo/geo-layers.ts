@@ -1,4 +1,4 @@
-import { ArcLayer, GeoJsonLayer, ScatterplotLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import type { Layer } from '@deck.gl/core';
 import type {
   GeoFlows,
@@ -10,29 +10,34 @@ import type {
   RiskTier,
 } from './geo-types';
 import { areaTier, DEFAULT_BASIS, type BasisId } from './geo-basis';
+import { rgba, type Rgba } from './geo-colors';
+import { curvePath, fadeAlong, wrapCopies } from './geo-curves';
+import { type CorridorPair, hubsOf, pairUp } from './geo-pairs';
 import { corridorId, pairId, shownCorridors, shownPairs } from './geo-rank';
-
-type Rgba = [number, number, number, number];
 
 /** Colour carries risk only: elevated tiers are red and amber; low and unrated corridors stay a quiet grey, never green. */
 export const TIER_COLOR: Readonly<Record<RiskTier, Rgba>> = {
-  low: [138, 155, 168, 120],
-  medium: [217, 150, 20, 210],
-  high: [200, 50, 50, 220],
+  low: rgba('cx-faint', 120),
+  medium: rgba('cx-warn', 210),
+  high: rgba('cx-bad', 220),
 };
-const MISMATCH_COLOR: Rgba = [16, 107, 163, 210];
-const OFFSHORE_COLOR: Rgba = [16, 107, 163, 150];
-const SELECTED_COLOR: Rgba = [17, 17, 17, 255];
-const UNRATED_COLOR: Rgba = [138, 155, 168, 120];
-const OUTLINE_COLOR: Rgba = [120, 134, 148, 90];
+/** Selection is the accent, as everywhere in the cockpit; the data's own colours stay state and ink. */
+const SELECTED_COLOR: Rgba = rgba('cx-accent', 255);
+const MISMATCH_COLOR: Rgba = rgba('cx-ink', 190);
+const OFFSHORE_COLOR: Rgba = rgba('cx-muted', 150);
+const UNRATED_COLOR: Rgba = rgba('cx-faint', 120);
+const OUTLINE_COLOR: Rgba = rgba('cx-muted', 70);
 const NO_FILL: Rgba = [0, 0, 0, 0];
 
 /** [ASSUMPTION] below this many incorporated entities a country is not drawn as an offshore centre (keeps the map readable). */
 export const MIN_OFFSHORE_ENTITIES = 500;
 const AREA_FILL_ALPHA = 70;
-// Arcs lift out of the map plane; on a flat (untilted) map that is invisible, so lay the arc in the plane to read as a curve.
-const ARC_TILT_DEG = 90;
-const ARC_HEIGHT = 0.06;
+/** [ASSUMPTION] a country that this many drawn routes meet is drawn as a hub node. */
+export const HUB_MIN_SPOKES = 4;
+/** Share of a route's opacity kept when a pick puts something else in focus. */
+const DIM = 0.28;
+const HUB_BASE_RADIUS = 9;
+const HUB_RADIUS_PER_SPOKE = 2.5;
 /** An arc drawn for the current pick (a gateway and its users' homes, an account's logins), above every lens. */
 export interface HighlightArc {
   readonly from: string;
@@ -51,13 +56,28 @@ export interface LayerHandlers {
   readonly onSelect?: (selection: GeoSelection) => void;
 }
 
-interface ArcRow {
-  readonly source: LngLat;
-  readonly target: LngLat;
+/** One route on the map: a curved path with a colour per vertex (faint at the origin, full at the destination). */
+interface PathRow {
+  readonly path: readonly [number, number][];
+  readonly colors: readonly Rgba[];
   readonly width: number;
-  readonly color: Rgba;
   readonly ref: NonNullable<GeoSelection>;
 }
+
+interface HubRow {
+  readonly iso2: string;
+  readonly position: LngLat;
+  readonly spokes: number;
+  readonly tier: RiskTier | null;
+}
+
+/** A route as the path rows that draw it: the curve, and its copy one world over when it crosses the map's edge. */
+function routeRows(source: LngLat, target: LngLat, color: Rgba, width: number, ref: NonNullable<GeoSelection>): readonly PathRow[] {
+  const path = curvePath(source, target);
+  return wrapCopies(path).map((p) => ({ path: p as [number, number][], colors: fadeAlong(color, p.length), width, ref }));
+}
+
+const dimmed = (color: Rgba): Rgba => [color[0], color[1], color[2], Math.round(color[3] * DIM)];
 
 const toLngLat = (p: LngLat): [number, number] => [p[0], p[1]];
 const MIN_ARC_WIDTH = 1.5;
@@ -72,26 +92,55 @@ function positions(reference: GeoReference): ReadonlyMap<string, LngLat> {
   return new Map(reference.countries.map((c) => [c.iso2, c.position]));
 }
 
-function corridorRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly ArcRow[] {
-  const at = positions(reference);
-  const max = Math.max(0, ...flows.corridors.map((c) => c.volume_usd));
+/** Which routes the pick puts in focus: a country keeps the routes that touch it, a corridor keeps its own pair; any other pick keeps all. */
+function inFocus(pair: CorridorPair, selection: GeoSelection): boolean {
+  if (selection?.kind === 'country') {
+    return [pair.lead.origin, pair.lead.destination].includes(selection.id);
+  }
+  if (selection?.kind === 'corridor') {
+    return [pair.lead, pair.back].some((c) => c !== null && corridorId(c) === selection.id);
+  }
+  return true;
+}
+
+const isPickedPair = (pair: CorridorPair, selection: GeoSelection): boolean =>
+  selection?.kind === 'corridor' && [pair.lead, pair.back].some((c) => c !== null && corridorId(c) === selection.id);
+
+/** The drawn corridors folded into routes: the two directions of a pair are one line, and a corridor picked from the list is always among them. */
+function corridorPairs(flows: GeoFlows, selection: GeoSelection): readonly CorridorPair[] {
   const drawn = shownCorridors(flows);
-  // A corridor picked from the list is drawn even when it is not among the largest, so a selection is never invisible.
   const picked = selection?.kind === 'corridor' ? flows.corridors.find((c) => corridorId(c) === selection.id) : undefined;
   const rows = picked && !drawn.includes(picked) ? [...drawn, picked] : drawn;
-  return rows.flatMap((c) => {
-    const source = at.get(c.origin);
-    const target = at.get(c.destination);
+  return pairUp(rows, flows.corridors);
+}
+
+function corridorRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly PathRow[] {
+  const at = positions(reference);
+  const pairs = corridorPairs(flows, selection);
+  const max = Math.max(0, ...pairs.map((p) => p.gross));
+  return pairs.flatMap((pair) => {
+    const source = at.get(pair.lead.origin);
+    const target = at.get(pair.lead.destination);
     if (!source || !target) return [];
-    const id = corridorId(c);
-    const isPicked = picked === c;
-    const color = isPicked ? SELECTED_COLOR : c.tier ? TIER_COLOR[c.tier] : UNRATED_COLOR;
-    const width = widthFor(c.volume_usd, max) + (isPicked ? SELECTED_EXTRA_WIDTH : 0);
-    return [{ source, target, width, color, ref: { kind: 'corridor', id } as const }];
+    const picked = isPickedPair(pair, selection);
+    const base = picked ? SELECTED_COLOR : pair.tier ? TIER_COLOR[pair.tier] : UNRATED_COLOR;
+    const color = inFocus(pair, selection) ? base : dimmed(base);
+    const width = widthFor(pair.gross, max) + (picked ? SELECTED_EXTRA_WIDTH : 0);
+    return routeRows(source, target, color, width, { kind: 'corridor', id: corridorId(pair.lead) });
   });
 }
 
-function mismatchRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly ArcRow[] {
+/** Where drawn routes converge: one ring for the country, sized by how many routes meet there. */
+function hubRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly HubRow[] {
+  const at = positions(reference);
+  const placed = corridorPairs(flows, selection).filter((p) => at.has(p.lead.origin) && at.has(p.lead.destination));
+  return hubsOf(placed, HUB_MIN_SPOKES).flatMap((h) => {
+    const position = at.get(h.iso2);
+    return position ? [{ ...h, position }] : [];
+  });
+}
+
+function mismatchRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly PathRow[] {
   const at = positions(reference);
   const max = Math.max(0, ...flows.mismatch_pairs.map((p) => p.accounts));
   const drawn = shownPairs(flows);
@@ -103,27 +152,79 @@ function mismatchRows(flows: GeoFlows, reference: GeoReference, selection: GeoSe
     if (!source || !target) return [];
     const isPicked = picked === p;
     const width = widthFor(p.accounts, max) + (isPicked ? SELECTED_EXTRA_WIDTH : 0);
-    return [{ source, target, width, color: isPicked ? SELECTED_COLOR : MISMATCH_COLOR, ref: { kind: 'mismatch', id: pairId(p) } as const }];
+    return routeRows(source, target, isPicked ? SELECTED_COLOR : MISMATCH_COLOR, width, { kind: 'mismatch', id: pairId(p) });
   });
 }
 
 const point = (info: { x: number; y: number }): HoverPoint => ({ x: info.x, y: info.y });
 
-function arcLayer(id: string, rows: readonly ArcRow[], handlers: LayerHandlers): ArcLayer<ArcRow> {
-  return new ArcLayer<ArcRow>({
+function pathLayer(id: string, rows: readonly PathRow[], handlers: LayerHandlers): PathLayer<PathRow> {
+  return new PathLayer<PathRow>({
     id,
-    data: rows as ArcRow[],
+    data: rows as PathRow[],
     pickable: true,
-    antialiasing: true,
-    getSourcePosition: (d) => toLngLat(d.source),
-    getTargetPosition: (d) => toLngLat(d.target),
-    getSourceColor: (d) => d.color,
-    getTargetColor: (d) => d.color,
+    getPath: (d) => d.path as [number, number][],
+    getColor: (d) => d.colors as Rgba[],
     getWidth: (d) => d.width,
-    getTilt: () => ARC_TILT_DEG,
-    getHeight: () => ARC_HEIGHT,
-    onHover: (info) => handlers.onHover?.(info.object ? (info.object as ArcRow).ref : null, point(info)),
-    onClick: (info) => handlers.onSelect?.(info.object ? (info.object as ArcRow).ref : null),
+    widthUnits: 'pixels',
+    capRounded: true,
+    jointRounded: true,
+    autoHighlight: false,
+    onHover: (info) => handlers.onHover?.(info.object ? (info.object as PathRow).ref : null, point(info)),
+    onClick: (info) => handlers.onSelect?.(info.object ? (info.object as PathRow).ref : null),
+  });
+}
+
+interface LabelRow {
+  readonly iso2: string;
+  readonly name: string;
+  readonly position: LngLat;
+}
+
+const LABEL_SIZE = 12;
+const LABEL_LIFT_PX = -16;
+const LABEL_HALO: Rgba = [255, 255, 255, 235];
+
+/** Names for the countries a drawn route touches, each once; the basemap's own names are faint so these are the ones read. */
+function labelRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly LabelRow[] {
+  const touched = new Set(corridorPairs(flows, selection).flatMap((p) => [p.lead.origin, p.lead.destination]));
+  return reference.countries.filter((c) => touched.has(c.iso2)).map((c) => ({ iso2: c.iso2, name: c.name, position: c.position }));
+}
+
+function labelLayer(rows: readonly LabelRow[]): TextLayer<LabelRow> {
+  return new TextLayer<LabelRow>({
+    id: 'geo-labels',
+    data: rows as LabelRow[],
+    pickable: false,
+    getPosition: (d) => toLngLat(d.position),
+    getText: (d) => d.name,
+    getSize: LABEL_SIZE,
+    getColor: rgba('cx-ink', 255),
+    getPixelOffset: [0, LABEL_LIFT_PX],
+    fontFamily: 'Inter, system-ui, sans-serif',
+    fontWeight: 600,
+    characterSet: 'auto',
+    fontSettings: { sdf: true },
+    outlineWidth: 3,
+    outlineColor: LABEL_HALO,
+  });
+}
+
+function hubLayer(hubs: readonly HubRow[], handlers: LayerHandlers): ScatterplotLayer<HubRow> {
+  return new ScatterplotLayer<HubRow>({
+    id: 'geo-hubs',
+    data: hubs as HubRow[],
+    pickable: true,
+    stroked: true,
+    filled: false,
+    radiusUnits: 'pixels',
+    lineWidthUnits: 'pixels',
+    getPosition: (h) => toLngLat(h.position),
+    getRadius: (h) => HUB_BASE_RADIUS + HUB_RADIUS_PER_SPOKE * h.spokes,
+    getLineWidth: 2,
+    getLineColor: (h) => (h.tier === 'high' ? TIER_COLOR.high : h.tier === 'medium' ? TIER_COLOR.medium : rgba('cx-muted', 200)),
+    onHover: (info) => handlers.onHover?.(info.object ? { kind: 'country', id: (info.object as HubRow).iso2 } : null, point(info)),
+    onClick: (info) => handlers.onSelect?.(info.object ? { kind: 'country', id: (info.object as HubRow).iso2 } : null),
   });
 }
 
@@ -143,7 +244,13 @@ function areaFeatures(reference: GeoReference): readonly AreaFeature[] {
   return built;
 }
 
-function riskAreaLayer(reference: GeoReference, selection: GeoSelection, handlers: LayerHandlers, basis: BasisId): GeoJsonLayer<AreaFeature['properties']> {
+function riskAreaLayer(
+  reference: GeoReference,
+  selection: GeoSelection,
+  handlers: LayerHandlers,
+  basis: BasisId,
+  override: ReadonlyMap<string, RiskTier | null> | null,
+): GeoJsonLayer<AreaFeature['properties']> {
   const picked = (c: ReferenceCountry) => selection?.kind === 'country' && selection.id === c.iso2;
   return new GeoJsonLayer<AreaFeature['properties']>({
     id: 'geo-risk',
@@ -154,14 +261,15 @@ function riskAreaLayer(reference: GeoReference, selection: GeoSelection, handler
     lineWidthMinPixels: 1,
     lineWidthUnits: 'pixels',
     getFillColor: (f) => {
-      const tier = areaTier((f as unknown as AreaFeature).properties.country, basis);
+      const country = (f as unknown as AreaFeature).properties.country;
+      const tier = override?.has(country.iso2) ? (override.get(country.iso2) ?? null) : areaTier(country, basis);
       if (!tier) return NO_FILL;
       const [r, g, b] = TIER_COLOR[tier];
       return [r, g, b, AREA_FILL_ALPHA];
     },
     getLineColor: (f) => (picked((f as unknown as AreaFeature).properties.country) ? SELECTED_COLOR : OUTLINE_COLOR),
     getLineWidth: (f) => (picked((f as unknown as AreaFeature).properties.country) ? 3 : 1),
-    updateTriggers: { getFillColor: [basis], getLineColor: [selection?.kind, selection?.id], getLineWidth: [selection?.kind, selection?.id] },
+    updateTriggers: { getFillColor: [basis, override], getLineColor: [selection?.kind, selection?.id], getLineWidth: [selection?.kind, selection?.id] },
     onHover: (info) => handlers.onHover?.(info.object ? countryRef((info.object as unknown as AreaFeature).properties.country) : null, point(info)),
     onClick: (info) => handlers.onSelect?.(info.object ? countryRef((info.object as unknown as AreaFeature).properties.country) : null),
   });
@@ -190,27 +298,26 @@ function offshoreLayer(reference: GeoReference, handlers: LayerHandlers): Scatte
  * areas, offshore centres) draw only when the reference layer is present; flow lenses only when both the flows and
  * the reference layer (which places the countries) are present. Absent data draws nothing.
  */
-function highlightLayer(arcs: readonly HighlightArc[], reference: GeoReference): ArcLayer<ArcRow> | null {
+function highlightLayer(arcs: readonly HighlightArc[], reference: GeoReference): PathLayer<PathRow> | null {
   const at = positions(reference);
   const max = Math.max(0, ...arcs.map((a) => a.weight));
-  const rows = arcs.flatMap((a): ArcRow[] => {
+  const rows = arcs.flatMap((a): readonly PathRow[] => {
     const source = at.get(a.from);
     const target = at.get(a.to);
     if (!source || !target || a.from === a.to) return [];
-    return [{ source, target, width: widthFor(a.weight, max) + SELECTED_EXTRA_WIDTH, color: SELECTED_COLOR, ref: { kind: 'mismatch', id: `${a.from}>${a.to}` } }];
+    return routeRows(source, target, SELECTED_COLOR, widthFor(a.weight, max) + SELECTED_EXTRA_WIDTH, { kind: 'mismatch', id: `${a.from}>${a.to}` });
   });
   if (rows.length === 0) return null;
-  return new ArcLayer<ArcRow>({
+  return new PathLayer<PathRow>({
     id: 'geo-highlight',
     data: rows,
     pickable: false,
-    getSourcePosition: (d) => toLngLat(d.source),
-    getTargetPosition: (d) => toLngLat(d.target),
-    getSourceColor: (d) => d.color,
-    getTargetColor: (d) => d.color,
+    getPath: (d) => d.path as [number, number][],
+    getColor: (d) => d.colors as Rgba[],
     getWidth: (d) => d.width,
-    getTilt: () => ARC_TILT_DEG,
-    getHeight: () => ARC_HEIGHT,
+    widthUnits: 'pixels',
+    capRounded: true,
+    jointRounded: true,
   });
 }
 
@@ -219,8 +326,8 @@ export interface ListChangeMarks {
   readonly added: ReadonlySet<string>;
   readonly removed: ReadonlySet<string>;
 }
-const ADDED_COLOR: Rgba = [200, 50, 50, 255];
-const REMOVED_COLOR: Rgba = [16, 107, 163, 255];
+const ADDED_COLOR: Rgba = rgba('cx-bad', 255);
+const REMOVED_COLOR: Rgba = rgba('cx-accent', 255);
 
 function listChangeLayer(reference: GeoReference, marks: ListChangeMarks): GeoJsonLayer<AreaFeature['properties']> | null {
   const changed = areaFeatures(reference).filter(
@@ -249,16 +356,21 @@ export function buildLayers(
   highlight: readonly HighlightArc[] = [],
   basis: BasisId = DEFAULT_BASIS,
   listChange: ListChangeMarks | null = null,
+  /** Tiers that replace the list's own for named countries: the earlier edition, while a comparison shows "Before". */
+  tierOverride: ReadonlyMap<string, RiskTier | null> | null = null,
 ): Layer[] {
   const layers: Layer[] = [];
   const outlined = reference && listChange ? listChangeLayer(reference, listChange) : null;
-  if (reference && visible.has('risk')) layers.push(riskAreaLayer(reference, selection, handlers, basis));
+  if (reference && visible.has('risk')) layers.push(riskAreaLayer(reference, selection, handlers, basis, tierOverride));
   if (reference && visible.has('offshore')) layers.push(offshoreLayer(reference, handlers));
   if (flows && reference && visible.has('corridors')) {
-    layers.push(arcLayer('geo-corridors', corridorRows(flows, reference, selection), handlers));
+    layers.push(pathLayer('geo-corridors', corridorRows(flows, reference, selection), handlers));
+    const hubs = hubRows(flows, reference, selection);
+    if (hubs.length > 0) layers.push(hubLayer(hubs, handlers));
+    layers.push(labelLayer(labelRows(flows, reference, selection)));
   }
   if (flows && reference && visible.has('mismatches')) {
-    layers.push(arcLayer('geo-mismatches', mismatchRows(flows, reference, selection), handlers));
+    layers.push(pathLayer('geo-mismatches', mismatchRows(flows, reference, selection), handlers));
   }
   if (outlined) layers.push(outlined);
   const picked = reference ? highlightLayer(highlight, reference) : null;

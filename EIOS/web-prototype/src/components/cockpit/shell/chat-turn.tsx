@@ -64,34 +64,37 @@ export function ChatDividerView({ divider }: { divider: ChatDivider }) {
 }
 
 interface ChatTurnViewProps {
+  /** `plain` sets the exchange on the page's own white, with no card around the answer, for panels that already have a frame. */
+  variant?: 'default' | 'plain';
   turn: ChatTurn;
   proposalStates: Record<string, ProposalState>;
   onStage: (turnId: string, proposal: AssistantProposal) => void;
   onShowInDossier: () => void;
 }
 
-export function ChatTurnView({ turn, proposalStates, onStage, onShowInDossier }: ChatTurnViewProps) {
+export function ChatTurnView({ variant = 'default', turn, proposalStates, onStage, onShowInDossier }: ChatTurnViewProps) {
+  const plain = variant === 'plain';
   const response = turn.response;
   const figures = response?.citedMetrics ?? [];
   return (
     <div className="space-y-2.5">
       <div className="flex justify-end">
-        <div className="px-3 py-1.5 bg-slate-900 text-white text-xs font-sans max-w-[88%] break-words">{turn.query}</div>
+        <div className={`px-3 py-1.5 text-xs font-sans max-w-[88%] break-words ${plain ? 'bg-cx-select text-cx-ink' : 'bg-slate-900 text-white'}`}>{turn.query}</div>
       </div>
 
       {turn.isLoading ? (
-        <CopilotWorking />
+        <CopilotWorking plain={plain} />
       ) : turn.error ? (
         <div role="alert" className="p-2.5 bg-cx-bad-bg border border-cx-bad-line text-cx-bad flex items-start gap-2 text-xs">
           <span className="material-symbols-sharp text-base">error</span>
           <span>{turn.error}</span>
         </div>
       ) : response ? (
-        <div className="space-y-2.5 bg-white p-3 border border-slate-200">
+        <div className={plain ? 'space-y-2.5' : 'space-y-2.5 bg-white p-3 border border-slate-200'}>
           {response.assistantStatus && <AnswerStatusBanner response={response} />}
           <SimpleMarkdown
             source={response.responseMarkdown}
-            className="text-xs leading-relaxed text-slate-800 font-sans"
+            className={`text-xs leading-relaxed font-sans ${plain ? "text-cx-ink" : "text-slate-800"}`}
           />
 
           {figures.length > 0 && <FigureBadges figures={figures} />}

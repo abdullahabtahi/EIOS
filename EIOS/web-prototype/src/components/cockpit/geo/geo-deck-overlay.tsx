@@ -5,6 +5,9 @@ import { useMap } from '@vis.gl/react-google-maps';
 import { GoogleMapsOverlay } from '@deck.gl/google-maps';
 import type { Layer } from '@deck.gl/core';
 
+/** Pointer slack, in pixels, so a thin route can be hovered and clicked. */
+const ROUTE_PICK_PX = 6;
+
 /**
  * Renders deck.gl layers over the Google map; draws no DOM. Interleaved on a vector map, overlaid on a raster one
  * (the overlay detects which). A fresh overlay per mount, finalized on cleanup, and attached one tick late: Google
@@ -19,7 +22,7 @@ export function GeoDeckOverlay({ layers }: { readonly layers: readonly Layer[] }
 
   React.useEffect(() => {
     if (!map) return;
-    const overlay = new GoogleMapsOverlay({ interleaved: true });
+    const overlay = new GoogleMapsOverlay({ interleaved: true, pickingRadius: ROUTE_PICK_PX });
     const attach = window.setTimeout(() => {
       overlay.setMap(map);
       overlay.setProps({ layers: [...latest.current] });

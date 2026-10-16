@@ -54,7 +54,7 @@ export function GeoMap({ layers, focus = null, target = null }: GeoMapProps) {
           <Icon icon="map" size="lg" className="text-cx-faint" />
           <p className="text-sm font-semibold text-cx-ink">Map unavailable</p>
           <p className="text-xs">
-            No Google Maps key is configured (<span className="font-mono">NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</span>).
+            No Google Maps key is configured (<span>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</span>).
           </p>
         </div>
       </div>

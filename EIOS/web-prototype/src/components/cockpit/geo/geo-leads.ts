@@ -1,5 +1,6 @@
 import type { BasisId } from './geo-basis';
 import { FATF_TEXT, formatUsd, nameOf } from './geo-format';
+import { pairUp } from './geo-pairs';
 import { corridorId, pairId, rankedCorridors, rankedPairs } from './geo-rank';
 import type { GeoFlows, GeoReference, GeoSelection, RiskTier } from './geo-types';
 import type { ViewId } from './geo-views';
@@ -20,14 +21,20 @@ const plural = (n: number, one: string, many: string = `${one}s`): string => `${
 const TOP_OFFSHORE = 5;
 const TOP_BASEL = 10;
 
+/** One row per pair of countries: the two directions of a pair are one lead, led by the bigger and saying so when money runs both ways. */
 function corridorLeads(flows: GeoFlows, reference: GeoReference | null): readonly Lead[] {
-  return rankedCorridors(flows).map((c) => ({
-    key: `corridor:${corridorId(c)}`,
-    selection: { kind: 'corridor', id: corridorId(c) },
-    title: `${nameOf(reference, c.origin)} → ${nameOf(reference, c.destination)}`,
-    detail: `${formatUsd(c.volume_usd)} · ${plural(c.accounts, 'account')}`,
-    tier: c.tier === 'high' || c.tier === 'medium' ? c.tier : null,
-  }));
+  const pairs = pairUp(rankedCorridors(flows), flows.corridors);
+  return pairs.map(({ lead, back, tier }) => {
+    const ends = `${nameOf(reference, lead.origin)} ${back ? '↔' : '→'} ${nameOf(reference, lead.destination)}`;
+    const accounts = back && back.accounts !== lead.accounts ? `${COUNT.format(lead.accounts)} and ${COUNT.format(back.accounts)} accounts` : plural(lead.accounts, 'account');
+    return {
+      key: `corridor:${corridorId(lead)}`,
+      selection: { kind: 'corridor', id: corridorId(lead) },
+      title: ends,
+      detail: back ? `${formatUsd(lead.volume_usd)} · ${formatUsd(back.volume_usd)} back · ${accounts}` : `${formatUsd(lead.volume_usd)} · ${accounts}`,
+      tier: tier === 'high' || tier === 'medium' ? tier : null,
+    };
+  });
 }
 
 function gatewayLeads(flows: GeoFlows, reference: GeoReference | null): readonly Lead[] {

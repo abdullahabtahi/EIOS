@@ -11,7 +11,7 @@ export function GeoLayerToggles({ visible, disabled, onToggle }: { readonly visi
     <details className="group border-t border-cx-line-soft">
       <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-2.5 text-xs font-semibold text-cx-ink-soft outline-none hover:bg-cx-sub focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent">
         <span>Layers</span>
-        <span className="font-mono text-label font-normal text-cx-muted">{on} of {ORDER.length} on</span>
+        <span className="text-label font-normal text-cx-muted">{on} of {ORDER.length} on</span>
       </summary>
       <div className="space-y-1.5 px-4 pb-3">
         {ORDER.map((id) => {

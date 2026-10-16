@@ -3,7 +3,7 @@ import { summarize, summarizeReference } from '@/components/cockpit/geo/geo-aggr
 import { buildLayers, MIN_OFFSHORE_ENTITIES } from '@/components/cockpit/geo/geo-layers';
 import { areaTier } from '@/components/cockpit/geo/geo-basis';
 import { ARC_BUDGET, MAX_MISMATCH_PAIRS, drawnKinds, rankedCorridors, shownCorridors, shownPairs } from '@/components/cockpit/geo/geo-rank';
-import type { FlowCorridor } from '@/components/cockpit/geo/geo-types';
+import type { FlowCorridor, GeoFlows } from '@/components/cockpit/geo/geo-types';
 import type { LayerId } from '@/components/cockpit/geo/geo-types';
 import { FLOWS } from './flows-fixture';
 import { REFERENCE } from './reference-fixture';
@@ -51,11 +51,11 @@ describe('buildLayers', () => {
   const ids = (...args: Parameters<typeof buildLayers>) => buildLayers(...args).map((l) => l.id);
 
   it('builds one layer per visible lens with stable ids', () => {
-    expect(ids(FLOWS, REFERENCE, ALL, null)).toEqual(['geo-risk', 'geo-offshore', 'geo-corridors', 'geo-mismatches']);
+    expect(ids(FLOWS, REFERENCE, ALL, null)).toEqual(['geo-risk', 'geo-offshore', 'geo-corridors', 'geo-labels', 'geo-mismatches']);
   });
 
   it('omits hidden lenses and returns nothing when none is visible', () => {
-    expect(ids(FLOWS, REFERENCE, new Set<LayerId>(['corridors']), null)).toEqual(['geo-corridors']);
+    expect(ids(FLOWS, REFERENCE, new Set<LayerId>(['corridors']), null)).toEqual(['geo-corridors', 'geo-labels']);
     expect(ids(FLOWS, REFERENCE, new Set<LayerId>(), null)).toEqual([]);
   });
 
@@ -185,5 +185,77 @@ describe('focusOf', () => {
     expect(focusOf(null, REFERENCE)).toBeNull();
     expect(focusOf(FLOWS, null)).toBeNull();
     expect(focusOf({ ...FLOWS, corridors: [{ ...FLOWS.corridors[0], origin: 'ZZ', destination: 'YY' }] }, REFERENCE)).toBeNull();
+  });
+});
+
+describe('the corridor map reads as a network, not a knot', () => {
+  const rowsOf = (flows: GeoFlows, selection: Parameters<typeof buildLayers>[3] = null) =>
+    buildLayers(flows, REFERENCE, new Set<LayerId>(['corridors']), selection).find((l) => l.id === 'geo-corridors')!.props.data as unknown as {
+      path: [number, number][];
+      colors: number[][];
+      width: number;
+      ref: { kind: string; id: string };
+    }[];
+  const back = { origin: 'IR', destination: 'NO', volume_usd: 50_000, accounts: 2, events: 5, tier: 'high' as const };
+
+  it('draws the two directions of one pair as one route, led by the bigger direction, wider for both together', () => {
+    const merged = rowsOf({ ...FLOWS, corridors: [...FLOWS.corridors, back] });
+    expect(merged).toHaveLength(FLOWS.corridors.length);
+    const pair = merged.find((r) => r.ref.id === 'NO>IR')!;
+    const alone = rowsOf(FLOWS).find((r) => r.ref.id === 'NO>IR')!;
+    expect(pair.width).toBeGreaterThanOrEqual(alone.width);
+    expect(merged.some((r) => r.ref.id === 'IR>NO')).toBe(false);
+  });
+
+  it('draws a curved path from the origin to the destination with direction in its colour', () => {
+    const row = rowsOf(FLOWS).find((r) => r.ref.id === 'NO>IR')!;
+    expect(row.path.length).toBeGreaterThan(8);
+    expect(row.colors).toHaveLength(row.path.length);
+    expect(row.colors[0][3]).toBeLessThan(row.colors[row.colors.length - 1][3]);
+  });
+
+  it('puts the picked country in focus and quiets the routes that do not touch it', () => {
+    const tail = (rows: ReturnType<typeof rowsOf>, id: string) => rows.find((r) => r.ref.id === id)!.colors.at(-1)![3];
+    const none = rowsOf(FLOWS, null);
+    const focused = rowsOf(FLOWS, { kind: 'country', id: 'IR' });
+    expect(tail(focused, 'NO>IR')).toBe(tail(none, 'NO>IR'));
+    expect(tail(focused, 'KE>BS')).toBeLessThan(tail(none, 'KE>BS'));
+  });
+
+  it('reads either direction of a pair as the picked corridor', () => {
+    const rows = rowsOf({ ...FLOWS, corridors: [...FLOWS.corridors, back] }, { kind: 'corridor', id: 'IR>NO' });
+    const lead = rows.find((r) => r.ref.id === 'NO>IR')!;
+    const other = rows.find((r) => r.ref.id === 'KE>BS')!;
+    expect(lead.width).toBeGreaterThan(other.width);
+    expect(lead.colors.at(-1)![3]).toBeGreaterThan(other.colors.at(-1)![3]);
+  });
+
+  it('names only the countries a drawn route touches, each once, so the basemap can stay quiet', () => {
+    const [labels] = buildLayers(FLOWS, REFERENCE, new Set<LayerId>(['corridors']), null).filter((l) => l.id === 'geo-labels');
+    const names = (labels.props.data as { name: string }[]).map((d) => d.name).sort();
+    const touched = new Set(FLOWS.corridors.flatMap((c) => [c.origin, c.destination]));
+    expect(names).toEqual(REFERENCE.countries.filter((c) => touched.has(c.iso2)).map((c) => c.name).sort());
+  });
+
+  it('marks a country that four or more routes meet as a hub, and no other', () => {
+    const hubIds = (flows: GeoFlows) =>
+      buildLayers(flows, REFERENCE, new Set<LayerId>(['corridors']), null).filter((l) => l.id === 'geo-hubs');
+    expect(hubIds(FLOWS)).toHaveLength(0);
+    const star = {
+      ...FLOWS,
+      corridors: ['NO', 'KE', 'PA', 'BS'].map((o) => ({ origin: o, destination: 'IR', volume_usd: 1000, accounts: 1, events: 1, tier: 'high' as const })),
+    };
+    const [hub] = hubIds(star);
+    expect((hub.props.data as { iso2: string }[]).map((h) => h.iso2)).toEqual(['IR']);
+  });
+});
+
+describe('map colours come from the design tokens', () => {
+  it('uses the same values the stylesheet declares for state colour and ink', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { join } = await import('node:path');
+    const { GEO_TOKENS } = await import('@/components/cockpit/geo/geo-colors');
+    const css = readFileSync(join(process.cwd(), 'src/app/globals.css'), 'utf8');
+    for (const [name, hex] of Object.entries(GEO_TOKENS)) expect(css, name).toContain(`--color-${name}: ${hex};`);
   });
 });

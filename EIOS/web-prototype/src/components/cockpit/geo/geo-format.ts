@@ -48,6 +48,8 @@ export interface SelectionView {
   /** Accounts behind this mark, each of which can be opened. */
   readonly accounts?: readonly string[];
   readonly note?: string;
+  /** True when this country is named by the latest change of a list, so its card can offer the comparison. */
+  readonly changed?: boolean;
 }
 
 const REGIONS = typeof Intl !== 'undefined' && 'DisplayNames' in Intl ? new Intl.DisplayNames(['en'], { type: 'region' }) : null;
@@ -86,6 +88,7 @@ export function describeSelection(
   }
   if (selection.kind === 'corridor') {
     const c = flows?.corridors.find((x) => `${x.origin}>${x.destination}` === selection.id);
+    const back = c ? flows?.corridors.find((x) => x.origin === c.destination && x.destination === c.origin) : undefined;
     return c
       ? {
           title: `${name(c.origin)} → ${name(c.destination)}`,
@@ -94,7 +97,17 @@ export function describeSelection(
             ['Volume', formatUsd(c.volume_usd)],
             ['Accounts', COUNT.format(c.accounts)],
             ['Payments', COUNT.format(c.events)],
+            ...(back
+              ? ([['Returned', formatUsd(back.volume_usd)]] as const)
+              : []),
+            ...(c.deposits != null && c.withdrawals != null
+              ? ([
+                  ['Deposits', COUNT.format(c.deposits)],
+                  ['Withdrawals', COUNT.format(c.withdrawals)],
+                ] as const)
+              : []),
           ],
+          accounts: c.sample_accounts,
         }
       : null;
   }

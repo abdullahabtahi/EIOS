@@ -60,7 +60,7 @@ export function GeoEvidence({ bundleId }: { readonly bundleId: string }) {
           verified
         </span>
         <span className="text-cx-muted">
-          Evidence sealed <span className="font-mono" title={bundleId}>sha256 {bundleId.slice(0, 12)}…</span>, signed with
+          Evidence sealed <span title={bundleId}>sha256 {bundleId.slice(0, 12)}…</span>, signed with
           any hold staged from it.
         </span>
         {state.phase !== 'done' && (
@@ -77,7 +77,7 @@ export function GeoEvidence({ bundleId }: { readonly bundleId: string }) {
       {state.phase === 'done' && (
         <p
           role="status"
-          className={`text-label font-mono ${state.replay.equal ? 'text-cx-ok' : 'text-cx-bad'}`}
+          className={`text-label ${state.replay.equal ? 'text-cx-ok' : 'text-cx-bad'}`}
           data-testid="geo-evidence-result"
         >
           {verdict(state.replay)}

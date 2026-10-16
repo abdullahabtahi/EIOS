@@ -23,7 +23,7 @@ export function GeoDossierCard({ entityId }: { readonly entityId: string }) {
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-1.5 text-title font-sans font-semibold text-slate-900">
           Geography
-          {flagged && <span className="border border-cx-bad-line bg-cx-bad-bg px-1 py-0.5 font-mono text-label font-bold text-cx-bad">FLAGGED</span>}
+          {flagged && <span className="border border-cx-bad-line bg-cx-bad-bg px-1 py-0.5 text-label font-bold text-cx-bad">FLAGGED</span>}
         </h3>
         <Link
           href={mapHref(entityId)}

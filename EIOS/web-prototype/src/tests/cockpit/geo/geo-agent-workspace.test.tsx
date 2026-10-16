@@ -80,7 +80,7 @@ beforeEach(() => {
 describe('the assistant on the map', () => {
   it('moves the map to what the answer names, says so, and goes back', async () => {
     render(<GeoWorkspace initialSearch="" />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Ask' }));
+    fireEvent.click(screen.getByRole('button', { name: /Ask the assistant/ }));
     fireEvent.click(await screen.findByText('Where should I look first?'));
     await waitFor(() => expect(window.location.search).toContain('sel=gateway%3AGW-KE-X00'));
     expect(window.location.search).toContain('view=logins');
@@ -92,7 +92,7 @@ describe('the assistant on the map', () => {
 
   it('carries what the map shows with the question', async () => {
     render(<GeoWorkspace initialSearch="?view=logins&sel=gateway:GW-KE-X00" />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Ask' }));
+    fireEvent.click(screen.getByRole('button', { name: /Ask the assistant/ }));
     fireEvent.click(await screen.findByText('Why is this exit suspicious, and who else is in its ring?'));
     await waitFor(() => expect(authFetch.mock.calls.some(([url]) => String(url).includes('/copilot/query'))).toBe(true));
     const [, init] = authFetch.mock.calls.find(([url]) => String(url).includes('/copilot/query'))!;
@@ -101,13 +101,14 @@ describe('the assistant on the map', () => {
 });
 
 describe('what the latest list change does to us', () => {
-  it('opens from the Jurisdictions view and lists the countries the change names', async () => {
+  it('opens from the mode switch and shows the countries the change names, most exposed first', async () => {
     render(<GeoWorkspace initialSearch="?view=jurisdictions" />);
-    fireEvent.click(await screen.findByText('What did the latest list change do to us?'));
-    expect(await screen.findByText(/Added to the list · 3 accounts touched/)).toBeInTheDocument();
-    expect(screen.getByText('Shared exit here: GW-KE-X00')).toBeInTheDocument();
-    expect(screen.getByText(/Links from BigQuery Graph in 1.8 s/)).toBeInTheDocument();
-    fireEvent.click(within(screen.getByRole('region', { name: 'Added to the list' })).getByText('Kenya'));
+    fireEvent.click(await screen.findByRole('button', { name: /What changed/ }));
+    const region = await screen.findByRole('region', { name: 'What changed on the lists' });
+    expect(await within(region).findByText('Kenya')).toBeInTheDocument();
+    expect(within(region).getByText(/Links from BigQuery Graph in 1.8 s/)).toBeInTheDocument();
+    fireEvent.click(within(region).getByRole('button', { name: /Kenya/ }));
+    expect(within(region).getByText('Shared exit here: GW-KE-X00')).toBeInTheDocument();
     await waitFor(() => expect(window.location.search).toContain('sel=country%3AKE'));
   });
 });

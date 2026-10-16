@@ -1,0 +1,59 @@
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import React from 'react';
+import { FLOWS } from './flows-fixture';
+import { REFERENCE } from './reference-fixture';
+import { leadsFor } from '@/components/cockpit/geo/geo-leads';
+import { GeoLeadList } from '@/components/cockpit/geo/geo-lead-list';
+import type { GeoFlows } from '@/components/cockpit/geo/geo-types';
+
+const BACK = { origin: 'IR', destination: 'NO', volume_usd: 50_000, accounts: 2, events: 5, tier: 'high' as const };
+const TWO_WAY: GeoFlows = { ...FLOWS, corridors: [...FLOWS.corridors, BACK] };
+const leads = (flows: GeoFlows) => leadsFor('corridors', flows, REFERENCE)!;
+
+describe('the corridor list', () => {
+  it('lists the two directions of a pair as one row, led by the bigger, and says it runs both ways', () => {
+    const rows = leads(TWO_WAY);
+    expect(rows).toHaveLength(FLOWS.corridors.length);
+    const pair = rows.find((r) => r.selection.id === 'NO>IR')!;
+    expect(pair.title).toBe('Norway ↔ Iran');
+    expect(pair.detail).toContain('$50K back');
+    expect(rows.some((r) => r.selection.id === 'IR>NO')).toBe(false);
+    expect(leads(FLOWS).find((r) => r.selection.id === 'NO>IR')!.title).toBe('Norway → Iran');
+  });
+
+  it('counts an unrated corridor as other, never as elevated', () => {
+    const unrated = { ...FLOWS, corridors: FLOWS.corridors.map((c) => ({ ...c, tier: null })) };
+    expect(leads(unrated).every((r) => r.tier === null)).toBe(true);
+  });
+});
+
+describe('GeoLeadList', () => {
+  const many = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({
+      key: `c${i}`,
+      selection: { kind: 'corridor', id: `A${i}>B${i}` } as const,
+      title: `Country ${i} → Place ${i}`,
+      detail: '$1K · 1 account',
+      tier: null,
+      group: 'Other corridors',
+    }));
+
+  it('moves between rows with the arrow keys and j and k, and Home and End', () => {
+    render(<GeoLeadList leads={many(5)} selected={null} onSelect={vi.fn()} />);
+    const rows = screen.getAllByRole('button', { name: /Country/ });
+    rows[0].focus();
+    fireEvent.keyDown(rows[0], { key: 'ArrowDown' });
+    expect(rows[1]).toHaveFocus();
+    fireEvent.keyDown(rows[1], { key: 'j' });
+    expect(rows[2]).toHaveFocus();
+    fireEvent.keyDown(rows[2], { key: 'k' });
+    expect(rows[1]).toHaveFocus();
+    fireEvent.keyDown(rows[1], { key: 'End' });
+    expect(rows[4]).toHaveFocus();
+    fireEvent.keyDown(rows[4], { key: 'Home' });
+    expect(rows[0]).toHaveFocus();
+    fireEvent.keyDown(rows[0], { key: 'ArrowUp' });
+    expect(rows[0]).toHaveFocus();
+  });
+});
