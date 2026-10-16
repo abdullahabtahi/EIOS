@@ -365,10 +365,26 @@ def parse_splits(raw: str | None) -> tuple[Split, ...]:
     if raw is None:
         return DEFAULT_SPLITS
     names = [name.strip() for name in raw.split(",") if name.strip()]
+    if not names:
+        raise ValueError("--split names no split; use dev, validation or sealed")
     known = {s.value for s in Split}
     if unknown := sorted(set(names) - known):
         raise ValueError(f"unknown split: {', '.join(unknown)} (known: {', '.join(sorted(known))})")
     return tuple(Split(name) for name in names)
+
+
+def explain_unselected(
+    golden: list[GoldenCase], splits: Sequence[Split], only: Sequence[str] | None
+) -> None:
+    """`--only` names a golden case whose split was not selected: say so, instead of "unknown case id"."""
+    by_id = {c.scenario_id: c for c in golden}
+    for name in only or ():
+        case = by_id.get(name.removesuffix(_turn_suffix(name)))
+        if case is not None and case.split not in splits:
+            raise ValueError(
+                f"{case.scenario_id} is in split '{case.split.value}', which this run does not include; "
+                f"add --split {case.split.value}"
+            )
 
 
 def select_splits(golden: list[GoldenCase], splits: Sequence[Split]) -> list[GoldenCase]:
@@ -432,10 +448,10 @@ def main(argv: Sequence[str]) -> int:
             load_attack_cases(GOLDEN / "attacks"),
         )
         splits = parse_splits(args.split)
+        only = [x.strip() for x in args.only.split(",")] if args.only else None
+        explain_unselected(golden, splits, only)
         golden = select_splits(golden, splits)
-        golden, attacks = select_cases(
-            golden, attacks, [x.strip() for x in args.only.split(",")] if args.only else None
-        )
+        golden, attacks = select_cases(golden, attacks, only)
         turns = sum(len(c.turns) for c in golden) + len(attacks)
         cap = os.getenv("EIOS_AGENT_EVAL_MAX_TURNS")
         check_spend_cap(turns, args.repeats, args.live, int(cap) if cap else None)

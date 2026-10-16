@@ -139,7 +139,10 @@ ROUTES: tuple[Route, ...] = (
         r"how good are the clients|client quality|quality of .*clients",
         ("get_client_quality", _part),
     ),
-    _r(r"recent messages|telling us|\bmessages?\b|\bcomms\b", ("read_partner_comms", _part)),
+    _r(
+        r"recent messages|telling us|\bcomms\b|what has .* (?:said|written)",
+        ("read_partner_comms", _part),
+    ),
     _r(r"partner or a client|what kind of entity", ("resolve_entity", _kind_target)),
     _r(r"offer|rebate", ("get_partner_signals", _part), ("propose_partner_action", _cheapest_deal)),
     _r(
@@ -149,7 +152,10 @@ ROUTES: tuple[Route, ...] = (
     ),
     _r(r"which partners|attention|worklist|ecosystem", ("list_partner_worklist", _none)),
     _r(r"morning briefing|briefing", ("get_briefing", _none)),
-    _r(r"forecast|heading|outlook|coming months", ("get_forecast", _forecast)),
+    _r(
+        r"forecast|outlook|coming months|\bheading (?:over|into|for|towards?)\b",
+        ("get_forecast", _forecast),
+    ),
     _r(r"what happens|what if|cut", ("run_what_if", _what_if)),
     _r(r"causing|causal|\bcause\b", ("get_causal_evidence", _none)),
     _r(r"net revenue", ("get_metric", _revenue)),

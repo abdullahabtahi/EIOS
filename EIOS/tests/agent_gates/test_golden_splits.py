@@ -34,6 +34,12 @@ def test_a_run_tunes_against_dev_and_validation_and_never_touches_sealed_by_defa
     assert not [c for c in picked if c.split is Split.SEALED]
 
 
+def test_an_empty_split_is_refused_not_run_as_zero_cases() -> None:
+    for raw in ("", ",", " , "):
+        with pytest.raises(ValueError, match="no split"):
+            parse_splits(raw)
+
+
 def test_the_sealed_split_runs_only_when_named() -> None:
     assert parse_splits(None) == DEFAULT_SPLITS
     assert parse_splits("sealed") == (Split.SEALED,)
@@ -47,12 +53,22 @@ def test_each_split_has_cases_so_a_held_out_run_is_never_empty(cases: list[Golde
         assert [c for c in cases if c.split is split], f"no {split.value} cases"
 
 
-def test_held_out_cases_are_not_dev_questions_reworded_only_by_case(
+def _tokens(text: str) -> set[str]:
+    return set(_words(text).split())
+
+
+def test_held_out_questions_are_not_dev_questions_with_a_word_changed(
     cases: list[GoldenCase],
 ) -> None:
-    dev = {_words(t.user_query) for c in cases if c.split is Split.DEV for t in c.turns}
-    held = {_words(t.user_query) for c in cases if c.split is not Split.DEV for t in c.turns}
-    assert not dev & held
+    """Jaccard overlap of words: an identical question, or one with a single word swapped, is a dev question again."""
+    dev = [_tokens(t.user_query) for c in cases if c.split is Split.DEV for t in c.turns]
+    for c in cases:
+        if c.split is Split.DEV:
+            continue
+        for turn in c.turns:
+            mine = _tokens(turn.user_query)
+            closest = max(len(mine & d) / len(mine | d) for d in dev)
+            assert closest < 0.7, f"{c.scenario_id} is too close to a dev question ({closest:.2f})"
 
 
 def test_scenario_ids_are_unique(cases: list[GoldenCase]) -> None:
@@ -64,9 +80,20 @@ def test_every_reachable_capability_has_a_case_so_none_is_unmeasured(
     cases: list[GoldenCase],
 ) -> None:
     named = {e.capability for c in cases for t in c.turns for e in t.expected_capabilities}
-    reachable = {
-        cap_id
-        for cap_id, cap in default_map().capabilities.items()
-        if not getattr(cap, "planned", None)
-    }
+    reachable = {cap_id for cap_id, cap in default_map().capabilities.items() if not cap.planned}
     assert reachable - named - NO_CASE_BY_DESIGN == set()
+
+
+def test_naming_a_case_outside_the_selected_splits_says_which_split_it_is_in(
+    cases: list[GoldenCase],
+) -> None:
+    from evals.agent.baseline import explain_unselected
+
+    sealed = next(c for c in cases if c.split is Split.SEALED)
+    with pytest.raises(ValueError, match=rf"{sealed.scenario_id}.*split 'sealed'.*--split sealed"):
+        explain_unselected(cases, DEFAULT_SPLITS, [sealed.scenario_id])
+    dev = next(c for c in cases if c.split is Split.DEV)
+    explain_unselected(cases, DEFAULT_SPLITS, [dev.scenario_id])  # selected: nothing to say
+    explain_unselected(
+        cases, DEFAULT_SPLITS, ["some_attack_id"]
+    )  # not a golden case: left to select_cases
