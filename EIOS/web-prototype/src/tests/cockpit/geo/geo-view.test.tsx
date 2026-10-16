@@ -45,7 +45,7 @@ const MANY_FLOWS = {
   ...FLOWS,
   corridors: [
     ...FLOWS.corridors,
-    ...Array.from({ length: 10 }, (_, i) => ({ origin: 'PA', destination: 'BS', volume_usd: 1_000 + i, accounts: 1, events: 1, tier: 'low' as const })),
+    ...Array.from({ length: 10 }, (_, i) => ({ origin: 'PA', destination: `D${i}`, volume_usd: 1_000 + i, accounts: 1, events: 1, tier: 'low' as const })),
   ],
 };
 
@@ -89,7 +89,7 @@ describe('GeoWorkspace', () => {
     const list = await screen.findByRole('region', { name: 'Where to look first' });
     const rows = within(list).getAllByRole('button');
     expect(rows[0]).toHaveTextContent('Norway → Iran');
-    expect(rows[0]).toHaveTextContent('High');
+    expect(within(list).getByRole('heading', { name: 'High risk' })).toBeInTheDocument();
     expect(rows[1]).toHaveTextContent('Kenya → The Bahamas');
     expect(screen.getByRole('list', { name: 'Map legend' }).parentElement).toHaveTextContent('Showing 3 of 3 corridors');
   });
@@ -113,6 +113,15 @@ describe('GeoWorkspace', () => {
     expect(screen.getByRole('region', { name: 'Selection' })).toBeInTheDocument();
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByRole('region', { name: 'Selection' })).not.toBeInTheDocument();
+  });
+
+  it('leaves Escape to the field being typed in, instead of putting the pick down', async () => {
+    render(<GeoWorkspace />);
+    const list = await screen.findByRole('region', { name: 'Where to look first' });
+    fireEvent.click(within(list).getByRole('button', { name: /Kenya → The Bahamas/ }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Ask' }));
+    fireEvent.keyDown(screen.getByRole('textbox', { name: 'Ask the geospatial assistant' }), { key: 'Escape' });
+    expect(screen.getByRole('region', { name: 'Selection' })).toBeInTheDocument();
   });
 
   it('shows the first rows only, and all of them on request', async () => {
@@ -283,6 +292,13 @@ describe('describeSelection', () => {
     const older = describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'KE>BS' });
     expect(older?.accounts).toBeUndefined();
     expect(older?.rows.map(([l]) => l)).not.toContain('Deposits');
+  });
+
+  it('shows what comes back the other way when money runs both directions on a corridor', () => {
+    const both = { ...FLOWS, corridors: [...FLOWS.corridors, { origin: 'IR', destination: 'NO', volume_usd: 50_000, accounts: 2, events: 5, tier: 'high' as const }] };
+    const view = describeSelection(both, REFERENCE, { kind: 'corridor', id: 'NO>IR' });
+    expect(view?.rows).toContainEqual(['Back, Iran → Norway', '$50K · 2 accounts']);
+    expect(describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'NO>IR' })?.rows.map(([l]) => l)).not.toContain('Back, Iran → Norway');
   });
 
   it('describes a flagged country pair with its account count and examples', () => {

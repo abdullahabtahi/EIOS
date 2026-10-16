@@ -152,7 +152,12 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   }, [initialTarget]);
 
   React.useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setSelected(null);
+    // Escape puts the pick down, but not while someone is typing: in the Ask box or a filter it belongs to that field.
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target instanceof HTMLElement ? e.target : null;
+      const typing = !!el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
+      if (e.key === 'Escape' && !typing) setSelected(null);
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);

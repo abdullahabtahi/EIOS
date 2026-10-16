@@ -86,6 +86,7 @@ export function describeSelection(
   }
   if (selection.kind === 'corridor') {
     const c = flows?.corridors.find((x) => `${x.origin}>${x.destination}` === selection.id);
+    const back = c ? flows?.corridors.find((x) => x.origin === c.destination && x.destination === c.origin) : undefined;
     return c
       ? {
           title: `${name(c.origin)} → ${name(c.destination)}`,
@@ -94,6 +95,9 @@ export function describeSelection(
             ['Volume', formatUsd(c.volume_usd)],
             ['Accounts', COUNT.format(c.accounts)],
             ['Payments', COUNT.format(c.events)],
+            ...(back
+              ? ([[`Back, ${name(back.origin)} → ${name(back.destination)}`, `${formatUsd(back.volume_usd)} · ${COUNT.format(back.accounts)} ${back.accounts === 1 ? 'account' : 'accounts'}`]] as const)
+              : []),
             ...(c.deposits != null && c.withdrawals != null
               ? ([
                   ['Deposits', COUNT.format(c.deposits)],
