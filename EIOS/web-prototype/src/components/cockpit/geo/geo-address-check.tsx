@@ -150,7 +150,7 @@ export function GeoAddressCheck({ onShowCountry, knownCountries }: GeoAddressChe
             spellCheck={false}
             autoComplete="off"
             placeholder="203.0.113.7 or 2001:db8::1"
-            className="min-w-0 flex-1 border border-cx-line bg-white px-2 py-1.5 text-xs text-cx-ink outline-none placeholder:text-cx-faint focus-visible:ring-2 focus-visible:ring-cx-accent"
+            className="min-w-0 flex-1 border border-cx-line bg-white px-2 py-1.5 text-xs text-cx-ink outline-none placeholder:text-cx-muted focus-visible:ring-2 focus-visible:ring-cx-accent"
           />
           <button
             type="submit"

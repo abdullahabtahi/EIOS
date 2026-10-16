@@ -268,7 +268,10 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
       <GeoChatWindow mode={dock.mode} pos={dock.pos} bounds={box} onMove={dock.move} onSettle={dock.settle} onDock={dock.dock} onFloat={dock.float} onClose={dock.close}>
         <GeoAsk context={mapContextOf(mapState)} selected={selected} onMove={applyMove} onPending={setAsking} onAnswered={answered} intent={intent} />
       </GeoChatWindow>
-      <div ref={mapBox} className="relative min-h-0 min-w-0 flex-[3] lg:flex-1">
+      <div ref={mapBox} role="region" aria-label="World map" aria-describedby="geo-map-help" className="relative min-h-0 min-w-0 flex-[3] lg:flex-1">
+        <p id="geo-map-help" className="sr-only">
+          The map draws what the side panel lists. Use the list to move through countries and corridors with the arrow keys; the map itself pans with the arrow keys and zooms with plus and minus.
+        </p>
         <GeoMap layers={layers} focus={focus} target={target} />
         <div className="absolute left-3 top-3 z-10">
           <GeoViewSwitcher current={view} onChange={changeView} />

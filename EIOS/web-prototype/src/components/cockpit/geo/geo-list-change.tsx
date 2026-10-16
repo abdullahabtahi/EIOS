@@ -68,8 +68,8 @@ function Row({ row, open, onToggle }: { readonly row: ChangeRow; readonly open: 
         </button>
         {open && <Facts c={c} />}
       </td>
-      <td className={`py-1.5 pr-2 text-right text-xs tabular-nums ${c.exposed_accounts === 0 ? 'text-cx-faint' : 'text-cx-ink'}`}>{COUNT.format(c.exposed_accounts)}</td>
-      <td className={`py-1.5 text-right text-xs tabular-nums ${row.share ? 'text-cx-ink' : 'text-cx-faint'}`}>{row.share === null ? NO_SHARE : `${row.share.toFixed(1)}%`}</td>
+      <td className={`py-1.5 pr-2 text-right text-xs tabular-nums ${c.exposed_accounts === 0 ? 'text-cx-muted' : 'text-cx-ink'}`}>{COUNT.format(c.exposed_accounts)}</td>
+      <td className={`py-1.5 text-right text-xs tabular-nums ${row.share ? 'text-cx-ink' : 'text-cx-muted'}`}>{row.share === null ? NO_SHARE : `${row.share.toFixed(1)}%`}</td>
     </tr>
   );
 }

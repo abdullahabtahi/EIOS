@@ -64,6 +64,12 @@ describe('the assistant as a launcher, a window and a docked column', () => {
     expect(await screen.findByRole('region', { name: 'Where to look first' })).toBeInTheDocument();
   });
 
+  it('names the map for a screen reader and points at the list as its keyboard route', () => {
+    render(<GeoWorkspace initialSearch="" />);
+    const map = screen.getByRole('region', { name: 'World map' });
+    expect(map).toHaveAccessibleDescription(/Use the list to move through countries and corridors/);
+  });
+
   it('opens a floating window from the launcher, and the launcher steps aside', () => {
     render(<GeoWorkspace initialSearch="" />);
     fireEvent.click(launcher());
