@@ -440,6 +440,8 @@ export interface StageRequest {
   severity: string;
   requires_four_eyes: boolean;
   metadata: Record<string, unknown>;
+  /** The sealed evidence the hub signs with the intent (`evidence_refs`). */
+  evidence_bundle_id?: string;
 }
 
 /** A draft the assistant proposes. It is never signed, staged or approved until a human stages it. */
@@ -492,6 +494,8 @@ export interface CopilotQueryResponse {
   proposals: AssistantProposal[];
   /** Map moves the assembler accepted (geospatial workstation only); empty elsewhere. */
   viewCommands?: ViewCommand[];
+  /** SHA-256 of the sealed evidence of a turn that proposed a hold or drafted a SAR; absent for any other turn. */
+  evidenceBundleId?: string;
   turnLatencyMs?: number;
   fallbackReason?: string;
   timestamp: string;

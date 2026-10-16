@@ -15,6 +15,7 @@ import { ModelPicker, useModelChoice } from '../shell/model-picker';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { authFetch } from '@/lib/auth/token';
 import { geoSuggestions, type MapContextPayload, moveLabel } from './geo-moves';
+import { GeoEvidence } from './geo-evidence';
 import { GeoVerify } from './geo-verify';
 import type { GeoSelection } from './geo-types';
 
@@ -196,6 +197,7 @@ export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
                 {item.response?.assistantStatus === 'ASSEMBLED' && (
                   <GeoVerify figures={item.response.citedMetrics} role="geospatial" />
                 )}
+                {item.response?.evidenceBundleId && <GeoEvidence bundleId={item.response.evidenceBundleId} />}
               </div>
             ),
           )

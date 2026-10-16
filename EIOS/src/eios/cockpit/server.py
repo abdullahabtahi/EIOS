@@ -37,7 +37,7 @@ from eios.assistant.geo_context import MapContext
 from eios.assistant.sessions import valid_entity_id
 from eios.assistant.telemetry import record_turn
 from eios.cockpit import aml_engine_view as aml_view
-from eios.cockpit import compliance_view, copilot_verify, operations_view
+from eios.cockpit import compliance_view, copilot_verify, evidence_routes, operations_view
 from eios.cockpit import executive_view as exec_view
 from eios.cockpit import geo as geo_routes
 from eios.cockpit import partner_engine_view as partner_view
@@ -157,6 +157,11 @@ class StageActionRequest(BaseModel):
     )
     metadata: dict[str, Any] = Field(
         default_factory=dict, description="Action parameters and context"
+    )
+    evidence_bundle_id: str | None = Field(
+        default=None,
+        pattern=r"^[0-9a-f]{64}$",
+        description="A sealed evidence bundle to sign with the intent (evidence_routes.py)",
     )
 
 
@@ -1160,11 +1165,18 @@ def stage_governed_action(
     """Propose an action through the intent hub: validated, KMS-signed, nonce-registered and ledgered."""
     action_type = _ACTION_ALIASES.get(req.action_type, req.action_type)
     requester = operator.uid if operator else (req.initiator_officer_id or "DEV_OPERATOR")
+    evidence_refs = ["ev_user_staged"]
+    if (
+        req.evidence_bundle_id
+    ):  # signed with the intent, so the approval names the evidence it rested on
+        evidence_refs.append(
+            evidence_routes.check_for_stage(req.evidence_bundle_id, req.target_entity_id)
+        )
     try:
         token = governance.hub.propose_action(
             action_type=action_type,
             parameters=_resolve_parameters(action_type, req.target_entity_id, req.metadata),
-            evidence_refs=["ev_user_staged"],
+            evidence_refs=evidence_refs,
             requester_agent_id=requester,
             policy_tags=["STAGED_VIA_COCKPIT"],
             require_dual_approval=req.requires_four_eyes,
@@ -1268,7 +1280,9 @@ async def query_copilot(
             status_code=503,
             content={"detail": "offline", **assistant_response_body(req.query, outcome)},
         )
-    return assistant_response_body(req.query, outcome)
+    # A turn that proposed a hold or drafted a SAR is sealed; staging then signs the bundle's id with the intent.
+    bundle_id = await run_in_threadpool(evidence_routes.seal_turn, principal, req.query, outcome)
+    return evidence_routes.with_bundle(assistant_response_body(req.query, outcome), bundle_id)
 
 
 @router.post(FLYWHEEL_FEEDBACK_PATH, response_model=FlywheelFeedbackResponse)
@@ -1337,6 +1351,7 @@ app.include_router(public_router)
 app.include_router(router)
 app.include_router(geo_routes.router)
 app.include_router(copilot_verify.router)  # carries its own operator dependency
+app.include_router(evidence_routes.router)  # likewise
 
 
 def main() -> None:

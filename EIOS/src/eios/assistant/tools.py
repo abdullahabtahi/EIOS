@@ -224,6 +224,11 @@ def _turn_facts(payload: dict[str, Any]) -> dict[str, dict[str, Any]]:
     }
 
 
+def figures_of(payload: dict[str, Any]) -> dict[str, float]:
+    """Every unit-bearing figure of a result, by fact id: what an evidence replay compares."""
+    return {fact_id: fact["value"] for fact_id, fact in _turn_facts(payload).items()}
+
+
 def _model_view(payload: dict[str, Any]) -> dict[str, Any]:
     """A result as the model reads it. A regulation passage is shown as numbered sentences only, so the model picks the
     sentences to quote by number and the same words are not sent twice; the whole text stays in turn state for the source."""
