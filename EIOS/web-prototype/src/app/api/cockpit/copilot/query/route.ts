@@ -8,6 +8,7 @@ import {
   normalizeCitedMetric,
   normalizeProposal,
   normalizeSource,
+  normalizeViewCommands,
 } from '@/lib/server/normalize';
 
 // A live Gemini turn with tool calls can take well over the default proxy timeout.
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest) {
     dataOrigin: dataOriginOf(data.data_origin),
     steps: Array.isArray(data.steps) ? data.steps.filter((s: unknown): s is string => typeof s === 'string') : [],
     proposals: rawProposals.map(normalizeProposal).filter((p): p is NonNullable<typeof p> => p !== undefined),
+    viewCommands: normalizeViewCommands(data.view_commands),
     turnLatencyMs: typeof data.turn_latency_ms === 'number' ? data.turn_latency_ms : undefined,
     fallbackReason: typeof data.fallback_reason === 'string' ? data.fallback_reason : undefined,
     timestamp: data.timestamp ?? new Date().toISOString(),

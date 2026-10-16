@@ -472,6 +472,12 @@ export interface AnswerSource {
   dataOrigin?: DataOrigin;
 }
 
+/** A map move the geospatial assistant made: an object a tool of the same turn returned, never coordinates. */
+export interface ViewCommand {
+  kind: 'country' | 'corridor' | 'mismatch' | 'gateway' | 'account';
+  id: string;
+}
+
 export interface CopilotQueryResponse {
   queryId: string;
   naturalLanguageQuery: string;
@@ -484,6 +490,8 @@ export interface CopilotQueryResponse {
   dataOrigin?: DataOrigin;
   steps: string[];
   proposals: AssistantProposal[];
+  /** Map moves the assembler accepted (geospatial workstation only); empty elsewhere. */
+  viewCommands?: ViewCommand[];
   turnLatencyMs?: number;
   fallbackReason?: string;
   timestamp: string;
