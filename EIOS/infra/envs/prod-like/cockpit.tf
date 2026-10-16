@@ -83,7 +83,7 @@ module "service_cockpit_api" {
   min_instances         = 1 # keep one warm: the engines are built at start-up, and an idle demo must not scale to zero
   max_instances         = 5
   cpu                   = "1"
-  memory                = "1Gi"
+  memory                = "2Gi" # 1Gi was exceeded (1,066 MiB used `[MEASURED]`) once the geo engines, graph tables and prepared briefs were deployed
   deletion_protection   = false # [ASSUMPTION] hackathon environment; tighten before real use
   invoker_members       = { cockpit_web = module.identity_cockpit_web.member }
 
