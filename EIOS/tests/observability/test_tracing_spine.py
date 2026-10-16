@@ -149,3 +149,19 @@ def test_tracing_spine_overhead_sub_2ms():
             pass
     avg_ms = ((time.perf_counter() - t0) * 1000.0) / iterations
     assert avg_ms < 2.0
+
+
+def test_current_baggage_default_isolation():
+    """Verify that ContextVar defaults to None and accessor returns an isolated dict without shared mutation."""
+    from eios.observability.carrier import _CURRENT_BAGGAGE, current_baggage
+
+    # Default in ContextVar is None
+    assert _CURRENT_BAGGAGE.get() is None
+    # current_baggage returns empty dict
+    baggage = current_baggage()
+    assert baggage == {}
+
+    # Mutating returned copy does not affect ContextVar default
+    baggage["malicious_key"] = "malicious_value"
+    assert current_baggage() == {}
+    assert _CURRENT_BAGGAGE.get() is None

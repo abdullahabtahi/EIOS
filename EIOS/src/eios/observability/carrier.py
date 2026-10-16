@@ -32,7 +32,7 @@ _TRACEPARENT_PATTERN = re.compile(r"^([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})
 _PROPAGATOR = TraceContextTextMapPropagator()
 
 # Task-local baggage store
-_CURRENT_BAGGAGE: ContextVar[dict[str, str]] = ContextVar("eios_baggage", default={})  # noqa: B039
+_CURRENT_BAGGAGE: ContextVar[dict[str, str] | None] = ContextVar("eios_baggage", default=None)
 
 
 @dataclass(frozen=True)
@@ -95,7 +95,7 @@ def format_baggage(items: Mapping[str, str]) -> str:
 
 def current_baggage() -> dict[str, str]:
     """Returns a copy of current task-local baggage."""
-    return dict(_CURRENT_BAGGAGE.get())
+    return dict(_CURRENT_BAGGAGE.get() or {})
 
 
 @contextmanager
@@ -109,7 +109,7 @@ def ambient_context_scope(
         if correlation_id
         else (current_id() or new_correlation_id())
     )
-    new_bag = dict(_CURRENT_BAGGAGE.get())
+    new_bag = dict(_CURRENT_BAGGAGE.get() or {})
     if baggage:
         new_bag.update(baggage)
     new_bag["correlation_id"] = cid
@@ -134,16 +134,17 @@ def inject_context(
     _PROPAGATOR.inject(carrier)
 
     # 2. Resolve correlation ID
+    curr_baggage = _CURRENT_BAGGAGE.get() or {}
     cid = (
         correlation_id
         or current_id()
-        or _CURRENT_BAGGAGE.get().get("correlation_id")
+        or curr_baggage.get("correlation_id")
         or new_correlation_id()
     )
     carrier[CORRELATION_HEADER] = cid
 
     # 3. Merge baggage
-    combined_baggage = dict(_CURRENT_BAGGAGE.get())
+    combined_baggage = dict(curr_baggage)
     if baggage:
         combined_baggage.update(baggage)
     combined_baggage["correlation_id"] = cid
