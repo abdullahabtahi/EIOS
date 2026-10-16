@@ -51,28 +51,32 @@ export function OpportunitiesPanel({ risks, opportunities }: { risks: BoardRisk[
           <div className="text-label font-mono uppercase tracking-wider text-slate-500 font-semibold">
             Largest risks by expected exposure
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             {risks.map((r) => (
               <div
                 key={r.id}
-                className="flex flex-wrap items-center justify-between gap-2 p-2.5 bg-slate-50 border border-slate-200 text-xs hover:border-slate-300 transition-colors"
+                className="p-3 bg-slate-50/70 border border-slate-200 hover:border-slate-300 transition-colors rounded-xs space-y-1.5"
               >
-                <div className="flex items-center gap-2 font-semibold text-slate-800">
-                  <span className="material-symbols-sharp text-xs text-amber-600">warning</span>
-                  <span>{r.title}</span>
+                <div className="flex items-start justify-between gap-3">
+                  <span className="font-sans text-xs font-semibold text-slate-900 leading-snug">
+                    {r.title}
+                  </span>
+                  <span className="font-mono text-xs font-bold text-slate-900 tabular-nums shrink-0 whitespace-nowrap">
+                    {usd(r.exposureUsd)}
+                  </span>
                 </div>
-                <div className="font-mono text-label tabular-nums flex items-center gap-1.5">
+                <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500">
                   <span
-                    className={`px-1.5 py-0.2 font-bold border text-[10px] ${
+                    className={`px-1.5 py-0.5 font-bold uppercase tracking-wider text-[9.5px] border ${
                       r.severity === 'HIGH'
-                        ? 'bg-red-50 text-red-800 border-red-300'
-                        : 'bg-amber-50 text-amber-800 border-amber-300'
+                        ? 'bg-red-50 text-red-700 border-red-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
                     }`}
                   >
                     {r.severity}
                   </span>
-                  <span className="text-slate-500">· exposure</span>
-                  <strong className="text-slate-900 font-bold">{usd(r.exposureUsd)}</strong>
+                  <span>·</span>
+                  <span>exposure at risk</span>
                 </div>
               </div>
             ))}
@@ -93,18 +97,18 @@ export function OpportunitiesPanel({ risks, opportunities }: { risks: BoardRisk[
             {opportunities.map((o) => {
               const phase: Phase = phases[o.id] ?? { phase: 'idle' };
               return (
-                <div key={o.id} className="p-3 bg-slate-50 border border-slate-200 space-y-2.5">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-bold text-slate-900">{o.title}</span>
-                    <span className="text-label font-mono text-green-800 bg-green-50 border border-green-200 px-2 py-0.5 font-bold tabular-nums">
+                <div key={o.id} className="p-3 bg-slate-50/70 border border-slate-200 space-y-2.5 rounded-xs">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-xs font-bold text-slate-900 leading-snug">{o.title}</span>
+                    <span className="text-label font-mono text-green-800 bg-green-50 border border-green-200 px-2 py-0.5 font-bold tabular-nums shrink-0 whitespace-nowrap">
                       keeps {usd(o.upsideUsd)}
                     </span>
                   </div>
-                  <p className="text-label font-mono text-slate-500 leading-normal">
-                    <span className="px-1.5 py-0.2 bg-white border border-slate-300 text-slate-700 font-semibold mr-1.5">
+                  <p className="text-label font-mono text-slate-500 leading-normal flex items-center gap-1.5 flex-wrap">
+                    <span className="px-1.5 py-0.5 bg-white border border-slate-200 text-slate-700 font-semibold text-[10px] tracking-wider uppercase">
                       {o.actionType}
                     </span>
-                    model projection under the hazard model, not a causal estimate
+                    <span>model projection under the hazard model, not a causal estimate</span>
                   </p>
                   {o.stage ? (
                     <button
