@@ -1638,9 +1638,9 @@ export function TopologicalGraphCanvas() {
               onWheel={handleWheel}
             />
 
-            {/* Floating HUD Overlays Toggles (Radar & Legend) in Right Corner */}
+            {/* Floating HUD Overlays Toggles (Radar & Legend) in Left Corner */}
             <div
-              className={`absolute top-2.5 right-2.5 z-10 inline-flex items-center border p-0.5 gap-0.5 shadow-sm backdrop-blur-md ${
+              className={`absolute top-2.5 left-2.5 z-10 inline-flex items-center border p-0.5 gap-0.5 shadow-sm backdrop-blur-md ${
                 isFullscreen ? 'border-slate-700 bg-slate-900/90' : 'border-slate-300 bg-white/95'
               }`}
               onMouseDown={(e) => e.stopPropagation()}
