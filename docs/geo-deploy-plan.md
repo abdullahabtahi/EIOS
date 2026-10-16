@@ -7,7 +7,7 @@ Status: the code and Terraform are written and the Terraform plan has been run; 
 | Piece | Prod-like before | After this change (still to be applied) |
 |---|---|---|
 | `warm_reference` (FATF, EU, Basel lists, address check) | absent | dataset, labelled, API read grant, loader grant for `warm_writer_members` |
-| `warm_graph` and the Enterprise reservation | absent | dataset, and reservation `eios-graph`: baseline 0, autoscale cap 20 slots |
+| `warm_graph` and the Enterprise reservation | absent | dataset, and reservation `eios-graph`: baseline 0, autoscale cap 50 slots (the smallest BigQuery allows; it must be a multiple of 50) |
 | Graph backend | none | BigQuery Graph, with a result cache and a fall-back to the local double (the result's source says which answered) |
 | Regulation text (Agent Search) | **not configured** (no `EIOS_KNOWLEDGE_DATA_STORE` on the live revision, so the SAR duty and every regulation question answer "no index") | reads the dev data store: `EIOS_KNOWLEDGE_DATA_STORE`, `EIOS_KNOWLEDGE_PROJECT`, and `roles/discoveryengine.viewer` for the API identity on that project |
 | Prepared briefs | not deployed | `EIOS_AMBIENT_TOP_N=5`; a fresh brief is not rebuilt, so scaling out does not repeat the model calls |
@@ -22,7 +22,7 @@ Status: the code and Terraform are written and the Terraform plan has been run; 
 
 ## Cost and availability guards (checked against Google's docs)
 
-- **Capacity billing, bounded.** GQL needs an Enterprise reservation, billed in slots. Baseline 0 means an idle reservation costs nothing; the autoscale cap (`graph_max_slots`, 20) bounds the worst case. Bytes-billed limits and custom daily quotas apply only to on-demand pricing, so the cap is the control, not those. The docs recommend a non-zero baseline for predictable speed; at baseline 0 the first job is slow, so the API warms the graph at start-up.
+- **Capacity billing, bounded.** GQL needs an Enterprise reservation, billed in slots. Baseline 0 means an idle reservation costs nothing; the autoscale cap (`graph_max_slots`, 50, the minimum allowed) bounds the worst case. Bytes-billed limits and custom daily quotas apply only to on-demand pricing, so the cap is the control, not those. The docs recommend a non-zero baseline for predictable speed; at baseline 0 the first job is slow, so the API warms the graph at start-up.
 - **Every graph job is labelled** (`app=eios`, `component=geo`, `query=<name>`) **and has a 30 s timeout**, so a stuck job is stopped and graph slot use filters on its own in billing. Reservation labels filter only the slot-usage SKU, not the reservation fee.
 - **Repeated questions are cached** (256 entries, copies returned, failures never cached).
 - **Fall-back, not silence.** If the warehouse is unreachable the local double answers and the figure's source reads `graph.local`, not `graph.bigquery`. A refused query stays refused.
@@ -32,7 +32,7 @@ Status: the code and Terraform are written and the Terraform plan has been run; 
 ## The Terraform plan (read-only, `terraform plan` with targets)
 
 `12 to add, 1 to change, 0 to destroy`:
-- add: datasets `warm_reference` and `warm_graph` with API read and owner write grants; reservation `eios-graph` (Enterprise, baseline 0, max 20); custom role `eiosGraphReservationUser` (only `bigquery.reservations.use`) and its grant to the API identity; `roles/discoveryengine.viewer` for the API identity in the dev project.
+- add: datasets `warm_reference` and `warm_graph` with API read and owner write grants; reservation `eios-graph` (Enterprise, baseline 0, max 50); custom role `eiosGraphReservationUser` (only `bigquery.reservations.use`) and its grant to the API identity; `roles/discoveryengine.viewer` for the API identity in the dev project.
 - change: the `eios-api` Cloud Run service gets six new variables (`EIOS_AMBIENT_TOP_N`, `EIOS_GRAPH_BACKEND`, `EIOS_GRAPH_PROJECT`, `EIOS_GRAPH_RESERVATION`, `EIOS_KNOWLEDGE_DATA_STORE`, `EIOS_KNOWLEDGE_PROJECT`).
 - **Also in the plan, not mine:** enabling `cloudtrace.googleapis.com` and `telemetry.googleapis.com`, and the variables `EIOS_TRACE_EXPORT=cloud_trace` and `EIOS_SERVICE_NAME`. They belong to the Cloud Trace work merged earlier (#89 to #91) and never applied. Applying the service target deploys them too. Decide whether to include them or to apply the geo resources first.
 

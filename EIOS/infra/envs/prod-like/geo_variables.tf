@@ -10,9 +10,14 @@ variable "geo_graph_backend" {
 }
 
 variable "graph_max_slots" {
-  description = "The most slots the graph reservation may autoscale to. The baseline is 0, so this bounds the worst case."
+  description = "The most slots the graph reservation may autoscale to (BigQuery needs a multiple of 50). The baseline is 0, so this bounds the worst case."
   type        = number
-  default     = 20 # [ASSUMPTION] the largest graph job measured used 191 slot-milliseconds
+  default     = 50 # the smallest allowed; the largest graph job measured used 191 slot-milliseconds [MEASURED]
+
+  validation {
+    condition     = var.graph_max_slots > 0 && var.graph_max_slots % 50 == 0
+    error_message = "graph_max_slots must be a positive multiple of 50."
+  }
 }
 
 variable "ambient_top_n" {
