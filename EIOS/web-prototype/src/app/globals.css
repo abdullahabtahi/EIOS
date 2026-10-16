@@ -1134,7 +1134,7 @@
   }
   100% {
     opacity: 0;
-    transform: scale(1.5, 1.9);
+    transform: scale(1.7);
   }
 }
 .geo-ask-ping {

@@ -79,10 +79,13 @@ export function ModelPicker({
   choices,
   selected,
   onSelect,
+  quiet = false,
 }: {
   choices: ModelChoice[];
   selected: string | undefined;
   onSelect: (key: string) => void;
+  /** Set as plain text with no box, for a header that is already framed. */
+  quiet?: boolean;
 }) {
   if (choices.length < 2 || !selected) return null;
   return (
@@ -92,7 +95,7 @@ export function ModelPicker({
         aria-label="Model"
         value={selected}
         onChange={(e) => onSelect(e.target.value)}
-        className="bg-white border border-cx-line text-cx-ink text-label py-0.5 pl-1.5 pr-1 cursor-pointer hover:border-blue-500"
+        className={quiet ? 'cursor-pointer bg-transparent py-0.5 pr-1 text-label text-cx-ink-soft outline-none hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent' : 'bg-white border border-cx-line text-cx-ink text-label py-0.5 pl-1.5 pr-1 cursor-pointer hover:border-blue-500'}
         title={choices.find((c) => c.key === selected)?.note}
       >
         {choices.map((c) => (
