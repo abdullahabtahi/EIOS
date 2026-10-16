@@ -155,13 +155,15 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
                   onMouseMove={handleMouseMove}
                   onMouseLeave={handleMouseLeave}
                 >
-                  {/* Mini Small Confidence Probability Density Label Inside Graph */}
+                  {/* Mini Small Confidence Probability Density Label Inside Graph (Top-Right Stacked) */}
                   <text
-                    x="18"
-                    y="18"
+                    x="485"
+                    y="16"
+                    textAnchor="end"
                     className="fill-slate-400 font-mono text-label font-semibold tracking-wider uppercase select-none pointer-events-none"
                   >
-                    {nominalPct}% Confidence Probability Density
+                    <tspan x="485" dy="0">{nominalPct}% Confidence</tspan>
+                    <tspan x="485" dy="12">Probability Density</tspan>
                   </text>
 
                   {/* Shaded Confidence Mass */}
