@@ -84,22 +84,32 @@ export function PartnerOntologyInspector() {
 
   const handleStageAction = (action: any) => {
     stageAction({
-      intentId: `INT-${action.action_type}-${partnerId}-${Date.now().toString(36).slice(-4).toUpperCase()}`,
-      title: action.label,
-      description: `Governed action ${action.action_type} for partner ${partnerId}. Dual-signoff required before execution.`,
-      actionType: action.action_type,
-      entityId: partnerId,
-      riskScore: 0.82,
-      confidence: 0.94,
-      requiresDualApproval: action.requires_four_eyes ?? true,
-      blastRadiusUSD: action.blast_radius_usd ?? 25000,
-      suggestedAt: new Date().toISOString(),
-      status: 'STAGED',
+      intentId: `act_partner_${action.action_type}_${partnerId}_${Date.now()}`,
+      actionType: action.action_type || 'FREEZE_PARTNER_COMMISSION',
+      targetEntityId: partnerId,
+      targetEntityType: 'PARTNER',
+      severity: 'HIGH',
+      lifecycleState: 'STAGED',
+      stagedTimestamp: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      parameters: {
+        partnerId,
+        actionType: action.action_type,
+        label: action.label,
+        blastRadiusUsd: action.blast_radius_usd ?? 25000,
+      },
+      estimatedImpact: action.label || `Governed action ${action.action_type} for partner ${partnerId}`,
+      requiresFourEyes: Boolean(action.requires_four_eyes ?? true),
       kmsSignatureBadge: {
         keyId: 'projects/eios/locations/global/keyRings/eios-ring/cryptoKeys/intent-ecdsa-p256',
         algorithm: 'ECDSA_P256_SHA256',
         signatureDigest: `sig_${Date.now().toString(36)}`,
         verified: true,
+      },
+      fourEyesRecord: {
+        initiatorOfficerId: state.operator.officerId,
+        initiatorTimestamp: new Date().toISOString(),
+        idpClaimValidation: true,
       },
     });
     setStagedToast(`Staged: ${action.label}`);
