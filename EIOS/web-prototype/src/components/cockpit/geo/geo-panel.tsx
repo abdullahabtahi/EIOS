@@ -28,7 +28,6 @@ export interface GeoPanelProps {
   readonly onSelect: (selection: NonNullable<GeoSelection>) => void;
   readonly onClear: () => void;
   readonly onPickAccount: (id: string) => void;
-  readonly onDraftSar?: (accountId: string) => void;
   /** The picked account's evidence, when the pick is an account. */
   readonly account: ResourceState<GeoAccount> | null;
   /** Which list colours the Jurisdictions map, and the way to change it. */
@@ -50,7 +49,7 @@ export function disabledLayers(flows: GeoFlows | null, reference: GeoReference |
  * The right-hand panel, read top to bottom: the question this view answers, how big the picture is, the picked
  * mark in full, then where to look first. Layers and sources sit below, collapsed.
  */
-export function GeoPanel({ view, flows, reference, visible, onToggle, selected, onSelect, onClear, onPickAccount, onDraftSar, account, basis, onBasis, listChange }: GeoPanelProps) {
+export function GeoPanel({ view, flows, reference, visible, onToggle, selected, onSelect, onClear, onPickAccount, account, basis, onBasis, listChange }: GeoPanelProps) {
   const ref = dataOf(reference);
   const fl = dataOf(flows);
   const leads = leadsFor(view.id, fl, ref, basis);
@@ -97,7 +96,7 @@ export function GeoPanel({ view, flows, reference, visible, onToggle, selected, 
             {selected?.kind === 'account' && account ? (
               <GeoAccountDetail accountId={selected.id} state={account} onClear={onClear} onPickAccount={onPickAccount} />
             ) : (
-              detail && <GeoDetail view={detail} onClear={onClear} onPickAccount={onPickAccount} onDraftSar={onDraftSar} />
+              detail && <GeoDetail view={detail} onClear={onClear} onPickAccount={onPickAccount} />
             )}
             <section aria-label="Where to look first" className="space-y-1">
               <h3 className="text-title font-sans font-semibold text-cx-ink">Where to look first</h3>
