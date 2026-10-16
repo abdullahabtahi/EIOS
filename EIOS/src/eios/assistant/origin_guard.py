@@ -19,7 +19,8 @@ from eios.llm_gateway.providers.adk_types import Content, Part, text_of
 
 GUARDED = "eios_guarded"  # event metadata: a response the platform wrote in place of the model
 REFUSAL = (
-    "I can't rank or judge people by nationality, ethnicity, race or religion. Geography here is evidence about "
+    "I cannot answer that: I don't rank or judge people by nationality, ethnicity, race or religion. Geography here "
+    "is evidence about "
     "behaviour, never about who someone is. I can show which corridors, shared exits or accounts behave unusually, "
     "and why."
 )

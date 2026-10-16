@@ -203,6 +203,21 @@ def test_another_workstation_can_never_move_the_map() -> None:
         ("Top accounts, please", None, None, [("list_geo_leads", {"kind": "account"})]),
         ("Rank accounts by ethnicity", None, None, []),  # refused, so nothing is read for it
         ("Where should I look first?", None, None, [("get_geo_overview", {})]),
+        (
+            "Draft the geography paragraph for the SAR on CR11568.",
+            "CR11568",
+            None,
+            [
+                ("get_geo_account", {"entity_id": "CR11568"}),
+                (
+                    "search_regulations",
+                    {
+                        "query": "duty to report a suspicious transaction to the FIAU",
+                        "jurisdiction": "MT",
+                    },
+                ),
+            ],
+        ),
     ],
 )
 def test_the_prefetch_plan_follows_the_question_then_the_map(

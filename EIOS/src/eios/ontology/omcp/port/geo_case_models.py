@@ -51,6 +51,14 @@ class LensFinding(StrictModel):
     assessable: bool | None  # None: the lens judges every account it sees (the shared exit)
 
 
+class BenignReading(StrictModel):
+    """An innocent explanation the account's own data supports. Read from the evidence, never guessed; carries no
+    number, so it adds no figure to check."""
+
+    code: str
+    reading: str
+
+
 class LensRule(StrictModel):
     """The thresholds the lenses apply, so "why was it flagged" is answered from the rule, not from a guess."""
 
@@ -94,6 +102,8 @@ class GeoAccountEvidence(ToolResult):
     )  # None: no country positions here, so travel cannot be judged (not "no jumps")
     payments: list[CrossBorder]
     findings: list[LensFinding]
+    # What else could explain the pattern: false-lead control, stated beside the findings (geo rule 18).
+    benign_readings: list[BenignReading]
     rule: LensRule
     geo_score: float
     neighbourhood: Neighbourhood

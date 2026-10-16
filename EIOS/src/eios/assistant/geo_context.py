@@ -53,7 +53,18 @@ Geography rules for this workstation:
 16. Never count the items of a list yourself, in digits or in words ("two countries", "four lenses"). State a count only
     when a result returns it (login_country_count, gateway_count, lens_count, accounts, home_countries); otherwise name
     the items instead of counting them.
+17. A SAR paragraph cites the licensing jurisdiction's duty to report: quote, by sentence number, the passage the
+    regulation search of this turn returned for Malta (the licence is the MFSA's). Never write a regulation's number
+    or words yourself; if no passage was returned, say the rule could not be retrieved.
+18. Most leads have an innocent explanation. When a result lists benign_readings, state them beside the findings, in
+    their own words: what else could explain the pattern.
+19. For an investigation question, answer in this order: what the data shows, what it could mean (the findings and
+    the benign readings), then the next step a person could take (more evidence, a hold proposal, a SAR draft).
 """
+# The tenant (DERIV_MFSA) is licensed in Malta: a SAR cites Malta's duty to report, read from the regulation index.
+LICENSING_JURISDICTION = "MT"
+_REPORTING_DUTY = "duty to report a suspicious transaction to the FIAU"
+_SAR = re.compile(r"\bSARs?\b|suspicious (?:activity|transaction) report", re.IGNORECASE)
 
 _VIEW = {"corridors": "Corridors", "logins": "Login vs KYC", "jurisdictions": "Jurisdictions"}
 _BASIS = {"fatf": "the FATF lists", "eu": "the EU high-risk list", "basel": "the Basel AML Index"}
@@ -144,6 +155,22 @@ def geo_steps(
     reads nothing: the drafter refuses it before the model runs (origin_guard.py)."""
     if asks_about_origin(question):
         return []
+    steps = _geo_steps(question, named, context)
+    if _SAR.search(
+        question
+    ):  # the duty to report is read with the evidence, so the paragraph can quote it
+        steps.append(
+            (
+                "search_regulations",
+                {"query": _REPORTING_DUTY, "jurisdiction": LICENSING_JURISDICTION},
+            )
+        )
+    return steps
+
+
+def _geo_steps(
+    question: str, named: str | None, context: Mapping[str, Any] | None
+) -> list[tuple[str, dict[str, Any]]]:
     if _LIST_CHANGE.search(question):
         return [("get_list_change_impact", {"list_id": "eu" if _EU.search(question) else "fatf"})]
     if named:
