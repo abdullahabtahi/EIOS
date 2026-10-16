@@ -12,6 +12,7 @@ from eios.warm.sink import LocalWarmSink
 from eios.warm.store import (
     BigQueryWarmStore,
     LocalWarmStore,
+    is_valid_label,
     WarmQueryRefused,
     WarmUnavailable,
 )
@@ -176,6 +177,33 @@ def test_a_label_the_warehouse_would_reject_is_dropped_not_sent() -> None:
         "proj", client=client, labels={"Environment": "Prod Like", "x" * 64: "v", "ok": "y" * 64}
     ).run("account_daily_activity", PARAMS)
     assert set(client.configs[-1][1].labels) == {"app", "component", "query"}
+
+
+def test_an_unset_environment_adds_no_empty_label() -> None:
+    client = _Client(estimate=500)
+    BigQueryWarmStore("proj", client=client, labels={"environment": ""}).run(
+        "account_daily_activity", PARAMS
+    )
+    assert "environment" not in client.configs[-1][1].labels
+
+
+def test_a_caller_cannot_replace_the_labels_the_store_owns(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    client = _Client(estimate=500)
+    with caplog.at_level("WARNING"):
+        BigQueryWarmStore("proj", client=client, labels={"app": "x", "query": "y"}).run(
+            "account_daily_activity", PARAMS
+        )
+    labels = client.configs[-1][1].labels
+    assert labels["app"] == "eios" and labels["query"] == "account_daily_activity"
+    assert "reserved" in caplog.text
+
+
+@pytest.mark.parametrize("name", list(CATALOGUE))
+def test_every_catalogue_name_is_a_valid_job_label(name: str) -> None:
+    """A new named query with a space, capital or long name would be rejected by the warehouse on every run."""
+    assert is_valid_label("query", name)
 
 
 def test_a_warehouse_failure_is_a_labelled_unavailable_not_an_empty_answer() -> None:

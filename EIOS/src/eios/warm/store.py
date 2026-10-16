@@ -13,6 +13,7 @@ import logging
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Any, Protocol
 
 import duckdb
@@ -25,11 +26,14 @@ DEFAULT_MAX_BYTES = (
     100 * 1024 * 1024
 )  # [ASSUMPTION] 100 MB per query; the tables are tiny at demo scale
 _PARAM = re.compile(r":([a-z_]+)")
-_LABEL = re.compile(
-    r"[a-z][a-z0-9_-]{0,62}"
-)  # a BigQuery label key; values may also start with a digit
-_LABEL_VALUE = re.compile(r"[a-z0-9_-]{0,63}")
-BASE_LABELS = {"app": "eios", "component": "warm-tier"}
+LABEL_MAX_LEN = 63  # BigQuery's limit for a label key or value
+# The ASCII subset of what BigQuery accepts: lowercase letters, digits, underscore and dash; a key starts with a letter.
+_LABEL_KEY = re.compile(rf"[a-z][a-z0-9_-]{{0,{LABEL_MAX_LEN - 1}}}")
+_LABEL_VALUE = re.compile(
+    rf"[a-z0-9_-]{{1,{LABEL_MAX_LEN}}}"
+)  # an empty value is left out, not sent
+BASE_LABELS: Mapping[str, str] = MappingProxyType({"app": "eios", "component": "warm-tier"})
+RESERVED_LABELS = frozenset({*BASE_LABELS, "query"})
 
 
 class WarmError(RuntimeError):
@@ -97,12 +101,25 @@ class LocalWarmStore:
         return WarmResult(rows, 0, f"warm.local:{spec.dataset}.{spec.table}")
 
 
+def is_valid_label(key: str, value: str) -> bool:
+    return bool(_LABEL_KEY.fullmatch(key) and _LABEL_VALUE.fullmatch(value))
+
+
 def _valid_labels(labels: Mapping[str, str]) -> dict[str, str]:
-    """The labels BigQuery would accept; the rest are dropped with a warning, never sent to fail a query."""
-    kept = {k: v for k, v in labels.items() if _LABEL.fullmatch(k) and _LABEL_VALUE.fullmatch(v)}
-    if dropped := sorted(set(labels) - set(kept)):
-        _LOG.warning("warm query labels dropped (not valid BigQuery labels): %s", dropped)
-    return kept
+    """The caller's labels BigQuery would accept. Empty values are left out quietly (an unset environment); reserved
+    keys and invalid labels are dropped with a warning, so a bad label can never fail a query."""
+    reserved = sorted(set(labels) & RESERVED_LABELS)
+    kept = {
+        k: v
+        for k, v in labels.items()
+        if k not in RESERVED_LABELS and (v == "" or is_valid_label(k, v))
+    }
+    invalid = sorted(set(labels) - set(kept) - set(reserved))
+    if reserved or invalid:
+        _LOG.warning(
+            "warm query labels dropped: reserved %s, not valid for BigQuery %s", reserved, invalid
+        )
+    return {k: v for k, v in kept.items() if v != ""}
 
 
 class BigQueryWarmStore:
