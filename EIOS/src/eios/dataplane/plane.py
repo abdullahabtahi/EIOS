@@ -44,6 +44,9 @@ logger = logging.getLogger(__name__)
 PLANE_ENV = "EIOS_DATA_PLANE"
 KNOWLEDGE_STORE_ENV = "EIOS_KNOWLEDGE_DATA_STORE"
 KNOWLEDGE_PROJECT_ENV = "GOOGLE_CLOUD_PROJECT"
+KNOWLEDGE_OWN_PROJECT_ENV = (
+    "EIOS_KNOWLEDGE_PROJECT"  # optional: the project that holds the data store
+)
 
 
 class PlaneKind(StrEnum):
@@ -203,9 +206,11 @@ def _build_engines() -> _Engines:
 def knowledge_index(env: Mapping[str, str] | None = None) -> RegulationIndex | None:
     """The regulatory index named by `EIOS_KNOWLEDGE_DATA_STORE`, or None when none is configured (the tool then says so)."""
     source = os.environ if env is None else env
-    store, project = (
-        source.get(KNOWLEDGE_STORE_ENV, "").strip(),
-        source.get(KNOWLEDGE_PROJECT_ENV, "").strip(),
+    store = source.get(KNOWLEDGE_STORE_ENV, "").strip()
+    # The data store may live in another project than the service (the regulation corpus is built once, in dev).
+    project = (
+        source.get(KNOWLEDGE_OWN_PROJECT_ENV, "").strip()
+        or source.get(KNOWLEDGE_PROJECT_ENV, "").strip()
     )
     if not store:
         return None

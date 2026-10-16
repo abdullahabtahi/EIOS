@@ -87,7 +87,7 @@ module "service_cockpit_api" {
   deletion_protection   = false # [ASSUMPTION] hackathon environment; tighten before real use
   invoker_members       = { cockpit_web = module.identity_cockpit_web.member }
 
-  env_vars = {
+  env_vars = merge(local.geo_env, {
     EIOS_ENVIRONMENT         = local.environment
     EIOS_AUTH_MODE           = "firebase"
     EIOS_FIREBASE_PROJECT_ID = var.project_id
@@ -109,7 +109,7 @@ module "service_cockpit_api" {
     GOOGLE_GENAI_USE_ENTERPRISE        = "true"
     EIOS_MODEL_ARMOR_PROMPT_TEMPLATE   = module.model_armor.prompt_template_name
     EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE = module.model_armor.response_template_name
-  }
+  })
 
   secret_env = {
     EIOS_CASHIER_WEBHOOK_SECRET = { secret_id = "cashier_webhook_secret" }

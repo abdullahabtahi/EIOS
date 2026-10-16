@@ -90,6 +90,22 @@ def test_only_approver_roles_may_refresh(client: TestClient) -> None:
     assert client.post(REFRESH).status_code == 202
 
 
+def test_a_refresh_does_not_rebuild_a_brief_that_is_still_fresh(client: TestClient) -> None:
+    assert client.post(REFRESH).json()["started"] is True
+    _wait_for_brief(client)
+    for _ in range(100):  # let the first refresh finish before starting another
+        if ambient_routes._running is not None and ambient_routes._running.done():
+            break
+        time.sleep(0.05)
+    assert client.post(REFRESH).json()["started"] is True
+    for _ in range(100):
+        if ambient_routes._running is not None and ambient_routes._running.done():
+            break
+        time.sleep(0.05)
+    assert ambient_routes._last is not None and ambient_routes._last.prepared == ()
+    assert ambient_routes._last.skipped == ()  # nothing was due, so nothing was attempted or failed
+
+
 def test_a_second_refresh_while_one_runs_does_not_start_another(client: TestClient) -> None:
     assert client.post(REFRESH).json()["started"] is True
     again = client.post(REFRESH)

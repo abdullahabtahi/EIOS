@@ -96,7 +96,10 @@ def top_entities(n: int) -> list[str]:
 async def _refresh(n: int) -> Preparation:
     global _last
     entities = await asyncio.to_thread(top_entities, n)
-    result = await prepare_top(_runtime(), brief_store(), entities, ttl_s=ttl_s())
+    store = brief_store()
+    # A brief that is still fresh is not rebuilt: every instance that starts would otherwise spend the same model calls.
+    due = [e for e in entities if (view := store.get(e)) is None or view.stale]
+    result = await prepare_top(_runtime(), store, due, ttl_s=ttl_s())
     _last = result
     _LOG.info(
         "ambient briefs: %d prepared, %d not kept, %.1f s",
