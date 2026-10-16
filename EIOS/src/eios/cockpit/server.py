@@ -33,10 +33,11 @@ from starlette.concurrency import run_in_threadpool
 from starlette.responses import JSONResponse
 
 from eios.assistant.config import AssistantConfigError
+from eios.assistant.geo_context import MapContext
 from eios.assistant.sessions import valid_entity_id
 from eios.assistant.telemetry import record_turn
 from eios.cockpit import aml_engine_view as aml_view
-from eios.cockpit import compliance_view, operations_view
+from eios.cockpit import compliance_view, copilot_verify, operations_view
 from eios.cockpit import executive_view as exec_view
 from eios.cockpit import geo as geo_routes
 from eios.cockpit import partner_engine_view as partner_view
@@ -201,6 +202,10 @@ class CopilotQueryRequest(BaseModel):
     role: str = "executive"
     model: str | None = (
         None  # a registry key from GET /api/cockpit/copilot/models; None runs the default
+    )
+    # What the Geospatial tab shows (view, colouring basis, selection), validated against closed vocabularies
+    map_context: MapContext | None = Field(
+        default=None, validation_alias=AliasChoices("map_context", "mapContext")
     )
 
 
@@ -1252,6 +1257,7 @@ async def query_copilot(
             principal=principal,
             question=req.query,
             entity_id=req.context_entity_id,
+            entity_context=req.map_context.model_dump() if req.map_context else None,
             model_key=req.model,
         )
     except UnknownModelError as exc:
@@ -1330,6 +1336,7 @@ def compliance_ledger() -> dict[str, Any]:
 app.include_router(public_router)
 app.include_router(router)
 app.include_router(geo_routes.router)
+app.include_router(copilot_verify.router)  # carries its own operator dependency
 
 
 def main() -> None:

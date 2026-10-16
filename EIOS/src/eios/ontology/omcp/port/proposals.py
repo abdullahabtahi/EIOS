@@ -210,7 +210,7 @@ TOOLS: tuple[ToolSpec, ...] = (
         "propose_hold",
         "action.propose_hold",
         "propose",
-        (Workstation.AML_INVESTIGATOR,),
+        (Workstation.AML_INVESTIGATOR, Workstation.GEOSPATIAL),
         ProposeHoldArgs,
         Proposal,
         propose_hold,

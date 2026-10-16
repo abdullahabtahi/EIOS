@@ -17,6 +17,7 @@ from google.adk.models.base_llm import BaseLlm
 
 from eios.assistant.assembler_agent import DRAFT_KEY, FEEDBACK_KEY, AnswerAssembler
 from eios.assistant.assembly import MAX_ATTEMPTS
+from eios.assistant.geo_context import GEO_RULES, describe_map
 from eios.assistant.intent import BROAD_KEY, ON_SCREEN_KEY
 from eios.assistant.prefetch import Prefetcher
 from eios.assistant.timing import TimedLlm, timed
@@ -47,6 +48,7 @@ TITLES: dict[Workstation, str] = {
     Workstation.EXECUTIVE: "executive",
     Workstation.COMPLIANCE_AUDITOR: "compliance auditor",
     Workstation.DATA_OPERATIONS: "data operations",
+    Workstation.GEOSPATIAL: "geospatial investigator",
 }
 
 _PLACEHOLDER_FIGURES = """\
@@ -153,11 +155,18 @@ def instruction_for(
         list_rule=listing.format(),
     )
 
+    geo = workstation is Workstation.GEOSPATIAL
+
     def provide(ctx: ReadonlyContext) -> str:
         state = ctx.state
-        parts = [base]
+        parts = [base, GEO_RULES] if geo else [base]
         entity = state.get("entity_id")
-        parts.append(f"Entity on screen: {entity}." if entity else "No entity is on screen.")
+        if (
+            geo
+        ):  # the map's selection is what is on screen; an account the question names comes first
+            parts.append(describe_map(state.get("entity_context"), named=entity))
+        else:
+            parts.append(f"Entity on screen: {entity}." if entity else "No entity is on screen.")
         if elsewhere := state.get(ON_SCREEN_KEY):
             parts.append(
                 f"The question names {entity}, not {elsewhere} which is on screen: answer about {entity}, "

@@ -181,3 +181,52 @@ export interface GeoAddress {
   readonly uncovered: readonly AddressListName[];
   readonly sources: readonly { readonly name: string; readonly as_of: string }[];
 }
+
+/** The two published lists whose latest change the book can be compared against. */
+export type ListId = 'fatf' | 'eu';
+
+/** One country a list change names, with what this book does there (`/api/cockpit/geo/list-changes`). */
+export interface ListChangeCountry {
+  readonly iso2: string;
+  readonly name: string;
+  readonly before: string | null;
+  readonly after: string | null;
+  readonly registered_accounts: number;
+  /** null: no login sessions on this plane, not zero logins. */
+  readonly login_accounts: number | null;
+  readonly sessions: number | null;
+  readonly payment_accounts: number;
+  readonly payment_volume_usd: number;
+  readonly shared_exits: readonly string[] | null;
+  readonly exposed_accounts: number;
+  /** Accounts one shared device, payment token or address away (BigQuery Graph); null when the graph could not answer. */
+  readonly linked_accounts: number | null;
+}
+
+export interface ListChangeGroup {
+  readonly countries: readonly ListChangeCountry[];
+  readonly exposed_accounts: number;
+  readonly sessions: number;
+  readonly payment_volume_usd: number;
+  /** Each country's share of the group's sessions or payments, summing to 100.0; null when there is nothing to share. */
+  readonly session_shares: Readonly<Record<string, number>> | null;
+  readonly payment_shares: Readonly<Record<string, number>> | null;
+}
+
+export interface ListEditionInfo {
+  readonly label: string;
+  readonly in_force: string;
+  readonly source: string;
+}
+
+export interface GeoListChange {
+  readonly list_id: ListId;
+  readonly as_of: string;
+  readonly source: string;
+  readonly before: ListEditionInfo;
+  readonly after: ListEditionInfo;
+  readonly added: ListChangeGroup;
+  readonly removed: ListChangeGroup;
+  readonly relisted: ListChangeGroup;
+  readonly graph: { readonly source: string | null; readonly seconds: number | null; readonly error: string | null };
+}

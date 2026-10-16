@@ -37,6 +37,7 @@ from eios.assistant.timing import TimedSessionService, TimingPlugin, TurnTimer, 
 from eios.assistant.tools import (
     FACTS_KEY,
     IDENTIFIERS_KEY,
+    MAP_TARGETS_KEY,
     NUMBERS_KEY,
     ORIGINS_KEY,
     PASSAGES_KEY,
@@ -147,6 +148,7 @@ def _fresh_turn_state(
         IDENTIFIERS_KEY: [],
         NUMBERS_KEY: [],
         PROPOSALS_KEY: [],
+        MAP_TARGETS_KEY: [],
         "entity_id": entity_id,
         "entity_context": entity_context or {},
     }

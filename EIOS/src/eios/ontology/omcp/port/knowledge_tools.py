@@ -19,7 +19,7 @@ from eios.ontology.omcp.port.principal import Principal, Workstation
 from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.registry import ToolSpec
 
-READERS = (Workstation.AML_INVESTIGATOR, Workstation.COMPLIANCE_AUDITOR)
+READERS = (Workstation.AML_INVESTIGATOR, Workstation.COMPLIANCE_AUDITOR, Workstation.GEOSPATIAL)
 
 
 class Jurisdiction(StrEnum):

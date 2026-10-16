@@ -26,7 +26,10 @@ FREE_TEXT_ARGUMENTS = {("search_regulations", "query")}
 SLOW_BUDGETS_MS = {
     "search_regulations": 5000,
     "get_account_history": 3000,
-}  # remote retrieval and a warehouse query
+    "get_shared_exit": 3000,
+    "get_geo_account": 3000,
+    "get_list_change_impact": 3000,
+}  # remote retrieval, a warehouse query, and a BigQuery Graph job
 
 SAMPLE_ARGS: dict[str, dict[str, object]] = {
     "search_regulations": {"query": "when must a suspicious report be filed"},
@@ -62,6 +65,13 @@ SAMPLE_ARGS: dict[str, dict[str, object]] = {
     "get_reliability": {},
     "get_drill_status": {},
     "get_red_lines": {},
+    "get_geo_overview": {},
+    "list_geo_leads": {"kind": "shared_exit"},
+    "get_shared_exit": {"gateway_id": "GW-NG-X00"},
+    "get_corridor": {"corridor_id": "ID>MM"},
+    "get_geo_account": {"entity_id": "CR11568"},
+    "get_jurisdiction": {"country_id": "NG"},
+    "get_list_change_impact": {"list_id": "fatf"},
 }
 # Capabilities that answer with a typed error today because the data does not exist yet (and say so).
 UNAVAILABLE_TODAY = {"get_client_quality", "get_calibration_status", "get_red_lines"}

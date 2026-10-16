@@ -24,6 +24,7 @@ from eios.dataplane.aml_engine import AmlSnapshot, run_aml_engine
 from eios.dataplane.aml_service import EngineAMLService
 from eios.dataplane.executive_engine import run_executive_engine
 from eios.dataplane.executive_service import EngineExecutiveService
+from eios.dataplane.geo_readmodel import PlaneGeo
 from eios.dataplane.ops_calibration import calibration_sample
 from eios.dataplane.ops_service import EngineOperationsService
 from eios.dataplane.partner_engine import PartnerSnapshot, run_partner_engine
@@ -241,6 +242,7 @@ def read_models() -> ReadModels:
                     ),
                     knowledge=knowledge_index(),
                     warm=build_warm_store(built.aml_snapshot.world),
+                    geo=PlaneGeo(),  # built on first use: its tiers come from the warehouse
                 )
                 _operations.measure(_models, built.aml_snapshot)
             else:

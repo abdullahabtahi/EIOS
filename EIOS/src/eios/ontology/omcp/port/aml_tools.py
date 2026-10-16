@@ -13,6 +13,10 @@ from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.registry import Handler, ToolSpec
 
 AML = (Workstation.AML_INVESTIGATOR,)
+AML_AND_GEO = (
+    Workstation.AML_INVESTIGATOR,
+    Workstation.GEOSPATIAL,
+)  # the same case, seen through geography
 PRIVATE = (SecurityMarking.PII, SecurityMarking.SENSITIVE_COMPLIANCE)
 _SVC = "cockpit.aml.AMLWorkstationService"
 
@@ -341,7 +345,7 @@ def draft_sar(ctx: ReadModels, who: Principal, args: AccountArgs) -> SarDraft:
     )
 
 
-def _spec(
+def _spec(  # noqa: PLR0913 - a ToolSpec's own fields, named at each call
     name: str,
     capability: str,
     kind: str,
@@ -349,12 +353,13 @@ def _spec(
     out: type[ToolResult],
     fn: Handler,
     budget_ms: float = 300.0,
+    workstations: tuple[Workstation, ...] = AML,
 ) -> ToolSpec:
     return ToolSpec(
         name=name,
         capability=capability,
         kind=kind,
-        workstations=AML,
+        workstations=workstations,
         args_model=args,
         result_model=out,
         handler=fn,
@@ -365,7 +370,15 @@ def _spec(
 
 TOOLS: tuple[ToolSpec, ...] = (
     _spec("list_alerts", "aml.alerts", "evidence", AlertsArgs, AlertList, list_alerts),
-    _spec("get_aml_dossier", "aml.dossier", "evidence", AccountArgs, AmlDossier, get_aml_dossier),
+    _spec(
+        "get_aml_dossier",
+        "aml.dossier",
+        "evidence",
+        AccountArgs,
+        AmlDossier,
+        get_aml_dossier,
+        workstations=AML_AND_GEO,
+    ),
     _spec(
         "get_network_evidence",
         "aml.network",
@@ -390,5 +403,13 @@ TOOLS: tuple[ToolSpec, ...] = (
         WithdrawalRisk,
         check_withdrawal_risk,
     ),
-    _spec("draft_sar", "aml.sar_draft", "draft", AccountArgs, SarDraft, draft_sar),
+    _spec(
+        "draft_sar",
+        "aml.sar_draft",
+        "draft",
+        AccountArgs,
+        SarDraft,
+        draft_sar,
+        workstations=AML_AND_GEO,
+    ),
 )

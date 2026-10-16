@@ -128,3 +128,7 @@ What: in the Login vs KYC view, one closed line, "Check an IP address". Type an 
 - **Privacy.** The route is a POST (the address is not in a URL or an access log), nothing on the path logs it (a test fails if it does), and the panel says it is not stored.
 - **Attribution.** IPinfo Lite is CC BY-SA 4.0 and asks for "IP address data is powered by IPinfo" with a link, shown under Sources. X4BNet is MIT.
 - **Deploy note.** Build the snapshot into the prod-like `warm_reference` before a deploy that includes this (`--project eios-hackathon-prod`); until then the check answers a plain 503 "no network data loaded here". Nothing is deployed.
+
+## G1: the geo assistant (branch `feat/geo-agent`)
+
+Supersedes M5 above. Design, measured results and known limits are in `docs/geo-agent.md`. In short: a sixth workstation (`geospatial`) with seven geo capabilities, an Ask panel beside the map that moves the map only to objects a tool returned in the same turn (Back undoes a move), a list-edition comparison in the Jurisdictions view (what an FATF plenary or an EU amendment changes for this book), two new BigQuery Graph queries (`exit_ring`, `country_links`) at parity with the local double, and "Verify figures", which derives every figure of an answer again through the governed port. Offline baseline 116 of 116 `[MEASURED]`; live, four of four questions assembled on one model call in 3.0 to 4.5 s `[MEASURED]` after two fixes the first live run called for. The N3 evidence bundle is not started. Nothing is deployed.

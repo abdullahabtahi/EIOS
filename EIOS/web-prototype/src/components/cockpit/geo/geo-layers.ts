@@ -214,6 +214,32 @@ function highlightLayer(arcs: readonly HighlightArc[], reference: GeoReference):
   });
 }
 
+/** Countries a list change names: added ones outlined red, removed ones outlined blue (the activity there continues). */
+export interface ListChangeMarks {
+  readonly added: ReadonlySet<string>;
+  readonly removed: ReadonlySet<string>;
+}
+const ADDED_COLOR: Rgba = [200, 50, 50, 255];
+const REMOVED_COLOR: Rgba = [16, 107, 163, 255];
+
+function listChangeLayer(reference: GeoReference, marks: ListChangeMarks): GeoJsonLayer<AreaFeature['properties']> | null {
+  const changed = areaFeatures(reference).filter(
+    (f) => marks.added.has(f.properties.country.iso2) || marks.removed.has(f.properties.country.iso2),
+  );
+  if (changed.length === 0) return null;
+  const isAdded = (f: unknown) => marks.added.has((f as AreaFeature).properties.country.iso2);
+  return new GeoJsonLayer<AreaFeature['properties']>({
+    id: 'geo-list-change',
+    data: changed as never,
+    pickable: false,
+    stroked: true,
+    filled: false,
+    lineWidthUnits: 'pixels',
+    getLineColor: (f) => (isAdded(f) ? ADDED_COLOR : REMOVED_COLOR),
+    getLineWidth: (f) => (isAdded(f) ? 3 : 2.5),
+  });
+}
+
 export function buildLayers(
   flows: GeoFlows | null,
   reference: GeoReference | null,
@@ -222,8 +248,10 @@ export function buildLayers(
   handlers: LayerHandlers = {},
   highlight: readonly HighlightArc[] = [],
   basis: BasisId = DEFAULT_BASIS,
+  listChange: ListChangeMarks | null = null,
 ): Layer[] {
   const layers: Layer[] = [];
+  const outlined = reference && listChange ? listChangeLayer(reference, listChange) : null;
   if (reference && visible.has('risk')) layers.push(riskAreaLayer(reference, selection, handlers, basis));
   if (reference && visible.has('offshore')) layers.push(offshoreLayer(reference, handlers));
   if (flows && reference && visible.has('corridors')) {
@@ -232,6 +260,7 @@ export function buildLayers(
   if (flows && reference && visible.has('mismatches')) {
     layers.push(arcLayer('geo-mismatches', mismatchRows(flows, reference, selection), handlers));
   }
+  if (outlined) layers.push(outlined);
   const picked = reference ? highlightLayer(highlight, reference) : null;
   if (picked) layers.push(picked);
   return layers;

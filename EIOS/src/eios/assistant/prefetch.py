@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import re
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Mapping
 from typing import Any
 
 from google.adk.agents.base_agent import BaseAgent
@@ -22,10 +22,12 @@ from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events.event import Event
 from google.adk.events.event_actions import EventActions
 
+from eios.assistant.geo_context import geo_steps
 from eios.assistant.intent import is_broad
 from eios.assistant.tools import (
     FACTS_KEY,
     IDENTIFIERS_KEY,
+    MAP_TARGETS_KEY,
     NUMBERS_KEY,
     ORIGINS_KEY,
     PASSAGES_KEY,
@@ -62,12 +64,18 @@ _PARTNER = re.compile(r"^(?:PTR|AP|P)-\d{2,5}$", re.IGNORECASE)
 Step = tuple[str, dict[str, Any]]
 
 
-def plan(workstation: Workstation, question: str, entity_id: str | None) -> list[Step]:
+def plan(
+    workstation: Workstation,
+    question: str,
+    entity_id: str | None,
+    context: Mapping[str, Any] | None = None,
+) -> list[Step]:
     """The tool calls worth making before the model speaks, for this question on this workstation."""
     steps: list[Step] = []
     if workstation in {
         Workstation.AML_INVESTIGATOR,
         Workstation.COMPLIANCE_AUDITOR,
+        Workstation.GEOSPATIAL,
     } and _REGULATION.search(question):
         args: dict[str, Any] = {"query": question.strip()[:_MAX_QUERY]}
         for code, pattern in _JURISDICTION:
@@ -84,6 +92,8 @@ def plan(workstation: Workstation, question: str, entity_id: str | None) -> list
             steps.append(("get_partner_integrity", {"entity_id": entity_id}))
     elif workstation is Workstation.EXECUTIVE and _BRIEFING.search(question):
         steps.append(("get_briefing", {}))
+    elif workstation is Workstation.GEOSPATIAL:
+        steps += geo_steps(question, entity_id, context)
     return steps
 
 
@@ -103,7 +113,12 @@ class Prefetcher(BaseAgent):
         question = text_of(ctx.user_content)
         steps = [
             (t, a)
-            for t, a in plan(principal.workstation, question, state.get("entity_id"))
+            for t, a in plan(
+                principal.workstation,
+                question,
+                state.get("entity_id"),
+                state.get("entity_context"),
+            )
             if t in offered
         ]
         staged = _Defaulting(
@@ -117,6 +132,7 @@ class Prefetcher(BaseAgent):
                     IDENTIFIERS_KEY,
                     NUMBERS_KEY,
                     PROPOSALS_KEY,
+                    MAP_TARGETS_KEY,
                 )
             }
         )
@@ -158,6 +174,7 @@ class _Defaulting(dict[str, Any]):
         IDENTIFIERS_KEY: [],
         NUMBERS_KEY: [],
         PROPOSALS_KEY: [],
+        MAP_TARGETS_KEY: [],
     }
 
     def get(self, key: str, default: Any = None) -> Any:

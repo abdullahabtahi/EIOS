@@ -54,17 +54,29 @@ def _items(spec: str, fallback: str) -> tuple[RateLimitItem, ...]:
         return tuple(parse_many(fallback))
 
 
-async def limit_copilot(operator: Operator | None = Depends(current_operator)) -> None:
+# Replaying an answer's figures calls the port again (graph jobs included) but never the model: its own counters, so a
+# reader who verifies does not spend their questions. `EIOS_RATE_VERIFY_PER_USER` and `EIOS_RATE_VERIFY_GLOBAL`.
+VERIFY_PER_USER_DEFAULT = (
+    "30/minute;900/day"  # [ASSUMPTION] about one check per answer, with room to repeat
+)
+VERIFY_GLOBAL_DEFAULT = "5000/day"  # [ASSUMPTION] the whole instance
+
+
+def _setting(name: str, default: str) -> tuple[RateLimitItem, ...]:
+    return _items(os.environ.get(name, default), default)
+
+
+def _enforce(
+    operator: Operator | None,
+    scope: str,
+    per_user: tuple[RateLimitItem, ...],
+    overall: tuple[RateLimitItem, ...],
+    what: str,
+) -> None:
     if os.environ.get("EIOS_RATE_LIMITS", "on").strip().lower() in _OFF:
         return
     who = operator.uid if operator else "anonymous"  # dev with auth off has one anonymous caller
-    per_user = _items(
-        os.environ.get("EIOS_RATE_COPILOT_PER_USER", PER_USER_DEFAULT), PER_USER_DEFAULT
-    )
-    overall = _items(os.environ.get("EIOS_RATE_COPILOT_GLOBAL", GLOBAL_DEFAULT), GLOBAL_DEFAULT)
-    checks = [(item, "copilot", who) for item in per_user] + [
-        (item, "copilot", "*") for item in overall
-    ]
+    checks = [(item, scope, who) for item in per_user] + [(item, scope, "*") for item in overall]
     if all(LIMITER.test(*c) for c in checks):
         for c in checks:
             LIMITER.hit(*c)  # all-or-nothing: a refused request is counted nowhere
@@ -74,9 +86,29 @@ async def limit_copilot(operator: Operator | None = Depends(current_operator)) -
         for c in checks
         if not LIMITER.test(*c)
     )
-    _LOG.warning("copilot rate limit reached for %s; retry in %ss", who, wait)
+    _LOG.warning("%s rate limit reached for %s; retry in %ss", scope, who, wait)
     raise HTTPException(
         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-        detail=f"Too many questions in a short time. Try again in {wait} s.",
+        detail=f"Too many {what} in a short time. Try again in {wait} s.",
         headers={"Retry-After": str(wait)},
+    )
+
+
+async def limit_copilot(operator: Operator | None = Depends(current_operator)) -> None:
+    _enforce(
+        operator,
+        "copilot",
+        _setting("EIOS_RATE_COPILOT_PER_USER", PER_USER_DEFAULT),
+        _setting("EIOS_RATE_COPILOT_GLOBAL", GLOBAL_DEFAULT),
+        "questions",
+    )
+
+
+async def limit_verify(operator: Operator | None = Depends(current_operator)) -> None:
+    _enforce(
+        operator,
+        "verify",
+        _setting("EIOS_RATE_VERIFY_PER_USER", VERIFY_PER_USER_DEFAULT),
+        _setting("EIOS_RATE_VERIFY_GLOBAL", VERIFY_GLOBAL_DEFAULT),
+        "checks",
     )

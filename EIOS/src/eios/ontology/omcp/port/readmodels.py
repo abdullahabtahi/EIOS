@@ -17,6 +17,7 @@ from eios.cockpit.operations import DataPlatformOperationsService
 from eios.cockpit.operations_readmodel import OperationsReadModel
 from eios.cockpit.partner import PartnerWorkstationService
 from eios.cockpit.partner_readmodel import PartnerReadModel
+from eios.dataplane.geo_readmodel import GeoReadModel
 from eios.dataplane.ops_calibration import CalibrationSample
 from eios.flywheel.diagnostics import CalibrationDiagnosticsEngine
 from eios.flywheel.ledger import DecisionOutcomesLedger
@@ -66,6 +67,9 @@ class ReadModels:
     warm: WarmStore | None = (
         None  # the warm tier (BigQuery, or a local double); None where none is configured
     )
+    geo: GeoReadModel | None = (
+        None  # the geo engine, graph and lists; None where no world is served
+    )
 
     @classmethod
     def default(cls) -> ReadModels:
@@ -85,6 +89,7 @@ class ReadModels:
         executive: ExecutiveReadModel | None = None,
         operations: OperationsReadModel | None = None,
         calibration_sample: CalibrationSample | None = None,
+        geo: GeoReadModel | None = None,
     ) -> ReadModels:
         """Read models over the given AML plane (and partner plane and ledger, when given); the rest is built fresh."""
         partners: PartnerReadModel = partner or PartnerWorkstationService()
@@ -107,4 +112,5 @@ class ReadModels:
             calibration_sample=calibration_sample,
             knowledge=knowledge,
             warm=warm,
+            geo=geo,
         )

@@ -18,6 +18,7 @@ class Role(StrEnum):
     EXECUTIVE = "executive"
     COMPLIANCE_AUDITOR = "compliance_auditor"
     DATA_OPERATIONS = "data_operations"
+    GEOSPATIAL = "geospatial"
 
 
 class IdentitySource(StrEnum):

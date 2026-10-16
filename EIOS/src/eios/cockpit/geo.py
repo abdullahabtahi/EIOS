@@ -18,9 +18,11 @@ from eios.cockpit.auth import current_operator
 from eios.cockpit.geo_account import account_payload
 from eios.cockpit.geo_address import address_payload
 from eios.cockpit.geo_view import flows_payload
+from eios.dataplane.geo_lists import list_change
 from eios.dataplane.geo_plane import geo_snapshot, graph_store
 from eios.netintel.store import NetUnavailable, SnapshotReader
 from eios.netintel.store import reader_from_env as net_reader_from_env
+from eios.reference.editions import ListId, editions
 from eios.reference.reader import ReferenceReader, ReferenceUnavailable, reader_from_env
 
 _LOG = logging.getLogger("eios.cockpit.geo")
@@ -28,6 +30,7 @@ GEO_REFERENCE_PATH = "/api/cockpit/geo/reference"
 GEO_FLOWS_PATH = "/api/cockpit/geo/flows"
 GEO_ACCOUNT_PATH = "/api/cockpit/geo/accounts/{account_id}"
 GEO_ADDRESS_PATH = "/api/cockpit/geo/address"
+GEO_LIST_CHANGES_PATH = "/api/cockpit/geo/list-changes"
 _ACCOUNT_ID = re.compile(r"^[A-Z]{2}[0-9]{3,8}$")
 
 router = APIRouter(tags=["Cockpit Geo"], dependencies=[Depends(current_operator)])
@@ -85,6 +88,19 @@ def geo_account(account_id: str) -> dict[str, Any]:
     if payload is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="unknown_account")
     return payload
+
+
+@router.get(GEO_LIST_CHANGES_PATH)
+def geo_list_changes(list_id: ListId = ListId.FATF) -> dict[str, Any]:
+    """What a published list's latest change does to this book; the same function the geo assistant's tool calls."""
+    try:
+        snapshot = geo_snapshot()
+    except Exception as exc:
+        _LOG.exception("geo engine build failed")
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="geo_unavailable") from exc
+    if snapshot is None:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="geo_unavailable")
+    return list_change(snapshot, graph_store(), editions(list_id))
 
 
 class AddressQuery(BaseModel):

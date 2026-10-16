@@ -22,6 +22,7 @@ import type {
   RedLineGateStatus,
   SarDraftDocument,
   StageRequest,
+  ViewCommand,
   WorkstationApiResponse,
 } from '@/components/cockpit/state/cockpit-types';
 
@@ -121,6 +122,22 @@ export function normalizeProposal(raw: Raw): AssistantProposal | undefined {
     asOf: text(raw.as_of),
     stageRequest,
   };
+}
+
+const VIEW_KINDS = new Set<ViewCommand['kind']>(['country', 'corridor', 'mismatch', 'gateway', 'account']);
+// The map's own id shapes, as its URL accepts them; anything else is dropped, never repaired.
+const VIEW_ID = /^[A-Za-z0-9>_-]{1,64}$/;
+
+/** The map moves the backend accepted. One with an unknown kind or an id outside the map's shapes is dropped. */
+export function normalizeViewCommands(raw: unknown): ViewCommand[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((c): ViewCommand[] => {
+    if (!c || typeof c !== 'object') return [];
+    const kind = (c as Raw).kind;
+    const id = (c as Raw).id;
+    if (!VIEW_KINDS.has(kind) || typeof id !== 'string' || !VIEW_ID.test(id)) return [];
+    return [{ kind, id }];
+  });
 }
 
 /** One quoted regulation passage. Without a passage id, a document and text it names no source, so it is dropped. */

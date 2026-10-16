@@ -110,6 +110,7 @@ def test_the_shipped_golden_and_attack_sets_load_and_cover_the_required_shape() 
         "executive",
         "compliance_auditor",
         "data_operations",
+        "geospatial",
     }
     families = {a.family.value for a in attacks}
     assert len(families) == 5

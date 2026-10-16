@@ -19,6 +19,7 @@ Read the doc for the area you touch, not all of them:
 | Executive plane (fitted causal graph, backtested forecast, what-if) | `docs/executive-engine.md` |
 | Operations plane (ingestion replay, probes, red lines, restore drill) | `docs/operations-engine.md` |
 | Geo/AML product direction | `docs/financial_geospatial.md` (v3 draft) |
+| Geo assistant (sixth workstation, map moves, verify figures), geo milestones | `docs/geo-agent.md`, `docs/geospatial-milestones.md` |
 | Deploy, environments, exceptions | `docs/runbooks/cockpit-deploy.md`, `EIOS/docs/environments.md` |
 
 ## 2. Commands

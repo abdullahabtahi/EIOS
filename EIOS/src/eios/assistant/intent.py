@@ -29,7 +29,7 @@ _BROAD = re.compile(
 
 def named_entity(workstation: Workstation, question: str) -> str | None:
     """The account or partner id the question names, written as the system writes it ("PTR 9699" is PTR-9699)."""
-    if workstation is Workstation.AML_INVESTIGATOR:
+    if workstation in {Workstation.AML_INVESTIGATOR, Workstation.GEOSPATIAL}:
         found = _ACCOUNT.search(question)
         return f"CR{found.group(1)}" if found else None
     if workstation is Workstation.PARTNER_MANAGER:

@@ -20,6 +20,22 @@ EXIT_PARAMS = {
     "min_shared": MIN_SHARED_FOREIGN,
     "min_sessions": MIN_EXIT_SESSIONS,
 }
+# Every country the two list changes name (FATF June 2026, EU January 2026): the geo agent's list-change question.
+LIST_CHANGE_COUNTRIES = (
+    "BA",
+    "BF",
+    "BO",
+    "DZ",
+    "IQ",
+    "ML",
+    "MZ",
+    "NA",
+    "NG",
+    "RU",
+    "TZ",
+    "VG",
+    "ZA",
+)
 
 
 def _served() -> tuple[Any, Any]:
@@ -48,13 +64,18 @@ def parity(remote: GraphStore, local: GraphStore, snap: Any, accounts: list[str]
     )
     failures += (not same) + (graph != engine)
     timings.append(exits.seconds)
-    for account in accounts:
-        r = remote.run("account_neighbourhood", {"account": account})
-        ok = _key(r.rows) == _key(local.run("account_neighbourhood", {"account": account}).rows)
+    checks: list[tuple[str, dict[str, Any]]] = [
+        *(("account_neighbourhood", {"account": a}) for a in accounts),
+        *(("exit_ring", {"gateway": g}) for g in sorted({r["gateway_id"] for r in exits.rows})),
+        ("country_links", {"countries": list(LIST_CHANGE_COUNTRIES)}),
+    ]
+    for name, params in checks:
+        r = remote.run(name, params)
+        ok = _key(r.rows) == _key(local.run(name, params).rows)
         failures += not ok
         timings.append(r.seconds)
         print(
-            f"account_neighbourhood {account}: {len(r.rows)} rows, bigquery == local {ok}, {r.seconds}s, slot ms {r.slot_ms}"
+            f"{name} {params}: {len(r.rows)} rows, bigquery == local {ok}, {r.seconds}s, slot ms {r.slot_ms}"
         )
     print(
         f"bigquery graph latency median {statistics.median(timings):.2f}s, max {max(timings):.2f}s over {len(timings)} queries [MEASURED]"

@@ -16,6 +16,7 @@ from typing import Any
 from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 
+from eios.assistant.map_commands import targets_of
 from eios.llm_gateway.providers.adk_types import FunctionDeclaration
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.proposals import Proposal, stage_request
@@ -28,6 +29,9 @@ SOURCES_KEY = "temp:sources"
 PASSAGES_KEY = "temp:passages"  # passage id -> a regulation passage a tool returned this turn
 ORIGINS_KEY = "temp:data_origins"
 PROPOSALS_KEY = "temp:proposals"
+MAP_TARGETS_KEY = (
+    "temp:map_targets"  # `kind:ID` of every object a trusted result offered to the map
+)
 IDENTIFIERS_KEY = (
     "temp:identifiers"  # names a trusted result returned (case, SAR, cluster ids): not figures
 )
@@ -151,6 +155,7 @@ def record_result(
     state[ORIGINS_KEY] = [*state.get(ORIGINS_KEY, []), payload["data_origin"]]
     state[IDENTIFIERS_KEY] = sorted({*state.get(IDENTIFIERS_KEY, []), *identifiers_of(raw)})
     state[NUMBERS_KEY] = sorted({*state.get(NUMBERS_KEY, []), *numbers_of(raw)})[:_MAX_NUMBERS]
+    state[MAP_TARGETS_KEY] = sorted({*state.get(MAP_TARGETS_KEY, []), *targets_of(raw)})
     if spec.kind == _PROPOSAL_KIND and isinstance(outcome.result, Proposal):
         kept = {**payload, "stage_request": stage_request(outcome.result, args)}
         state[PROPOSALS_KEY] = [*state.get(PROPOSALS_KEY, []), kept]

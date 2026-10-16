@@ -12,6 +12,10 @@ from typing import Any
 _ACCOUNT = re.compile(r"\bCR\d{4,6}\b", re.IGNORECASE)
 _PARTNER = re.compile(r"\b(?:PTR|AP|P)-\d{2,5}\b", re.IGNORECASE)
 _PERCENT = re.compile(r"(\d+(?:\.\d+)?)\s*(?:percent|%)", re.IGNORECASE)
+_GATEWAY = re.compile(r"\bGW-[A-Z]{2}-[A-Z]\d{2}\b", re.IGNORECASE)
+_CORRIDOR = re.compile(r"\b[A-Z]{2}>[A-Z]{2}\b")
+_COUNTRY = re.compile(r"\(([A-Z]{2})\)|\bcountry ([A-Z]{2})\b")  # a code the question spells out
+_LIST_EU = re.compile(r"\b(?:eu|european)\b", re.IGNORECASE)
 
 
 @dataclass
@@ -20,6 +24,9 @@ class Found:
     account: str | None
     partner: str | None
     percent: float | None
+    gateway: str | None = None
+    corridor: str | None = None
+    country: str | None = None
     results: dict[str, dict[str, Any]] = field(default_factory=dict)  # tool name -> payload so far
 
 
@@ -38,6 +45,11 @@ def extract(question: str, context: dict[str, Any] | None) -> Found:
     partner = _PARTNER.search(question)
     percent = _PERCENT.search(question)
     on_screen = (context or {}).get("entity_id")
+    gateway, corridor, country = (
+        _GATEWAY.search(question),
+        _CORRIDOR.search(question),
+        _COUNTRY.search(question),
+    )
     return Found(
         question=question,
         account=account.group(0)
@@ -47,6 +59,9 @@ def extract(question: str, context: dict[str, Any] | None) -> Found:
         if partner
         else (on_screen if str(on_screen or "").upper()[:2] in {"PT", "AP", "P-"} else None),
         percent=float(percent.group(1)) if percent else None,
+        gateway=gateway.group(0).upper() if gateway else None,
+        corridor=corridor.group(0) if corridor else None,
+        country=(country.group(1) or country.group(2)) if country else None,
     )
 
 
@@ -109,6 +124,28 @@ def _forecast(_f: Found) -> dict[str, Any]:
     return {"metric_id": "net_revenue_usd"}
 
 
+def _gateway(f: Found) -> dict[str, Any] | None:
+    return {"gateway_id": f.gateway} if f.gateway else None
+
+
+def _corridor(f: Found) -> dict[str, Any] | None:
+    return {"corridor_id": f.corridor} if f.corridor else None
+
+
+def _country(f: Found) -> dict[str, Any] | None:
+    return {"country_id": f.country} if f.country else None
+
+
+def _list(f: Found) -> dict[str, Any]:
+    return {"list_id": "eu" if _LIST_EU.search(f.question) else "fatf"}
+
+
+def _lead_kind(f: Found) -> dict[str, Any]:
+    q = f.question.lower()
+    kind = "corridor" if "corridor" in q else "account" if "account" in q else "shared_exit"
+    return {"kind": kind, "limit": 10}
+
+
 def _r(pattern: str, *steps: tuple[str, ArgsFn], unless: str | None = None) -> Route:
     return Route(
         re.compile(pattern, re.IGNORECASE),
@@ -118,6 +155,21 @@ def _r(pattern: str, *steps: tuple[str, ArgsFn], unless: str | None = None) -> R
 
 
 ROUTES: tuple[Route, ...] = (
+    # Geography: a list change first, then the object the question names, then the book as a whole.
+    _r(
+        r"plenary|gr[ae]y.?list|delist|newly listed|list change|off its .*list",
+        ("get_list_change_impact", _list),
+    ),
+    _r(r"\bexit\b|gateway", ("get_shared_exit", _gateway), unless=r"plenary|delist"),
+    _r(r"\brank\b|\btop\b.*\b(?:corridors|accounts|exits)\b", ("list_geo_leads", _lead_kind)),
+    _r(r"corridor", ("get_corridor", _corridor), unless=r"\brank\b|\btop\b"),
+    _r(r"exposure|jurisdiction", ("get_jurisdiction", _country), unless=r"plenary|delist"),
+    _r(r"where should i (?:look|start)|geography of|whole book", ("get_geo_overview", _none)),
+    _r(
+        r"log(?:s|ged)? in from|travel|geograph",
+        ("get_geo_account", _acct),
+        unless=r"geography of|whole book",
+    ),
     _r(r"\bhold\b", ("get_aml_dossier", _acct), ("propose_hold", _acct)),
     _r(
         r"withdrawal|take (?:the )?(?:money|funds|cash) out",
