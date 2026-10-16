@@ -9,6 +9,7 @@ from typing import Any
 
 import pytest
 from google.adk.telemetry.context import ContentCapturingMode
+from google.adk.telemetry.setup import OTelHooks
 
 from eios.common.errors import ConfigError
 from eios.observability.cloud_trace import (
@@ -24,24 +25,32 @@ from eios.observability.cloud_trace import (
 class _Recorder:
     """Stands in for ADK's exporter factory and provider setup, recording what the app asked for."""
 
-    def __init__(self, *, factory_error: Exception | None = None) -> None:
+    def __init__(
+        self, *, factory_error: Exception | None = None, no_processors: bool = False
+    ) -> None:
         self.factory_calls: list[dict[str, bool]] = []
         self.setup_calls: list[list[Any]] = []
         self._factory_error = factory_error
+        self._no_processors = no_processors
 
-    def factory(self, **flags: bool) -> str:
+    def factory(self, **flags: bool) -> OTelHooks:
         self.factory_calls.append(flags)
         if self._factory_error is not None:
             raise self._factory_error
-        return "gcp-hooks"
+        return OTelHooks(span_processors=[] if self._no_processors else [object()])  # type: ignore[list-item]
 
     def setup(self, hooks: list[Any]) -> None:
         self.setup_calls.append(hooks)
 
 
-def _configure(env: MutableMapping[str, str], rec: _Recorder) -> TraceExport:
+def _configure(
+    env: MutableMapping[str, str], rec: _Recorder, *, provider_installed: bool = False
+) -> TraceExport:
     return configure_cloud_trace(
-        env, exporters=rec.factory, set_providers=lambda hooks: rec.setup(hooks)
+        env,
+        exporters=rec.factory,
+        set_providers=lambda hooks: rec.setup(hooks),
+        provider_installed=lambda: provider_installed,
     )
 
 
@@ -58,7 +67,7 @@ def test_cloud_trace_asks_for_traces_only_not_metrics_or_logs() -> None:
         {"enable_cloud_tracing": True, "enable_cloud_metrics": False, "enable_cloud_logging": False}
     ]
     assert len(rec.setup_calls) == 1
-    assert "gcp-hooks" in rec.setup_calls[0]
+    assert rec.setup_calls[0][0].span_processors  # the exporter's processor goes first
 
 
 def test_an_unknown_mode_fails_fast_instead_of_silently_exporting_nothing() -> None:
@@ -123,3 +132,26 @@ def test_run_telemetry_ignores_a_hostile_environment(monkeypatch: pytest.MonkeyP
     config = run_telemetry()
     assert not config.should_add_content_to_legacy_spans
     assert not config.should_add_content_to_logs
+
+
+def test_no_exporter_from_adk_is_reported_as_failed_not_as_on(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """ADK returns empty hooks when it cannot work out the project; saying "on" would send operators to an empty page."""
+    rec = _Recorder(no_processors=True)
+    with caplog.at_level(logging.ERROR):
+        result = _configure({EXPORT_ENV: "cloud_trace"}, rec)
+    assert result is TraceExport.FAILED
+    assert rec.setup_calls == []
+    assert any("no span exporter" in r.getMessage() for r in caplog.records)
+
+
+def test_a_tracer_provider_installed_earlier_is_reported_not_silently_ignored(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    rec = _Recorder()
+    with caplog.at_level(logging.ERROR):
+        result = _configure({EXPORT_ENV: "cloud_trace"}, rec, provider_installed=True)
+    assert result is TraceExport.FAILED
+    assert rec.setup_calls == []
+    assert any("already" in r.getMessage() for r in caplog.records)

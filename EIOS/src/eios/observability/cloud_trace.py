@@ -6,8 +6,14 @@ Google Cloud exporter (not a hand-written one) when `EIOS_TRACE_EXPORT=cloud_tra
 request's correlation id so a trace and its log lines can be joined.
 
 Some ADK spans carry the prompt and the model's answer by default, which here means account data. Content is switched
-off on every path: the process environment (ADK reads it when a config is built) and each run's own `TelemetryConfig`.
-It is forced off even when export is off, so adding an OTLP endpoint later cannot start shipping text.
+off on the paths the assistant runs: every run carries its own `TelemetryConfig` (the guarantee, whatever the
+environment says), and the API's start-up also forces the process environment off (ADK reads it when a config is built),
+even when export is off, so adding an OTLP endpoint later cannot start shipping text. A process that builds a runtime
+without the API's start-up still has the per-run guarantee.
+
+ADK exports over OTLP to telemetry.googleapis.com, so that API must be enabled in the project. Start-up reports
+`FAILED`, loudly, when ADK produced no exporter (it does so when it cannot work out the project) or when a tracer
+provider was installed first and would ignore ours; it never claims "on" for an export that is not happening.
 """
 
 from __future__ import annotations
@@ -21,6 +27,7 @@ from typing import Any
 from google.adk.telemetry.context import ContentCapturingMode, TelemetryConfig
 from google.adk.telemetry.google_cloud import get_gcp_exporters
 from google.adk.telemetry.setup import OTelHooks, maybe_set_otel_providers
+from opentelemetry import trace
 
 from eios.common.errors import ConfigError
 from eios.common.otel import correlation_span_processor
@@ -51,11 +58,16 @@ def run_telemetry() -> TelemetryConfig:
     return TelemetryConfig(capture_message_content=ContentCapturingMode.NO_CONTENT)
 
 
+def _provider_installed() -> bool:
+    return not isinstance(trace.get_tracer_provider(), trace.ProxyTracerProvider)
+
+
 def configure_cloud_trace(
     environ: MutableMapping[str, str] | None = None,
     *,
     exporters: Callable[..., Any] = get_gcp_exporters,
     set_providers: Callable[[list[Any]], None] = maybe_set_otel_providers,
+    provider_installed: Callable[[], bool] = _provider_installed,
 ) -> TraceExport:
     """Install the Cloud Trace exporter when asked; never raises for an export problem, always raises for a bad setting."""
     env = os.environ if environ is None else environ
@@ -68,10 +80,18 @@ def configure_cloud_trace(
     service = env.get(SERVICE_NAME_ENV, "").strip()
     if service:
         env.setdefault(_OTEL_SERVICE_NAME_ENV, service)
+    if provider_installed():
+        _LOG.error("a tracer provider is already installed; Cloud Trace export was not added")
+        return TraceExport.FAILED
     try:
         gcp = exporters(
             enable_cloud_tracing=True, enable_cloud_metrics=False, enable_cloud_logging=False
         )
+        if not gcp.span_processors:
+            _LOG.error(
+                "ADK returned no span exporter for Cloud Trace (is the project set?); the service runs without traces"
+            )
+            return TraceExport.FAILED
         set_providers([gcp, OTelHooks(span_processors=[correlation_span_processor()])])
     except Exception:
         _LOG.exception("Cloud Trace export could not be set up; the service runs without traces")

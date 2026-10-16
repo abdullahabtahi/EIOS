@@ -18,6 +18,7 @@ locals {
     "apikeys.googleapis.com",
     "cloudbuild.googleapis.com",
     "cloudtrace.googleapis.com",
+    "telemetry.googleapis.com", # ADK exports spans to it over OTLP
     "identitytoolkit.googleapis.com",
   ]
 }
@@ -97,7 +98,8 @@ module "service_cockpit_api" {
     GOOGLE_CLOUD_PROJECT     = var.project_id
     GOOGLE_CLOUD_LOCATION    = "global"
     # ADK's turn, model and tool spans go to Cloud Trace; prompt and answer text is kept off them in code
-    # (observability/cloud_trace.py). The runtime identity already holds roles/cloudtrace.agent.
+    # (observability/cloud_trace.py). The runtime identity holds roles/cloudtrace.agent, the role Google's agent
+    # scaffold grants for this exporter; the first deploy must confirm spans arrive (docs/cloud-trace.md).
     EIOS_TRACE_EXPORT = "cloud_trace"
     EIOS_SERVICE_NAME = "eios-api"
     # Vertex AI with the service identity instead of an API key. The assistant's models come from the registry in
