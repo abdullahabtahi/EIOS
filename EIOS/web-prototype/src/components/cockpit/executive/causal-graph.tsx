@@ -201,7 +201,7 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
               <th className="py-2.5 px-2.5 font-semibold min-w-[85px]">Effect per unit</th>
               <th className="py-2.5 px-2.5 font-semibold min-w-[100px]">Stability (Bootstrap)</th>
               <th className="py-2.5 px-2.5 font-semibold min-w-[75px]">Placebo p-value</th>
-              <th className="py-2.5 px-2.5 font-semibold min-w-[270px]">Refuter Gate Verdict</th>
+              <th className="py-2.5 px-2.5 font-semibold min-w-[150px]">Refuter Gate Verdict</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
@@ -243,7 +243,14 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
                       }`}
                     />
                     <span className={e.verified ? 'text-green-700 font-sans' : 'text-amber-800 font-sans'}>
-                      {e.label}
+                      {e.verified ? (
+                        e.label
+                      ) : (
+                        <>
+                          <span className="sr-only">{e.label}</span>
+                          <span aria-hidden="true">{e.label.includes('Correlation') ? 'Correlation' : e.label}</span>
+                        </>
+                      )}
                     </span>
                   </div>
                 </td>

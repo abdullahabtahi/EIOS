@@ -76,7 +76,6 @@ export function KineticCanvas({ onCollapse }: { onCollapse?: () => void } = {}) 
           tabs: [
             { id: 'dag', label: 'Causal DAG', title: 'Causal DAG', anchor: 'panel-dag' },
             { id: 'whatif', label: 'What-If', title: 'What-If Waterfall', anchor: 'panel-whatif' },
-            { id: 'briefing', label: 'Briefing', title: 'Morning Briefing', anchor: 'panel-briefing' },
             { id: 'tradeoffs', label: 'Trade-offs', title: 'Strategic Trade-offs', anchor: 'panel-tradeoffs' },
           ],
         };
