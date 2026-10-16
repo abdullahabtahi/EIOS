@@ -65,9 +65,9 @@ export function OpportunitiesPanel({ risks, opportunities }: { risks: BoardRisk[
                     {usd(r.exposureUsd)}
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-mono text-slate-500">
+                <div className="flex items-center gap-2 text-label font-mono text-slate-500">
                   <span
-                    className={`px-1.5 py-0.5 font-bold uppercase tracking-wider text-[9.5px] border ${
+                    className={`px-1.5 py-0.5 font-bold uppercase tracking-wider text-label border ${
                       r.severity === 'HIGH'
                         ? 'bg-red-50 text-red-700 border-red-200'
                         : 'bg-amber-50 text-amber-700 border-amber-200'
@@ -105,7 +105,7 @@ export function OpportunitiesPanel({ risks, opportunities }: { risks: BoardRisk[
                     </span>
                   </div>
                   <p className="text-label font-mono text-slate-500 leading-normal flex items-center gap-1.5 flex-wrap">
-                    <span className="px-1.5 py-0.5 bg-white border border-slate-200 text-slate-700 font-semibold text-[10px] tracking-wider uppercase">
+                    <span className="px-1.5 py-0.5 bg-white border border-slate-200 text-slate-700 font-semibold text-label tracking-wider uppercase">
                       {o.actionType}
                     </span>
                     <span>model projection under the hazard model, not a causal estimate</span>

@@ -57,10 +57,10 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
           </h3>
         </div>
         <div className="flex items-center gap-2 text-label font-mono">
-          <span className="px-2.5 py-1 bg-white border border-slate-200 text-slate-600 font-semibold tracking-wider text-[10px]">
+          <span className="px-2.5 py-1 bg-white border border-slate-200 text-slate-600 font-semibold tracking-wider text-label">
             HORIZON: {forecast.horizonDays ?? 28}D
           </span>
-          <span className="px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-800 font-semibold tracking-wider text-[10px]">
+          <span className="px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-800 font-semibold tracking-wider text-label">
             GAUSSIAN DRIFT ESTIMATE
           </span>
         </div>
@@ -70,7 +70,7 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
       <div className="p-6 grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
         {/* Left: Point Estimate */}
         <div className="xl:col-span-5 space-y-3">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-2 h-6">
+          <div className="text-label font-mono uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-2 h-6">
             <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block" />
             Expected Projected Revenue
           </div>
@@ -80,7 +80,7 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
                 {usd(forecast.point)}
               </span>
               <span
-                className={`text-[11px] font-medium px-2 py-0.5 border tabular-nums whitespace-nowrap ${
+                className={`text-label font-medium px-2 py-0.5 border tabular-nums whitespace-nowrap ${
                   forecast.deltaPct < 0
                     ? 'bg-amber-50 border-amber-300 text-amber-800'
                     : 'bg-green-50 border-green-300 text-green-800'
@@ -98,11 +98,11 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
         {/* Right: Palantir Gaussian Probability Distribution Envelope */}
         <div className="xl:col-span-7 space-y-3">
           <div className="flex items-center justify-between text-label font-mono h-6">
-            <span className="font-semibold uppercase tracking-wider text-slate-500 text-[10px] flex items-center gap-1.5">
+            <span className="font-semibold uppercase tracking-wider text-slate-500 text-label flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block" />
               90% Confidence Probability Density
             </span>
-            <span className="text-slate-800 font-bold bg-slate-100 px-2 py-0.5 border border-slate-200 text-[11px]">
+            <span className="text-slate-800 font-bold bg-slate-100 px-2 py-0.5 border border-slate-200 text-label">
               {interval}
             </span>
           </div>
@@ -142,23 +142,23 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
               <div className="grid grid-cols-3 gap-3 font-mono">
                 {/* 1. Floor */}
                 <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Conservative Floor (P05)</div>
+                  <div className="text-label text-slate-500 uppercase font-semibold">Conservative Floor (P05)</div>
                   <div className="text-base font-bold text-slate-900 tabular-nums">{usd(forecast.low!)}</div>
-                  <div className="text-[9.5px] text-slate-500 font-sans">Downside planning buffer</div>
+                  <div className="text-label text-slate-500 font-sans">Downside planning buffer</div>
                 </div>
 
                 {/* 2. Mode Expected */}
                 <div className="p-3 bg-blue-50/70 border border-blue-200 space-y-1">
-                  <div className="text-[10px] text-blue-800 uppercase font-bold">Most Likely (Mode)</div>
+                  <div className="text-label text-blue-800 uppercase font-bold">Most Likely (Mode)</div>
                   <div className="text-base font-bold text-blue-950 tabular-nums">{usd(forecast.point)}</div>
-                  <div className="text-[9.5px] text-blue-700/80 font-sans">Peak density forecast</div>
+                  <div className="text-label text-blue-700/80 font-sans">Peak density forecast</div>
                 </div>
 
                 {/* 3. Ceiling */}
                 <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-[10px] text-slate-500 uppercase font-semibold">Optimistic Ceiling (P95)</div>
+                  <div className="text-label text-slate-500 uppercase font-semibold">Optimistic Ceiling (P95)</div>
                   <div className="text-base font-bold text-slate-900 tabular-nums">{usd(forecast.high!)}</div>
-                  <div className="text-[9.5px] text-slate-500 font-sans">Upside target threshold</div>
+                  <div className="text-label text-slate-500 font-sans">Upside target threshold</div>
                 </div>
               </div>
             </div>

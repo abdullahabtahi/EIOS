@@ -101,7 +101,7 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
             return (
               <g key={domain}>
                 <line x1={x + BOX.w / 2} y1={0} x2={x + BOX.w / 2} y2={H} className="stroke-slate-200 stroke-1" strokeDasharray="3 3" />
-                <text x={x + BOX.w / 2} y={16} textAnchor="middle" className="fill-slate-400 font-mono text-[10px] font-bold uppercase tracking-wider">
+                <text x={x + BOX.w / 2} y={16} textAnchor="middle" className="fill-slate-400 font-mono text-label font-bold uppercase tracking-wider">
                   {domain}
                 </text>
               </g>
@@ -145,7 +145,7 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
                   x={midX}
                   y={midY + 3.5}
                   textAnchor="middle"
-                  className="fill-slate-800 font-mono text-[9px] font-bold"
+                  className="fill-slate-800 font-mono text-label font-bold"
                 >
                   {weightText(e.weight)}
                 </text>
@@ -178,11 +178,11 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
                 {/* Accessible Text Container with Guaranteed Bounds */}
                 <g clipPath="url(#node-text-clip)">
                   {/* Node Label */}
-                  <text x={10} y={23} className="fill-slate-900 text-[10.5px] font-bold font-sans tracking-tight">
+                  <text x={10} y={23} className="fill-slate-900 text-label font-bold font-sans tracking-tight">
                     {n.label}
                   </text>
                   {/* Node Domain */}
-                  <text x={10} y={38} className="fill-slate-500 text-[9.5px] font-mono tracking-wider uppercase font-semibold">
+                  <text x={10} y={38} className="fill-slate-500 text-label font-mono tracking-wider uppercase font-semibold">
                     {n.domain}
                   </text>
                 </g>
@@ -196,7 +196,7 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       <div className="border border-slate-200 overflow-x-auto bg-white">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="text-slate-500 bg-slate-50/90 border-b border-slate-200 font-mono text-[10px] uppercase tracking-wider">
+            <tr className="text-slate-500 bg-slate-50/90 border-b border-slate-200 font-mono text-label uppercase tracking-wider">
               <th className="py-2.5 px-2.5 font-semibold min-w-[340px]">Causal Link Pathway</th>
               <th className="py-2.5 px-2.5 font-semibold min-w-[85px]">Effect per unit</th>
               <th className="py-2.5 px-2.5 font-semibold min-w-[100px]">Stability (Bootstrap)</th>

@@ -51,12 +51,12 @@ function Property({
         <div className="flex items-baseline justify-between gap-1">
           <div className="font-bold text-slate-900 font-mono text-sm tabular-nums">{value}</div>
           {badge && (
-            <span className={`text-[10px] font-mono px-1 py-0.2 border font-bold ${badgeCls}`}>
+            <span className={`text-label font-mono px-1 py-0.2 border font-bold ${badgeCls}`}>
               {badge}
             </span>
           )}
         </div>
-        {subtext && <div className="text-[10px] font-mono text-slate-400 mt-0.5">{subtext}</div>}
+        {subtext && <div className="text-label font-mono text-slate-400 mt-0.5">{subtext}</div>}
       </div>
     </div>
   );
@@ -307,7 +307,7 @@ export function PartnerOntologyInspector() {
               <span className="material-symbols-sharp text-sm text-blue-700">schema</span>
               Upstream Data Product Lineage
             </span>
-            <span className="text-[10px] text-slate-500 font-mono">CRYPTOGRAPHIC PROVENANCE</span>
+            <span className="text-label text-slate-500 font-mono">CRYPTOGRAPHIC PROVENANCE</span>
           </div>
           {lineage.length === 0 ? (
             <span className="text-slate-400 font-sans">{DASH}</span>
@@ -315,7 +315,7 @@ export function PartnerOntologyInspector() {
             <div className="space-y-1.5 pt-1">
               {lineage.map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <div className="size-4 shrink-0 rounded-full bg-slate-200 border border-slate-300 text-slate-700 text-[9px] flex items-center justify-center font-bold">
+                  <div className="size-4.5 shrink-0 rounded-full bg-slate-200 border border-slate-300 text-slate-700 text-label flex items-center justify-center font-bold">
                     {idx + 1}
                   </div>
                   <div className="px-2 py-1 bg-white border border-slate-200 text-slate-700 text-label flex-1 truncate font-mono shadow-2xs">
@@ -337,7 +337,7 @@ export function PartnerOntologyInspector() {
               <span className="material-symbols-sharp text-sm text-blue-700">gavel</span>
               Governed Write-Back Actions
             </span>
-            <span className="text-[10px] text-slate-500 font-mono">SPEC 032 INTENT HUB</span>
+            <span className="text-label text-slate-500 font-mono">SPEC 032 INTENT HUB</span>
           </div>
 
           {actions.length === 0 ? (
@@ -354,7 +354,7 @@ export function PartnerOntologyInspector() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <div className="font-bold text-slate-900 text-xs font-sans">{a.label}</div>
-                      <div className="text-[10px] text-slate-500 font-mono mt-0.5">
+                      <div className="text-label text-slate-500 font-mono mt-0.5">
                         {a.action_type}
                         {a.requires_four_eyes && ' • 4-Eyes Signoff Required'}
                         {a.blast_radius_usd && ` • Blast Radius: $${Math.round(a.blast_radius_usd).toLocaleString()}`}

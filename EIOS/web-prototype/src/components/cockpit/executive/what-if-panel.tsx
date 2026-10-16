@@ -33,9 +33,9 @@ function Tile({ label, value, note, tone }: { label: string; value: string; note
 
   return (
     <div className={`p-3 border shadow-2xs space-y-1 ${borderBg}`}>
-      <div className="text-[10px] font-mono uppercase text-slate-500 font-semibold tracking-wider truncate">{label}</div>
+      <div className="text-label font-mono uppercase text-slate-500 font-semibold tracking-wider truncate">{label}</div>
       <div className={`text-base sm:text-lg font-bold font-mono tabular-nums tracking-tight ${color}`}>{value}</div>
-      <div className="text-[11px] font-mono text-slate-500 truncate">{note}</div>
+      <div className="text-label font-mono text-slate-500 truncate">{note}</div>
     </div>
   );
 }
@@ -116,7 +116,7 @@ export function WhatIfPanel({ shock }: { shock: Shock }) {
             onChange={(e) => setMagnitude(Number(e.target.value))}
             className="w-full accent-blue-700 cursor-pointer h-2 bg-slate-200 rounded-xs"
           />
-          <div className="flex justify-between text-[10px] font-mono text-slate-500">
+          <div className="flex justify-between text-label font-mono text-slate-500">
             <span>-{RANGE}%</span>
             <span>-25%</span>
             <span className="font-bold text-slate-700">0%</span>
