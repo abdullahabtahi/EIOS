@@ -45,6 +45,7 @@ from eios.assistant.tools import (
 )
 from eios.llm_gateway.providers.adk_types import text_of, user_message
 from eios.llm_gateway.providers.registry import ModelRegistry, load_registry
+from eios.observability.cloud_trace import run_telemetry
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
 
@@ -185,6 +186,10 @@ class AssistantRuntime:
     def registry(self) -> ModelRegistry:
         return self._registry
 
+    def _run_config(self) -> RunConfig:
+        """Per-turn limits, with prompt and answer text kept off every span and log event (observability/cloud_trace.py)."""
+        return RunConfig(max_llm_calls=self._settings.max_llm_calls, telemetry=run_telemetry())
+
     async def flush(self) -> None:
         """Wait until everything the session service holds back has been written (shutdown, tests, probes)."""
         await self._sessions.flush()
@@ -274,7 +279,7 @@ class AssistantRuntime:
                 on_screen=entity_id if subject != entity_id else None,
                 broad=is_broad(question),
             ),
-            run_config=RunConfig(max_llm_calls=self._settings.max_llm_calls),
+            run_config=self._run_config(),
         ):
             events.append(event)
             for call in event.get_function_calls():
