@@ -18,6 +18,7 @@ import type {
   FlywheelDiagnosticStatus,
   MetricProvenance,
   PersonaRole,
+  PreparedBrief,
   ProvenanceCitation,
   RedLineGateStatus,
   SarDraftDocument,
@@ -99,6 +100,29 @@ function stageRequestOf(raw: unknown): StageRequest | undefined {
     requires_four_eyes: r.requires_four_eyes !== false,
     metadata: r.metadata && typeof r.metadata === 'object' ? (r.metadata as Record<string, unknown>) : {},
     ...(bundleIdOf(r.evidence_bundle_id) ? { evidence_bundle_id: bundleIdOf(r.evidence_bundle_id) } : {}),
+  };
+}
+
+/** A prepared brief from the backend, whitelisted; without an entity, text and a time it names nothing, so it is dropped. */
+export function normalizeBrief(raw: unknown): PreparedBrief | undefined {
+  if (!raw || typeof raw !== 'object') return undefined;
+  const r = raw as Raw;
+  const entityId = text(r.entity_id);
+  const body = text(r.response);
+  const preparedAt = text(r.prepared_at);
+  if (!entityId || !body || Number.isNaN(Date.parse(preparedAt))) return undefined;
+  return {
+    entityId,
+    preparedAt,
+    expiresAt: text(r.expires_at),
+    stale: r.stale === true,
+    text: body,
+    citedMetrics: Array.isArray(r.provenance_citations)
+      ? r.provenance_citations.map((m: Raw, i: number) => normalizeCitedMetric(m, i))
+      : [],
+    sources: Array.isArray(r.sources)
+      ? r.sources.map(normalizeSource).filter((s: AnswerSource | undefined): s is AnswerSource => s !== undefined)
+      : [],
   };
 }
 

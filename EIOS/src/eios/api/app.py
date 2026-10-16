@@ -18,7 +18,7 @@ from eios.api.routes_fraud import router as fraud_router
 from eios.api.routes_ops import router as ops_router
 from eios.api.routes_synthesis import router as synthesis_router
 from eios.api.routes_webhooks import router as webhooks_router
-from eios.cockpit import copilot_verify, evidence_routes
+from eios.cockpit import ambient_routes, copilot_verify, evidence_routes
 from eios.cockpit import geo as geo_routes
 from eios.cockpit.assistant_gateway import drain_sessions
 from eios.cockpit.assistant_gateway import warm_up as warm_up_assistant
@@ -47,6 +47,14 @@ async def _warm_up_address_check() -> None:
         _LOG.warning("the address-check snapshot could not be read at start-up; lookups will retry")
 
 
+async def _prepare_briefs_after(warm_up: asyncio.Task[None]) -> None:
+    """Once the assistant is warm, prepare the briefs for the top alerts (nothing when EIOS_AMBIENT_TOP_N is 0)."""
+    await warm_up
+    running = ambient_routes.start_refresh()
+    if running is not None:
+        await running
+
+
 @asynccontextmanager
 async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Build the data plane before serving, then warm the assistant in the background.
@@ -63,11 +71,13 @@ async def _lifespan(_app: FastAPI) -> AsyncIterator[None]:
     except Exception:
         _LOG.exception("the data plane could not be built at start-up; requests will retry")
     task = asyncio.create_task(warm_up_assistant())
+    ambient_task = asyncio.create_task(_prepare_briefs_after(task))
     address_task = asyncio.create_task(_warm_up_address_check())
     try:
         yield
     finally:
         task.cancel()
+        ambient_task.cancel()
         address_task.cancel()
         await drain_sessions()  # conversation events still held in memory are written before exit
 
@@ -101,6 +111,9 @@ def create_app() -> FastAPI:
     app.include_router(geo_routes.router)  # carries its own operator dependency
     app.include_router(copilot_verify.router)  # likewise
     app.include_router(evidence_routes.router)  # likewise
+    app.include_router(
+        ambient_routes.router
+    )  # prepared briefs; the routes carry their own dependencies
 
     @app.get(HEALTH_PATH)
     @app.get(API_HEALTH_PATH)

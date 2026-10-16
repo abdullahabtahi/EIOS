@@ -117,6 +117,39 @@ def _proposal_view(raw: Mapping[str, Any]) -> dict[str, Any]:
     return {name: raw[name] for name in _PROPOSAL_FIELDS if name in raw}
 
 
+def figure_views(answer: Answer) -> list[dict[str, Any]]:
+    """The answer's figures as the cockpit reads them: value as written, unit, source, as-of and data origin."""
+    return [
+        {
+            "metric_id": figure.fact_id,
+            "formatted_value": figure.text,
+            "steward": figure.source,
+            "source": figure.source,
+            "unit": figure.unit,
+            "raw_value": figure.value,
+            "data_origin": figure.data_origin.value,
+            "as_of": figure.as_of.isoformat(),
+        }
+        for figure in answer.figures
+    ]
+
+
+def source_views(answer: Answer) -> list[dict[str, Any]]:
+    """The regulation passages quoted in the answer, with where they come from."""
+    return [
+        {
+            "passage_id": source.passage_id,
+            "document_id": source.document_id,
+            "title": source.title,
+            "jurisdiction": source.jurisdiction,
+            "pages": source.pages,
+            "text": source.text,
+            "data_origin": source.data_origin.value,
+        }
+        for source in answer.sources
+    ]
+
+
 def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
     answer = outcome.answer
     return {
@@ -125,31 +158,8 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
         "assistant_status": assistant_status(answer),
         "failed_closed": answer.failed_closed,
         "fallback_reason": answer.fallback_reason,
-        "provenance_citations": [
-            {
-                "metric_id": figure.fact_id,
-                "formatted_value": figure.text,
-                "steward": figure.source,
-                "source": figure.source,
-                "unit": figure.unit,
-                "raw_value": figure.value,
-                "data_origin": figure.data_origin.value,
-                "as_of": figure.as_of.isoformat(),
-            }
-            for figure in answer.figures
-        ],
-        "sources": [
-            {
-                "passage_id": source.passage_id,
-                "document_id": source.document_id,
-                "title": source.title,
-                "jurisdiction": source.jurisdiction,
-                "pages": source.pages,
-                "text": source.text,
-                "data_origin": source.data_origin.value,
-            }
-            for source in answer.sources
-        ],
+        "provenance_citations": figure_views(answer),
+        "sources": source_views(answer),
         "turn_latency_ms": outcome.latency_ms,
         "model": outcome.model_key,
         "timing_ms": outcome.timing,

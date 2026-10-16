@@ -15,6 +15,7 @@ import { MetricProvenanceBadge } from '../common/metric-provenance';
 import { FallbackReplayBadge } from '../common/fallback-replay-badge';
 import type { DossierSection, MetricProvenance } from '../state/cockpit-types';
 import { GeoDossierCard } from '../geo/geo-dossier-card';
+import { PreparedBriefCard } from './prepared-brief-card';
 import { MOCK_PARTNERS } from '../state/fixtures';
 
 /** ' · 14:57 UTC' for a valid ISO timestamp, '' otherwise (never invent a time). */
@@ -142,6 +143,9 @@ export function CopilotDossier() {
             </section>
           );
         })}
+
+        {/* The assistant's brief, prepared ahead of time for the top alerts (AML only) */}
+        {state.activeRole === 'aml_investigator' && dossier.entityId && <PreparedBriefCard entityId={dossier.entityId} />}
 
         {/* Geography of the account under investigation (AML only) */}
         {state.activeRole === 'aml_investigator' && dossier.entityId && <GeoDossierCard entityId={dossier.entityId} />}
