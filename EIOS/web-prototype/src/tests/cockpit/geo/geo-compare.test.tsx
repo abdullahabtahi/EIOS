@@ -4,7 +4,7 @@ import React from 'react';
 import { FLOWS } from './flows-fixture';
 import { REFERENCE } from './reference-fixture';
 import { buildLayers } from '@/components/cockpit/geo/geo-layers';
-import { beforeTiers, changeCount, listingTier } from '@/components/cockpit/geo/geo-compare';
+import { beforeTiers, changeCount, changeNotes, listingTier, withChangeNote } from '@/components/cockpit/geo/geo-compare';
 import type { GeoListChange, LayerId, ListChangeCountry } from '@/components/cockpit/geo/geo-types';
 
 vi.mock('@vis.gl/react-google-maps', () => ({
@@ -86,53 +86,87 @@ describe('reading a list change as map tiers', () => {
   });
 });
 
-describe('the comparison in the Jurisdictions view', () => {
-  const open = async () => {
-    render(<GeoWorkspace initialSearch="?view=jurisdictions" />);
-    return screen.findByRole('button', { name: /Compare FATF/ });
-  };
-
-  it('puts the number of changed countries on the list it concerns, and none on a list without a change', async () => {
-    const badge = await open();
-    expect(badge).toHaveTextContent('2');
-    expect(screen.getByRole('button', { name: /Compare EU/ })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Compare Basel/ })).toBeNull();
+describe('what a change says about one country', () => {
+  it('says what happened to each country the change names, and nothing about the rest', () => {
+    const notes = changeNotes(CHANGE);
+    expect(notes.get('KE')).toBe('Added · increased monitoring');
+    expect(notes.get('IR')).toBe('Removed · was call for action');
+    expect(notes.has('NO')).toBe(false);
   });
 
-  it('no longer offers the old full-width bar', async () => {
-    await open();
+  it('adds the latest change to a country description without altering the original', () => {
+    const view = { title: 'Kenya', rows: [['FATF list', 'Increased monitoring']] as const };
+    const out = withChangeNote(view, 'Added · increased monitoring');
+    expect(out.rows.at(-1)).toEqual(['Latest change', 'Added · increased monitoring']);
+    expect(out.changed).toBe(true);
+    expect(view.rows).toHaveLength(1);
+    expect(withChangeNote(view, undefined)).toBe(view);
+  });
+});
+
+describe('the Jurisdictions view and what changed on its lists', () => {
+  const open = async () => {
+    render(<GeoWorkspace initialSearch="?view=jurisdictions" />);
+    return screen.findByRole('button', { name: /What changed/ });
+  };
+  const region = () => screen.getByRole('region', { name: 'What changed on the lists' });
+
+  it('opens on where the lists stand, with a visible switch to what changed that carries the number of changes', async () => {
+    const mode = await open();
+    expect(mode).toHaveTextContent('4');
+    expect(screen.getByRole('button', { name: /Where we stand/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'FATF' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'What changed on the lists' })).toBeNull();
     expect(screen.queryByText('What did the latest list change do to us?')).toBeNull();
   });
 
-  it('opens the table and the Before and After switch from the badge', async () => {
+  it('shows the table, the list tabs and the Before and After switch in that mode, and puts the other controls away', async () => {
     fireEvent.click(await open());
-    const region = await screen.findByRole('region', { name: 'What changed on the lists' });
-    expect(await within(region).findByText('Kenya')).toBeInTheDocument();
-    const after = screen.getByRole('button', { name: 'After' });
-    const before = screen.getByRole('button', { name: 'Before' });
-    expect(after).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.click(before);
-    expect(before).toHaveAttribute('aria-pressed', 'true');
-    expect(after).toHaveAttribute('aria-pressed', 'false');
+    expect(await within(await screen.findByRole('region', { name: 'What changed on the lists' })).findByText('Kenya')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /What changed/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /^FATF/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /^EU/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'After' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.queryByText('Colour countries by')).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Where to look first' })).toBeNull();
   });
 
-  it('closes from the panel, and when the basis moves to a list with no change', async () => {
+  it('switches Before and After', async () => {
     fireEvent.click(await open());
     await screen.findByRole('region', { name: 'What changed on the lists' });
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(screen.queryByRole('region', { name: 'What changed on the lists' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: /Compare FATF/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Before' }));
+    expect(screen.getByRole('button', { name: 'Before' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'After' })).toHaveAttribute('aria-pressed', 'false');
+  });
+
+  it('moves to the other list with its tab, and back to where we stand with the switch', async () => {
+    fireEvent.click(await open());
     await screen.findByRole('region', { name: 'What changed on the lists' });
-    fireEvent.click(screen.getByRole('button', { name: 'Basel AML' }));
-    await waitFor(() => expect(screen.queryByRole('region', { name: 'What changed on the lists' })).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: /^EU/ }));
+    await waitFor(() => expect(screen.getByRole('button', { name: /^EU/ })).toHaveAttribute('aria-pressed', 'true'));
+    expect(region()).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Where we stand/ }));
+    expect(screen.queryByRole('region', { name: 'What changed on the lists' })).toBeNull();
+    expect(screen.getByText('Colour countries by')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'EU' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.queryByRole('button', { name: 'Before' })).toBeNull();
   });
 
-  it('follows the basis to the other list while a comparison is open', async () => {
-    fireEvent.click(await open());
-    await screen.findByRole('region', { name: 'What changed on the lists' });
-    fireEvent.click(screen.getByRole('button', { name: 'EU' }));
-    await waitFor(() => expect(screen.getByRole('region', { name: 'What changed on the lists' })).toBeInTheDocument());
-    expect(screen.getByRole('button', { name: /Compare EU/ })).toHaveAttribute('aria-pressed', 'true');
+  it('names the outlines on the map in the legend, for a list that has a change, and not for Basel', async () => {
+    await open();
+    const legend = screen.getByRole('list', { name: 'Map legend' });
+    expect(within(legend).getByText('Added to the list')).toBeInTheDocument();
+    expect(within(legend).getByText('Removed from the list')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Basel AML' }));
+    expect(within(screen.getByRole('list', { name: 'Map legend' })).queryByText('Added to the list')).toBeNull();
+  });
+
+  it('says on a country that it changed, and opens the comparison from there', async () => {
+    render(<GeoWorkspace initialSearch="?view=jurisdictions&sel=country:KE" />);
+    const detail = await screen.findByRole('region', { name: 'Selection' });
+    await waitFor(() => expect(within(detail).getByText('Latest change')).toBeInTheDocument());
+    expect(within(detail).getByText('Added · increased monitoring')).toBeInTheDocument();
+    fireEvent.click(within(detail).getByRole('button', { name: 'See what changed' }));
+    expect(await screen.findByRole('region', { name: 'What changed on the lists' })).toBeInTheDocument();
   });
 });

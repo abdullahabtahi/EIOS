@@ -4,6 +4,8 @@ import * as React from 'react';
 import type { BasisId } from './geo-basis';
 import { GeoAddressCheck } from './geo-address-check';
 import { GeoBasisSwitcher } from './geo-basis-switcher';
+import { withChangeNote } from './geo-compare';
+import { GeoChangeLists, GeoModeSwitch } from './geo-change-mode';
 import { describeSelection } from './geo-format';
 import { GeoAccountDetail } from './geo-account-detail';
 import { GeoDetail } from './geo-detail';
@@ -33,10 +35,13 @@ export interface GeoPanelProps {
   /** Which list colours the Jurisdictions map, and the way to change it. */
   readonly basis: BasisId;
   readonly onBasis: (id: BasisId) => void;
-  /** Countries each list's latest change names, the list whose change is open, and how to open one. */
-  readonly changes?: Readonly<Partial<Record<ListId, number>>>;
+  /** Countries each list's latest change names, the list whose change is open (null: the lists as they stand), and how to switch. */
+  readonly changeCounts?: Readonly<Partial<Record<ListId, number>>>;
   readonly comparing?: ListId | null;
-  readonly onCompare?: (id: ListId) => void;
+  readonly onMode?: (changing: boolean) => void;
+  readonly onChangeList?: (id: ListId) => void;
+  /** What the latest change did to a country, in a line; undefined when it names none. */
+  readonly changeNote?: (iso2: string) => string | undefined;
   /** The list-change comparison, shown in the Jurisdictions view (what the latest FATF or EU change does to us). */
   readonly listChange?: React.ReactNode;
 }
@@ -53,11 +58,14 @@ export function disabledLayers(flows: GeoFlows | null, reference: GeoReference |
  * The right-hand panel, read top to bottom: the question this view answers, how big the picture is, the picked
  * mark in full, then where to look first. Layers and sources sit below, collapsed.
  */
-export function GeoPanel({ view, flows, reference, visible, onToggle, selected, onSelect, onClear, onPickAccount, account, basis, onBasis, changes, comparing, onCompare, listChange }: GeoPanelProps) {
+export function GeoPanel({ view, flows, reference, visible, onToggle, selected, onSelect, onClear, onPickAccount, account, basis, onBasis, changeCounts = {}, comparing = null, onMode, onChangeList, changeNote, listChange }: GeoPanelProps) {
   const ref = dataOf(reference);
   const fl = dataOf(flows);
   const leads = leadsFor(view.id, fl, ref, basis);
-  const detail = describeSelection(fl, ref, selected);
+  const described = describeSelection(fl, ref, selected);
+  const detail = described && selected?.kind === 'country' ? withChangeNote(described, changeNote?.(selected.id)) : described;
+  const changing = view.id === 'jurisdictions' && comparing !== null;
+  const changeTotal = Object.values(changeCounts).length > 0 ? Object.values(changeCounts).reduce((a, b) => a + b, 0) : null;
   const needs: readonly { readonly label: string; readonly state: ResourceState<unknown> }[] =
     view.id === 'jurisdictions'
       ? [{ label: 'reference layer', state: reference }]
@@ -71,9 +79,11 @@ export function GeoPanel({ view, flows, reference, visible, onToggle, selected, 
       <div className="space-y-5 p-4">
         <header className="space-y-3">
           <h2 className="text-balance text-sm font-semibold leading-snug text-cx-ink">{view.question}</h2>
-          {view.id === 'jurisdictions' && ref && <GeoBasisSwitcher current={basis} onChange={onBasis} changes={changes} comparing={comparing} onCompare={onCompare} />}
-          {view.id === 'jurisdictions' && listChange}
-          {waiting.length === 0 && <GeoSummary view={view.id} flows={fl} reference={ref} basis={basis} />}
+          {view.id === 'jurisdictions' && ref && onMode && <GeoModeSwitch changing={changing} total={changeTotal} onMode={onMode} />}
+          {changing && comparing && onChangeList && <GeoChangeLists list={comparing} counts={changeCounts} onList={onChangeList} />}
+          {changing && listChange}
+          {view.id === 'jurisdictions' && ref && !changing && <GeoBasisSwitcher current={basis} onChange={onBasis} />}
+          {waiting.length === 0 && !changing && <GeoSummary view={view.id} flows={fl} reference={ref} basis={basis} />}
           {view.id === 'logins' && (
             <details className="border border-cx-line bg-cx-sub">
               <summary className="cursor-pointer px-3 py-2 text-xs font-semibold text-cx-ink-soft outline-none hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent">
@@ -100,12 +110,14 @@ export function GeoPanel({ view, flows, reference, visible, onToggle, selected, 
             {selected?.kind === 'account' && account ? (
               <GeoAccountDetail accountId={selected.id} state={account} onClear={onClear} onPickAccount={onPickAccount} />
             ) : (
-              detail && <GeoDetail view={detail} onClear={onClear} onPickAccount={onPickAccount} />
+              detail && <GeoDetail view={detail} onClear={onClear} onPickAccount={onPickAccount} onOpenChange={onMode ? () => onMode(true) : undefined} />
             )}
-            <section aria-label="Where to look first" className="space-y-1">
-              <h3 className="text-title font-sans font-semibold text-cx-ink">Where to look first</h3>
-              {leads ? <GeoLeadList leads={leads} selected={selected} onSelect={onSelect} /> : null}
-            </section>
+            {!changing && (
+              <section aria-label="Where to look first" className="space-y-1">
+                <h3 className="text-title font-sans font-semibold text-cx-ink">Where to look first</h3>
+                {leads ? <GeoLeadList leads={leads} selected={selected} onSelect={onSelect} /> : null}
+              </section>
+            )}
           </>
         )}
       </div>

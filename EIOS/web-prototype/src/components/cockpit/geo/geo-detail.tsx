@@ -7,9 +7,11 @@ export interface GeoDetailProps {
   readonly view: SelectionView;
   readonly onClear: () => void;
   readonly onPickAccount?: (id: string) => void;
+  /** Open the comparison of what the latest list change did, offered when this country is named by one. */
+  readonly onOpenChange?: () => void;
 }
 
-export function GeoDetail({ view, onClear, onPickAccount }: GeoDetailProps) {
+export function GeoDetail({ view, onClear, onPickAccount, onOpenChange }: GeoDetailProps) {
   return (
     <section aria-label="Selection" className="border border-cx-line bg-cx-sub p-3">
       <div className="flex items-start justify-between gap-2">
@@ -47,6 +49,11 @@ export function GeoDetail({ view, onClear, onPickAccount }: GeoDetailProps) {
             ))}
           </ul>
         </div>
+      )}
+      {view.changed && onOpenChange && (
+        <button type="button" onClick={onOpenChange} className="mt-2 cursor-pointer text-label font-semibold text-cx-accent outline-none hover:text-cx-accent-strong focus-visible:ring-2 focus-visible:ring-cx-accent">
+          See what changed
+        </button>
       )}
       {view.note && <p className="mt-2 text-label text-cx-muted">{view.note}</p>}
     </section>

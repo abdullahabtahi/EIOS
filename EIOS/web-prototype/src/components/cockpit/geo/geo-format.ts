@@ -48,6 +48,8 @@ export interface SelectionView {
   /** Accounts behind this mark, each of which can be opened. */
   readonly accounts?: readonly string[];
   readonly note?: string;
+  /** True when this country is named by the latest change of a list, so its card can offer the comparison. */
+  readonly changed?: boolean;
 }
 
 const REGIONS = typeof Intl !== 'undefined' && 'DisplayNames' in Intl ? new Intl.DisplayNames(['en'], { type: 'region' }) : null;

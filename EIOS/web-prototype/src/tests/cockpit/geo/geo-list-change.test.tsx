@@ -50,8 +50,8 @@ const CHANGE: GeoListChange = {
 };
 
 describe('what a list change does to the book', () => {
-  const panel = (state: Parameters<typeof GeoListChangePanel>[0]['state'] = { status: 'ready', data: CHANGE }, onSelect = vi.fn(), onClose = vi.fn()) =>
-    render(<GeoListChangePanel state={state} onClose={onClose} onSelect={onSelect} />);
+  const panel = (state: Parameters<typeof GeoListChangePanel>[0]['state'] = { status: 'ready', data: CHANGE }, onSelect = vi.fn()) =>
+    render(<GeoListChangePanel state={state} onSelect={onSelect} />);
 
   it('is one table, one row per country, the most exposed first, saying what happened to each', () => {
     panel();
@@ -101,13 +101,10 @@ describe('what a list change does to the book', () => {
     expect(screen.getByText(/Links unavailable: warehouse unreachable/)).toBeInTheDocument();
   });
 
-  it('shows the load state and a failure with its status, and closes', () => {
-    const onClose = vi.fn();
-    const { rerender } = render(<GeoListChangePanel state={{ status: 'loading' }} onClose={onClose} onSelect={vi.fn()} />);
+  it('shows the load state and a failure with its status', () => {
+    const { rerender } = render(<GeoListChangePanel state={{ status: 'loading' }} onSelect={vi.fn()} />);
     expect(screen.getByRole('status')).toBeInTheDocument();
-    rerender(<GeoListChangePanel state={{ status: 'error', httpStatus: 503, reload: vi.fn() }} onClose={onClose} onSelect={vi.fn()} />);
+    rerender(<GeoListChangePanel state={{ status: 'error', httpStatus: 503, reload: vi.fn() }} onSelect={vi.fn()} />);
     expect(screen.getByText(/503/)).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-    expect(onClose).toHaveBeenCalled();
   });
 });

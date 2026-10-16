@@ -101,9 +101,9 @@ describe('the assistant on the map', () => {
 });
 
 describe('what the latest list change does to us', () => {
-  it('opens from the badge on the list and shows the countries the change names, most exposed first', async () => {
+  it('opens from the mode switch and shows the countries the change names, most exposed first', async () => {
     render(<GeoWorkspace initialSearch="?view=jurisdictions" />);
-    fireEvent.click(await screen.findByRole('button', { name: /Compare FATF/ }));
+    fireEvent.click(await screen.findByRole('button', { name: /What changed/ }));
     const region = await screen.findByRole('region', { name: 'What changed on the lists' });
     expect(await within(region).findByText('Kenya')).toBeInTheDocument();
     expect(within(region).getByText(/Links from BigQuery Graph in 1.8 s/)).toBeInTheDocument();

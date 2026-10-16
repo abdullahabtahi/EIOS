@@ -8,18 +8,13 @@
  */
 
 import * as React from 'react';
+import { describeChange } from './geo-compare';
 import { formatUsd } from './geo-format';
 import { GeoStatus } from './geo-status';
 import type { GeoListChange, GeoSelection, ListChangeCountry } from './geo-types';
 import type { ResourceState } from './use-geo-resource';
 
 const COUNT = new Intl.NumberFormat('en-US');
-const LISTING: Readonly<Record<string, string>> = {
-  call_for_action: 'call for action',
-  increased_monitoring: 'increased monitoring',
-  eu_high_risk: 'EU high-risk',
-};
-const listingText = (listing: string | null): string => (listing ? (LISTING[listing] ?? listing) : 'not listed');
 const NO_SHARE = '—';
 
 interface ChangeRow {
@@ -31,13 +26,9 @@ interface ChangeRow {
 function rowsOf(data: GeoListChange): readonly ChangeRow[] {
   const share = (iso2: string, shares: Readonly<Record<string, number>> | null) => shares?.[iso2] ?? null;
   return [
-    ...data.added.countries.map((country) => ({ country, what: `Added · ${listingText(country.after)}`, share: share(country.iso2, data.added.session_shares) })),
-    ...data.removed.countries.map((country) => ({ country, what: `Removed · was ${listingText(country.before)}`, share: share(country.iso2, data.removed.session_shares) })),
-    ...data.relisted.countries.map((country) => ({
-      country,
-      what: `Moved · ${listingText(country.before)} → ${listingText(country.after)}`,
-      share: share(country.iso2, data.relisted.session_shares),
-    })),
+    ...data.added.countries.map((country) => ({ country, what: describeChange(country, 'added'), share: share(country.iso2, data.added.session_shares) })),
+    ...data.removed.countries.map((country) => ({ country, what: describeChange(country, 'removed'), share: share(country.iso2, data.removed.session_shares) })),
+    ...data.relisted.countries.map((country) => ({ country, what: describeChange(country, 'moved'), share: share(country.iso2, data.relisted.session_shares) })),
   ].sort((a, b) => b.country.exposed_accounts - a.country.exposed_accounts || a.country.name.localeCompare(b.country.name));
 }
 
@@ -132,21 +123,13 @@ function Body({ data, onSelect }: { readonly data: GeoListChange; readonly onSel
 
 export interface GeoListChangeProps {
   readonly state: ResourceState<GeoListChange> | null;
-  readonly onClose: () => void;
   readonly onSelect: (selection: NonNullable<GeoSelection>) => void;
 }
 
-export function GeoListChangePanel({ state, onClose, onSelect }: GeoListChangeProps) {
+export function GeoListChangePanel({ state, onSelect }: GeoListChangeProps) {
   return (
-    <section aria-label="What changed on the lists" className="space-y-2 border-y border-cx-line py-3">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="text-title font-sans font-semibold text-cx-ink">
-          {state?.status === 'ready' ? state.data.after.label : 'What changed on the list'}
-        </h3>
-        <button type="button" onClick={onClose} className="cursor-pointer text-label text-cx-muted underline outline-none hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent">
-          Close
-        </button>
-      </div>
+    <section aria-label="What changed on the lists" className="space-y-2">
+      <h3 className="text-title font-sans font-semibold text-cx-ink">{state?.status === 'ready' ? state.data.after.label : 'What changed on the list'}</h3>
       {state === null || state.status !== 'ready' ? state && <GeoStatus label="list change" state={state} /> : <Body data={state.data} onSelect={onSelect} />}
     </section>
   );

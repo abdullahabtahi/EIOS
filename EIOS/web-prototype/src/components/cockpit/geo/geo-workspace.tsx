@@ -9,7 +9,7 @@ import { useGeoAccount } from './geo-account';
 import { GeoAsk } from './geo-ask';
 import { describeSelection } from './geo-format';
 import { focusFor } from './geo-focus';
-import { beforeTiers, changeCount } from './geo-compare';
+import { beforeTiers, changeCount, changeNotes, withChangeNote } from './geo-compare';
 import { type CompareSide, GeoCompareBar } from './geo-compare-bar';
 import { GeoListChangePanel } from './geo-list-change';
 import { mapContextOf, type MapState, moveLabel, stateAfterMove } from './geo-moves';
@@ -190,7 +190,12 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-  const marks = React.useMemo(() => (view === 'jurisdictions' ? marksOf(listChange?.status === 'ready' ? listChange.data : null) : null), [view, listChange]);
+  // The map outlines what the latest change of the list in view named, whether or not the comparison is open.
+  const outlineList: ListId | null = compare ?? (basis === 'fatf' || basis === 'eu' ? basis : null);
+  const outlined = outlineList ? changes[outlineList] : null;
+  const outlineData = outlined?.status === 'ready' ? outlined.data : null;
+  const marks = React.useMemo(() => (view === 'jurisdictions' ? marksOf(outlineData) : null), [view, outlineData]);
+  const notes = React.useMemo(() => (view === 'jurisdictions' && outlineData ? changeNotes(outlineData) : null), [view, outlineData]);
   const earlier = React.useMemo(
     () => (view === 'jurisdictions' && side === 'before' && listChange?.status === 'ready' ? beforeTiers(listChange.data) : null),
     [view, side, listChange],
@@ -201,12 +206,13 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   );
   const focus = React.useMemo(() => focusFor(view, flowData, referenceData), [view, flowData, referenceData]);
 
-  const tip = hover ? describeSelection(flowData, referenceData, hover.selection) : null;
+  const described = hover ? describeSelection(flowData, referenceData, hover.selection) : null;
+  const tip = described && hover?.selection?.kind === 'country' ? withChangeNote(described, notes?.get(hover.selection.id)) : described;
   const waitingOnFlows = view !== 'jurisdictions' && flows.status === 'loading';
   const listChangeSlot = compare ? (
-    <GeoListChangePanel state={listChange} onClose={() => setCompare(null)} onSelect={pickFromList} />
+    <GeoListChangePanel state={listChange} onSelect={pickFromList} />
   ) : null;
-  // The comparison belongs to one list: moving the basis to the other list moves it, and a list with no change ends it.
+  // The comparison belongs to one list: moving the basis to the other list moves it, and Basel has no change to compare.
   const changeBasis = (id: BasisId) => {
     setBasis(id);
     setCompare((now) => (now && (id === 'fatf' || id === 'eu') ? id : null));
@@ -216,6 +222,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
     setCompare(id);
     setSide('after');
   };
+  const setMode = (changing: boolean) => (changing ? openCompare(basis === 'fatf' || basis === 'eu' ? basis : 'fatf') : setCompare(null));
   const compareLabel = listChange?.status === 'ready' ? listChange.data.after.label : 'Reading the change…';
 
   return (
@@ -237,7 +244,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
           </p>
         )}
         <div className="pointer-events-none absolute bottom-6 left-3 z-10">
-          <GeoLegend visible={visible} flows={flowData} basis={basis} />
+          <GeoLegend visible={visible} flows={flowData} basis={basis} outlines={marks ? { added: marks.added.size > 0, removed: marks.removed.size > 0 } : null} />
         </div>
         {tip && hover && <GeoTooltip view={tip} point={hover.point} bounds={box} />}
         {notice && (
@@ -262,9 +269,11 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
               account={account}
               basis={basis}
               onBasis={changeBasis}
-              changes={changeCounts}
+              changeCounts={changeCounts}
               comparing={compare}
-              onCompare={openCompare}
+              onMode={setMode}
+              onChangeList={openCompare}
+              changeNote={(iso2) => notes?.get(iso2)}
               listChange={listChangeSlot}
             />
           }

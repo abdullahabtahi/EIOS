@@ -39,11 +39,17 @@ export function drawnCounts(flows: GeoFlows | null, visible: ReadonlySet<LayerId
 }
 
 /** Only the marks of the layers that are on, in the colours the layers use. */
-export function GeoLegend({ visible, flows, basis = 'fatf' }: { readonly visible: ReadonlySet<LayerId>; readonly flows: GeoFlows | null; readonly basis?: BasisId }) {
+/** Outlines for the countries a list's latest change names, drawn on the map whenever the list has one. */
+export interface ChangeOutlines {
+  readonly added: boolean;
+  readonly removed: boolean;
+}
+
+export function GeoLegend({ visible, flows, basis = 'fatf', outlines = null }: { readonly visible: ReadonlySet<LayerId>; readonly flows: GeoFlows | null; readonly basis?: BasisId; readonly outlines?: ChangeOutlines | null }) {
   const kinds = flows ? drawnKinds(flows) : new Set<string>();
   const keys = KEYS.filter((k) => visible.has(k.layer) && (k.basis === undefined || k.basis === basis) && (k.kind === undefined || kinds.has(k.kind)));
   const notes = drawnCounts(flows, visible);
-  if (keys.length === 0) return null;
+  if (keys.length === 0 && !(outlines && visible.has('risk') && (outlines.added || outlines.removed))) return null;
   return (
     <div className="w-56 border border-cx-line bg-white p-2.5 text-label text-cx-ink-soft">
       <ul aria-label="Map legend" className="hidden space-y-1.5 sm:block">
@@ -53,6 +59,18 @@ export function GeoLegend({ visible, flows, basis = 'fatf' }: { readonly visible
             {k.label}
           </li>
         ))}
+        {outlines && visible.has('risk') && outlines.added && (
+          <li className="flex items-center gap-2">
+            <span aria-hidden="true" className="inline-block h-3 w-4 shrink-0 border-2 border-cx-bad" />
+            Added to the list
+          </li>
+        )}
+        {outlines && visible.has('risk') && outlines.removed && (
+          <li className="flex items-center gap-2">
+            <span aria-hidden="true" className="inline-block h-3 w-4 shrink-0 border-2 border-cx-accent" />
+            Removed from the list
+          </li>
+        )}
       </ul>
       {visible.has('corridors') && flows && <p className="mt-2 hidden border-t border-cx-line-soft pt-1.5 text-cx-muted sm:block">A line darkens toward where the money goes. A ring marks where several routes meet.</p>}
       {visible.has('offshore') && <p className="mt-2 border-t border-cx-line-soft pt-1.5 text-cx-muted">{OFFSHORE_NOTICE}</p>}
