@@ -51,6 +51,12 @@ export interface GeoAskProps {
   readonly selected: GeoSelection;
   /** Apply one of an answer's map moves; `auto` is true for the move applied when the answer arrives. */
   readonly onMove: (move: ViewCommand, auto: boolean) => void;
+  /** An answer is being waited for, or is not. */
+  readonly onPending?: (pending: boolean) => void;
+  /** An answer has arrived. */
+  readonly onAnswered?: () => void;
+  /** A request to be ready for a question: focus the box, and put the given text in it (not sent). The id changes with each request. */
+  readonly intent?: { readonly id: number; readonly text?: string } | null;
 }
 
 function selectionKey(selected: GeoSelection): string | null {
@@ -92,18 +98,32 @@ function TurnMoves({ moves, onMove }: { readonly moves: readonly ViewCommand[]; 
   );
 }
 
-export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
+export function GeoAsk({ context, selected, onMove, onPending, onAnswered, intent }: GeoAskProps) {
   const [items, setItems] = React.useState<ChatItem[]>([]);
   const [proposalStates, setProposalStates] = React.useState<Record<string, ProposalState>>({});
   const [query, setQuery] = React.useState('');
   const [pending, setPending] = React.useState(false);
   const models = useModelChoice();
   const endRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  // A request to be ready for a question is answered once per id: the text lands in the box during the render that sees it.
+  const [seenIntent, setSeenIntent] = React.useState<number | null>(null);
   const onScreen = selectionKey(selected);
 
   React.useEffect(() => {
     if (typeof endRef.current?.scrollIntoView === 'function') endRef.current.scrollIntoView({ behavior: 'smooth' });
   }, [items]);
+
+  React.useEffect(() => onPending?.(pending), [pending, onPending]);
+
+  if (intent && seenIntent !== intent.id) {
+    setSeenIntent(intent.id);
+    if (intent.text !== undefined) setQuery(intent.text);
+  }
+  const intentId = intent?.id;
+  React.useEffect(() => {
+    if (intentId !== undefined) inputRef.current?.focus();
+  }, [intentId]);
 
   const ask = async (text: string) => {
     const trimmed = text.trim();
@@ -131,6 +151,7 @@ export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
       }
       const data: CopilotQueryResponse = await res.json();
       settle({ response: data });
+      onAnswered?.();
       const first = data.viewCommands?.[0];
       if (first) onMove(first, true);
     } catch (err) {
@@ -154,8 +175,8 @@ export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
 
   return (
     <section aria-label="Ask about the map" className="flex h-full min-h-0 flex-col bg-cx-wash-0">
-      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-cx-line bg-cx-sub px-3 py-2 text-xs">
-        <span className="min-w-0 truncate text-cx-muted" data-testid="geo-ask-context">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1 border-b border-cx-line bg-cx-sub px-3 py-2 text-xs">
+        <span className="min-w-0 basis-full text-cx-muted" data-testid="geo-ask-context">
           {onScreen ? `About the ${onScreen} on the map` : 'Nothing selected: ask about the whole book'}
         </span>
         <ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />
@@ -215,6 +236,7 @@ export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
       >
         <div className="flex items-center gap-2">
           <input
+            ref={inputRef}
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

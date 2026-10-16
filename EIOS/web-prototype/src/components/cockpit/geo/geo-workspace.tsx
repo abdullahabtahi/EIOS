@@ -12,13 +12,15 @@ import { focusFor } from './geo-focus';
 import { beforeTiers, changeCount, changeNotes, withChangeNote } from './geo-compare';
 import { type CompareSide, GeoCompareBar } from './geo-compare-bar';
 import { GeoListChangePanel } from './geo-list-change';
-import { mapContextOf, type MapState, moveLabel, stateAfterMove } from './geo-moves';
+import { geoSuggestions, mapContextOf, type MapState, moveLabel, stateAfterMove } from './geo-moves';
 import { GeoMoveToast } from './geo-move-toast';
 import { formatGeoUrl, parseGeoUrl } from './geo-url';
 import { GeoLegend } from './geo-legend';
 import { GeoMap } from './geo-map';
 import { GeoPanel } from './geo-panel';
-import { GeoSide, type SidePanel } from './geo-side';
+import { GeoChatLauncher, type LauncherStatus } from './geo-chat-launcher';
+import { GeoChatWindow } from './geo-chat-window';
+import { useChatDock } from './use-chat-dock';
 import { GeoTooltip } from './geo-tooltip';
 import { GeoViewSwitcher } from './geo-view-switcher';
 import { DEFAULT_VIEW, viewOf, type ViewId } from './geo-views';
@@ -58,9 +60,12 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   const [hover, setHover] = React.useState<Hover | null>(null);
   const [selected, setSelected] = React.useState<GeoSelection>(initial.selection);
   const [target, setTarget] = React.useState<CameraTarget | null>(null);
-  const [panel, setPanel] = React.useState<SidePanel>('explore');
   const [compare, setCompare] = React.useState<ListId | null>(null);
   const [side, setSide] = React.useState<CompareSide>('after');
+  const dock = useChatDock();
+  const [asking, setAsking] = React.useState(false);
+  const [unread, setUnread] = React.useState(false);
+  const [intent, setIntent] = React.useState<{ id: number; text?: string } | null>(null);
   const [history, setHistory] = React.useState<readonly MapState[]>([]);
   const [notice, setNotice] = React.useState<MoveNotice | null>(null);
   const flownToInitial = React.useRef(false);
@@ -174,6 +179,39 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  // The assistant opens ready for a question: with the text given (a hint), or empty (the slash key, the launcher).
+  const show = dock.show;
+  const openChat = React.useCallback(
+    (prefill?: string) => {
+      show();
+      setUnread(false);
+      setIntent((prev) => ({ id: (prev?.id ?? 0) + 1, ...(prefill !== undefined ? { text: prefill } : {}) }));
+    },
+    [show],
+  );
+  // An answer that lands while the window is closed is marked on the launcher until it is opened; the closure that
+  // delivers it was made when the question was asked, so it reads the mode from here, not from its own render.
+  const modeNow = React.useRef(dock.mode);
+  React.useEffect(() => {
+    modeNow.current = dock.mode;
+  }, [dock.mode]);
+  const answered = React.useCallback(() => {
+    if (modeNow.current === 'closed') setUnread(true);
+  }, []);
+  React.useEffect(() => {
+    const onSlash = (e: KeyboardEvent) => {
+      if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return;
+      const el = e.target instanceof HTMLElement ? e.target : null;
+      if (el && (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName))) return;
+      e.preventDefault();
+      openChat();
+    };
+    window.addEventListener('keydown', onSlash);
+    return () => window.removeEventListener('keydown', onSlash);
+  }, [openChat]);
+  const launcherStatus: LauncherStatus = asking ? 'pending' : unread ? 'unread' : 'idle';
+  const hint = selected ? (geoSuggestions(selected)[0] ?? null) : null;
+
   const onHover = React.useCallback((selection: GeoSelection, point?: HoverPoint) => {
     setHover(selection && point ? { selection, point } : null);
   }, []);
@@ -226,7 +264,10 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   const compareLabel = listChange?.status === 'ready' ? listChange.data.after.label : 'Reading the change…';
 
   return (
-    <div className="geo-inter flex h-full min-h-0 flex-col lg:flex-row">
+    <div className="geo-inter relative flex h-full min-h-0 flex-col lg:flex-row">
+      <GeoChatWindow mode={dock.mode} pos={dock.pos} bounds={box} onMove={dock.move} onSettle={dock.settle} onDock={dock.dock} onFloat={dock.float} onClose={dock.close}>
+        <GeoAsk context={mapContextOf(mapState)} selected={selected} onMove={applyMove} onPending={setAsking} onAnswered={answered} intent={intent} />
+      </GeoChatWindow>
       <div ref={mapBox} className="relative min-h-0 min-w-0 flex-[3] lg:flex-1">
         <GeoMap layers={layers} focus={focus} target={target} />
         <div className="absolute left-3 top-3 z-10">
@@ -246,37 +287,31 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
         <div className="pointer-events-none absolute bottom-6 left-3 z-10">
           <GeoLegend visible={visible} flows={flowData} basis={basis} outlines={marks ? { added: marks.added.size > 0, removed: marks.removed.size > 0 } : null} />
         </div>
+        {dock.mode === 'closed' && <GeoChatLauncher status={launcherStatus} hint={hint} onOpen={openChat} />}
         {tip && hover && <GeoTooltip view={tip} point={hover.point} bounds={box} />}
         {notice && (
           <GeoMoveToast label={notice.label} auto={notice.auto} canGoBack={history.length > 0} onBack={goBack} onDismiss={() => setNotice(null)} />
         )}
       </div>
       <div className="min-h-0 flex-[2] border-t border-cx-line bg-white lg:w-[24rem] lg:flex-none lg:border-l lg:border-t-0">
-        <GeoSide
-          panel={panel}
-          onPanel={setPanel}
-          explore={
-            <GeoPanel
-              view={viewOf(view)}
-              flows={flows}
-              reference={reference}
-              visible={visible}
-              onToggle={toggle}
-              selected={selected}
-              onSelect={pickFromList}
-              onClear={clear}
-              onPickAccount={pickAccount}
-              account={account}
-              basis={basis}
-              onBasis={changeBasis}
-              changeCounts={changeCounts}
-              comparing={compare}
-              onMode={setMode}
-              changeNote={(iso2) => notes?.get(iso2)}
-              listChange={listChangeSlot}
-            />
-          }
-          ask={<GeoAsk context={mapContextOf(mapState)} selected={selected} onMove={applyMove} />}
+        <GeoPanel
+          view={viewOf(view)}
+          flows={flows}
+          reference={reference}
+          visible={visible}
+          onToggle={toggle}
+          selected={selected}
+          onSelect={pickFromList}
+          onClear={clear}
+          onPickAccount={pickAccount}
+          account={account}
+          basis={basis}
+          onBasis={changeBasis}
+          changeCounts={changeCounts}
+          comparing={compare}
+          onMode={setMode}
+          changeNote={(iso2) => notes?.get(iso2)}
+          listChange={listChangeSlot}
         />
       </div>
     </div>

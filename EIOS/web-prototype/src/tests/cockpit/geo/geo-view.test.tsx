@@ -119,7 +119,7 @@ describe('GeoWorkspace', () => {
     render(<GeoWorkspace />);
     const list = await screen.findByRole('region', { name: 'Where to look first' });
     fireEvent.click(within(list).getByRole('button', { name: /Kenya → The Bahamas/ }));
-    fireEvent.click(screen.getByRole('tab', { name: 'Ask' }));
+    fireEvent.click(screen.getByRole('button', { name: /Ask the assistant/ }));
     fireEvent.keyDown(screen.getByRole('textbox', { name: 'Ask the geospatial assistant' }), { key: 'Escape' });
     expect(screen.getByRole('region', { name: 'Selection' })).toBeInTheDocument();
   });

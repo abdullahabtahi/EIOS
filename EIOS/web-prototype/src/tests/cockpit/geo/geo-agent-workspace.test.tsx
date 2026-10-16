@@ -80,7 +80,7 @@ beforeEach(() => {
 describe('the assistant on the map', () => {
   it('moves the map to what the answer names, says so, and goes back', async () => {
     render(<GeoWorkspace initialSearch="" />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Ask' }));
+    fireEvent.click(screen.getByRole('button', { name: /Ask the assistant/ }));
     fireEvent.click(await screen.findByText('Where should I look first?'));
     await waitFor(() => expect(window.location.search).toContain('sel=gateway%3AGW-KE-X00'));
     expect(window.location.search).toContain('view=logins');
@@ -92,7 +92,7 @@ describe('the assistant on the map', () => {
 
   it('carries what the map shows with the question', async () => {
     render(<GeoWorkspace initialSearch="?view=logins&sel=gateway:GW-KE-X00" />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Ask' }));
+    fireEvent.click(screen.getByRole('button', { name: /Ask the assistant/ }));
     fireEvent.click(await screen.findByText('Why is this exit suspicious, and who else is in its ring?'));
     await waitFor(() => expect(authFetch.mock.calls.some(([url]) => String(url).includes('/copilot/query'))).toBe(true));
     const [, init] = authFetch.mock.calls.find(([url]) => String(url).includes('/copilot/query'))!;

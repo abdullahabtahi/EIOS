@@ -5,7 +5,6 @@ import { FLOWS } from './flows-fixture';
 import { REFERENCE } from './reference-fixture';
 import { leadsFor } from '@/components/cockpit/geo/geo-leads';
 import { GeoLeadList } from '@/components/cockpit/geo/geo-lead-list';
-import { GeoSide } from '@/components/cockpit/geo/geo-side';
 import type { GeoFlows } from '@/components/cockpit/geo/geo-types';
 
 const BACK = { origin: 'IR', destination: 'NO', volume_usd: 50_000, accounts: 2, events: 5, tier: 'high' as const };
@@ -56,37 +55,5 @@ describe('GeoLeadList', () => {
     expect(rows[0]).toHaveFocus();
     fireEvent.keyDown(rows[0], { key: 'ArrowUp' });
     expect(rows[0]).toHaveFocus();
-  });
-});
-
-describe('GeoSide tabs', () => {
-  const side = (onPanel = vi.fn(), panel: 'explore' | 'ask' = 'explore') =>
-    render(<GeoSide panel={panel} onPanel={onPanel} explore={<p>explore body</p>} ask={<p>ask body</p>} />);
-
-  it('keeps only the open tab in the tab order and names the panel each one controls', () => {
-    side();
-    const explore = screen.getByRole('tab', { name: 'Explore' });
-    const ask = screen.getByRole('tab', { name: 'Ask' });
-    expect(explore).toHaveAttribute('tabindex', '0');
-    expect(ask).toHaveAttribute('tabindex', '-1');
-    for (const t of [explore, ask]) expect(document.getElementById(t.getAttribute('aria-controls')!)).not.toBeNull();
-  });
-
-  it('moves between tabs with the arrow keys, Home and End', () => {
-    const onPanel = vi.fn();
-    side(onPanel);
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Explore' }), { key: 'ArrowRight' });
-    expect(onPanel).toHaveBeenLastCalledWith('ask');
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Explore' }), { key: 'End' });
-    expect(onPanel).toHaveBeenLastCalledWith('ask');
-  });
-
-  it('wraps from the last tab back to the first', () => {
-    const onPanel = vi.fn();
-    side(onPanel, 'ask');
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Ask' }), { key: 'ArrowRight' });
-    expect(onPanel).toHaveBeenLastCalledWith('explore');
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Ask' }), { key: 'ArrowLeft' });
-    expect(onPanel).toHaveBeenLastCalledWith('explore');
   });
 });
