@@ -17,6 +17,14 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
       ? `${nominalPct}% interval ${usd(forecast.low)} to ${usd(forecast.high)}`
       : 'No interval was measured for this projection.';
 
+  const svgRef = React.useRef<SVGSVGElement | null>(null);
+  const [hoverPoint, setHoverPoint] = React.useState<{
+    x: number;
+    y: number;
+    value: number;
+    pct: number;
+  } | null>(null);
+
   // Compute point estimate position relative to the low/high confidence envelope
   const envelopePct = React.useMemo(() => {
     if (forecast.low === null || forecast.high === null || forecast.high === forecast.low) return 50;
@@ -43,8 +51,43 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
     const yLow = yBaseline - amplitude * Math.exp(-0.5 * Math.pow((50 - x0) / sigma, 2));
     const yHigh = yBaseline - amplitude * Math.exp(-0.5 * Math.pow((450 - x0) / sigma, 2));
     const areaPath = `M 50,${yBaseline} L 50,${yLow.toFixed(1)} L ${shaded.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L ')} L 450,${yHigh.toFixed(1)} L 450,${yBaseline} Z`;
-    return { fullPath, areaPath, x0, yPeak: yBaseline - amplitude, yLow, yHigh, yBaseline };
+    return { fullPath, areaPath, x0, yPeak: yBaseline - amplitude, yLow, yHigh, yBaseline, sigma, amplitude };
   }, [forecast.low, forecast.high, envelopePct]);
+
+  // Mouse hover interaction tracker
+  const handleMouseMove = React.useCallback(
+    (e: React.MouseEvent<SVGSVGElement>) => {
+      if (!svgRef.current || !gaussian || forecast.low === null || forecast.high === null) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      if (!rect.width) return;
+      const clientX = e.clientX - rect.left;
+      const rawX = (clientX / rect.width) * 500;
+      const x = Math.min(Math.max(rawX, 15), 485);
+
+      // Compute Gaussian curve y coordinate at x
+      const exponent = -0.5 * Math.pow((x - gaussian.x0) / gaussian.sigma, 2);
+      const y = gaussian.yBaseline - gaussian.amplitude * Math.exp(exponent);
+
+      // Interpolate revenue value
+      let value: number;
+      if (x <= gaussian.x0) {
+        value = forecast.low + ((x - 50) / (gaussian.x0 - 50)) * (forecast.point - forecast.low);
+      } else {
+        value = forecast.point + ((x - gaussian.x0) / (450 - gaussian.x0)) * (forecast.high - forecast.point);
+      }
+
+      // Calculate approximate percentile
+      const rawPct = Math.round(5 + ((x - 50) / 400) * 90);
+      const pct = Math.min(Math.max(rawPct, 1), 99);
+
+      setHoverPoint({ x, y, value, pct });
+    },
+    [gaussian, forecast.low, forecast.high, forecast.point],
+  );
+
+  const handleMouseLeave = React.useCallback(() => {
+    setHoverPoint(null);
+  }, []);
 
   return (
     <section
@@ -71,105 +114,135 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
 
       {/* Primary KPI & Visual Confidence Envelope (Responsive Container Query Grid) */}
       <div className="p-5 sm:p-6 grid grid-cols-1 @[840px]:grid-cols-12 gap-6 sm:gap-8 items-start">
-        {/* Left: Point Estimate & Calibrated Interval */}
-        <div className="@[840px]:col-span-5 space-y-4 min-w-0">
-          <div className="text-label font-mono uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-2 h-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block shrink-0" />
-            <span>Expected Projected Revenue</span>
-          </div>
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-baseline gap-2 sm:gap-2.5 font-mono">
-              <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums tracking-tight">
-                {usd(forecast.point)}
-              </span>
-              <span
-                className={`text-label font-medium px-2 py-0.5 border tabular-nums ${
-                  forecast.deltaPct < 0
-                    ? 'bg-amber-50 border-amber-300 text-amber-800'
-                    : 'bg-green-50 border-green-300 text-green-800'
-                }`}
-              >
-                {signed(forecast.deltaPct)}% against today
-              </span>
+        {/* Left: Point Estimate & Natural Relocated Telemetry (No Rectangle, Airy Hierarchy) */}
+        <div className="@[840px]:col-span-5 min-w-0 flex flex-col justify-between self-stretch py-0.5">
+          {/* Hero Point Estimate */}
+          <div className="space-y-3">
+            <div className="text-label font-mono uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-2 h-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block shrink-0" />
+              <span>Expected Projected Revenue</span>
             </div>
-            <p className="text-xs text-slate-500 font-sans leading-relaxed max-w-sm">
-              Synthesized from historical payout velocity, partner attrition risk, and deposit momentum.
-            </p>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-baseline gap-2 sm:gap-2.5 font-mono">
+                <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums tracking-tight">
+                  {usd(forecast.point)}
+                </span>
+                <span
+                  className={`text-label font-medium px-2 py-0.5 border tabular-nums ${
+                    forecast.deltaPct < 0
+                      ? 'bg-amber-50 border-amber-300 text-amber-800'
+                      : 'bg-green-50 border-green-300 text-green-800'
+                  }`}
+                >
+                  {signed(forecast.deltaPct)}% against today
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 font-sans leading-relaxed max-w-sm">
+                Synthesized from historical payout velocity, partner attrition risk, and deposit momentum.
+              </p>
+            </div>
           </div>
 
-          {/* Relocated Part: Confidence Interval Meta Card */}
-          <div className="p-3 bg-slate-50/80 border border-slate-200/90 rounded-xs space-y-1.5 font-mono">
-            <div className="flex items-center justify-between text-label">
-              <span className="font-semibold uppercase tracking-tight text-slate-600 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
-                {nominalPct}% Confidence Interval
-              </span>
-              <span className="text-blue-800 bg-blue-50 border border-blue-200 px-1.5 py-0.2 text-[10px] font-bold">
-                P05 — P95
-              </span>
+          {/* Relocated Part: Left Bottom Corner, Natural Hierarchy, NO RECTANGLE */}
+          <div className="pt-5 mt-6 border-t border-slate-100 space-y-1.5 font-mono">
+            <div className="text-label uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block shrink-0" />
+              <span>{nominalPct}% Confidence Probability Density</span>
             </div>
-            <div className="text-sm font-bold text-slate-800 tabular-nums flex items-center gap-1.5">
+            <div className="text-xs text-slate-700 font-mono tabular-nums">
               {forecast.low !== null && forecast.high !== null ? (
                 <>
-                  <span>{usd(forecast.low)}</span>
-                  <span className="text-slate-400 font-normal text-xs">to</span>
-                  <span>{usd(forecast.high)}</span>
+                  <span className="text-slate-500 font-medium">{nominalPct}% interval</span>{' '}
+                  <span className="font-bold text-slate-900">{usd(forecast.low)}</span>{' '}
+                  <span className="text-slate-400 font-normal">to</span>{' '}
+                  <span className="font-bold text-slate-900">{usd(forecast.high)}</span>
                 </>
               ) : (
-                <span className="text-xs text-slate-500 font-normal">Not measured</span>
+                <span className="text-slate-500">{interval}</span>
               )}
-            </div>
-            <div className="text-[11px] text-slate-500 font-sans leading-normal">
-              Empirical holdout-calibrated probability density envelope.
             </div>
           </div>
         </div>
 
-        {/* Right: Palantir Gaussian Probability Distribution Envelope */}
+        {/* Right: Interactive Normal Distribution Chart & Metric Cards (No Header Clutter) */}
         <div className="@[840px]:col-span-7 space-y-3 min-w-0">
-          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-label font-mono min-h-6">
-            <span className="font-semibold uppercase tracking-tight text-slate-500 flex items-center gap-1.5 shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block" />
-              Probability Density Distribution (Gaussian)
-            </span>
-            <span className="text-slate-500 font-mono text-label tabular-nums">
-              Mode: <strong className="text-slate-800 font-bold">{usd(forecast.point)}</strong>
-            </span>
-          </div>
-
           {gaussian && (
             <div className="space-y-3">
-              {/* Elevated Gaussian Bell Curve SVG */}
-              <div className="bg-slate-50/70 border border-slate-200/90 p-3 rounded-xs overflow-hidden">
+              {/* Interactive Gaussian Bell Curve Canvas */}
+              <div className="bg-slate-50/70 border border-slate-200/90 p-3 rounded-xs overflow-hidden relative">
                 <svg
+                  ref={svgRef}
                   role="img"
-                  aria-label="Gaussian probability density curve"
-                  className="w-full h-24 sm:h-28 select-none"
+                  aria-label="Interactive Gaussian probability density curve"
+                  className="w-full h-24 sm:h-28 select-none cursor-crosshair"
                   viewBox="0 0 500 106"
+                  onMouseMove={handleMouseMove}
+                  onMouseLeave={handleMouseLeave}
                 >
                   {/* Shaded Confidence Mass */}
-                  <path d={gaussian.areaPath} className="fill-blue-100/75" />
+                  <path d={gaussian.areaPath} className="fill-blue-100/75 pointer-events-none" />
 
                   {/* Baseline Axis */}
-                  <line x1="10" y1={gaussian.yBaseline} x2="490" y2={gaussian.yBaseline} className="stroke-slate-300 stroke-1" />
+                  <line x1="10" y1={gaussian.yBaseline} x2="490" y2={gaussian.yBaseline} className="stroke-slate-300 stroke-1 pointer-events-none" />
 
                   {/* Low Boundary Dashed Marker (P05) */}
-                  <line x1="50" y1={gaussian.yLow} x2="50" y2={gaussian.yBaseline} strokeDasharray="3 2" className="stroke-blue-400 stroke-1" />
+                  <line x1="50" y1={gaussian.yLow} x2="50" y2={gaussian.yBaseline} strokeDasharray="3 2" className="stroke-blue-400 stroke-1 pointer-events-none" />
 
                   {/* High Boundary Dashed Marker (P95) */}
-                  <line x1="450" y1={gaussian.yHigh} x2="450" y2={gaussian.yBaseline} strokeDasharray="3 2" className="stroke-blue-400 stroke-1" />
+                  <line x1="450" y1={gaussian.yHigh} x2="450" y2={gaussian.yBaseline} strokeDasharray="3 2" className="stroke-blue-400 stroke-1 pointer-events-none" />
 
                   {/* Continuous Probability Curve */}
-                  <path d={gaussian.fullPath} fill="none" className="stroke-blue-600 stroke-1.5" />
+                  <path d={gaussian.fullPath} fill="none" className="stroke-blue-600 stroke-1.5 pointer-events-none" />
 
-                  {/* Mode / Expected Needle */}
-                  <line x1={gaussian.x0} y1={gaussian.yPeak} x2={gaussian.x0} y2={gaussian.yBaseline} className="stroke-slate-900 stroke-1.5" />
-                  <circle cx={gaussian.x0} cy={gaussian.yPeak} r="3.5" className="fill-slate-900 stroke-white stroke-1" />
+                  {/* Mode / Expected Needle (Drawn as reference) */}
+                  <line x1={gaussian.x0} y1={gaussian.yPeak} x2={gaussian.x0} y2={gaussian.yBaseline} className="stroke-slate-900 stroke-1.5 pointer-events-none" />
+                  <circle cx={gaussian.x0} cy={gaussian.yPeak} r="3.5" className="fill-slate-900 stroke-white stroke-1 pointer-events-none" />
 
-                  {/* Axis Legend Markers */}
-                  <text x="50" y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-400 font-mono text-[9px] font-semibold">P05</text>
-                  <text x={gaussian.x0} y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-700 font-mono text-[9px] font-bold">MODE</text>
-                  <text x="450" y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-400 font-mono text-[9px] font-semibold">P95</text>
+                  {/* Static Baseline Axis Markers */}
+                  <text x="50" y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-400 font-mono text-[9px] font-semibold pointer-events-none">P05</text>
+                  <text x={gaussian.x0} y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-700 font-mono text-[9px] font-bold pointer-events-none">MODE</text>
+                  <text x="450" y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-400 font-mono text-[9px] font-semibold pointer-events-none">P95</text>
+
+                  {/* Dynamic Hover Indicator & Tooltip */}
+                  {hoverPoint && (
+                    <g className="pointer-events-none">
+                      {/* Vertical Hairline Tracker */}
+                      <line
+                        x1={hoverPoint.x}
+                        y1={hoverPoint.y}
+                        x2={hoverPoint.x}
+                        y2={gaussian.yBaseline}
+                        strokeDasharray="2 2"
+                        className="stroke-blue-600 stroke-1"
+                      />
+
+                      {/* Interactive Data Point on Curve */}
+                      <circle cx={hoverPoint.x} cy={hoverPoint.y} r="7" className="fill-blue-500/20" />
+                      <circle cx={hoverPoint.x} cy={hoverPoint.y} r="4" className="fill-blue-600 stroke-white stroke-1.5" />
+
+                      {/* Floating Tooltip Pill inside SVG bounds */}
+                      <g
+                        transform={`translate(${Math.min(Math.max(hoverPoint.x, 62), 438)}, ${Math.max(hoverPoint.y - 18, 14)})`}
+                      >
+                        <rect
+                          x="-54"
+                          y="-13"
+                          width="108"
+                          height="20"
+                          rx="3"
+                          className="fill-slate-900 shadow-sm"
+                        />
+                        <text
+                          x="0"
+                          y="1.5"
+                          textAnchor="middle"
+                          className="fill-white font-mono text-[10px] font-semibold"
+                        >
+                          {usd(hoverPoint.value)} · P{hoverPoint.pct.toString().padStart(2, '0')}
+                        </text>
+                      </g>
+                    </g>
+                  )}
                 </svg>
               </div>
 
