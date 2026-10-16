@@ -49,28 +49,17 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
             Causal graph fitted from two years of daily history
           </h3>
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-label font-mono">
-          <span className="flex items-center gap-1.5 text-green-800 font-semibold bg-green-50 px-2 py-0.5 border border-green-200">
-            <span className="w-3.5 h-0.5 bg-green-700 inline-block" />
-            Verified causal
-          </span>
-          <span className="flex items-center gap-1.5 text-amber-800 font-semibold bg-amber-50 px-2 py-0.5 border border-amber-200">
-            <span className="w-3.5 border-t border-dashed border-amber-600 inline-block" />
-            Correlation only
-          </span>
-          <span className="text-slate-400">|</span>
-          <span className="text-slate-500 font-semibold">
-            {nodes.length} NODES · {edges.length} DIRECTED LINKS
-          </span>
+        <div className="text-label font-mono text-slate-500 font-semibold">
+          {nodes.length} NODES · {edges.length} DIRECTED LINKS
         </div>
       </div>
 
       {/* Blueprint Analytical Topology Canvas */}
-      <div className="relative border border-slate-200 overflow-hidden bg-slate-50">
+      <div className="relative border border-slate-200 overflow-x-auto bg-slate-50">
         <svg
           role="img"
           aria-label="Causal graph"
-          className="w-full h-56 select-none"
+          className="w-full min-w-[680px] h-56 select-none"
           viewBox={`0 0 ${W} ${H}`}
         >
           <defs>
@@ -100,7 +89,7 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
             const x = 20 + i * ((W - BOX.w - 40) / (COLUMNS.length - 1));
             return (
               <g key={domain}>
-                <line x1={x + BOX.w / 2} y1={0} x2={x + BOX.w / 2} y2={H} className="stroke-slate-200 stroke-1" strokeDasharray="3 3" />
+                <line x1={x + BOX.w / 2} y1={0} x2={x + BOX.w / 2} y2={160} className="stroke-slate-200 stroke-1" strokeDasharray="3 3" />
                 <text x={x + BOX.w / 2} y={16} textAnchor="middle" className="fill-slate-400 font-mono text-label font-bold uppercase tracking-wider">
                   {domain}
                 </text>
@@ -189,6 +178,45 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
               </g>
             );
           })}
+
+          {/* Integrated In-Graph Legend (Proper Institutional Legend Rectangle) */}
+          <g transform="translate(390, 160)" className="select-none pointer-events-none font-mono">
+            {/* Clean Crisp Backdrop Rectangle */}
+            <rect
+              x="0"
+              y="0"
+              width="550"
+              height="30"
+              rx="3"
+              className="fill-white stroke-slate-200 stroke-1 shadow-xs"
+            />
+
+            {/* Legend Eyebrow */}
+            <text x="14" y="19" className="fill-slate-400 text-label uppercase tracking-wider font-semibold">
+              Pathway Fidelity
+            </text>
+
+            {/* Subtle Divider */}
+            <line x1="126" y1="8" x2="126" y2="22" className="stroke-slate-200 stroke-1" />
+
+            {/* Verified Causal (Solid Green Arrow) */}
+            <g transform="translate(138, 19)">
+              <line x1="0" y1="-3.5" x2="18" y2="-3.5" strokeWidth="2" className="stroke-green-700" />
+              <path d="M 16 -6.5 L 20 -3.5 L 16 -0.5 z" className="fill-green-700" />
+              <text x="26" y="0" className="fill-slate-800 font-sans text-label font-semibold">
+                Verified causal <tspan className="fill-slate-400 font-mono font-normal">(passed refuters)</tspan>
+              </text>
+            </g>
+
+            {/* Correlation Only (Dashed Amber Arrow) */}
+            <g transform="translate(348, 19)">
+              <line x1="0" y1="-3.5" x2="18" y2="-3.5" strokeWidth="2" strokeDasharray="4 3" className="stroke-amber-600" />
+              <path d="M 16 -6.5 L 20 -3.5 L 16 -0.5 z" className="fill-amber-600" />
+              <text x="26" y="0" className="fill-slate-800 font-sans text-label font-semibold">
+                Correlation only <tspan className="fill-slate-400 font-mono font-normal">(unverified)</tspan>
+              </text>
+            </g>
+          </g>
         </svg>
       </div>
 

@@ -56,12 +56,14 @@ export function ExecutiveCockpitView() {
       </div>
 
       {/* 3. Co-Primary Execution Deck: What-If Parametric Simulation + Strategic Play Staging */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-stretch">
-        <div role="tabpanel" id="panel-whatif" aria-label="What-If Parametric Waterfall" className="h-full">
-          {board.shocks[0] && <WhatIfPanel shock={board.shocks[0]} />}
-        </div>
-        <div role="tabpanel" id="panel-tradeoffs" aria-label="Strategic Trade-offs" className="h-full">
-          <OpportunitiesPanel risks={board.risks} opportunities={board.opportunities} />
+      <div className="@container">
+        <div className="grid grid-cols-1 @[880px]:grid-cols-2 gap-4 items-stretch">
+          <div role="tabpanel" id="panel-whatif" aria-label="What-If Parametric Waterfall" className="h-full">
+            {board.shocks[0] && <WhatIfPanel shock={board.shocks[0]} />}
+          </div>
+          <div role="tabpanel" id="panel-tradeoffs" aria-label="Strategic Trade-offs" className="h-full">
+            <OpportunitiesPanel risks={board.risks} opportunities={board.opportunities} />
+          </div>
         </div>
       </div>
     </div>
