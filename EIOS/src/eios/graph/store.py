@@ -3,11 +3,16 @@
 `GraphStore.run` takes a catalogue name and parameters, never SQL. BigQuery runs GQL only on an Enterprise reservation,
 so each graph job names the reservation itself; nothing else in the project changes how it is billed. Before answering,
 the BigQuery store checks that the warehouse tables were built from the world the cockpit serves; tables from another
-world are refused, not used. An unreachable warehouse is a labelled `GraphUnavailable`, never a silent fall-back.
+world are refused, not used. An unreachable warehouse is a labelled `GraphUnavailable`. Each job carries labels (so its
+slot use shows on its own in billing) and a timeout; a repeated question is answered from a cache; and
+`FallbackGraphStore` may answer from the local double when the warehouse is unreachable, with the result's `source`
+naming the double, so the fall-back is never silent.
 """
 
 from __future__ import annotations
 
+import copy
+import json
 import logging
 import re
 import threading
@@ -25,6 +30,9 @@ _LOG = logging.getLogger("eios.graph.store")
 _PARAM = re.compile(r"@([a-z_]+)")
 _PROJECT = re.compile(r"^[a-z][a-z0-9-]{4,28}[a-z0-9]$")
 META_TABLE = "_meta"
+JOB_TIMEOUT_MS = 30_000  # [ASSUMPTION] a graph job here takes seconds; a stuck one is stopped, not billed for minutes
+CACHE_ENTRIES = 256
+JOB_LABELS = {"app": "eios", "component": "geo"}
 
 
 class GraphError(RuntimeError):
@@ -148,6 +156,8 @@ class BigQueryGraphStore:
             config = bigquery.QueryJobConfig(
                 query_parameters=[_param(bigquery, p, params[p]) for p in named.params],
                 reservation=self._reservation,
+                labels={**JOB_LABELS, "query": query},
+                job_timeout_ms=JOB_TIMEOUT_MS,
             )
             job = self._bq().query(compose(named, graph=self.graph), job_config=config)
             rows = [dict(r.items()) for r in job.result()]
@@ -166,6 +176,48 @@ class BigQueryGraphStore:
         )
 
 
+class CachedGraphStore:
+    """Answers a repeated question from memory. The tables change only on a reload, which changes the served world's
+    fingerprint and starts a new process, so the key is the query and its parameters. Failures are never cached, and a
+    caller gets its own copy of the rows."""
+
+    def __init__(self, inner: GraphStore, max_entries: int = CACHE_ENTRIES) -> None:
+        self._inner, self._max = inner, max_entries
+        self.backend = inner.backend
+        self._cache: dict[str, GraphResult] = {}
+        self._lock = threading.Lock()
+
+    def run(self, query: str, params: Mapping[str, Any]) -> GraphResult:
+        key = json.dumps([query, sorted(params.items())], default=str)
+        with self._lock:
+            hit = self._cache.get(key)
+        if hit is not None:
+            return copy.deepcopy(hit)
+        result = self._inner.run(query, params)
+        with self._lock:
+            if len(self._cache) >= self._max:
+                self._cache.pop(next(iter(self._cache)))  # the oldest entry
+            self._cache[key] = copy.deepcopy(result)
+        return result
+
+
+class FallbackGraphStore:
+    """The warehouse first; if it is unreachable, the local double over the same tables. A refused query stays refused."""
+
+    def __init__(self, primary: GraphStore, fallback: GraphStore) -> None:
+        self._primary, self._fallback = primary, fallback
+        self.backend = primary.backend
+
+    def run(self, query: str, params: Mapping[str, Any]) -> GraphResult:
+        try:
+            return self._primary.run(query, params)
+        except GraphUnavailable as exc:
+            _LOG.warning(
+                "graph warehouse unavailable, answering %s from the local double: %s", query, exc
+            )
+            return self._fallback.run(query, params)
+
+
 def _param(bigquery: Any, name: str, value: Any) -> Any:
     if isinstance(value, list | tuple):  # a list of codes or ids, bound as ARRAY<STRING>
         return bigquery.ArrayQueryParameter(name, "STRING", [str(v) for v in value])
@@ -174,7 +226,10 @@ def _param(bigquery: Any, name: str, value: Any) -> Any:
 
 
 __all__ = [
+    "JOB_TIMEOUT_MS",
     "BigQueryGraphStore",
+    "CachedGraphStore",
+    "FallbackGraphStore",
     "GraphQueryRefused",
     "GraphResult",
     "GraphStore",

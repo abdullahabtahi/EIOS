@@ -1,7 +1,7 @@
 # Builds and pushes the two cockpit images. Run from the repository root:
 #   gcloud builds submit . --project <project> --region <region> \
 #     --config EIOS/services/cloudbuild.cockpit.yaml \
-#     --substitutions _REPO=<region>-docker.pkg.dev/<project>/images,_FIREBASE_API_KEY=<public web key>,_FIREBASE_PROJECT_ID=<project>
+#     --substitutions _REPO=<region>-docker.pkg.dev/<project>/images,_FIREBASE_API_KEY=<public web key>,_FIREBASE_PROJECT_ID=<project>,_MAPS_API_KEY=<restricted browser key>
 # The images are addressed by digest afterwards (see docs/runbooks/cockpit-deploy.md).
 steps:
   - id: api
@@ -15,9 +15,12 @@ steps:
       - --build-arg=NEXT_PUBLIC_FIREBASE_API_KEY=${_FIREBASE_API_KEY}
       - --build-arg=NEXT_PUBLIC_FIREBASE_PROJECT_ID=${_FIREBASE_PROJECT_ID}
       - --build-arg=NEXT_PUBLIC_API_URL=
+      - --build-arg=NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=${_MAPS_API_KEY}
       - -t
       - ${_REPO}/cockpit-web:${BUILD_ID}
       - .
+substitutions:
+  _MAPS_API_KEY: "" # the restricted browser key for the map; empty leaves the map's "no key configured" message
 images:
   - ${_REPO}/cockpit-api:${BUILD_ID}
   - ${_REPO}/cockpit-web:${BUILD_ID}

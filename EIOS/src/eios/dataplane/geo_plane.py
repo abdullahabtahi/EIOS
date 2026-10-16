@@ -15,9 +15,21 @@ import time
 from typing import Any
 
 from eios.dataplane.aml_geo import GeoQuality, GeoSnapshot, run_geo_engine
-from eios.dataplane.aml_geo_sessions import LngLat, positions_from
+from eios.dataplane.aml_geo_sessions import (
+    HUB_DEGREE,
+    MIN_EXIT_SESSIONS,
+    MIN_SHARED_FOREIGN,
+    LngLat,
+    positions_from,
+)
 from eios.dataplane.plane import engine_service
-from eios.graph.store import BigQueryGraphStore, GraphStore, LocalGraphStore
+from eios.graph.store import (
+    BigQueryGraphStore,
+    CachedGraphStore,
+    FallbackGraphStore,
+    GraphStore,
+    LocalGraphStore,
+)
 from eios.graph.tables import GraphTables, build_tables
 from eios.reference.reader import ReferenceReader, ReferenceUnavailable, reader_from_env
 from eios.reference.tiers import jurisdiction_tiers
@@ -162,10 +174,35 @@ def graph_store() -> GraphStore | None:
                 os.environ.get("EIOS_GRAPH_RESERVATION"),
             )
             if os.environ.get("EIOS_GRAPH_BACKEND") == "bigquery" and project and reservation:
-                _store = BigQueryGraphStore(project, reservation, tables.fingerprint)
+                # The warehouse, then the local double if it is unreachable (the result's source says which), with
+                # repeated questions answered from memory so a demo's repeats cost no slots.
+                _store = CachedGraphStore(
+                    FallbackGraphStore(
+                        BigQueryGraphStore(project, reservation, tables.fingerprint),
+                        LocalGraphStore(tables),
+                    )
+                )
             else:
                 _store = LocalGraphStore(tables)
         return _store
+
+
+def warm_graph() -> None:
+    """Run the cheapest named query once, so the first operator does not pay the first job's 10 to 12 s (measured in
+    dev) and the answer is already cached. Best effort: an unreachable warehouse is logged, never raised."""
+    try:
+        store = graph_store()
+        if store is not None:
+            store.run(
+                "shared_exits",
+                {
+                    "hub_degree": HUB_DEGREE,
+                    "min_shared": MIN_SHARED_FOREIGN,
+                    "min_sessions": MIN_EXIT_SESSIONS,
+                },
+            )
+    except Exception:
+        logging.getLogger(__name__).warning("graph warm-up skipped", exc_info=True)
 
 
 def reset_for_testing() -> None:
