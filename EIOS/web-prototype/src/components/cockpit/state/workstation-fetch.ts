@@ -1,4 +1,4 @@
-import type { PersonaRole, WorkstationApiResponse } from './cockpit-types';
+import type { ActionIntentCard, PersonaRole, WorkstationApiResponse } from './cockpit-types';
 
 /** How fresh the workstation in view is. `fresh` is the last answer; the rest are in-between states. */
 export type WorkstationFreshness = 'fresh' | 'revalidating' | 'slow' | 'stale';
@@ -23,6 +23,9 @@ export const ALL_ROLES: readonly PersonaRole[] = [
   'data_operations',
 ];
 
+/** A cached workstation younger than this is shown without refetching its panels; the shelf is always refetched. */
+export const PANEL_TTL_MS = 30_000;
+
 /** Wait this long after the visible workstation is live before warming the others, so it never competes with it. */
 export const PREFETCH_DELAY_MS = 1000;
 
@@ -40,8 +43,10 @@ async function attempt(
   role: PersonaRole,
   signal: AbortSignal,
   patient: boolean,
+  withShelf = true,
 ): Promise<WorkstationResult> {
-  const res = await fetcher(`/api/cockpit/workstations/${role}${patient ? '?patient=1' : ''}`, {
+  const query = new URLSearchParams({ ...(patient ? { patient: '1' } : {}), ...(withShelf ? {} : { shelf: '0' }) }).toString();
+  const res = await fetcher(`/api/cockpit/workstations/${role}${query ? `?${query}` : ''}`, {
     method: 'GET',
     headers: { Accept: 'application/json' },
     signal,
@@ -66,7 +71,7 @@ export async function prefetchWorkstations(
   for (const role of roles) {
     if (options.signal.aborted) return;
     try {
-      const result = await attempt(options.fetcher, role, options.signal, false);
+      const result = await attempt(options.fetcher, role, options.signal, false, false);
       if (result.kind === 'denied') return;
       if (result.kind === 'live' && !options.signal.aborted) options.onLive(role, result.data);
     } catch {
@@ -95,5 +100,24 @@ export async function loadWorkstation(role: PersonaRole, options: LoadOptions): 
     return { kind: 'unavailable' };
   } finally {
     clearTimeout(slowTimer);
+  }
+}
+
+export type ShelfResult =
+  | { kind: 'live'; cards: ActionIntentCard[] }
+  | { kind: 'denied' }
+  | { kind: 'unavailable' };
+
+/** The action shelf on its own (never cached). One attempt: the panels in view stay; a failure labels them stale. */
+export async function loadShelf(fetcher: Fetcher, signal: AbortSignal): Promise<ShelfResult> {
+  try {
+    const res = await fetcher('/api/cockpit/shelf', { method: 'GET', headers: { Accept: 'application/json' }, signal });
+    if (res.status === 401 || res.status === 403) return { kind: 'denied' };
+    if (!res.ok) return { kind: 'unavailable' };
+    const body: { stagedActionCards?: ActionIntentCard[] } = await res.json();
+    return Array.isArray(body.stagedActionCards) ? { kind: 'live', cards: body.stagedActionCards } : { kind: 'unavailable' };
+  } catch (err) {
+    if (signal.aborted || (err instanceof DOMException && err.name === 'AbortError')) throw err;
+    return { kind: 'unavailable' };
   }
 }

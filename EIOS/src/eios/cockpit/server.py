@@ -26,7 +26,7 @@ from datetime import UTC, datetime
 from typing import Any, cast
 
 import uvicorn
-from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Response, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 from starlette.concurrency import run_in_threadpool
@@ -356,10 +356,28 @@ def _flywheel_status() -> dict[str, Any]:
     }
 
 
-def _build_contract_state(  # noqa: C901, PLR0915
-    role_str: str, operator_id: str | None = None, entity_id: str | None = None
+def _shelf_payload(
+    pairs: list[tuple[GovernedActionCard, ActionIntentToken]] | None = None,
 ) -> dict[str, Any]:
-    """Compiles the full CockpitUiContract JSON structure for a role (read-only, side-effect free)."""
+    """The governed action shelf in contract form, from one listing of the intents."""
+    cards = [
+        _card_to_ui_contract_dict(card, token)
+        for card, token in (pairs if pairs is not None else action_shelf.list_cards_with_tokens())
+    ]
+    return {"staged_count": len(cards), "actions": cards}
+
+
+def _build_contract_state(  # noqa: C901, PLR0915
+    role_str: str,
+    operator_id: str | None = None,
+    entity_id: str | None = None,
+    include_shelf: bool = True,
+) -> dict[str, Any]:
+    """Compiles the full CockpitUiContract JSON structure for a role (read-only, side-effect free).
+
+    `include_shelf=False` leaves the shelf out (the key is absent, not empty) for a caller that reads it from
+    `GET /api/cockpit/shelf`; the intents are then listed only where the compliance view needs them.
+    """
     norm_role = role_str.lower().strip()
     now_iso = _get_utc_now()
     case_extras: dict[str, Any] = {}  # what the AML engine view adds around its dossier
@@ -679,15 +697,19 @@ def _build_contract_state(  # noqa: C901, PLR0915
             compliance_svc.hub is not None and compliance_svc.hub is action_shelf.intent_hub
         )
         with ThreadPoolExecutor(max_workers=1) as pool:
-            shelf_listing = pool.submit(action_shelf.list_cards_with_tokens)
+            shelf_listing = (
+                pool.submit(action_shelf.list_cards_with_tokens)
+                if include_shelf or shared_hub
+                else None
+            )
             triage_items, active_dossier, kinetic_canvas = compliance_view.workstation(
                 compliance_svc,
                 now_iso,
                 list_tokens=(lambda: [t for _, t in shelf_listing.result()])
-                if shared_hub
+                if shared_hub and shelf_listing is not None
                 else None,
             )
-            shelf_pairs = shelf_listing.result()
+            shelf_pairs = shelf_listing.result() if shelf_listing is not None else None
 
     elif (
         operations_engine_service() is not None
@@ -880,13 +902,7 @@ def _build_contract_state(  # noqa: C901, PLR0915
             },
         }
 
-    # Staged action cards formatted for UI contract
-    formatted_cards = [
-        _card_to_ui_contract_dict(card, token)
-        for card, token in (
-            shelf_pairs if shelf_pairs is not None else action_shelf.list_cards_with_tokens()
-        )
-    ]
+    shelf = {"governed_action_shelf": _shelf_payload(shelf_pairs)} if include_shelf else {}
 
     # Build full contract JSON conforming to cockpit-ui-contract.schema.json
     contract_payload: dict[str, Any] = {
@@ -905,10 +921,7 @@ def _build_contract_state(  # noqa: C901, PLR0915
         },
         "active_dossier": active_dossier,
         "kinetic_canvas": kinetic_canvas,
-        "governed_action_shelf": {
-            "staged_count": len(formatted_cards),
-            "actions": formatted_cards,
-        },
+        **shelf,
         "fallback_state": {
             "is_active": False,
             "badge_label": _data_badge(role_enum),
@@ -1007,6 +1020,7 @@ COPILOT_MODELS_PATH = "/api/cockpit/copilot/models"
 FLYWHEEL_FEEDBACK_PATH = "/api/cockpit/flywheel/feedback"
 AUDIT_VERIFY_PATH = "/api/cockpit/audit/verify"
 COMPLIANCE_LEDGER_PATH = "/api/cockpit/compliance/ledger"
+SHELF_PATH = "/api/cockpit/shelf"
 
 public_router = APIRouter(tags=["Cockpit Presentation"])
 router = APIRouter(tags=["Cockpit Presentation"], dependencies=[Depends(current_operator)])
@@ -1033,6 +1047,7 @@ def get_health() -> CockpitHealthResponse:
 def get_workstation_state(
     role: str,
     entity_id: str | None = None,
+    shelf: bool = True,
     operator: Operator | None = Depends(current_operator),
 ) -> dict[str, Any]:
     """Returns the full contract-compliant client state for the requested workstation.
@@ -1042,7 +1057,10 @@ def get_workstation_state(
     """
     try:
         return _build_contract_state(
-            role, operator_id=operator.uid if operator else None, entity_id=entity_id
+            role,
+            operator_id=operator.uid if operator else None,
+            entity_id=entity_id,
+            include_shelf=shelf,
         )
     except Exception as exc:
         _LOG.exception("failed to assemble workstation state for %s", role)
@@ -1050,6 +1068,13 @@ def get_workstation_state(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to assemble workstation state",
         ) from exc
+
+
+@router.get(SHELF_PATH)
+def get_shelf(response: Response) -> dict[str, Any]:
+    """The governed action shelf alone: one listing of the intents, always read fresh (never cached)."""
+    response.headers["Cache-Control"] = "no-store"
+    return {"governed_action_shelf": _shelf_payload()}
 
 
 @router.get(AML_CASE_PATH)

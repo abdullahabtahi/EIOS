@@ -21,6 +21,8 @@ import { useAuth } from '@/lib/auth/auth-context';
 import {
   ALL_ROLES,
   PREFETCH_DELAY_MS,
+  PANEL_TTL_MS,
+  loadShelf,
   loadWorkstation,
   prefetchWorkstations,
   type WorkstationFreshness,
@@ -110,7 +112,8 @@ export type CockpitAction =
   | { type: 'LOAD_WORKSTATION_START' }
   | { type: 'LOAD_WORKSTATION_SUCCESS'; payload: WorkstationApiResponse }
   | { type: 'LOAD_WORKSTATION_FAILURE'; payload: string }
-  | { type: 'SHOW_CACHED_WORKSTATION'; payload: WorkstationApiResponse }
+  | { type: 'SHOW_CACHED_WORKSTATION'; payload: WorkstationApiResponse; revalidating: boolean }
+  | { type: 'SET_SHELF'; payload: ActionIntentCard[] }
   | { type: 'WORKSTATION_FRESHNESS'; payload: WorkstationFreshness }
   | { type: 'CASE_LOADED'; payload: CaseApiResponse }
   | { type: 'CASE_FAILED'; payload: { entityId: string; message: string } }
@@ -427,7 +430,12 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
         type: 'LOAD_WORKSTATION_SUCCESS',
         payload: { ...action.payload, stagedActionCards: [] },
       });
-      return { ...shown, workstationFreshness: 'revalidating' };
+      return { ...shown, workstationFreshness: action.revalidating ? 'revalidating' : 'fresh' };
+    }
+
+    case 'SET_SHELF': {
+      // The backend's shelf is the whole truth: what it no longer lists is gone, what it lists replaces what is shown.
+      return { ...state, stagedActions: action.payload };
     }
 
     case 'WORKSTATION_FRESHNESS': {
@@ -609,7 +617,7 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
   const inFlight = useRef<AbortController | null>(null);
   // The last live answer per workstation: never a replay, never persisted, gone on reload.
   const displayedRole = useRef<PersonaRole | null>(null);
-  const lastLive = useRef(new Map<PersonaRole, WorkstationApiResponse>());
+  const lastLive = useRef(new Map<PersonaRole, { data: WorkstationApiResponse; at: number }>());
   // One operator's data is never shown to the next: drop the cache whenever the signed-in operator changes.
   const { operator } = useAuth();
   const operatorUid = operator?.uid ?? null;
@@ -633,11 +641,26 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
     inFlight.current = controller;
     // Stale-while-revalidate: show the last live answer for this workstation at once and refresh behind it.
     // Only on a switch: a refresh of the workstation already in view must not reset the operator's selection.
-    const lastKnown = lastLive.current.get(role);
-    const cached = role !== displayedRole.current ? lastKnown : undefined;
+    const entry = lastLive.current.get(role);
+    const lastKnown = entry?.data;
+    const onSwitch = role !== displayedRole.current;
+    const cached = onSwitch ? lastKnown : undefined;
+    // Panels younger than the TTL are not refetched; the shelf is, every time (it is what an approver acts on).
+    const panelsFresh = onSwitch && entry !== undefined && Date.now() - entry.at < PANEL_TTL_MS;
     displayedRole.current = role;
-    dispatch(cached ? { type: 'SHOW_CACHED_WORKSTATION', payload: cached } : { type: 'LOAD_WORKSTATION_START' });
+    if (cached) dispatch({ type: 'SHOW_CACHED_WORKSTATION', payload: cached, revalidating: !panelsFresh });
+    else dispatch({ type: 'LOAD_WORKSTATION_START' });
     try {
+      if (panelsFresh) {
+        const shelf = await loadShelf(authFetch, controller.signal);
+        if (seq !== requestSeq.current) return;
+        if (shelf.kind === 'live') dispatch({ type: 'SET_SHELF', payload: shelf.cards });
+        else if (shelf.kind === 'denied') {
+          lastLive.current.clear();
+          dispatch({ type: 'LOAD_WORKSTATION_FAILURE', payload: 'Not authorised to view this workstation. Sign in again.' });
+        } else dispatch({ type: 'WORKSTATION_FRESHNESS', payload: 'stale' });
+        return;
+      }
       const result = await loadWorkstation(role, {
         fetcher: authFetch,
         signal: controller.signal,
@@ -647,7 +670,7 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
       });
       if (seq !== requestSeq.current) return;
       if (result.kind === 'live') {
-        lastLive.current.set(role, result.data);
+        lastLive.current.set(role, { data: result.data, at: Date.now() });
         dispatch({ type: 'LOAD_WORKSTATION_SUCCESS', payload: result.data });
         return;
       }
@@ -687,7 +710,7 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
         signal: controller.signal,
         // Never over a newer answer the operator's own load already stored.
         onLive: (role, data) => {
-          if (!lastLive.current.has(role)) lastLive.current.set(role, data);
+          if (!lastLive.current.has(role)) lastLive.current.set(role, { data, at: Date.now() });
         },
       });
     }, PREFETCH_DELAY_MS);

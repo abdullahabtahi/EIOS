@@ -34,7 +34,7 @@ function isMeasuredPlatform(raw: any): boolean {
   return Array.isArray(raw?.dr_proofs) && raw.dr_proofs.some((p: any) => typeof p?.rows_restored === 'number');
 }
 
-function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationApiResponse {
+function normalizeBackendWorkstation(raw: any, role: PersonaRole, shelfOmitted: boolean): WorkstationApiResponse {
   const mock = getMockWorkstationState(role);
   if (!raw || typeof raw !== 'object') return mock;
 
@@ -74,7 +74,10 @@ function normalizeBackendWorkstation(raw: any, role: PersonaRole): WorkstationAp
   // 4. Staged Action Cards: signature state comes from the backend verdict, never a default
   let stagedActionCards: ActionIntentCard[] = mock.stagedActionCards;
   const rawActions = raw.governed_action_shelf?.actions || raw.stagedActionCards;
-  if (Array.isArray(rawActions) && rawActions.length > 0) {
+  if (shelfOmitted) {
+    // Panels only: the shelf is read from its own route, never filled in from a fixture.
+    stagedActionCards = [];
+  } else if (Array.isArray(rawActions) && rawActions.length > 0) {
     stagedActionCards = rawActions.map(normalizeActionCard).filter((card) => card.intentId !== '');
   }
 
@@ -136,15 +139,19 @@ export async function GET(
   try {
     const params = new URL(req.url).searchParams;
     const entityId = params.get('entity_id');
-    const query = entityId ? `?entity_id=${encodeURIComponent(entityId)}` : '';
-    const res = await callBackend(req, `/api/cockpit/workstations/${role}${query}`, {
+    const shelfOmitted = params.get('shelf') === '0';
+    const query = new URLSearchParams({
+      ...(entityId ? { entity_id: entityId } : {}),
+      ...(shelfOmitted ? { shelf: 'false' } : {}),
+    }).toString();
+    const res = await callBackend(req, `/api/cockpit/workstations/${role}${query ? `?${query}` : ''}`, {
       headers: { Accept: 'application/json' },
     }, params.get('patient') === '1' ? { timeoutMs: PATIENT_TIMEOUT_MS } : {});
     if (res && (res.status === 401 || res.status === 403)) return relayError(res);
 
     if (res?.ok) {
       const raw = await res.json();
-      const normalized = normalizeBackendWorkstation(raw, validRole);
+      const normalized = normalizeBackendWorkstation(raw, validRole, shelfOmitted);
       return privateJson(req, normalized);
     }
   } catch {
