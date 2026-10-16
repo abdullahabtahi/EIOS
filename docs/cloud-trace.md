@@ -1,0 +1,14 @@
+# Cloud Trace for the copilot
+
+**Why.** ADK wraps each turn in `invoke_agent`, `call_llm` and `execute_tool` spans. No tracer provider was ever installed (`setup_telemetry` in `common/otel.py` has no caller), so on Cloud Run those spans went nowhere and a slow turn could only be explained from our own `timing_ms` field. The advice in `docs/assistant-latency.md` to "measure per stage before blaming code" now has a standard tool: Trace explorer.
+
+**What changed.** `observability/cloud_trace.py`:
+- `configure_cloud_trace()` runs at start-up. `EIOS_TRACE_EXPORT=cloud_trace` installs ADK's own Google Cloud exporter (traces only, not metrics or logs), which sends OTLP to `telemetry.googleapis.com` and a processor that stamps the request's `correlation_id` on each span, so a trace joins to its log lines. Unset or `off` installs nothing (dev and tests). Any other value fails start-up, so a typo cannot silently disable tracing. An exporter that cannot be set up is logged and the service runs without traces; so is the case where ADK produced no exporter (it does that when it cannot work out the project) or a tracer provider was installed first. Start-up never reports "on" for an export that is not happening. It runs in a thread, since it reads credentials.
+- Message content stays off. ADK puts the prompt and the answer on some spans by default; here that is account data. Every run carries `RunConfig(telemetry=TelemetryConfig(capture_message_content=NO_CONTENT))` (the guarantee, whatever the environment says; a test checks what the runner is actually called with), and the API's start-up also forces the process environment to no-content, even with export off, so adding an OTLP endpoint later cannot start shipping text. A process that builds the runtime without the API's start-up has the per-run guarantee only.
+
+**Infra (not applied).** `cockpit.tf` sets `EIOS_TRACE_EXPORT` and `EIOS_SERVICE_NAME` on `eios-api` and declares `telemetry.googleapis.com` (what the exporter calls) beside `cloudtrace.googleapis.com`. The runtime identity holds `roles/cloudtrace.agent`, the role Google's agent scaffold grants for this exporter; I could not confirm it against the product docs (the docs server was unavailable), so the first deploy must show spans arriving, and if it does not, check for `roles/telemetry.tracesWriter`. A deploy needs its own go.
+
+**Not done, on purpose.**
+- The BigQuery Agent Analytics plugin: the standing decision is no telemetry to BigQuery.
+- The structured JSON log handler in `common/otel.py` is also unused in production, so Cloud Logging lines carry no trace id yet. Wiring it is a separate change.
+- `observability/tracing.py` is a hand-written span model that duplicates OpenTelemetry. Nothing on the agent path uses it; remove it in its own change once its callers are confirmed.
