@@ -272,7 +272,6 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
               changeCounts={changeCounts}
               comparing={compare}
               onMode={setMode}
-              onChangeList={openCompare}
               changeNote={(iso2) => notes?.get(iso2)}
               listChange={listChangeSlot}
             />

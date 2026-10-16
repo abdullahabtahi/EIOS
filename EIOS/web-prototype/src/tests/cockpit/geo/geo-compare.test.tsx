@@ -111,23 +111,22 @@ describe('the Jurisdictions view and what changed on its lists', () => {
   };
   const region = () => screen.getByRole('region', { name: 'What changed on the lists' });
 
-  it('opens on where the lists stand, with a visible switch to what changed that carries the number of changes', async () => {
-    const mode = await open();
-    expect(mode).toHaveTextContent('4');
-    expect(screen.getByRole('button', { name: /Where we stand/ })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: 'FATF' })).toBeInTheDocument();
+  it('puts one small toggle on the label of the list switcher, with the count for the list in view, and no second switch', async () => {
+    const toggle = await open();
+    expect(toggle).toHaveTextContent('2');
+    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(within(toggle.parentElement as HTMLElement).getByText('Colour countries by')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Where we stand/ })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Which list' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'What changed on the lists' })).toBeNull();
-    expect(screen.queryByText('What did the latest list change do to us?')).toBeNull();
   });
 
-  it('shows the table, the list tabs and the Before and After switch in that mode, and puts the other controls away', async () => {
+  it('opens the table and the Before and After switch, keeps the list switcher, and puts the summary and the lead list away', async () => {
     fireEvent.click(await open());
     expect(await within(await screen.findByRole('region', { name: 'What changed on the lists' })).findByText('Kenya')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /What changed/ })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: /^FATF/ })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: /^EU/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'FATF' })).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getByRole('button', { name: 'After' })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.queryByText('Colour countries by')).toBeNull();
     expect(screen.queryByRole('region', { name: 'Where to look first' })).toBeNull();
   });
 
@@ -139,17 +138,24 @@ describe('the Jurisdictions view and what changed on its lists', () => {
     expect(screen.getByRole('button', { name: 'After' })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('moves to the other list with its tab, and back to where we stand with the switch', async () => {
+  it('follows the list switcher to the other list, and ends on Basel, which has no change to read', async () => {
     fireEvent.click(await open());
     await screen.findByRole('region', { name: 'What changed on the lists' });
-    fireEvent.click(screen.getByRole('button', { name: /^EU/ }));
-    await waitFor(() => expect(screen.getByRole('button', { name: /^EU/ })).toHaveAttribute('aria-pressed', 'true'));
+    fireEvent.click(screen.getByRole('button', { name: 'EU' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'EU' })).toHaveAttribute('aria-pressed', 'true'));
     expect(region()).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /Where we stand/ }));
-    expect(screen.queryByRole('region', { name: 'What changed on the lists' })).toBeNull();
-    expect(screen.getByText('Colour countries by')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'EU' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Basel AML' }));
+    await waitFor(() => expect(screen.queryByRole('region', { name: 'What changed on the lists' })).toBeNull());
+    expect(screen.queryByRole('button', { name: /What changed/ })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Before' })).toBeNull();
+  });
+
+  it('closes with the same toggle and goes back to the lists as they stand', async () => {
+    fireEvent.click(await open());
+    await screen.findByRole('region', { name: 'What changed on the lists' });
+    fireEvent.click(screen.getByRole('button', { name: /What changed/ }));
+    expect(screen.queryByRole('region', { name: 'What changed on the lists' })).toBeNull();
+    expect(screen.getByRole('region', { name: 'Where to look first' })).toBeInTheDocument();
   });
 
   it('names the outlines on the map in the legend, for a list that has a change, and not for Basel', async () => {

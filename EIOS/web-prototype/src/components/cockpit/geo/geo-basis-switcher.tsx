@@ -3,11 +3,39 @@
 import * as React from 'react';
 import { BASES, type BasisId } from './geo-basis';
 
-/** Which published list colours the map. The lists differ, so showing one at a time keeps each one's claim its own. */
-export function GeoBasisSwitcher({ current, onChange }: { readonly current: BasisId; readonly onChange: (id: BasisId) => void }) {
+export interface GeoBasisSwitcherProps {
+  readonly current: BasisId;
+  readonly onChange: (id: BasisId) => void;
+  /** How many countries the latest change of the list in view names; undefined when it has none (Basel) or is not read yet. */
+  readonly changeCount?: number;
+  /** Whether the comparison of that change is open. */
+  readonly changing?: boolean;
+  readonly onToggleChange?: () => void;
+}
+
+/**
+ * Which published list colours the map. The lists differ, so showing one at a time keeps each one's claim its own. On
+ * the label's line, a small toggle opens what the latest change of that same list did to this book: one switcher, with
+ * the change a reading of the list you are on.
+ */
+export function GeoBasisSwitcher({ current, onChange, changeCount, changing = false, onToggleChange }: GeoBasisSwitcherProps) {
   return (
     <div role="group" aria-label="Risk basis" className="space-y-1">
-      <p className="text-label font-semibold text-cx-muted">Colour countries by</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-label font-semibold text-cx-muted">Colour countries by</p>
+        {changeCount !== undefined && changeCount > 0 && onToggleChange && (
+          <button
+            type="button"
+            aria-pressed={changing}
+            onClick={onToggleChange}
+            className={`flex cursor-pointer items-center gap-1.5 border px-2 py-0.5 text-label font-semibold outline-none transition-colors focus-visible:ring-2 focus-visible:ring-cx-accent ${
+              changing ? 'border-cx-accent bg-cx-accent text-white' : 'border-cx-line bg-white text-cx-accent hover:border-cx-accent'
+            }`}>
+            What changed
+            <span className={`font-mono tabular-nums ${changing ? 'text-white/80' : 'text-cx-muted'}`}>{changeCount}</span>
+          </button>
+        )}
+      </div>
       <div className="inline-flex gap-0.5 border border-cx-line bg-cx-sub-2 p-0.5">
         {BASES.map((b) => {
           const active = b.id === current;
