@@ -109,7 +109,16 @@ export function TripartiteShell({
         <HeaderNav onOpenShortcuts={() => setShortcutsModalOpen(true)} />
 
         {/* Tripartite COP Center Work Area */}
-        <div id="workspace" tabIndex={-1} className="flex-1 flex overflow-hidden relative outline-none">
+        <div
+          id="workspace"
+          tabIndex={-1}
+          onScroll={(e) => {
+            if (e.currentTarget.scrollTop !== 0) {
+              e.currentTarget.scrollTop = 0;
+            }
+          }}
+          className="flex-1 flex overflow-hidden relative outline-none"
+        >
           {/* Left Triage Rail: fluid (collapsible on smaller displays) */}
           {!leftRailCollapsed ? (
             <div className="flex h-full">

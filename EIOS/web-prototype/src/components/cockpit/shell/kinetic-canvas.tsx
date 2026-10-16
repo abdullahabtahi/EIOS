@@ -124,8 +124,18 @@ export function KineticCanvas({ onCollapse }: { onCollapse?: () => void } = {}) 
   const handleTabClick = (tab: (typeof allTabs)[number]) => {
     setActiveTabId(tab.id);
     if (tab.anchor) {
+      const container = scrollContainerRef.current;
       const el = document.getElementById(tab.anchor);
-      if (el) {
+      if (container && el) {
+        if (tab.id === allTabs[0].id) {
+          container.scrollTo?.({ top: 0, behavior: 'smooth' });
+        } else {
+          const containerRect = container.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          const targetScrollTop = container.scrollTop + (elRect.top - containerRect.top);
+          container.scrollTo?.({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+        }
+      } else if (el) {
         el.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
       }
     }
