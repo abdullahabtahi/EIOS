@@ -26,39 +26,39 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
   return (
     <section
       aria-label="Net revenue projection"
-      className="bg-white border border-slate-200 p-4 shadow-xs space-y-3.5 select-none text-slate-900"
+      className="bg-white border border-slate-200 shadow-xs select-none text-slate-900 overflow-hidden"
     >
       {/* Header Ribbon */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+      <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b border-slate-200/90 bg-slate-50/50">
         <div className="flex items-center gap-2">
           <span className="material-symbols-sharp text-base text-blue-700">trending_up</span>
-          <h3 className="text-title font-sans font-semibold text-slate-900">
+          <h3 className="text-title font-sans font-semibold text-slate-900 tracking-tight">
             Net revenue, {forecast.horizonDays ?? 28} days ahead
           </h3>
         </div>
-        <div className="flex items-center gap-2 text-label font-mono">
-          <span className="px-2 py-0.5 bg-slate-100 border border-slate-300 text-slate-700 font-bold">
+        <div className="flex items-center gap-1.5 text-label font-mono">
+          <span className="px-2 py-0.5 bg-white border border-slate-200 text-slate-600 font-semibold tracking-wider text-[10px]">
             HORIZON: {forecast.horizonDays ?? 28}D
           </span>
-          <span className="px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-800 font-bold">
+          <span className="px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-800 font-semibold tracking-wider text-[10px]">
             GAUSSIAN DRIFT ESTIMATE
           </span>
         </div>
       </div>
 
       {/* Primary KPI & Visual Confidence Envelope */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+      <div className="p-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         {/* Left: Point Estimate */}
-        <div className="lg:col-span-5 space-y-1">
-          <div className="text-label font-mono uppercase tracking-wider text-slate-500 font-semibold">
+        <div className="lg:col-span-5 space-y-1.5">
+          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold">
             Point Estimate Projected Revenue
           </div>
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 font-mono">
+          <div className="flex flex-wrap items-baseline gap-3 font-mono">
             <span className="text-3xl font-extrabold text-slate-900 tabular-nums tracking-tight">
               {usd(forecast.point)}
             </span>
             <span
-              className={`text-xs font-bold px-2 py-0.5 border tabular-nums ${
+              className={`text-[11px] font-bold px-2 py-0.5 border tabular-nums ${
                 forecast.deltaPct < 0
                   ? 'bg-amber-50 border-amber-300 text-amber-800'
                   : 'bg-green-50 border-green-300 text-green-800'
@@ -69,47 +69,81 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
           </div>
         </div>
 
-        {/* Right: Palantir Range Gauge */}
-        <div className="lg:col-span-7 bg-slate-50 border border-slate-200 p-3 space-y-2 font-mono text-label">
-          <div className="flex items-center justify-between">
-            <span className="font-semibold uppercase tracking-wider text-slate-500">Credible Interval Distribution</span>
+        {/* Right: Palantir Statistical Range Gauge */}
+        <div className="lg:col-span-7 space-y-2">
+          <div className="flex items-center justify-between text-label font-mono">
+            <span className="font-semibold uppercase tracking-wider text-slate-500 text-[10px]">
+              Credible Interval Distribution
+            </span>
             <span className="text-slate-800 font-bold">{interval}</span>
           </div>
 
           {forecast.low !== null && forecast.high !== null && (
-            <div className="space-y-1 pt-0.5">
-              <div className="relative h-3 bg-slate-200 border border-slate-300 rounded-xs overflow-hidden">
-                <div className="absolute inset-y-0 left-0 right-0 bg-blue-100/90" />
+            <div className="space-y-1.5 pt-0.5">
+              {/* Statistical Distribution Axis Track */}
+              <div className="relative h-3.5 bg-slate-100 border border-slate-300/80 rounded-xs overflow-hidden flex items-center">
+                {/* 90% Confidence Mass Fill */}
+                <div className="absolute inset-y-0 left-0 right-0 bg-blue-100/70 border-x border-blue-300" />
+                {/* Center Reference Guide */}
+                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-blue-200" />
+                {/* Mode Point Estimate Needle */}
                 <div
-                  className="absolute top-0 bottom-0 w-1.5 bg-slate-900 z-10 -translate-x-1/2"
+                  className="absolute top-0 bottom-0 w-1 bg-slate-900 z-10 -translate-x-1/2 shadow-xs"
                   style={{ left: `${envelopePct}%` }}
                   title={`Point: ${usd(forecast.point)}`}
                 />
               </div>
-              <div className="flex items-center justify-between text-slate-500 text-[10px]">
-                <span>Low: <strong>{usd(forecast.low)}</strong></span>
-                <span className="font-bold text-slate-900">▲ Point: {usd(forecast.point)}</span>
-                <span>High: <strong>{usd(forecast.high)}</strong></span>
+              {/* Coordinate Callouts */}
+              <div className="flex items-center justify-between text-[10px] font-mono text-slate-500">
+                <span>Low: <strong className="text-slate-700">{usd(forecast.low)}</strong></span>
+                <span className="font-bold text-slate-900 bg-slate-100 px-1.5 py-0.2 border border-slate-200">
+                  ▲ Point: {usd(forecast.point)}
+                </span>
+                <span>High: <strong className="text-slate-700">{usd(forecast.high)}</strong></span>
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Structured Telemetry Calibration Strip (No duplicate paragraphs) */}
+      {/* Model Telemetry & Audit Footer Strip */}
       {forecast.skill !== null && forecast.coverage !== null && forecast.origins !== null && (
-        <div className="pt-2 border-t border-slate-200 flex flex-wrap items-center gap-2 text-label font-mono">
-          <span className="px-2 py-1 bg-slate-100 border border-slate-300 text-slate-700">
-            Backtested on {forecast.origins} past forecasts: its error was <strong className="text-slate-900 font-bold">{forecast.skill.toFixed(2)}× the error of carrying</strong> today&apos;s value forward
-          </span>
-          <span className="px-2 py-1 bg-green-50 border border-green-200 text-green-800">
-            Calibration: <strong className="text-green-900 font-bold">interval held {(forecast.coverage * 100).toFixed(0)}%</strong> of the time on holdouts
-          </span>
-          {forecast.assumption && (
-            <span className="px-2 py-1 bg-slate-100 border border-slate-300 text-slate-700">
-              Assumes the {forecast.assumption}.
-            </span>
-          )}
+        <div className="border-t border-slate-200/90 bg-slate-50/70 px-4 py-2.5 text-label font-mono">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 divide-y md:divide-y-0 md:divide-x divide-slate-200 text-slate-600">
+            {/* Benchmark */}
+            <div className="flex items-start gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1 shrink-0" />
+              <span className="leading-snug text-[11px]">
+                Backtested on {forecast.origins} past forecasts: its error was{' '}
+                <strong className="text-slate-900 font-semibold">
+                  {forecast.skill.toFixed(2)}× the error of carrying
+                </strong>{' '}
+                today&apos;s value forward
+              </span>
+            </div>
+
+            {/* Calibration */}
+            <div className="flex items-start gap-2 md:pl-3 pt-2 md:pt-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1 shrink-0" />
+              <span className="leading-snug text-[11px]">
+                Calibration:{' '}
+                <strong className="text-slate-900 font-semibold">
+                  interval held {(forecast.coverage * 100).toFixed(0)}%
+                </strong>{' '}
+                of the time on holdouts
+              </span>
+            </div>
+
+            {/* Prior Assumption */}
+            {forecast.assumption && (
+              <div className="flex items-start gap-2 md:pl-3 pt-2 md:pt-0">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1 shrink-0" />
+                <span className="leading-snug text-[11px] text-slate-500">
+                  Assumes the {forecast.assumption}.
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       )}
     </section>
