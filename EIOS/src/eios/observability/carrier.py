@@ -136,10 +136,7 @@ def inject_context(
     # 2. Resolve correlation ID
     curr_baggage = _CURRENT_BAGGAGE.get() or {}
     cid = (
-        correlation_id
-        or current_id()
-        or curr_baggage.get("correlation_id")
-        or new_correlation_id()
+        correlation_id or current_id() or curr_baggage.get("correlation_id") or new_correlation_id()
     )
     carrier[CORRELATION_HEADER] = cid
 
