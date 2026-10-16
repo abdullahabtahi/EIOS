@@ -193,58 +193,59 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       </div>
 
       {/* Causal Link Refuter Battery Verification Matrix */}
-      <div className="border border-slate-200 overflow-x-auto">
-        <table className="w-full text-label font-mono">
+      <div className="border border-slate-200 overflow-x-auto bg-white">
+        <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="text-left text-slate-500 bg-slate-50 border-b border-slate-200">
-              <th className="py-2 px-3 font-semibold uppercase tracking-wider">Causal Link Pathway</th>
-              <th className="py-2 px-3 font-semibold uppercase tracking-wider">Effect per unit</th>
-              <th className="py-2 px-3 font-semibold uppercase tracking-wider">Stability (Bootstrap)</th>
-              <th className="py-2 px-3 font-semibold uppercase tracking-wider">Placebo p-value</th>
-              <th className="py-2 px-3 font-semibold uppercase tracking-wider">Refuter Gate Verdict</th>
+            <tr className="text-slate-500 bg-slate-50/90 border-b border-slate-200 font-mono text-[10px] uppercase tracking-wider">
+              <th className="py-2.5 px-2.5 font-semibold min-w-[340px]">Causal Link Pathway</th>
+              <th className="py-2.5 px-2.5 font-semibold min-w-[85px]">Effect per unit</th>
+              <th className="py-2.5 px-2.5 font-semibold min-w-[100px]">Stability (Bootstrap)</th>
+              <th className="py-2.5 px-2.5 font-semibold min-w-[75px]">Placebo p-value</th>
+              <th className="py-2.5 px-2.5 font-semibold min-w-[270px]">Refuter Gate Verdict</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
             {edges.map((e) => (
-              <tr key={`${e.source}-${e.target}`} className="hover:bg-slate-50/80 transition-colors">
-                <td className="py-2 px-3 text-slate-900 font-bold flex items-center gap-1.5">
-                  <span className="material-symbols-sharp text-xs text-slate-400">arrow_right_alt</span>
-                  <span>{label(e.source)}</span>
-                  <span className="text-slate-400">→</span>
-                  <span>{label(e.target)}</span>
+              <tr key={`${e.source}-${e.target}`} className="hover:bg-slate-50/60 transition-colors">
+                <td className="py-2.5 px-2.5">
+                  <div className="grid grid-cols-[150px_16px_1fr] items-center gap-1.5 text-xs">
+                    <span className="font-sans font-medium text-slate-700 whitespace-nowrap" title={label(e.source)}>
+                      {label(e.source)}
+                    </span>
+                    <span className="text-slate-400 font-mono text-center select-none text-xs">→</span>
+                    <span className="font-sans font-semibold text-slate-900 whitespace-nowrap" title={label(e.target)}>
+                      {label(e.target)}
+                    </span>
+                  </div>
                 </td>
-                <td className="py-2 px-3 tabular-nums font-bold text-slate-800">
+                <td className="py-2.5 px-2.5 font-mono text-xs tabular-nums font-semibold text-slate-900">
                   {weightText(e.weight)}
                 </td>
-                <td className="py-2 px-3 tabular-nums text-slate-700">
+                <td className="py-2.5 px-2.5 font-mono text-xs tabular-nums text-slate-700">
                   <div className="flex items-center gap-2">
-                    <span className="w-12 h-1.5 bg-slate-200 rounded-full overflow-hidden inline-block">
+                    <span className="w-10 h-1.5 bg-slate-200 rounded-full overflow-hidden inline-block shrink-0">
                       <span
                         className="h-full bg-blue-600 block rounded-full"
                         style={{ width: `${Math.round(e.confidence * 100)}%` }}
                       />
                     </span>
-                    <span>{e.confidence.toFixed(2)}</span>
+                    <span className="font-medium">{e.confidence.toFixed(2)}</span>
                   </div>
                 </td>
-                <td className="py-2 px-3 tabular-nums text-slate-700">
+                <td className="py-2.5 px-2.5 font-mono text-xs tabular-nums text-slate-600">
                   {e.placeboP.toFixed(2)}
                 </td>
-                <td className="py-2 px-3">
-                  <span
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-bold border ${
-                      e.verified
-                        ? 'bg-green-50 text-green-800 border-green-300'
-                        : 'bg-amber-50 text-amber-800 border-amber-300'
-                    }`}
-                  >
+                <td className="py-2.5 px-2.5">
+                  <div className="flex items-center gap-2 text-xs font-semibold whitespace-nowrap">
                     <span
-                      className={`size-1.5 rounded-full ${
+                      className={`w-2 h-2 rounded-full shrink-0 ${
                         e.verified ? 'bg-green-600' : 'bg-amber-600'
                       }`}
                     />
-                    {e.label}
-                  </span>
+                    <span className={e.verified ? 'text-green-700 font-sans' : 'text-amber-800 font-sans'}>
+                      {e.label}
+                    </span>
+                  </div>
                 </td>
               </tr>
             ))}
