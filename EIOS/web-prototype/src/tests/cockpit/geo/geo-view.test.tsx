@@ -297,8 +297,8 @@ describe('describeSelection', () => {
   it('shows what comes back the other way when money runs both directions on a corridor', () => {
     const both = { ...FLOWS, corridors: [...FLOWS.corridors, { origin: 'IR', destination: 'NO', volume_usd: 50_000, accounts: 2, events: 5, tier: 'high' as const }] };
     const view = describeSelection(both, REFERENCE, { kind: 'corridor', id: 'NO>IR' });
-    expect(view?.rows).toContainEqual(['Back, Iran → Norway', '$50K · 2 accounts']);
-    expect(describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'NO>IR' })?.rows.map(([l]) => l)).not.toContain('Back, Iran → Norway');
+    expect(view?.rows).toContainEqual(['Returned', '$50K']);
+    expect(describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'NO>IR' })?.rows.map(([l]) => l)).not.toContain('Returned');
   });
 
   it('describes a flagged country pair with its account count and examples', () => {

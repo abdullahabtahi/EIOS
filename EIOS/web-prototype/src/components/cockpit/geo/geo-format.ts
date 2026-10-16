@@ -96,7 +96,7 @@ export function describeSelection(
             ['Accounts', COUNT.format(c.accounts)],
             ['Payments', COUNT.format(c.events)],
             ...(back
-              ? ([[`Back, ${name(back.origin)} → ${name(back.destination)}`, `${formatUsd(back.volume_usd)} · ${COUNT.format(back.accounts)} ${back.accounts === 1 ? 'account' : 'accounts'}`]] as const)
+              ? ([['Returned', formatUsd(back.volume_usd)]] as const)
               : []),
             ...(c.deposits != null && c.withdrawals != null
               ? ([
