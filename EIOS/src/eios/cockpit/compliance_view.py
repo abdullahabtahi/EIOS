@@ -6,25 +6,31 @@ so; nothing claims a storage retention lock the platform does not hold.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import Any
 
 from eios.cockpit.aml_metric import metric
 from eios.cockpit.compliance import ComplianceExplorerService
+from eios.ontology.actions.models import ActionIntentToken
 
 TIMELINE_LIMIT = 50
 _ENGINE = "ContinuousAuditWalker"
 
 
-def ledger_payload(svc: ComplianceExplorerService) -> dict[str, Any]:
+def ledger_payload(
+    svc: ComplianceExplorerService,
+    list_tokens: Callable[[], Sequence[ActionIntentToken]] | None = None,
+) -> dict[str, Any]:
     """Entries newest first, every intent's sign-offs, the checkpoints and a fresh audit walk."""
+    read = svc.read_ledger(list_tokens)  # one listing of each collection for the whole request
     return {
-        "entries": list(reversed(svc.get_ledger_timeline(start_seq=1, limit=10_000)))[
+        "entries": list(reversed(svc.get_ledger_timeline(start_seq=1, limit=10_000, read=read)))[
             :TIMELINE_LIMIT
         ],
-        "approvals": list(reversed(svc.get_four_eyes_approval_log())),
-        "checkpoints": svc.get_worm_compliance_proofs(),
-        "verification": svc.verify_hash_chain_interactive(),
+        "approvals": list(reversed(svc.get_four_eyes_approval_log(read))),
+        "checkpoints": svc.get_worm_compliance_proofs(read),
+        "verification": svc.verify_hash_chain_interactive(read),
         "is_simulated": svc.sequencer is None,
     }
 
@@ -88,10 +94,12 @@ def _checkpoint_section(proof: dict[str, Any] | None, now_iso: str) -> dict[str,
 
 
 def workstation(
-    svc: ComplianceExplorerService, now_iso: str
+    svc: ComplianceExplorerService,
+    now_iso: str,
+    list_tokens: Callable[[], Sequence[ActionIntentToken]] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
     """Triage items, dossier and canvas for the compliance auditor."""
-    payload = ledger_payload(svc)
+    payload = ledger_payload(svc, list_tokens)
     proof = payload["checkpoints"][-1] if payload["checkpoints"] else None
     dossier = {
         "dossier_id": "dos_compliance_timeline",

@@ -7,10 +7,18 @@ nothing is filled in.
 
 from __future__ import annotations
 
+from collections.abc import Callable, Sequence
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, replace
 from typing import Any
 
 from eios.ontology.actions.intent_hub import ActionIntentHub
-from eios.ontology.actions.models import ActionIntentToken, ApprovalRecord, LedgerEntry
+from eios.ontology.actions.models import (
+    ActionIntentToken,
+    ApprovalRecord,
+    LedgerEntry,
+    WORMAnchorCheckpoint,
+)
 from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.worm import WORMAnchorService
 
@@ -37,17 +45,52 @@ def _tokens(hub: ActionIntentHub | None) -> dict[str, ActionIntentToken]:
     return {t.intent_id: t for t in hub.list_tokens()} if hub else {}
 
 
-def ledger_timeline(
+@dataclass(frozen=True)
+class LedgerRead:
+    """One read of the three collections a compliance request needs; every view of the request is built from it."""
+
+    entries: tuple[LedgerEntry, ...]
+    tokens: tuple[ActionIntentToken, ...]
+    checkpoints: tuple[WORMAnchorCheckpoint, ...]
+
+
+def read_ledger(
     sequencer: LedgerSequencer,
     worm: WORMAnchorService | None,
     hub: ActionIntentHub | None,
-    start_seq: int,
-    limit: int,
-) -> list[dict[str, Any]]:
+    list_tokens: Callable[[], Sequence[ActionIntentToken]] | None = None,
+) -> LedgerRead:
+    """List the ledger, the intents and the checkpoints once each, concurrently (each is a round trip on Firestore).
+
+    A caller that is already listing the hub's intents (the action shelf does, on every request) passes
+    `list_tokens`, which returns that listing, so the intents are read once and the reads overlap.
+    """
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        entries = pool.submit(lambda: tuple(sequencer.entries))
+        listed = pool.submit(
+            lambda: (
+                tuple(list_tokens())
+                if list_tokens is not None
+                else tuple(hub.list_tokens())
+                if hub
+                else ()
+            )
+        )
+        checkpoints = pool.submit(lambda: tuple(worm.get_checkpoints()) if worm else ())
+        read = LedgerRead(
+            entries=entries.result(), tokens=listed.result(), checkpoints=checkpoints.result()
+        )
+    # A write between the listings can leave a checkpoint pointing past the entries read; read the entries again.
+    if any(c.chain_head_seq > len(read.entries) for c in read.checkpoints):
+        read = replace(read, entries=tuple(sequencer.entries))
+    return read
+
+
+def ledger_timeline(read: LedgerRead, start_seq: int, limit: int) -> list[dict[str, Any]]:
     """Ledger entries from `start_seq`, oldest first; an entry is anchored once a checkpoint covers it."""
-    anchored_to = max((c.chain_head_seq for c in worm.get_checkpoints()), default=0) if worm else 0
-    tokens = _tokens(hub)
-    rows = [e for e in sequencer.entries if e.ledger_seq >= start_seq][:limit]
+    anchored_to = max((c.chain_head_seq for c in read.checkpoints), default=0)
+    tokens = {t.intent_id: t for t in read.tokens}
+    rows = [e for e in read.entries if e.ledger_seq >= start_seq][:limit]
     return [
         {
             "ledger_seq": e.ledger_seq,
@@ -63,7 +106,7 @@ def ledger_timeline(
     ]
 
 
-def checkpoint_proofs(worm: WORMAnchorService) -> list[dict[str, Any]]:
+def checkpoint_proofs(checkpoints: Sequence[WORMAnchorCheckpoint]) -> list[dict[str, Any]]:
     """Signed chain-head checkpoints, oldest first."""
     return [
         {
@@ -75,7 +118,7 @@ def checkpoint_proofs(worm: WORMAnchorService) -> list[dict[str, Any]]:
             "compliance_lock_mode": SIGNED_CHECKPOINT,
             "is_immutable": c.compliance_mode,
         }
-        for c in worm.get_checkpoints()
+        for c in sorted(checkpoints, key=lambda c: c.checkpoint_seq)
     ]
 
 
@@ -90,10 +133,10 @@ def _approver(record: ApprovalRecord | None) -> dict[str, Any] | None:
     }
 
 
-def approval_log(hub: ActionIntentHub) -> list[dict[str, Any]]:
+def approval_log(tokens: Sequence[ActionIntentToken]) -> list[dict[str, Any]]:
     """Every intent the hub holds with its sign-offs so far, oldest first; a pending intent has none."""
     out: list[dict[str, Any]] = []
-    for t in hub.list_tokens():
+    for t in tokens:
         first = t.approvals[0] if t.approvals else None
         second = t.approvals[1] if len(t.approvals) > 1 else None
         out.append(

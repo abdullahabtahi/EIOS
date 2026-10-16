@@ -7,6 +7,7 @@ SHA-256 hash chain verification bar, immutable WORM checkpoint proofs, and Four-
 from __future__ import annotations
 
 import time
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from typing import Any
 
@@ -15,6 +16,7 @@ from pydantic import BaseModel
 from eios.cockpit import compliance_ledger as ledger
 from eios.ontology.actions.audit import ContinuousAuditWalker
 from eios.ontology.actions.intent_hub import ActionIntentHub
+from eios.ontology.actions.models import ActionIntentToken
 from eios.ontology.actions.sequencer import LedgerSequencer
 from eios.ontology.actions.worm import WORMAnchorService
 
@@ -79,12 +81,23 @@ class ComplianceExplorerService:
             hub=hub,
         )
 
-    def get_ledger_timeline(self, start_seq: int = 1, limit: int = 20) -> list[dict[str, Any]]:
+    def read_ledger(
+        self, list_tokens: Callable[[], Sequence[ActionIntentToken]] | None = None
+    ) -> ledger.LedgerRead | None:
+        """List the ledger, intents and checkpoints once, for a request that needs several views; None if simulated.
+
+        `list_tokens` returns this hub's intents when the caller is already listing them.
+        """
+        if self.sequencer is None:
+            return None
+        return ledger.read_ledger(self.sequencer, self.worm_service, self.hub, list_tokens)
+
+    def get_ledger_timeline(
+        self, start_seq: int = 1, limit: int = 20, read: ledger.LedgerRead | None = None
+    ) -> list[dict[str, Any]]:
         """Returns sequential monotonic ledger records."""
         if self.sequencer is not None:
-            return ledger.ledger_timeline(
-                self.sequencer, self.worm_service, self.hub, start_seq, limit
-            )
+            return ledger.ledger_timeline(read or self.read_ledger_required(), start_seq, limit)
 
         # Canonical demo sequence (ledger_seq = 1, 2, 3...)
         now = datetime.now(UTC)
@@ -123,12 +136,24 @@ class ComplianceExplorerService:
             },
         ]
 
-    def verify_hash_chain_interactive(self) -> dict[str, Any]:
+    def read_ledger_required(self) -> ledger.LedgerRead:
+        read = self.read_ledger()
+        if read is None:
+            raise RuntimeError("the ledger is simulated: there is nothing to read")
+        return read
+
+    def verify_hash_chain_interactive(
+        self, read: ledger.LedgerRead | None = None
+    ) -> dict[str, Any]:
         """Executes full cryptographic hash chain verification walking."""
         t0 = time.perf_counter()
 
         if self.audit_walker:
-            report = self.audit_walker.verify_ledger()
+            report = (
+                self.audit_walker.verify_ledger(read.entries, read.checkpoints)
+                if read
+                else self.audit_walker.verify_ledger()
+            )
             elapsed_ms = (time.perf_counter() - t0) * 1000.0
             corrupted = (
                 [report.tampered_sequence_id] if report.tampered_sequence_id is not None else []
@@ -158,10 +183,13 @@ class ComplianceExplorerService:
             "integrity_score_pct": 100.0,
         }
 
-    def get_worm_compliance_proofs(self) -> list[dict[str, Any]]:
+    def get_worm_compliance_proofs(
+        self, read: ledger.LedgerRead | None = None
+    ) -> list[dict[str, Any]]:
         """Returns verified immutable WORM compliance retention proofs."""
         if self.worm_service is not None:
-            return ledger.checkpoint_proofs(self.worm_service)
+            checkpoints = read.checkpoints if read else self.worm_service.get_checkpoints()
+            return ledger.checkpoint_proofs(checkpoints)
         expiration = datetime(2033, 10, 9, 0, 0, tzinfo=UTC)  # 7-year statutory retention
 
         return [
@@ -176,10 +204,12 @@ class ComplianceExplorerService:
             }
         ]
 
-    def get_four_eyes_approval_log(self) -> list[dict[str, Any]]:
+    def get_four_eyes_approval_log(
+        self, read: ledger.LedgerRead | None = None
+    ) -> list[dict[str, Any]]:
         """Returns dual human approval log entries for High-severity mutations."""
         if self.hub is not None:
-            return ledger.approval_log(self.hub)
+            return ledger.approval_log(read.tokens if read else self.hub.list_tokens())
         now = datetime.now(UTC)
         return [
             {

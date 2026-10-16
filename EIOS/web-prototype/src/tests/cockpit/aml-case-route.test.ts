@@ -115,3 +115,55 @@ describe('Workstation proxy: the [ENGINE] badge is the only way to engine origin
     expect(String(fetchMock.mock.calls[0][0])).toContain('entity_id=CR91204');
   });
 });
+
+describe('workstation proxy caching and budget', () => {
+  const fetchMock = vi.fn();
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+
+  const call = (headers: Record<string, string> = {}, query = '') =>
+    getWorkstation(
+      new Request(`http://localhost:3000/api/cockpit/workstations/executive${query}`, { headers }) as any,
+      { params: Promise.resolve({ role: 'executive' }) },
+    );
+
+  it('marks the answer private and always revalidated, with an ETag', async () => {
+    fetchMock.mockResolvedValue(json(200, { as_of_timestamp: '2026-10-16T00:00:00Z' }));
+    const res = await call();
+    expect(res.headers.get('Cache-Control')).toBe('private, no-cache');
+    expect(res.headers.get('ETag')).toMatch(/^"[\w-]+"$/);
+  });
+
+  it('answers 304 when the ETag still matches', async () => {
+    fetchMock.mockResolvedValue(json(200, { as_of_timestamp: '2026-10-16T00:00:00Z' }));
+    const etag = (await call()).headers.get('ETag') as string;
+    fetchMock.mockResolvedValue(json(200, { as_of_timestamp: '2026-10-16T00:00:00Z' }));
+    const again = await call({ 'If-None-Match': etag });
+    expect(again.status).toBe(304);
+  });
+
+  it('keeps the ETag stable across builds that differ only by clock and session', async () => {
+    fetchMock.mockResolvedValue(json(200, { as_of_timestamp: '2026-10-16T00:00:00Z', session: { session_id: 'a' } }));
+    const first = (await call()).headers.get('ETag');
+    fetchMock.mockResolvedValue(json(200, { as_of_timestamp: '2026-10-16T00:00:09Z', session: { session_id: 'b' } }));
+    expect((await call()).headers.get('ETag')).toBe(first);
+  });
+
+  it('never lets a replay be cached', async () => {
+    fetchMock.mockRejectedValue(new TypeError('down'));
+    const res = await call();
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect((await res.json()).isCachedFallback).toBe(true);
+  });
+
+  it('uses a longer timeout for the retry', async () => {
+    fetchMock.mockResolvedValue(json(200, {}));
+    const spy = vi.spyOn(AbortSignal, 'timeout');
+    await call({}, '?patient=1');
+    await call();
+    expect(spy.mock.calls.map((c) => c[0])).toEqual([25000, 8000]);
+    spy.mockRestore();
+  });
+});
