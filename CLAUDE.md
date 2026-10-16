@@ -20,6 +20,7 @@ Read the doc for the area you touch, not all of them:
 | Operations plane (ingestion replay, probes, red lines, restore drill) | `docs/operations-engine.md` |
 | Geo/AML product direction | `docs/financial_geospatial.md` (v3 draft) |
 | Geo assistant (sixth workstation, map moves, verify figures), geo milestones | `docs/geo-agent.md`, `docs/geospatial-milestones.md` |
+| Prepared briefs for the top alerts (ambient dossiers) | `docs/ambient-dossiers.md` |
 | Deploy, environments, exceptions | `docs/runbooks/cockpit-deploy.md`, `EIOS/docs/environments.md` |
 
 ## 2. Commands

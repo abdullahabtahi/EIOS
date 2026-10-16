@@ -86,6 +86,15 @@ class GovernedToolPort:
         self.refusals = refusals or RefusalLog()
         self.traces: list[CallTrace] = []
 
+    def restricted_to(self, kinds: Iterable[str]) -> GovernedToolPort:
+        """A port over the same data that offers only tools of these kinds; the rest answer as unknown tools.
+
+        For a caller that must never propose or draft (the ambient brief runs under a system identity, not a person)."""
+        allowed = frozenset(kinds)
+        return GovernedToolPort(
+            (s for s in self._specs.values() if s.kind in allowed), self._context, self.refusals
+        )
+
     def spec_for_capability(self, capability: str) -> ToolSpec | None:
         return next((s for s in self._specs.values() if s.capability == capability), None)
 

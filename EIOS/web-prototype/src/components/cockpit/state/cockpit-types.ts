@@ -608,3 +608,15 @@ export interface WorkstationApiResponse extends CaseExtras {
   drProofs?: DisasterRecoveryProof[];
   redLineGates?: RedLineGateStatus[];
 }
+
+/** The assistant's brief for an alert, prepared ahead of time (docs/ambient-dossiers.md). Same figures and sources as an answer. */
+export interface PreparedBrief {
+  entityId: string;
+  preparedAt: string;
+  expiresAt: string;
+  /** Past its time to live: still shown, and said to be older. */
+  stale: boolean;
+  text: string;
+  citedMetrics: MetricProvenance[];
+  sources: AnswerSource[];
+}

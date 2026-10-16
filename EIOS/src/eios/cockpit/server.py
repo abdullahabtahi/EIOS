@@ -36,8 +36,14 @@ from eios.assistant.config import AssistantConfigError
 from eios.assistant.geo_context import MapContext
 from eios.assistant.sessions import valid_entity_id
 from eios.assistant.telemetry import record_turn
+from eios.cockpit import (
+    ambient_routes,
+    compliance_view,
+    copilot_verify,
+    evidence_routes,
+    operations_view,
+)
 from eios.cockpit import aml_engine_view as aml_view
-from eios.cockpit import compliance_view, copilot_verify, evidence_routes, operations_view
 from eios.cockpit import executive_view as exec_view
 from eios.cockpit import geo as geo_routes
 from eios.cockpit import partner_engine_view as partner_view
@@ -1352,6 +1358,9 @@ app.include_router(router)
 app.include_router(geo_routes.router)
 app.include_router(copilot_verify.router)  # carries its own operator dependency
 app.include_router(evidence_routes.router)  # likewise
+app.include_router(
+    ambient_routes.router
+)  # prepared briefs; the routes carry their own dependencies
 
 
 def main() -> None:
