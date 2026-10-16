@@ -21,7 +21,8 @@ from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.registry import ToolSpec
 
 W = Workstation
-ALL = tuple(Workstation)
+# The governed metric registry holds no geography, so the geospatial assistant is not offered it: fewer, sharper tools.
+METRIC_READERS = tuple(w for w in Workstation if w is not Workstation.GEOSPATIAL)
 PRIVATE_AML = (SecurityMarking.PII, SecurityMarking.SENSITIVE_COMPLIANCE)
 COMMERCIAL = (SecurityMarking.PARTNER_COMMERCIAL,)
 VERIFIED, CORRELATION = "VERIFIED_CAUSAL", "CORRELATION_ONLY"
@@ -315,7 +316,14 @@ def compare_facts(ctx: ReadModels, who: Principal, args: CompareArgs) -> Compari
 
 TOOLS: tuple[ToolSpec, ...] = (
     ToolSpec(
-        "get_metric", "metric.get", "evidence", ALL, MetricArgs, MetricValue, get_metric, 300.0
+        "get_metric",
+        "metric.get",
+        "evidence",
+        METRIC_READERS,
+        MetricArgs,
+        MetricValue,
+        get_metric,
+        300.0,
     ),
     ToolSpec(
         "resolve_entity",

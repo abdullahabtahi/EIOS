@@ -25,6 +25,9 @@ class Workstation(StrEnum):
     EXECUTIVE = "executive"
     COMPLIANCE_AUDITOR = "compliance_auditor"
     DATA_OPERATIONS = "data_operations"
+    GEOSPATIAL = (
+        "geospatial"  # the Geospatial tab: geography as AML case evidence (docs/geo-agent.md)
+    )
 
 
 class Principal(StrictModel):
@@ -58,6 +61,7 @@ _ENFORCER_ROLE = {
     Workstation.EXECUTIVE: "Executive",
     Workstation.COMPLIANCE_AUDITOR: "ComplianceOfficer",
     Workstation.DATA_OPERATIONS: "PublicAgent",
+    Workstation.GEOSPATIAL: "AMLInvestigator",  # the same accounts and cases, seen through geography
 }
 
 

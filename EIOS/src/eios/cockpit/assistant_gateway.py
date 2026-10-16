@@ -157,6 +157,8 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
         "block_reason": answer.block_reason,
         "steps": list(outcome.steps),
         "proposals": [_proposal_view(p) for p in answer.proposed_actions],
+        # map moves the assembler accepted: each names an object a tool of this turn returned (map_commands.py)
+        "view_commands": [dict(c) for c in answer.view_commands],
         "data_origin": answer.data_origin.value,
         "verification": {
             "method": "assembled_from_governed_results",

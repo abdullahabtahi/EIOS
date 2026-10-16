@@ -7,17 +7,19 @@ still runs. Run `python -m eios.dataplane.geo_plane` to print the measured quali
 
 from __future__ import annotations
 
+import functools
 import logging
 import os
 import threading
 import time
+from typing import Any
 
 from eios.dataplane.aml_geo import GeoQuality, GeoSnapshot, run_geo_engine
 from eios.dataplane.aml_geo_sessions import LngLat, positions_from
 from eios.dataplane.plane import engine_service
 from eios.graph.store import BigQueryGraphStore, GraphStore, LocalGraphStore
 from eios.graph.tables import GraphTables, build_tables
-from eios.reference.reader import ReferenceUnavailable, reader_from_env
+from eios.reference.reader import ReferenceReader, ReferenceUnavailable, reader_from_env
 from eios.reference.tiers import jurisdiction_tiers
 
 logger = logging.getLogger("eios.dataplane.geo")
@@ -28,9 +30,27 @@ _graph: GraphTables | None = None
 _store: GraphStore | None = None
 
 
+@functools.cache
+def _reader() -> ReferenceReader | None:
+    """One reader per process, so the engine build and the geo tools share its cached snapshot of the warehouse."""
+    return reader_from_env()
+
+
+def reference_world() -> dict[str, Any] | None:
+    """The reference layer as the warehouse holds it, or None when it is not configured or cannot be read."""
+    reader = _reader()
+    if reader is None:
+        return None
+    try:
+        return reader.world()
+    except Exception:  # a warehouse failure: the caller falls back to the curated lists and says so
+        logger.warning("geo plane: reference layer unreadable", exc_info=True)
+        return None
+
+
 def _reference() -> tuple[dict[str, str], dict[str, LngLat]]:
     """Jurisdiction tiers and country centroids; both empty (not invented) when the reference layer is missing."""
-    reader = reader_from_env()
+    reader = _reader()
     if reader is None:
         logger.warning(
             "geo plane: no reference layer configured; corridor and travel lenses will not be measured"
@@ -142,6 +162,7 @@ def reset_for_testing() -> None:
         _snapshot = None
         _graph = None
         _store = None
+    _reader.cache_clear()
 
 
 def main() -> int:

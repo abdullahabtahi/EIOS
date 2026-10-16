@@ -107,6 +107,11 @@ def _events(world: AmlWorld, tiers: Mapping[str, str]) -> pd.DataFrame:
     return df
 
 
+def money_events(world: AmlWorld, tiers: Mapping[str, str]) -> pd.DataFrame:
+    """One row per completed or pending payment with its corridor ends and IP country: the rows the lenses count."""
+    return _events(world, tiers)
+
+
 def _test(hits: pd.Series, events: pd.Series) -> tuple[pd.Series, pd.Series, pd.Series]:
     """(p-value, flagged, assessable) of `hits` out of `events` against the population rate of hits."""
     rate = hits.sum() / max(events.sum(), 1)
@@ -323,4 +328,11 @@ def run_geo_engine(
     return GeoSnapshot(world, clients, corridors, dict(tiers), quality, lenses)
 
 
-__all__ = ["TOP_K", "GeoQuality", "GeoSnapshot", "SessionQuality", "run_geo_engine"]
+__all__ = [
+    "TOP_K",
+    "GeoQuality",
+    "GeoSnapshot",
+    "SessionQuality",
+    "money_events",
+    "run_geo_engine",
+]

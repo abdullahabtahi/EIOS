@@ -99,6 +99,43 @@ DESCRIPTIONS: dict[str, str] = {
         "Which recovery runbooks are registered and the result of the warm-start restore drill that was actually run. "
         "The other runbooks are catalogue only."
     ),
+    "geo.overview": (
+        "Where to look first in the book's geography: for each lens (shared foreign exit, impossible travel, login "
+        "country against registered country, risky payment corridor) how many accounts it flags and how many it can "
+        "judge at all, with the top shared exits, elevated corridors and accounts. Use it for a question about the "
+        "whole book, or when nothing is selected on the map."
+    ),
+    "geo.leads": (
+        "A ranked list of one kind of geography lead, in the order the map draws them: shared exits, payment "
+        "corridors, login-country pairs or accounts by geography score. Use it to list more leads of one kind than "
+        "the overview shows."
+    ),
+    "geo.exit": (
+        "One login gateway by its gateway id: who uses it and from which countries, whether it is a shared foreign "
+        "exit or a hub, the rule an exit meets, and the ring around it from BigQuery Graph (the accounts sharing a "
+        "device, payment token or address with its users). First call for any question about an exit."
+    ),
+    "geo.corridor": (
+        "One payment corridor by its corridor id, two country codes joined by '>' with the origin first: volume, "
+        "accounts and payments on it, deposits and withdrawals, both countries' standing on the FATF, EU and Basel "
+        "lists, and its largest accounts."
+    ),
+    "geo.account": (
+        "One account's geography as case evidence: registered country, login countries and gateways, impossible "
+        "jumps with an example, cross-border payments, what each lens concluded with the rule it applied, and the "
+        "accounts linked to it in BigQuery Graph. First call for any question about an account on the map."
+    ),
+    "geo.jurisdiction": (
+        "One country by its two-letter code: its standing on the FATF lists, the EU high-risk list and the Basel AML "
+        "Index with source and as-of, and this book's exposure to it (accounts registered there, logins from it, "
+        "payments through it, shared exits located there)."
+    ),
+    "geo.list_change": (
+        "What a change of a published list does to this book. list_id fatf compares the February and June plenary "
+        "editions; eu compares the EU high-risk list before and after its January amendments. For each country added "
+        "or removed: accounts registered, logging in or paying there, shared exits located there, and the accounts "
+        "one shared identifier away in BigQuery Graph."
+    ),
     "ops.calibration": (
         "How well the churn hazards predicted what partners then did: calibration error, Brier score and whether "
         "drift was detected, with the basis the labels came from."

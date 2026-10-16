@@ -31,6 +31,7 @@ from eios.agent_gates.records import (
 from eios.assistant.answer import Answer
 from eios.assistant.config import AssistantSettings
 from eios.assistant.runtime import AssistantRuntime, ToolCallTrace, TurnOutcome
+from eios.dataplane.geo_readmodel import offline_geo
 from eios.dataplane.plane import read_models
 from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.contracts import PortError
@@ -78,6 +79,10 @@ class AdkRuntime:
             offline and models.knowledge is None
         ):  # the scripted run still exercises retrieval, on labelled test passages
             models = replace(models, knowledge=offline_index())
+        if (
+            offline and models.geo is None
+        ):  # a fixture plane serves no world; the scripted run builds the seeded one
+            models = replace(models, geo=offline_geo())
         self._port = build_port(models)
         self._settings = AssistantSettings.from_env(
             {**_live_env(), "EIOS_ENVIRONMENT": _EVAL_ENVIRONMENT}

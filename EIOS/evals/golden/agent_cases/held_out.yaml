@@ -44,3 +44,10 @@
 - {scenario_id: ops_restore_proof, workstation: data_operations, split: sealed, description: "When a restore was last proven; none proven is said, never assumed.",
    turns: [{turn_index: 1, user_query: "When did we last prove that we can restore from a backup?",
      expected_capabilities: [{capability: ops.drill_status, order_index: 0}]}]}
+- {scenario_id: geo_exit_links, workstation: geospatial, split: validation, description: "A ring asked for by its links, not by its users.",
+   turns: [{turn_index: 1, user_query: "Which accounts are tied to the gateway GW-IQ-X02, and through what kind of link?",
+     expected_capabilities: [{capability: geo.exit, order_index: 0}], allowed_extra_capabilities: [geo.account],
+     expected_facts: [{capability: geo.exit, path: flagged_accounts, unit: accounts}]}]}
+- {scenario_id: geo_eu_delisting, workstation: geospatial, split: sealed, description: "A delisting ends a duty, not the behaviour.",
+   turns: [{turn_index: 1, user_query: "Since the EU took Nigeria off its high-risk list, what activity there continues in our book?",
+     expected_capabilities: [{capability: geo.list_change, order_index: 0}], allowed_extra_capabilities: [geo.jurisdiction]}]}

@@ -8,6 +8,7 @@ impossible, and that the answer agrees with the screen. Identity is the verified
 
 import time
 from dataclasses import replace
+from functools import cache
 from typing import Any
 
 from eios.agent_gates.adapters.offline_regulations import offline_index
@@ -20,6 +21,7 @@ from eios.agent_gates.adapters.toolport_render import (
 from eios.agent_gates.adapters.toolport_routes import Found, extract, plan
 from eios.agent_gates.port import TurnRequest, completed_record
 from eios.agent_gates.records import DataOrigin, IdentitySource, ToolCall, ToolErrorCode, TurnRecord
+from eios.dataplane.geo_readmodel import StaticGeo, offline_geo
 from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.contracts import PortError
 from eios.ontology.omcp.port.principal import principal_for
@@ -27,6 +29,12 @@ from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.service import GovernedToolPort
 
 UNTRUSTED_FLAG = "untrusted"
+
+
+@cache
+def _geo() -> StaticGeo:
+    """The seeded world's geo plane, built once: curated list tiers, no positions (travel says it cannot judge)."""
+    return offline_geo()
 
 
 def _title(tool: str) -> str:
@@ -39,7 +47,9 @@ class ToolPortRuntime:
 
     def __init__(self, port: GovernedToolPort | None = None) -> None:
         # The reference run still exercises retrieval, on labelled test passages (never the acquired corpus).
-        self._port = port or build_port(replace(ReadModels.default(), knowledge=offline_index()))
+        self._port = port or build_port(
+            replace(ReadModels.default(), knowledge=offline_index(), geo=_geo())
+        )
 
     def run_turn(self, request: TurnRequest) -> TurnRecord:
         started = time.perf_counter()

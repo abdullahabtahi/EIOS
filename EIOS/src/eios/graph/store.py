@@ -167,6 +167,8 @@ class BigQueryGraphStore:
 
 
 def _param(bigquery: Any, name: str, value: Any) -> Any:
+    if isinstance(value, list | tuple):  # a list of codes or ids, bound as ARRAY<STRING>
+        return bigquery.ArrayQueryParameter(name, "STRING", [str(v) for v in value])
     kind = "INT64" if isinstance(value, int) and not isinstance(value, bool) else "STRING"
     return bigquery.ScalarQueryParameter(name, kind, value)
 
