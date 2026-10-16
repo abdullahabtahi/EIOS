@@ -132,3 +132,23 @@ What: in the Login vs KYC view, one closed line, "Check an IP address". Type an 
 ## G1: the geo assistant (branch `feat/geo-agent`)
 
 Supersedes M5 above. Design, measured results and known limits are in `docs/geo-agent.md`. In short: a sixth workstation (`geospatial`) with seven geo capabilities, an Ask panel beside the map that moves the map only to objects a tool returned in the same turn (Back undoes a move), a list-edition comparison in the Jurisdictions view (what an FATF plenary or an EU amendment changes for this book), two new BigQuery Graph queries (`exit_ring`, `country_links`) at parity with the local double, and "Verify figures", which derives every figure of an answer again through the governed port. Offline baseline 116 of 116 `[MEASURED]`; live, four of four questions assembled on one model call in 3.0 to 4.5 s `[MEASURED]` after two fixes the first live run called for. The N3 evidence bundle is not started. Nothing is deployed.
+
+## G0 to G3, and the GEOG 850 additions (branch `feat/geo-g2`)
+
+Gates first, then the loop the investigator works in. Each exit gate is a measurement, listed in `docs/geo-agent.md` ("Measured"); a gate that failed once is recorded with what changed.
+
+| Phase | Exit gate | Result `[MEASURED]` |
+|---|---|---|
+| G0 gates | a stub that always answers "42" fails the geo cases | fails 22 of 22 |
+| G1 assistant | every figure traced to a tool; live turns within budget | 22 of 22 live, 100.0% supported, median 2.3 s, p95 4.1 s, no timeouts |
+| G2 case loop | an approved hold names the exact evidence; the evidence replays | tested end to end: seal, stage, signed refs, two approvers, replay equal |
+| G3 list change | two list editions compared for the book in under 200 ms | median 26 to 35 ms, p95 at most 48 ms |
+
+What the plan added, from the GEOG 850 workflow (<https://courses.ems.psu.edu/geog850/node/338>):
+- **U8 login hotspots**, built. Countries that foreign accounts keep returning to, tested against chance with false discovery control and RL-4; the six planted ring-exit countries, precision and recall 1.00, on the served world and five unseen seeds. A first version counted repeat sessions and flagged two travel destinations (precision 0.75); counting accounts once fixed it.
+- **False-lead control**, built. Benign readings for an account (a shared exit, a hub, one country abroad, no money abroad); "could be chance" for a tested country that is not listed; a refusal to rank people by origin.
+- **U9 "where else"**, measured, not built: the shared-exit rule already finds every planted exit and nothing below it is enriched (`docs/geo-agent.md`, Known limits).
+- **U4 corridor change, U7 teleconnection**, deferred until a world plants a temporal pattern to be found.
+- Colocation window, skipped: shared-exit precision is already 1.00.
+
+Nothing is deployed.
