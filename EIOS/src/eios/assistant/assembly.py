@@ -194,6 +194,8 @@ class _Typed:
     decimals: int  # digits after the point as written
     scale: float  # 1, or 1e3 / 1e6 / 1e9 for K, M, B
     symbol: str  # "", "$", "%" or "x"
+    # The few words written right after it ("impossible jumps"), to tell equal values apart.
+    after: str = ""
 
 
 _WRITTEN = re.compile(
@@ -221,7 +223,28 @@ def _written(prose: str, at: int, report: str) -> _Typed | None:
     )
     scale = _SCALES.get(suffix, 1.0)
     whole, dec = match.group("int").replace(",", ""), match.group("dec") or ""
-    return _Typed(report, float(f"{whole}.{dec or '0'}"), len(dec), scale, symbol)
+    after = " ".join(
+        _WORD.findall(prose[match.end() : match.end() + _AFTER_CHARS].lower())[:_AFTER_WORDS]
+    )
+    return _Typed(report, float(f"{whole}.{dec or '0'}"), len(dec), scale, symbol, after)
+
+
+_WORD = re.compile(r"[a-z]+")
+_AFTER_CHARS, _AFTER_WORDS = 40, 3
+
+
+def _stem(word: str) -> str:
+    return word[:-1] if len(word) > 3 and word.endswith("s") else word
+
+
+def _named_by(typed: _Typed, fact: TurnFact) -> int:
+    """How well the words after a written number name this fact: its unit ("jumps"), or a word of its own name."""
+    words = {_stem(w) for w in typed.after.split()}
+    if not words:
+        return 0
+    unit = {_stem(w) for w in _WORD.findall(fact.unit.lower())}
+    name = {_stem(w) for w in _WORD.findall(fact.fact_id.rsplit(":", 1)[-1].lower())}
+    return 2 * len(words & unit) + len(words & name)
 
 
 def _typed_numbers(draft: str, identifiers: frozenset[str]) -> list[_Typed | str]:
@@ -306,7 +329,9 @@ def _trace(
         if isinstance(item, str):
             unmatched.append(item)
             continue
-        fact = next((f for f in facts.values() if _fits(item, f)), None)
+        # Several returned facts can share a value; cite the one the words after the figure name, not the first.
+        fitting = [f for f in facts.values() if _fits(item, f)]
+        fact = max(fitting, key=lambda f: _named_by(item, f)) if fitting else None
         if fact is not None:
             cited.setdefault(fact.fact_id, _figure_for(item, fact))
         elif not (item.symbol or not math.isclose(item.scale, 1.0, abs_tol=1e-9)) and any(

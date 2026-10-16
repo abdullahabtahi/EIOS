@@ -66,8 +66,10 @@ def extract(draft: str, targets: Iterable[str]) -> MapCommands:
         command = {"kind": kind, "id": key.split(":", 1)[1]}
         if command not in commands:
             commands.append(command)
-    if len(commands) > MAX_MAP_COMMANDS:
-        problems.append(f"use at most {MAX_MAP_COMMANDS} map placeholders in one answer")
+    # More valid moves than the map can follow is a presentation limit, not a proof failure: the first ones are kept
+    # and the rest dropped. Rejecting would cost a redraft, and a live run showed the redraft can be worse [MEASURED].
     text = _MAP.sub("", draft)
     text = _SPACE_BEFORE_PUNCT.sub(r"\1", _RUNS.sub(" ", text))
-    return MapCommands(text=text, commands=tuple(commands), problems=tuple(problems))
+    return MapCommands(
+        text=text, commands=tuple(commands[:MAX_MAP_COMMANDS]), problems=tuple(problems)
+    )

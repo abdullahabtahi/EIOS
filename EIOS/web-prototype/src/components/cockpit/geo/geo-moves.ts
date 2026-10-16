@@ -56,7 +56,7 @@ export function geoSuggestions(selected: GeoSelection): string[] {
     selected?.kind === 'gateway'
       ? ['Why is this exit suspicious, and who else is in its ring?']
       : selected?.kind === 'account'
-        ? [`What does ${selected.id}'s geography show?`]
+        ? [`What does ${selected.id}'s geography show?`, `Draft the geography paragraph for the SAR on ${selected.id}.`]
         : selected?.kind === 'corridor'
           ? ['How much money moves on this corridor, and through whom?']
           : selected?.kind === 'country'

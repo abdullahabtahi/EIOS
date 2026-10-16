@@ -15,6 +15,7 @@ import { ModelPicker, useModelChoice } from '../shell/model-picker';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { authFetch } from '@/lib/auth/token';
 import { geoSuggestions, type MapContextPayload, moveLabel } from './geo-moves';
+import { GeoVerify } from './geo-verify';
 import type { GeoSelection } from './geo-types';
 
 const STEP_LABEL: Readonly<Record<string, string>> = {
@@ -192,6 +193,9 @@ export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
                 />
                 {item.response && <TurnMoves moves={item.response.viewCommands ?? []} onMove={onMove} />}
                 {item.response && <TurnTrace response={item.response} />}
+                {item.response?.assistantStatus === 'ASSEMBLED' && (
+                  <GeoVerify figures={item.response.citedMetrics} role="geospatial" />
+                )}
               </div>
             ),
           )

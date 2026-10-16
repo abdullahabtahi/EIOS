@@ -44,10 +44,12 @@ def test_an_unknown_kind_is_refused_and_named() -> None:
     assert out.commands == () and "coordinates" in out.problems[0]
 
 
-def test_too_many_moves_are_refused() -> None:
+def test_more_valid_moves_than_the_map_follows_keep_the_first_and_send_nothing_back() -> None:
     many = " ".join(f"{{{{map:{t}}}}}" for t in sorted(TARGETS))
     assert len(TARGETS) > MAX_MAP_COMMANDS
-    assert any("at most" in p for p in extract(many, TARGETS).problems)
+    out = extract(many, TARGETS)
+    assert out.problems == () and len(out.commands) == MAX_MAP_COMMANDS
+    assert out.commands[0] == {"kind": "account", "id": "CR11568"}  # in the order written
 
 
 def test_no_targets_means_no_command_is_ever_accepted() -> None:

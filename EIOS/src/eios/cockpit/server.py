@@ -37,7 +37,7 @@ from eios.assistant.geo_context import MapContext
 from eios.assistant.sessions import valid_entity_id
 from eios.assistant.telemetry import record_turn
 from eios.cockpit import aml_engine_view as aml_view
-from eios.cockpit import compliance_view, operations_view
+from eios.cockpit import compliance_view, copilot_verify, operations_view
 from eios.cockpit import executive_view as exec_view
 from eios.cockpit import geo as geo_routes
 from eios.cockpit import partner_engine_view as partner_view
@@ -1336,6 +1336,7 @@ def compliance_ledger() -> dict[str, Any]:
 app.include_router(public_router)
 app.include_router(router)
 app.include_router(geo_routes.router)
+app.include_router(copilot_verify.router)  # carries its own operator dependency
 
 
 def main() -> None:
