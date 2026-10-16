@@ -37,8 +37,8 @@ class AIPWCausalEstimator:
     ) -> tuple[np.ndarray, np.ndarray]:
         """Fits outcome models mu_1(X) on treated units and mu_0(X) on control units."""
         n_samples = len(Y)
-        treated_idx = np.where(W == 1.0)[0]
-        control_idx = np.where(W == 0.0)[0]
+        treated_idx = np.nonzero(np.isclose(W, 1.0))[0]
+        control_idx = np.nonzero(np.isclose(W, 0.0))[0]
 
         if len(treated_idx) == 0 or len(control_idx) == 0:
             raise ValueError("Both treated and control units are required for AIPW estimation")

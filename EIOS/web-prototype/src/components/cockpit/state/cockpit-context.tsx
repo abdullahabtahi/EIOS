@@ -299,22 +299,28 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
           const isMule = entityId.toLowerCase().includes('mule');
           const isRing = entityId.toLowerCase().includes('ring');
           const isDevice = entityId.toLowerCase().includes('dev');
+          let headline = `Entity Intelligence Profile: ${entityId}`;
+          if (isMule) {
+            headline = `Suspect Mule Profile: ${entityId}`;
+          } else if (isRing) {
+            headline = `Collusion Ring Entity: ${entityId}`;
+          } else if (isDevice) {
+            headline = `Hardware Cluster Fingerprint: ${entityId}`;
+          }
+
+          let executiveSummary = `Topological counterparty isolated during automated graph clustering and CGNAT proxy suppression.`;
+          if (isMule) {
+            executiveSummary = `Identified downstream beneficiary account receiving rapid structured transfers originating from primary focal suspect CR84920.`;
+          } else if (isRing) {
+            executiveSummary = `Circular layering counterpart exhibiting high-frequency round-trip velocity and 99.2% tick alignment.`;
+          }
+
           contextualDossier = {
             dossierId: `dossier_${entityId}`,
             entityId: entityId,
             role: 'aml_investigator',
-            headline: isMule
-              ? `Suspect Mule Profile: ${entityId}`
-              : isRing
-              ? `Collusion Ring Entity: ${entityId}`
-              : isDevice
-              ? `Hardware Cluster Fingerprint: ${entityId}`
-              : `Entity Intelligence Profile: ${entityId}`,
-            executiveSummary: isMule
-              ? `Identified downstream beneficiary account receiving rapid structured transfers originating from primary focal suspect CR84920.`
-              : isRing
-              ? `Circular layering counterpart exhibiting high-frequency round-trip velocity and 99.2% tick alignment.`
-              : `Topological counterparty isolated during automated graph clustering and CGNAT proxy suppression.`,
+            headline,
+            executiveSummary,
             asOfTimestamp: new Date().toISOString(),
             isCachedSnapshot: false,
             sections: [
@@ -351,10 +357,15 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
         }
       }
 
+      let fallbackTriageId = state.activeTriageItemId;
+      if (entityId.startsWith('PTR-')) {
+        fallbackTriageId = `item_${entityId}`;
+      }
+
       return {
         ...state,
         activeEntityId: entityId,
-        activeTriageItemId: found ? found.id : (entityId.startsWith('PTR-') ? `item_${entityId}` : state.activeTriageItemId),
+        activeTriageItemId: found ? found.id : fallbackTriageId,
         activeDossier: contextualDossier || state.activeDossier,
       };
     }
@@ -721,7 +732,7 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
   }, [settledLive, operatorUid]);
 
   useEffect(() => {
-    fetchWorkstation(state.activeRole, state.isSimulatedOutage);
+    void fetchWorkstation(state.activeRole, state.isSimulatedOutage);
   }, [state.activeRole, state.isSimulatedOutage, fetchWorkstation]);
 
   // Engine-backed workstations: opening a case fetches that entity's computed dossier and canvas (latest wins).
@@ -733,7 +744,7 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
     if (state.caseStatus !== 'loading') return;
     const seq = ++caseSeq.current;
     const controller = new AbortController();
-    (async () => {
+    void (async () => {
       try {
         const res = await authFetch(`${route.path}${encodeURIComponent(entityId)}`, {
           method: 'GET',
@@ -764,8 +775,8 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    globalThis.addEventListener('keydown', handleKeyDown);
+    return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Filtered triage items memoization

@@ -70,3 +70,18 @@ def test_aml_case_dossier_assembler_contract_compliance() -> None:
     )
     contract_dict = AMLDossierAssembler.to_contract_dict(dossier)
     jsonschema.validate(instance=contract_dict, schema=schema)
+
+
+def test_aml_case_dossier_zero_deposit() -> None:
+    from eios.aml.dossier import AMLDossierAssembler
+
+    assembler = AMLDossierAssembler()
+    dossier = assembler.assemble_dossier(
+        client_id="C-AML-ZERO-DEP",
+        kyc_tier="TIER_1_VERIFIED",
+        total_deposit=0.0,
+        total_withdrawal=0.0,
+        net_pl=0.0,
+    )
+    assert dossier.total_deposit_usd == 0.0
+    assert dossier.deposit_withdrawal_ratio == 0.0

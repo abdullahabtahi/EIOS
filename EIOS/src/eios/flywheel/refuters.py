@@ -151,7 +151,7 @@ class CausalEvidenceGate:
         for _ in range(n_iterations):
             idx = rng.choice(n, size=k, replace=False)
             # Ensure both treatment and control exist in subset
-            if np.sum(W[idx] == 1.0) < 2 or np.sum(W[idx] == 0.0) < 2:
+            if np.sum(np.isclose(W[idx], 1.0)) < 2 or np.sum(np.isclose(W[idx], 0.0)) < 2:
                 continue
             sub_est = self.estimator.estimate(
                 Y=Y[idx],

@@ -32,8 +32,9 @@ def main(argv: list[str] | None = None) -> int:
         print("Plan only. Re-run with --execute to upload and import.")
         return 0
     ingest.upload(chosen)
-    print("import started:", ingest.start_import(chosen, args.project))
-    return 0
+    op = ingest.start_import(chosen, args.project)
+    print("import started:", op)
+    return 0 if op else 1
 
 
 if __name__ == "__main__":

@@ -100,3 +100,17 @@ def test_aipw_small_sample_bounds():
             target_metric="revenue",
             intervention_type="test",
         )
+
+
+def test_fit_outcome_models_indicator_indexing():
+    """Verify fit_outcome_models indexes treated and control units correctly with float indicators."""
+    from eios.flywheel.aipw import AIPWCausalEstimator
+
+    estimator = AIPWCausalEstimator()
+    Y = np.array([10.0, 20.0, 30.0, 40.0])
+    W = np.array([1.0, 0.0, 1.0, 0.0])
+    X = np.array([[1.0], [2.0], [3.0], [4.0]])
+
+    mu_1, mu_0 = estimator.fit_outcome_models(Y, W, X)
+    assert len(mu_1) == 4
+    assert len(mu_0) == 4

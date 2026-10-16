@@ -38,7 +38,21 @@ class CopilotRequestError extends Error {
   }
 }
 
-const newId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+let chatCounter = 0;
+export const generateChatId = (prefix: string) => {
+  const cryptoObj = typeof globalThis !== 'undefined' ? globalThis.crypto : undefined;
+  if (cryptoObj && typeof cryptoObj.randomUUID === 'function') {
+    return `${prefix}_${Date.now()}_${cryptoObj.randomUUID().slice(0, 8)}`;
+  }
+  if (cryptoObj && typeof cryptoObj.getRandomValues === 'function') {
+    const buf = new Uint32Array(1);
+    cryptoObj.getRandomValues(buf);
+    return `${prefix}_${Date.now()}_${buf[0].toString(36)}`;
+  }
+  chatCounter = (chatCounter + 1) % 1e6;
+  return `${prefix}_${Date.now()}_${chatCounter.toString(36)}`;
+};
+const newId = generateChatId;
 const timeLabel = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 function lastEntity(items: ChatItem[]): string | null | undefined {
