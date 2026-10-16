@@ -355,7 +355,7 @@ def _flywheel_status() -> dict[str, Any]:
     }
 
 
-def _build_contract_state(  # noqa: C901, PLR0912, PLR0915
+def _build_contract_state(  # noqa: C901, PLR0915
     role_str: str, operator_id: str | None = None, entity_id: str | None = None
 ) -> dict[str, Any]:
     """Compiles the full CockpitUiContract JSON structure for a role (read-only, side-effect free)."""
@@ -867,11 +867,10 @@ def _build_contract_state(  # noqa: C901, PLR0912, PLR0915
         }
 
     # Staged action cards formatted for UI contract
-    raw_cards = action_shelf.list_cards()
-    formatted_cards = []
-    for c in raw_cards:
-        tok = action_shelf.get_token(c.intent_id)
-        formatted_cards.append(_card_to_ui_contract_dict(c, tok))
+    formatted_cards = [
+        _card_to_ui_contract_dict(card, token)
+        for card, token in action_shelf.list_cards_with_tokens()
+    ]
 
     # Build full contract JSON conforming to cockpit-ui-contract.schema.json
     contract_payload: dict[str, Any] = {
