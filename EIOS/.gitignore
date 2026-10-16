@@ -41,6 +41,10 @@ evals/reports/*
 service-account*.json
 credentials.json
 client_secret*.json
+.testsprite/
+testsprite.json
+.testsprite.json
+testsprite-artifacts/
 
 # Editor and OS
 .DS_Store

@@ -63,6 +63,10 @@ seed_output.txt
 service-account*.json
 credentials.json
 client_secret*.json
+.testsprite/
+testsprite.json
+.testsprite.json
+testsprite-artifacts/
 
 # ------------------------------------------------------------------------------
 # Python (Backend & Microservices)
