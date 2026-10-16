@@ -17,6 +17,7 @@ answer is no longer sent back only because it was not written as a placeholder.
 
 from __future__ import annotations
 
+import math
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, replace
@@ -273,7 +274,7 @@ def _fits(typed: _Typed, fact: TurnFact) -> bool:
         return unit in {"multiplier", "x"} and _near(
             typed.value, typed.decimals, typed.scale, value
         )
-    if typed.scale != 1.0:
+    if not math.isclose(typed.scale, 1.0, abs_tol=1e-9):
         return _near(typed.value, typed.decimals, typed.scale, value)
     return _near(typed.value, typed.decimals, 1.0, value)
 
@@ -308,7 +309,7 @@ def _trace(
         fact = next((f for f in facts.values() if _fits(item, f)), None)
         if fact is not None:
             cited.setdefault(fact.fact_id, _figure_for(item, fact))
-        elif not (item.symbol or item.scale != 1.0) and any(
+        elif not (item.symbol or not math.isclose(item.scale, 1.0, abs_tol=1e-9)) and any(
             _near(item.value, item.decimals, 1.0, n) for n in numbers
         ):
             continue

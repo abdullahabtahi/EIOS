@@ -8,6 +8,7 @@ Authoritative References:
 - .specify/memory/constitution.md (Principles I, II, IV, VII, VIII)
 """
 
+import math
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -95,7 +96,7 @@ class AMLDossierAssembler:
                         mule_ring_size = int(mule_rows[0][1])
 
                 # Check transaction sums if total_deposit is 0
-                if dep == 0.0:
+                if math.isclose(dep, 0.0, abs_tol=1e-9):
                     txn_sums = cursor.execute(
                         "SELECT "
                         "COALESCE(SUM(CASE WHEN transaction_type = 'DEPOSIT' THEN amount ELSE 0 END), 0.0), "
