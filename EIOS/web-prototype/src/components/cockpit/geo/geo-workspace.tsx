@@ -226,7 +226,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   const compareLabel = listChange?.status === 'ready' ? listChange.data.after.label : 'Reading the change…';
 
   return (
-    <div className="flex h-full min-h-0 flex-col lg:flex-row">
+    <div className="geo-inter flex h-full min-h-0 flex-col lg:flex-row">
       <div ref={mapBox} className="relative min-h-0 min-w-0 flex-[3] lg:flex-1">
         <GeoMap layers={layers} focus={focus} target={target} />
         <div className="absolute left-3 top-3 z-10">

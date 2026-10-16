@@ -1119,3 +1119,9 @@
     animation: none !important;
   }
 }
+
+/* The geospatial page is set in Inter alone: the shared chat components it hosts ask for a monospace face for ids and
+   figures, and here they get Inter. `tabular-nums` keeps figures aligned. Other workstations are not touched. */
+.geo-inter .font-mono {
+  font-family: var(--font-paragraph);
+}

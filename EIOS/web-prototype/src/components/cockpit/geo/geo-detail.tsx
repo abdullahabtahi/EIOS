@@ -29,7 +29,7 @@ export function GeoDetail({ view, onClear, onPickAccount, onOpenChange }: GeoDet
         {view.rows.map(([label, value]) => (
           <div key={label} className="flex justify-between gap-3">
             <dt className="text-cx-muted">{label}</dt>
-            <dd className="text-right font-mono tabular-nums text-cx-ink">{value}</dd>
+            <dd className="text-right tabular-nums text-cx-ink">{value}</dd>
           </div>
         ))}
       </dl>
@@ -42,7 +42,7 @@ export function GeoDetail({ view, onClear, onPickAccount, onOpenChange }: GeoDet
                 <button
                   type="button"
                   onClick={() => onPickAccount(id)}
-                  className="cursor-pointer border border-cx-line bg-white px-1.5 py-0.5 font-mono text-label text-cx-accent outline-none hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-cx-accent">
+                  className="cursor-pointer border border-cx-line bg-white px-1.5 py-0.5 text-label text-cx-accent outline-none hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-cx-accent">
                   {id}
                 </button>
               </li>

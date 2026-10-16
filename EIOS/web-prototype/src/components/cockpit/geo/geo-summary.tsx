@@ -13,15 +13,15 @@ const TIERS: readonly { readonly id: RiskTier; readonly label: string; readonly 
   { id: 'low', label: 'Low', bar: 'bg-slate-300' },
 ];
 
-const Strong = ({ children }: { children: React.ReactNode }) => <span className="font-mono font-semibold tabular-nums text-cx-ink">{children}</span>;
+const Strong = ({ children }: { children: React.ReactNode }) => <span className="font-semibold tabular-nums text-cx-ink">{children}</span>;
 
 /** Who the lens can judge at all: a client with too few events is not assessable, and saying so is part of the answer. */
 export function Coverage({ assessable, clients }: { readonly assessable: number | null | undefined; readonly clients: number | undefined }) {
   if (assessable == null || !clients) return null;
   return (
     <p className="text-label text-cx-muted">
-      This lens can judge <span className="font-mono tabular-nums text-cx-ink-soft">{COUNT.format(assessable)}</span> of{' '}
-      <span className="font-mono tabular-nums text-cx-ink-soft">{COUNT.format(clients)}</span> clients; the rest have too few events to tell.
+      This lens can judge <span className="tabular-nums text-cx-ink-soft">{COUNT.format(assessable)}</span> of{' '}
+      <span className="tabular-nums text-cx-ink-soft">{COUNT.format(clients)}</span> clients; the rest have too few events to tell.
     </p>
   );
 }
@@ -41,7 +41,7 @@ function ExposureBar({ exposure, total }: { readonly exposure: Readonly<Record<R
               <span aria-hidden="true" className={`size-1.5 ${t.bar}`} />
               {t.label}
             </dt>
-            <dd className="font-mono text-xs font-semibold tabular-nums text-cx-ink">{formatUsd(exposure[t.id])}</dd>
+            <dd className="text-xs font-semibold tabular-nums text-cx-ink">{formatUsd(exposure[t.id])}</dd>
           </div>
         ))}
       </dl>

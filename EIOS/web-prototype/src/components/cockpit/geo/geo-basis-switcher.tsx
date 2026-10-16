@@ -53,7 +53,7 @@ export function GeoBasisSwitcher({ current, onChange, changeCount, changing = fa
               changing ? 'border-cx-accent bg-cx-accent text-white' : 'border-cx-line bg-white text-cx-accent hover:border-cx-accent'
             }`}>
             <Icon icon="compare_arrows" size="sm" />
-            <span className={`font-mono text-label tabular-nums ${changing ? 'text-white' : 'text-cx-muted'}`}>{changeCount}</span>
+            <span className={`text-label tabular-nums ${changing ? 'text-white' : 'text-cx-muted'}`}>{changeCount}</span>
           </button>
         )}
       </div>

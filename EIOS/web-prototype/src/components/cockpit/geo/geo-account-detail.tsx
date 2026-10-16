@@ -20,7 +20,7 @@ export function GeoAccountDetail({ accountId, state, onClear, onPickAccount }: G
   return (
     <section aria-label="Selection" className="border border-cx-line bg-cx-sub p-3">
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-mono text-title font-semibold leading-snug text-cx-ink">{accountId}</h3>
+        <h3 className="text-title font-semibold leading-snug text-cx-ink">{accountId}</h3>
         <button
           type="button"
           aria-label="Clear selection"

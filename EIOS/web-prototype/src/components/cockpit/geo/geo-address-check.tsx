@@ -58,7 +58,7 @@ function Result({ result, onShowCountry, knownCountries }: { readonly result: Ge
   if (result.verdict === 'not_public') {
     return (
       <p className="text-xs text-cx-ink-soft">
-        <span className="font-mono">{result.address}</span> is {SCOPE_TEXT[result.scope] ?? 'not a public address'}. It does not exist on the open internet, so nothing is looked up.
+        <span>{result.address}</span> is {SCOPE_TEXT[result.scope] ?? 'not a public address'}. It does not exist on the open internet, so nothing is looked up.
       </p>
     );
   }
@@ -70,7 +70,7 @@ function Result({ result, onShowCountry, knownCountries }: { readonly result: Ge
       <p className={`text-xs font-semibold ${elevated ? 'text-cx-bad' : 'text-cx-ink'}`}>{VERDICT_TEXT[result.verdict as Exclude<AddressVerdict, 'not_public'>]}</p>
       {!elevated && <p className="text-label text-cx-muted">That does not mean the address is clean, only that no list we hold names it.</p>}
       <dl className="space-y-1 text-xs">
-        <Row label="Address"><span className="font-mono">{result.address}</span></Row>
+        <Row label="Address"><span>{result.address}</span></Row>
         <Row label="Country">{country ? country.name : 'Not in the database'}</Row>
         {result.network && (
           <Row label="Network">{`AS${result.network.asn} · ${result.network.name}`}</Row>
@@ -150,7 +150,7 @@ export function GeoAddressCheck({ onShowCountry, knownCountries }: GeoAddressChe
             spellCheck={false}
             autoComplete="off"
             placeholder="203.0.113.7 or 2001:db8::1"
-            className="min-w-0 flex-1 border border-cx-line bg-white px-2 py-1.5 font-mono text-xs text-cx-ink outline-none placeholder:text-cx-faint focus-visible:ring-2 focus-visible:ring-cx-accent"
+            className="min-w-0 flex-1 border border-cx-line bg-white px-2 py-1.5 text-xs text-cx-ink outline-none placeholder:text-cx-faint focus-visible:ring-2 focus-visible:ring-cx-accent"
           />
           <button
             type="submit"

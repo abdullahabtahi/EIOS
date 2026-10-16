@@ -63,7 +63,7 @@ function TurnTrace({ response }: { readonly response: CopilotQueryResponse }) {
   if (read.length === 0) return null;
   const seconds = response.turnLatencyMs ? ` · ${(response.turnLatencyMs / 1000).toFixed(1)} s` : '';
   return (
-    <p className="text-label font-mono text-cx-muted" data-testid="geo-turn-trace">
+    <p className="text-label text-cx-muted" data-testid="geo-turn-trace">
       Read: {[...new Set(read)].join(' · ')}
       {seconds}
     </p>

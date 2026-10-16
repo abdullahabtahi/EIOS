@@ -20,7 +20,7 @@ export function GeoTooltip({ view, point, bounds }: { readonly view: SelectionVi
         {view.rows.slice(0, MAX_ROWS).map(([label, value]) => (
           <div key={label} className="flex justify-between gap-3">
             <dt className="text-cx-muted">{label}</dt>
-            <dd className="text-right font-mono text-cx-ink">{value}</dd>
+            <dd className="text-right text-cx-ink">{value}</dd>
           </div>
         ))}
       </dl>

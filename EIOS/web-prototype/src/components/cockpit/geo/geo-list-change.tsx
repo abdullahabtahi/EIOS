@@ -47,7 +47,7 @@ function Facts({ c }: { readonly c: ListChangeCountry }) {
   return (
     <div className="mt-1 space-y-0.5 pb-1 text-label text-cx-ink-soft">
       <p>{listed.length > 0 ? listed.join(' · ') : 'No account of this book touches it'}</p>
-      {c.shared_exits && c.shared_exits.length > 0 && <p className="font-mono text-cx-bad">Shared exit here: {c.shared_exits.join(', ')}</p>}
+      {c.shared_exits && c.shared_exits.length > 0 && <p className="text-cx-bad">Shared exit here: {c.shared_exits.join(', ')}</p>}
       {c.linked_accounts === null && c.exposed_accounts > 0 && <p className="text-cx-muted">Links not available: the graph could not be reached</p>}
     </div>
   );
@@ -68,8 +68,8 @@ function Row({ row, open, onToggle }: { readonly row: ChangeRow; readonly open: 
         </button>
         {open && <Facts c={c} />}
       </td>
-      <td className={`py-1.5 pr-2 text-right font-mono text-xs tabular-nums ${c.exposed_accounts === 0 ? 'text-cx-faint' : 'text-cx-ink'}`}>{COUNT.format(c.exposed_accounts)}</td>
-      <td className={`py-1.5 text-right font-mono text-xs tabular-nums ${row.share ? 'text-cx-ink' : 'text-cx-faint'}`}>{row.share === null ? NO_SHARE : `${row.share.toFixed(1)}%`}</td>
+      <td className={`py-1.5 pr-2 text-right text-xs tabular-nums ${c.exposed_accounts === 0 ? 'text-cx-faint' : 'text-cx-ink'}`}>{COUNT.format(c.exposed_accounts)}</td>
+      <td className={`py-1.5 text-right text-xs tabular-nums ${row.share ? 'text-cx-ink' : 'text-cx-faint'}`}>{row.share === null ? NO_SHARE : `${row.share.toFixed(1)}%`}</td>
     </tr>
   );
 }

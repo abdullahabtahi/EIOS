@@ -63,7 +63,7 @@ export function GeoVerify({ figures, role }: { readonly figures: readonly Metric
   if (check.phase === 'done') {
     const all = check.matched === check.checked;
     return (
-      <p role="status" className={`text-label font-mono ${all ? 'text-cx-ok' : 'text-cx-bad'}`} data-testid="geo-verify-result">
+      <p role="status" className={`text-label ${all ? 'text-cx-ok' : 'text-cx-bad'}`} data-testid="geo-verify-result">
         {all
           ? `Derived again: all ${check.checked} figures match the governed tools.`
           : `Derived again: ${check.matched} of ${check.checked} match. Not verified: ${check.rows
