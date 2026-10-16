@@ -97,13 +97,23 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
 
         {/* Right: Palantir Gaussian Probability Distribution Envelope */}
         <div className="xl:col-span-7 space-y-3">
-          <div className="flex items-center justify-between text-label font-mono h-6">
-            <span className="font-semibold uppercase tracking-wider text-slate-500 text-label flex items-center gap-1.5">
+          <div className="flex items-center gap-2 text-label font-mono h-6 overflow-hidden">
+            <span className="font-semibold uppercase tracking-tight text-slate-500 flex items-center gap-1.5 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block" />
               90% Confidence Probability Density
             </span>
-            <span className="text-slate-800 font-bold bg-slate-100 px-2 py-0.5 border border-slate-200 text-label">
-              {interval}
+            <span className="text-slate-300 font-light select-none shrink-0">·</span>
+            <span className="text-slate-600 font-mono text-label tabular-nums shrink-0">
+              {forecast.low !== null && forecast.high !== null ? (
+                <>
+                  <span className="text-slate-500 font-medium">90% interval</span>{' '}
+                  <span className="font-bold text-slate-800">{usd(forecast.low)}</span>{' '}
+                  <span className="text-slate-400 font-normal">to</span>{' '}
+                  <span className="font-bold text-slate-800">{usd(forecast.high)}</span>
+                </>
+              ) : (
+                <span className="text-slate-500">{interval}</span>
+              )}
             </span>
           </div>
 
