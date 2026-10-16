@@ -153,6 +153,7 @@ def get_geo_overview(ctx: ReadModels, _who: Principal, _args: NoArgs) -> GeoOver
                 [target(MapKind.GATEWAY, e["gateway_id"]) for e in o["top_exits"]],
                 [target(MapKind.CORRIDOR, c["corridor_id"]) for c in o["top_corridors"]],
                 [target(MapKind.ACCOUNT, a["account_id"]) for a in o["top_accounts"]],
+                [target(MapKind.COUNTRY, h["iso2"]) for h in o["login_hotspots"]],
             ),
         }
     )

@@ -56,6 +56,15 @@ class LensCount(StrictModel):
     assessable: int | None
 
 
+class LoginHotspot(StrictModel):
+    """A login country foreign accounts keep returning to, beyond chance: FDR-controlled, hubs set aside (RL-4)."""
+
+    iso2: str
+    country: str
+    foreign_accounts: int
+    returning_accounts: int  # foreign accounts that logged in from the country at least twice
+
+
 class ExitLead(StrictModel):
     gateway_id: str
     country: str
@@ -118,10 +127,15 @@ class GeoOverview(ToolResult):
     top_exits: list[ExitLead]
     top_corridors: list[CorridorLead]
     top_accounts: list[AccountLead]
+    hotspots_tested: int | None  # None: no login sessions here, so no country could be tested
+    login_hotspots: list[LoginHotspot]
     map_targets: list[MapTarget]
 
 
 OVERVIEW_UNITS = {
+    "hotspots_tested": "countries",
+    "login_hotspots[].foreign_accounts": "accounts",
+    "login_hotspots[].returning_accounts": "accounts",
     "clients": "accounts",
     "lens_count": "lenses",
     "lenses[].flagged": "accounts",

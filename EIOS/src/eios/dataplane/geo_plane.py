@@ -83,6 +83,18 @@ def describe(q: GeoQuality) -> str:
         f"elevated {pct(q.planted_corridors_elevated)}; top-{q.top_k} precision {q.precision_at_k:.2f} against base rate "
         f"{q.base_rate:.3f}, lift {q.lift_at_k:.1f}x [MEASURED]"
         + (_describe_sessions(q) if q.sessions else "")
+        + (_describe_hotspots(q) if q.hotspots else "")
+    )
+
+
+def _describe_hotspots(q: GeoQuality) -> str:
+    h = q.hotspots
+    if h is None:
+        return ""
+    return (
+        f"; login hotspots {h.hotspots} of {h.tested} countries tested, precision {h.precision:.2f}, recall "
+        f"{h.recall:.2f} of planted ring-exit countries (without hub suppression {h.hotspots_without_rl4}, precision "
+        f"{h.precision_without_rl4:.2f}) [MEASURED]"
     )
 
 

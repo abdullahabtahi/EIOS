@@ -12,12 +12,13 @@ from __future__ import annotations
 
 import time
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 import numpy as np
 import pandas as pd
 from scipy.stats import binom
 
+from eios.dataplane.aml_geo_hotspots import HotspotQuality, hotspot_quality, login_hotspots
 from eios.dataplane.aml_geo_sessions import LngLat, SessionLenses, run_session_lenses
 from eios.foundry.scenarios.aml_geo import GeoTruth
 from eios.foundry.scenarios.aml_world import AmlWorld
@@ -77,6 +78,7 @@ class GeoQuality:
     lift_at_k: float
     build_seconds: float
     sessions: SessionQuality | None = None
+    hotspots: HotspotQuality | None = None
 
 
 @dataclass(frozen=True)
@@ -87,6 +89,8 @@ class GeoSnapshot:
     tiers: Mapping[str, str]
     quality: GeoQuality | None
     sessions: SessionLenses | None = None
+    # Login countries tested for returning foreign accounts, with FDR-controlled decisions (aml_geo_hotspots.py).
+    hotspots: pd.DataFrame | None = None
 
 
 def _events(world: AmlWorld, tiers: Mapping[str, str]) -> pd.DataFrame:
@@ -319,13 +323,31 @@ def run_geo_engine(
     )
     clients = _with_sessions(_client_table(world, events), lenses)
     corridors = _corridor_table(events, tiers)
+    hubs = _hubs(lenses)
+    hotspots = (
+        login_hotspots(world.geo_sessions, home, hubs) if world.geo_sessions is not None else None
+    )
     truth = world.truth.geo
     quality = (
         _quality(world, truth, clients, corridors, tiers, time.perf_counter() - started, lenses)
         if truth
         else None
     )
-    return GeoSnapshot(world, clients, corridors, dict(tiers), quality, lenses)
+    if quality is not None and truth is not None and world.geo_sessions is not None:
+        planted = {g.split("-")[1] for g in truth.ring_exits}  # GW-<country>-<kind><n>
+        quality = replace(
+            quality, hotspots=hotspot_quality(world.geo_sessions, home, hubs, planted)
+        )
+    return GeoSnapshot(world, clients, corridors, dict(tiers), quality, lenses, hotspots)
+
+
+def _hubs(lenses: SessionLenses | None) -> frozenset[str]:
+    """Gateways set aside under RL-4 (more accounts than the hub line)."""
+    if lenses is None:
+        return frozenset()
+    gateways = lenses.gateways
+    ids = gateways.index if "gateway_id" not in gateways.columns else gateways["gateway_id"]
+    return frozenset(str(g) for g in ids[gateways["hub"].to_numpy()])
 
 
 __all__ = [

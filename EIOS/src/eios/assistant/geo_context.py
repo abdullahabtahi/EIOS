@@ -60,6 +60,9 @@ Geography rules for this workstation:
     their own words: what else could explain the pattern.
 19. For an investigation question, answer in this order: what the data shows, what it could mean (the findings and
     the benign readings), then the next step a person could take (more evidence, a hold proposal, a SAR draft).
+20. A login hotspot is a country foreign accounts keep returning to beyond chance (false discovery rate controlled,
+    hub gateways set aside). A country the overview tested but does not list is not a hotspot: say the pattern there
+    could be chance, never that the country is clean.
 """
 # The tenant (DERIV_MFSA) is licensed in Malta: a SAR cites Malta's duty to report, read from the regulation index.
 LICENSING_JURISDICTION = "MT"
