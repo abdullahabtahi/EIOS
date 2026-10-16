@@ -362,6 +362,7 @@ def _build_contract_state(  # noqa: C901, PLR0915
     norm_role = role_str.lower().strip()
     now_iso = _get_utc_now()
     case_extras: dict[str, Any] = {}  # what the AML engine view adds around its dossier
+    shelf_pairs: list[tuple[GovernedActionCard, ActionIntentToken]] | None = None
 
     if norm_role in ("executive", "ceo", "cro"):
         role_enum = "executive"
@@ -671,8 +672,14 @@ def _build_contract_state(  # noqa: C901, PLR0915
 
     elif norm_role in ("compliance_auditor", "compliance", "audit"):
         role_enum = "compliance_auditor"
+        # The shelf lists the intents on every request; the compliance view reads the same listing.
+        shelf_pairs = action_shelf.list_cards_with_tokens()
         triage_items, active_dossier, kinetic_canvas = compliance_view.workstation(
-            compliance_svc, now_iso
+            compliance_svc,
+            now_iso,
+            tokens=[t for _, t in shelf_pairs]
+            if compliance_svc.hub is not None and compliance_svc.hub is action_shelf.intent_hub
+            else None,
         )
 
     elif (
@@ -869,7 +876,9 @@ def _build_contract_state(  # noqa: C901, PLR0915
     # Staged action cards formatted for UI contract
     formatted_cards = [
         _card_to_ui_contract_dict(card, token)
-        for card, token in action_shelf.list_cards_with_tokens()
+        for card, token in (
+            shelf_pairs if shelf_pairs is not None else action_shelf.list_cards_with_tokens()
+        )
     ]
 
     # Build full contract JSON conforming to cockpit-ui-contract.schema.json

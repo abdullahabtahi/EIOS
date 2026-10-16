@@ -8,8 +8,11 @@
 
 **After `[MEASURED]`, same setup, real HTTP.** Warm calls about 0.5 s, first call after start-up 0.8 to 2.6 s, for the executive, AML and partner workstations (the compliance workstation is below).
 
+**Follow-up: compliance reads and client resilience (2026-10-16).**
+- The compliance request now lists the intents, WORM checkpoints and ledger entries once each, concurrently, and reuses the intent listing the shelf already makes (`compliance_ledger.read_ledger`, `tests/cockpit/test_compliance_read_cost.py`). `[MEASURED]` over real HTTP against the dev Firestore from a laptop, warm calls: compliance workstation 4.1 s to 1.1 s, ledger endpoint 3.4 s to 0.9 s. Executive and AML are unchanged at about 0.6 to 0.9 s (the shelf listing and the state build).
+- Engine cost: not cached. On local stores the engine-backed workstations answer in 2 to 105 ms and the case routes in 20 to 55 ms `[MEASURED]`, so the 0.1 to 0.4 s per request quoted earlier is not reproducible, and a per-build cache would add an invalidation risk for no measured gain. Revisit only if a deployed measurement shows it.
+- Client: the cockpit keeps the last live answer per workstation, shows it at once on a switch and refreshes behind it; a failed refresh keeps that data labelled "Stale" rather than dropping to the replay; the proxy retries once with a 25 s budget (`?patient=1`); a request still running after 3 s shows "Slow". The replay is shown only when there is no live data to keep. The workstation answer is `Cache-Control: private, no-cache` with an ETag; a replay is `no-store`. The shelf is never taken from the client cache.
+
 **Not fixed.**
-- The compliance workstation still takes 3 to 5 s: it lists the same intent collection three times and the WORM checkpoints three times in one request. Under the proxy limit, but a request-scoped read would cut it to one each.
-- The 8 s limit is still a cliff: a slow backend looks like an outage and shows the replay. A distinct "slow, still loading" state would be more honest.
-- The engines add about 0.1 to 0.4 s per request (hazard model per partner); they could be cached per data-plane build.
-- Running against Firestore from a far-away laptop is slow by nature; the deployed API sits beside Firestore, so the production figure should be much lower (not measured).
+- Warm compliance is still about 1 s here: four sequential Firestore round trips remain (the intent listing, then entries and checkpoints together, then the chain head). The deployed API sits beside Firestore, so the production figure should be lower (not measured).
+- No production measurement yet; deploy is pending approval.

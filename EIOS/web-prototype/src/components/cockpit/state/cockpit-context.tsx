@@ -17,6 +17,8 @@ import React, {
   useMemo,
 } from 'react';
 import { authFetch } from '@/lib/auth/token';
+import { useAuth } from '@/lib/auth/auth-context';
+import { loadWorkstation, type WorkstationFreshness } from './workstation-fetch';
 import {
   PersonaRole,
   WorkstationApiResponse,
@@ -89,6 +91,8 @@ export interface CockpitState {
   asOfTimestamp: string;
   systemLatencyMs: number;
   isLoading: boolean;
+  /** How current the workstation in view is: refreshing behind cached live data, slow, or stale after a failed refresh. */
+  workstationFreshness: WorkstationFreshness;
   error: string | null;
 }
 
@@ -100,6 +104,8 @@ export type CockpitAction =
   | { type: 'LOAD_WORKSTATION_START' }
   | { type: 'LOAD_WORKSTATION_SUCCESS'; payload: WorkstationApiResponse }
   | { type: 'LOAD_WORKSTATION_FAILURE'; payload: string }
+  | { type: 'SHOW_CACHED_WORKSTATION'; payload: WorkstationApiResponse }
+  | { type: 'WORKSTATION_FRESHNESS'; payload: WorkstationFreshness }
   | { type: 'CASE_LOADED'; payload: CaseApiResponse }
   | { type: 'CASE_FAILED'; payload: { entityId: string; message: string } }
   | { type: 'STAGE_ACTION'; payload: ActionIntentCard }
@@ -179,6 +185,7 @@ const initialState: CockpitState = {
   systemLatencyMs: 14,
   // True until the first workstation response lands, so the UI never claims "Live" unproven.
   isLoading: true,
+  workstationFreshness: 'fresh',
   error: null,
 };
 
@@ -352,15 +359,22 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
     }
 
     case 'LOAD_WORKSTATION_START': {
-      return { ...state, isLoading: true, error: null };
+      return { ...state, isLoading: true, workstationFreshness: 'fresh', error: null };
     }
 
     case 'LOAD_WORKSTATION_SUCCESS': {
       const resp = action.payload;
-      const initialActiveId = resp?.triageItems?.[0]?.id ?? null;
+      // A refresh landing behind cached data keeps the operator's selection while that item still exists.
+      const keepSelection =
+        state.workstationFreshness === 'revalidating' || state.workstationFreshness === 'slow'
+          ? resp?.triageItems?.find((i) => i.id === state.activeTriageItemId)
+          : undefined;
+      const selected = keepSelection ?? resp?.triageItems?.[0];
+      const initialActiveId = selected?.id ?? null;
       return {
         ...state,
         isLoading: false,
+        workstationFreshness: 'fresh',
         isLiveConnected: resp?.isLiveConnected ?? state.isLiveConnected,
         isCachedFallback: resp?.isCachedFallback ?? false,
         dataOrigin: resp?.dataOrigin ?? 'fixture',
@@ -370,7 +384,7 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
         asOfTimestamp: resp?.asOfTimestamp ?? state.asOfTimestamp,
         triageItems: resp?.triageItems ?? state.triageItems,
         activeTriageItemId: initialActiveId ?? state.activeTriageItemId,
-        activeEntityId: resp?.triageItems?.[0]?.entityId ?? state.activeEntityId,
+        activeEntityId: selected?.entityId ?? state.activeEntityId,
         activeDossier: resp?.activeDossier ?? state.activeDossier,
         activeDrProofs: resp?.drProofs ?? state.activeDrProofs,
         activeRedLineGates: resp?.redLineGates ?? state.activeRedLineGates,
@@ -399,6 +413,19 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
     case 'CASE_FAILED': {
       if (action.payload.entityId !== state.activeEntityId) return state;
       return { ...state, caseStatus: 'error', caseError: action.payload.message };
+    }
+
+    case 'SHOW_CACHED_WORKSTATION': {
+      // Last live answer, shown while a refresh runs. The shelf is never taken from the cache: it keeps what it has until the refresh lands.
+      const shown = cockpitReducer(state, {
+        type: 'LOAD_WORKSTATION_SUCCESS',
+        payload: { ...action.payload, stagedActionCards: [] },
+      });
+      return { ...shown, workstationFreshness: 'revalidating' };
+    }
+
+    case 'WORKSTATION_FRESHNESS': {
+      return { ...state, workstationFreshness: action.payload };
     }
 
     case 'LOAD_WORKSTATION_FAILURE': {
@@ -574,6 +601,15 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
   // workstation the operator is actually looking at.
   const requestSeq = useRef(0);
   const inFlight = useRef<AbortController | null>(null);
+  // The last live answer per workstation: never a replay, never persisted, gone on reload.
+  const displayedRole = useRef<PersonaRole | null>(null);
+  const lastLive = useRef(new Map<PersonaRole, WorkstationApiResponse>());
+  // One operator's data is never shown to the next: drop the cache whenever the signed-in operator changes.
+  const { operator } = useAuth();
+  const operatorUid = operator?.uid ?? null;
+  useEffect(() => {
+    lastLive.current.clear();
+  }, [operatorUid]);
 
   // Fetch workstation data whenever activeRole changes (unless simulated outage is active)
   const fetchWorkstation = useCallback(async (role: PersonaRole, isOutage: boolean) => {
@@ -589,34 +625,42 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
 
     const controller = new AbortController();
     inFlight.current = controller;
-    dispatch({ type: 'LOAD_WORKSTATION_START' });
+    // Stale-while-revalidate: show the last live answer for this workstation at once and refresh behind it.
+    // Only on a switch: a refresh of the workstation already in view must not reset the operator's selection.
+    const lastKnown = lastLive.current.get(role);
+    const cached = role !== displayedRole.current ? lastKnown : undefined;
+    displayedRole.current = role;
+    dispatch(cached ? { type: 'SHOW_CACHED_WORKSTATION', payload: cached } : { type: 'LOAD_WORKSTATION_START' });
     try {
-      const res = await authFetch(`/api/cockpit/workstations/${role}`, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
+      const result = await loadWorkstation(role, {
+        fetcher: authFetch,
         signal: controller.signal,
+        onSlow: () => {
+          if (seq === requestSeq.current) dispatch({ type: 'WORKSTATION_FRESHNESS', payload: 'slow' });
+        },
       });
-
-      if (!res.ok) {
-        throw new Error(`HTTP error ${res.status}`);
-      }
-
-      const data: WorkstationApiResponse = await res.json();
       if (seq !== requestSeq.current) return;
-      dispatch({ type: 'LOAD_WORKSTATION_SUCCESS', payload: data });
+      if (result.kind === 'live') {
+        lastLive.current.set(role, result.data);
+        dispatch({ type: 'LOAD_WORKSTATION_SUCCESS', payload: result.data });
+        return;
+      }
+      // A refused token is shown as what it is: never masked by cached data or a replay.
+      if (result.kind === 'denied') {
+        lastLive.current.clear();
+        dispatch({ type: 'LOAD_WORKSTATION_FAILURE', payload: 'Not authorised to view this workstation. Sign in again.' });
+        return;
+      }
+      // Both attempts failed. Keep showing the last live data (on screen already), labelled stale.
+      if (lastKnown) {
+        dispatch({ type: 'WORKSTATION_FRESHNESS', payload: 'stale' });
+        return;
+      }
+      dispatch({ type: 'LOAD_WORKSTATION_SUCCESS', payload: { ...getFallbackWorkstationData(role), isLiveConnected: false, isCachedFallback: true } });
     } catch (err) {
       // A superseded request is not a failure; the newer request owns the state.
       if (seq !== requestSeq.current || (err instanceof DOMException && err.name === 'AbortError')) return;
-      // Deterministic fallback under failure (Principle VIII)
-      const fallback = getFallbackWorkstationData(role);
-      dispatch({
-        type: 'LOAD_WORKSTATION_SUCCESS',
-        payload: {
-          ...fallback,
-          isLiveConnected: false,
-          isCachedFallback: true,
-        },
-      });
+      dispatch({ type: 'LOAD_WORKSTATION_SUCCESS', payload: { ...getFallbackWorkstationData(role), isLiveConnected: false, isCachedFallback: true } });
     }
   }, []);
 

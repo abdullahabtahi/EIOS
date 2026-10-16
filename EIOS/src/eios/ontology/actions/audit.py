@@ -2,9 +2,14 @@
 
 import time
 import uuid
+from collections.abc import Sequence
 from datetime import UTC, datetime
 
-from eios.ontology.actions.models import AuditVerificationReport
+from eios.ontology.actions.models import (
+    AuditVerificationReport,
+    LedgerEntry,
+    WORMAnchorCheckpoint,
+)
 from eios.ontology.actions.sequencer import GENESIS_ANCHOR, LedgerSequencer
 from eios.ontology.actions.worm import WORMAnchorService
 
@@ -20,10 +25,17 @@ class ContinuousAuditWalker:
         self.sequencer = sequencer
         self.worm_service = worm_service
 
-    def verify_ledger(self) -> AuditVerificationReport:  # noqa: C901
-        """Execute a full sequential audit pass across the cryptographic ledger."""
+    def verify_ledger(  # noqa: C901
+        self,
+        entries: Sequence[LedgerEntry] | None = None,
+        checkpoints: Sequence[WORMAnchorCheckpoint] | None = None,
+    ) -> AuditVerificationReport:
+        """Execute a full sequential audit pass across the cryptographic ledger.
+
+        A caller that has already read the entries and checkpoints passes them, so the request reads each once.
+        """
         start_time = time.perf_counter()
-        entries = self.sequencer.entries
+        entries = self.sequencer.entries if entries is None else list(entries)
         total_entries = len(entries)
         now = datetime.now(UTC)
 
@@ -131,7 +143,7 @@ class ContinuousAuditWalker:
         # 5. Cross-check against WORM compliance checkpoints
         worm_verified = 0
         if self.worm_service:
-            for cp in self.worm_service.get_checkpoints():
+            for cp in self.worm_service.get_checkpoints() if checkpoints is None else checkpoints:
                 if cp.chain_head_seq <= total_entries:
                     matching_entry = entries[cp.chain_head_seq - 1]
                     if matching_entry.current_hash != cp.chain_head_hash:
