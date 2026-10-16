@@ -77,33 +77,72 @@ class FactResolver:
         self._port = port
 
     def resolve(self, principal: Principal, fact_id: str) -> ResolvedFact:
+        capability, scope, path = self._parse(fact_id)
+        return _read(fact_id, capability, path, self._fetch(principal, capability, scope))
+
+    def resolve_many(
+        self, principal: Principal, fact_ids: list[str]
+    ) -> list[ResolvedFact | PortError]:
+        """Each id resolved, in order, with one port call per result asked for: the figures of one answer mostly
+        come from a few results (one exit, one account), and each call can be a graph job. An id that fails
+        gives its error in its place; the others still resolve."""
+        fetched: dict[tuple[str, str], dict[str, Any] | PortError] = {}
+        out: list[ResolvedFact | PortError] = []
+        for fact_id in fact_ids:
+            try:
+                capability, scope, path = self._parse(fact_id)
+                key = (capability, scope)
+                if key not in fetched:
+                    try:
+                        fetched[key] = self._fetch(principal, capability, scope)
+                    except PortError as exc:
+                        fetched[key] = exc
+                payload = fetched[key]
+                if isinstance(payload, PortError):
+                    raise payload
+                out.append(_read(fact_id, capability, path, payload))
+            except PortError as exc:
+                out.append(exc)
+        return out
+
+    def _parse(self, fact_id: str) -> tuple[str, str, str]:
         match = _FACT_ID.fullmatch(fact_id) if isinstance(fact_id, str) else None
         if match is None or self._port is None:
             raise PortError(
                 ToolErrorCode.INVALID_ARGUMENTS, "a fact id from an earlier result is required"
             )
-        capability, scope, path = match["cap"], match["scope"], match["path"]
-        spec = self._port.spec_for_capability(capability)
+        return match["cap"], match["scope"], match["path"]
+
+    def _fetch(self, principal: Principal, capability: str, scope: str) -> dict[str, Any]:
+        port = self._port
+        if port is None:
+            raise PortError(ToolErrorCode.INVALID_ARGUMENTS, "no port is bound to resolve facts")
+        spec = port.spec_for_capability(capability)
         if spec is None:
             raise PortError(ToolErrorCode.NOT_FOUND, f"no capability '{capability}'")
-        outcome = self._port.call(principal, spec.name, _args_for(capability, scope))
+        outcome = port.call(principal, spec.name, _args_for(capability, scope))
         if outcome.error is not None:
             raise PortError(outcome.error.code, outcome.error.message)
-        payload = outcome.result.model_dump(mode="python")
-        value = _at(payload, path)
-        # Units name list items by template: `countries[].sessions`.
-        template = _INDEX.sub("[]", path)
-        if (
-            isinstance(value, bool)
-            or not isinstance(value, int | float)
-            or template not in payload["units"]
-        ):
-            raise PortError(ToolErrorCode.NOT_FOUND, f"'{path}' is not a figure of {capability}")
-        return ResolvedFact(
-            fact_id=fact_id,
-            value=float(value),
-            unit=payload["units"][template],
-            as_of=payload["as_of"],
-            data_origin=payload["data_origin"],
-            markings=tuple(payload["markings"]),
-        )
+        payload: dict[str, Any] = outcome.result.model_dump(mode="python")
+        return payload
+
+
+def _read(fact_id: str, capability: str, path: str, payload: dict[str, Any]) -> ResolvedFact:
+    """The figure a path names in one result, with the unit the result declares for it."""
+    value = _at(payload, path)
+    # Units name list items by template: `countries[].sessions`.
+    template = _INDEX.sub("[]", path)
+    if (
+        isinstance(value, bool)
+        or not isinstance(value, int | float)
+        or template not in payload["units"]
+    ):
+        raise PortError(ToolErrorCode.NOT_FOUND, f"'{path}' is not a figure of {capability}")
+    return ResolvedFact(
+        fact_id=fact_id,
+        value=float(value),
+        unit=payload["units"][template],
+        as_of=payload["as_of"],
+        data_origin=payload["data_origin"],
+        markings=tuple(payload["markings"]),
+    )

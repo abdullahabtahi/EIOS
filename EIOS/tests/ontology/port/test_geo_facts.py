@@ -10,6 +10,7 @@ import pytest
 from eios.assistant.tools import expand_fact_ids
 from eios.ontology.omcp.port.catalogue import build_port
 from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode
+from eios.ontology.omcp.port.facts import FactResolver, ResolvedFact
 from eios.ontology.omcp.port.readmodels import ReadModels
 from eios.ontology.omcp.port.service import GovernedToolPort
 from tests.ontology.port.conftest import seeded_geo, who
@@ -65,6 +66,60 @@ def test_a_path_that_is_no_figure_is_not_found(
     with pytest.raises(PortError) as exc:
         models.facts.resolve(GEO, fact_id)
     assert exc.value.error.code is ToolErrorCode.NOT_FOUND
+
+
+class _Counting:
+    """The real port, counting the calls a resolver makes through it."""
+
+    def __init__(self, port: GovernedToolPort) -> None:
+        self._port, self.calls = port, 0
+
+    def call(self, principal: Any, tool: str, arguments: dict[str, Any]) -> Any:
+        self.calls += 1
+        return self._port.call(principal, tool, arguments)
+
+    def spec_for_capability(self, capability: str) -> Any:
+        return self._port.spec_for_capability(capability)
+
+
+def test_many_figures_of_one_result_cost_one_call_each_result(geo_port: GovernedToolPort) -> None:
+    # Each exit call can be a graph job; an answer's six exit figures must not be six of them.
+    counting = _Counting(geo_port)
+    resolver = FactResolver()
+    resolver.bind(counting)
+    ids = [
+        "geo.exit:GW-NG-X00:flagged_accounts",
+        "geo.exit:GW-NG-X00:accounts",
+        "geo.corridor:ID>MM:volume_usd",
+        "geo.exit:GW-NG-X00:sessions",
+    ]
+    out = resolver.resolve_many(GEO, ids)
+    assert counting.calls == 2
+    assert [r.fact_id for r in out if isinstance(r, ResolvedFact)] == ids  # in the order asked
+    assert [r.value for r in out if isinstance(r, ResolvedFact)] == [
+        resolver.resolve(GEO, i).value for i in ids
+    ]
+
+
+def test_one_bad_id_fails_in_its_place_and_the_rest_resolve(geo_port: GovernedToolPort) -> None:
+    resolver = FactResolver()
+    resolver.bind(geo_port)
+    out = resolver.resolve_many(
+        GEO,
+        [
+            "geo.exit:GW-NG-X00:flagged_accounts",
+            "not a fact id",
+            "geo.exit:GW-XX-X99:flagged_accounts",
+            "geo.exit:GW-NG-X00:country.name",
+        ],
+    )
+    assert isinstance(out[0], ResolvedFact)
+    codes = [r.error.code for r in out[1:] if isinstance(r, PortError)]
+    assert codes == [
+        ToolErrorCode.INVALID_ARGUMENTS,
+        ToolErrorCode.NOT_FOUND,
+        ToolErrorCode.NOT_FOUND,
+    ]
 
 
 def test_another_workstation_cannot_resolve_a_geo_figure(
