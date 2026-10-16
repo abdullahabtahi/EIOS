@@ -125,6 +125,17 @@ function edgeLabel(e: any, replay: boolean): string {
 
 type LayoutMode = 'FORCE' | 'RADIAL_EGO' | 'BIPARTITE';
 
+export function resolveProofLedgerHash(state: {
+  canvasPayload?: unknown;
+  activeDrProofs?: Array<{ backupCheckpointHash?: string }>;
+}): string | null {
+  const payload = state.canvasPayload as Record<string, unknown> | null | undefined;
+  if (typeof payload?.ledgerHash === 'string') return payload.ledgerHash;
+  if (typeof payload?.checkpointHash === 'string') return payload.checkpointHash;
+  const proof = state.activeDrProofs?.find((p) => typeof p.backupCheckpointHash === 'string' && p.backupCheckpointHash.length > 0);
+  return proof?.backupCheckpointHash ?? null;
+}
+
 export function TopologicalGraphCanvas() {
   const { stageAction, state, selectEntity } = useCockpit();
   const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
@@ -1201,14 +1212,16 @@ export function TopologicalGraphCanvas() {
 
     ctx.drawImage(canvas, 50, 110, 1820, 890);
 
-    const proofHash = `WORM-${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`;
-    ctx.fillStyle = '#64748B';
-    ctx.font = '11px "Roboto Mono", monospace';
-    ctx.fillText(
-      `CRYPTOGRAPHIC PROOF: SHA256-LEDGER-HASH:${proofHash}  |  INVESTIGATOR: ${state.operator.officerId} (LEVEL-3 EXECUTIVE)  |  VERIFIED SYNCHRONIZED`,
-      50,
-      1045
-    );
+    const ledgerHash = resolveProofLedgerHash(state);
+    if (ledgerHash) {
+      ctx.fillStyle = '#64748B';
+      ctx.font = '11px "Roboto Mono", monospace';
+      ctx.fillText(
+        `CRYPTOGRAPHIC PROOF: SHA256-LEDGER-HASH:${ledgerHash}  |  INVESTIGATOR: ${state.operator.officerId} (LEVEL-3 EXECUTIVE)  |  VERIFIED SYNCHRONIZED`,
+        50,
+        1045
+      );
+    }
 
     const dataUrl = exportCanvas.toDataURL('image/png');
     const link = document.createElement('a');
@@ -1216,7 +1229,11 @@ export function TopologicalGraphCanvas() {
     link.href = dataUrl;
     link.click();
 
-    setExhibitToast(`SAR Exhibit 1 exported & watermarked (${proofHash.slice(0, 14)}...)`);
+    if (ledgerHash) {
+      setExhibitToast(`SAR Exhibit 1 exported & watermarked (${ledgerHash.slice(0, 14)}...)`);
+    } else {
+      setExhibitToast('SAR Exhibit 1 exported');
+    }
     setTimeout(() => setExhibitToast(null), 4500);
   };
 
