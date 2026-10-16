@@ -47,6 +47,8 @@ export interface SelectionView {
   readonly rows: readonly (readonly [label: string, value: string])[];
   /** Accounts behind this mark, each of which can be opened. */
   readonly accounts?: readonly string[];
+  /** The account a SAR paragraph is drafted for when the mark is a corridor: the one moving the most money. */
+  readonly draftSarFor?: string;
   readonly note?: string;
 }
 
@@ -94,7 +96,15 @@ export function describeSelection(
             ['Volume', formatUsd(c.volume_usd)],
             ['Accounts', COUNT.format(c.accounts)],
             ['Payments', COUNT.format(c.events)],
+            ...(c.deposits != null && c.withdrawals != null
+              ? ([
+                  ['Deposits', COUNT.format(c.deposits)],
+                  ['Withdrawals', COUNT.format(c.withdrawals)],
+                ] as const)
+              : []),
           ],
+          accounts: c.sample_accounts,
+          draftSarFor: c.sample_accounts?.[0],
         }
       : null;
   }

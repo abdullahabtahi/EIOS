@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 from eios.dataplane.aml_geo import GeoSnapshot
-from eios.dataplane.geo_evidence import gateways_of, mismatch_pairs_of
+from eios.dataplane.geo_evidence import corridor_breakdown, gateways_of, mismatch_pairs_of
 
 SOURCE = (
     "AML engine over the seeded world (IP country, payment-instrument country, transaction amounts)"
@@ -18,6 +18,7 @@ SOURCE = (
 
 def _corridors(snap: GeoSnapshot) -> list[dict[str, Any]]:
     known = bool(snap.tiers)
+    detail = corridor_breakdown(snap)
     return [
         {
             "origin": r.origin,
@@ -26,6 +27,7 @@ def _corridors(snap: GeoSnapshot) -> list[dict[str, Any]]:
             "accounts": int(r.accounts),
             "events": int(r.events),
             "tier": r.tier if known else None,
+            **detail[(r.origin, r.destination)],
         }
         for r in snap.corridors.itertuples()
     ]

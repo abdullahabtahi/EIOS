@@ -15,6 +15,12 @@ import { ModelPicker, useModelChoice } from '../shell/model-picker';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { authFetch } from '@/lib/auth/token';
 import { geoSuggestions, type MapContextPayload, moveLabel } from './geo-moves';
+export interface AskRequest {
+  /** Changes with every request, so asking the same question twice still asks twice. */
+  readonly id: number;
+  readonly text: string;
+}
+
 import { GeoEvidence } from './geo-evidence';
 import { GeoVerify } from './geo-verify';
 import type { GeoSelection } from './geo-types';
@@ -50,6 +56,8 @@ export interface GeoAskProps {
   readonly selected: GeoSelection;
   /** Apply one of an answer's map moves; `auto` is true for the move applied when the answer arrives. */
   readonly onMove: (move: ViewCommand, auto: boolean) => void;
+  /** A question put to the assistant from elsewhere on the page (an action in the panel). */
+  readonly request?: AskRequest | null;
 }
 
 function selectionKey(selected: GeoSelection): string | null {
@@ -91,7 +99,7 @@ function TurnMoves({ moves, onMove }: { readonly moves: readonly ViewCommand[]; 
   );
 }
 
-export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
+export function GeoAsk({ context, selected, onMove, request }: GeoAskProps) {
   const [items, setItems] = React.useState<ChatItem[]>([]);
   const [proposalStates, setProposalStates] = React.useState<Record<string, ProposalState>>({});
   const [query, setQuery] = React.useState('');
@@ -138,6 +146,18 @@ export function GeoAsk({ context, selected, onMove }: GeoAskProps) {
       setPending(false);
     }
   };
+
+  // Runs after the render that carries the request's own map context, so the question is about the object it names.
+  const handled = React.useRef<number | null>(null);
+  const askRef = React.useRef(ask);
+  React.useEffect(() => {
+    askRef.current = ask;
+  });
+  React.useEffect(() => {
+    if (!request || handled.current === request.id) return;
+    handled.current = request.id;
+    void askRef.current(request.text);
+  }, [request]);
 
   const stage = async (turnId: string, proposal: AssistantProposal) => {
     const key = `${turnId}:${proposal.proposalRef}`;

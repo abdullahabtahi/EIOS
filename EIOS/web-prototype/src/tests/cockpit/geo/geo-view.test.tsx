@@ -275,6 +275,16 @@ describe('describeSelection', () => {
     expect(describeSelection(unrated, REFERENCE, { kind: 'corridor', id: 'NO>IR' })?.rows).toContainEqual(['Risk tier', 'Unrated']);
   });
 
+  it('lets a corridor open the accounts behind it and splits its payments into deposits and withdrawals', () => {
+    const view = describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'NO>IR' });
+    expect(view?.accounts).toEqual(['CR84920', 'CR33333']);
+    expect(view?.rows).toContainEqual(['Deposits', '9']);
+    expect(view?.rows).toContainEqual(['Withdrawals', '3']);
+    const older = describeSelection(FLOWS, REFERENCE, { kind: 'corridor', id: 'KE>BS' });
+    expect(older?.accounts).toBeUndefined();
+    expect(older?.rows.map(([l]) => l)).not.toContain('Deposits');
+  });
+
   it('describes a flagged country pair with its account count and examples', () => {
     const view = describeSelection(FLOWS, REFERENCE, { kind: 'mismatch', id: 'NO>KE' });
     expect(view?.title).toBe('Registered in Norway, logging in from Kenya');

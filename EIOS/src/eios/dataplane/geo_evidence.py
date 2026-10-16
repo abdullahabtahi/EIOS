@@ -317,6 +317,25 @@ def shared_exit(
     }
 
 
+def corridor_breakdown(snap: GeoSnapshot) -> dict[tuple[str, str], dict[str, Any]]:
+    """Per corridor: the accounts moving the most money (biggest first, at most `TOP`) and the deposit and withdrawal counts."""
+    events = money_events(snap.world, snap.tiers)
+    keys = ["origin", "destination"]
+    by_account = events.groupby([*keys, "client_id"])["amount"].sum().reset_index()
+    by_account = by_account.sort_values(["amount", "client_id"], ascending=[False, True])
+    top = by_account.groupby(keys)["client_id"].apply(lambda ids: [str(i) for i in ids.head(TOP)])
+    kind = events.groupby([*keys, "transaction_type"]).size().unstack(fill_value=0)
+    out: dict[tuple[str, str], dict[str, Any]] = {}
+    for (origin, destination), ids in top.items():
+        row = kind.loc[(origin, destination)]
+        out[(str(origin), str(destination))] = {
+            "sample_accounts": ids,
+            "deposits": int(row.get("DEPOSIT", 0)),
+            "withdrawals": int(row.get("WITHDRAWAL", 0)),
+        }
+    return out
+
+
 def corridor(
     snap: GeoSnapshot, countries: Mapping[str, Any], origin: str, destination: str
 ) -> dict[str, Any] | None:

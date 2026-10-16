@@ -100,6 +100,26 @@ describe('the assistant on the map', () => {
   });
 });
 
+describe('from a corridor to its SAR paragraph', () => {
+  it('opens the biggest account, switches to Ask and asks for the SAR paragraph about it', async () => {
+    render(<GeoWorkspace initialSearch="?view=corridors&sel=corridor:NO>IR" />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Draft SAR paragraph for CR84920' }));
+    await waitFor(() => expect(window.location.search).toContain('sel=account%3ACR84920'));
+    await waitFor(() => expect(authFetch.mock.calls.some(([url]) => String(url).includes('/copilot/query'))).toBe(true));
+    const [, init] = authFetch.mock.calls.find(([url]) => String(url).includes('/copilot/query'))!;
+    const body = JSON.parse(init.body);
+    expect(body.query).toBe('Draft the geography paragraph for the SAR on CR84920.');
+    expect(body.mapContext.selection).toEqual({ kind: 'account', id: 'CR84920' });
+    expect(screen.getByRole('tab', { name: 'Ask' })).toHaveAttribute('aria-selected', 'true');
+  });
+
+  it('offers no SAR action when the API has not named the accounts behind the corridor', async () => {
+    render(<GeoWorkspace initialSearch="?view=corridors&sel=corridor:KE>BS" />);
+    expect(await screen.findByRole('region', { name: 'Selection' })).toHaveTextContent('Kenya → The Bahamas');
+    expect(screen.queryByRole('button', { name: /Draft SAR paragraph/ })).toBeNull();
+  });
+});
+
 describe('what the latest list change does to us', () => {
   it('opens from the Jurisdictions view and lists the countries the change names', async () => {
     render(<GeoWorkspace initialSearch="?view=jurisdictions" />);

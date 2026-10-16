@@ -6,7 +6,7 @@ export const FLOWS: GeoFlows = {
   as_of: '2026-10-14T08:00:00+00:00',
   tiers_known: true,
   corridors: [
-    { origin: 'NO', destination: 'IR', volume_usd: 900_000, accounts: 4, events: 12, tier: 'high' },
+    { origin: 'NO', destination: 'IR', volume_usd: 900_000, accounts: 4, events: 12, tier: 'high', sample_accounts: ['CR84920', 'CR33333'], deposits: 9, withdrawals: 3 },
     { origin: 'KE', destination: 'BS', volume_usd: 400_000, accounts: 9, events: 30, tier: 'medium' },
     { origin: 'PA', destination: 'NO', volume_usd: 100_000, accounts: 20, events: 55, tier: 'low' },
   ],

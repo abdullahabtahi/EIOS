@@ -6,11 +6,11 @@ import { DEFAULT_BASIS, type BasisId } from './geo-basis';
 import { buildLayers, type HighlightArc, type HoverPoint, type ListChangeMarks } from './geo-layers';
 import { cameraFor, cameraForCodes, type CameraTarget } from './geo-camera';
 import { useGeoAccount } from './geo-account';
-import { GeoAsk } from './geo-ask';
+import { GeoAsk, type AskRequest } from './geo-ask';
 import { describeSelection } from './geo-format';
 import { focusFor } from './geo-focus';
 import { GeoListChangePanel } from './geo-list-change';
-import { mapContextOf, type MapState, moveLabel, stateAfterMove } from './geo-moves';
+import { mapContextOf, type MapState, moveLabel, sarQuestion, stateAfterMove } from './geo-moves';
 import { GeoMoveToast } from './geo-move-toast';
 import { formatGeoUrl, parseGeoUrl } from './geo-url';
 import { GeoLegend } from './geo-legend';
@@ -83,6 +83,12 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   }, []);
   const clear = React.useCallback(() => setSelected(null), []);
   const pickAccount = React.useCallback((id: string) => setSelected({ kind: 'account', id }), []);
+  const [askRequest, setAskRequest] = React.useState<AskRequest | null>(null);
+  const draftSar = React.useCallback((id: string) => {
+    setSelected({ kind: 'account', id });
+    setPanel('ask');
+    setAskRequest((prev) => ({ id: (prev?.id ?? 0) + 1, text: sarQuestion(id) }));
+  }, []);
   const account = useGeoAccount(selected?.kind === 'account' ? selected.id : null);
   const accountData = account?.status === 'ready' ? account.data : null;
 
@@ -231,13 +237,14 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
               onSelect={pickFromList}
               onClear={clear}
               onPickAccount={pickAccount}
+              onDraftSar={draftSar}
               account={account}
               basis={basis}
               onBasis={setBasis}
               listChange={listChangeSlot}
             />
           }
-          ask={<GeoAsk context={mapContextOf(mapState)} selected={selected} onMove={applyMove} />}
+          ask={<GeoAsk context={mapContextOf(mapState)} selected={selected} onMove={applyMove} request={askRequest} />}
         />
       </div>
     </div>

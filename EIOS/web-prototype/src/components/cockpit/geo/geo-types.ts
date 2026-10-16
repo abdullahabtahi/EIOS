@@ -66,6 +66,10 @@ export interface FlowCorridor {
   readonly events: number;
   /** null when jurisdiction tiers are unknown: never "low". */
   readonly tier: RiskTier | null;
+  /** The accounts moving the most money on this corridor, biggest first. Absent from an API that predates it. */
+  readonly sample_accounts?: readonly string[];
+  readonly deposits?: number;
+  readonly withdrawals?: number;
 }
 
 export interface MismatchPair {

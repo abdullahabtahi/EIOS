@@ -107,3 +107,25 @@ def test_route_is_a_plain_503_when_there_is_no_engine_plane(
     response = client.get("/api/cockpit/geo/flows")
     assert response.status_code == 503
     assert response.json()["detail"] == "geo_unavailable"
+
+
+def test_each_corridor_names_the_accounts_behind_it_biggest_first(snap: GeoSnapshot) -> None:
+    from eios.dataplane.geo_evidence import corridor
+
+    rows = flows_payload(snap)["corridors"]
+    for row in rows:
+        ids = row["sample_accounts"]
+        assert 1 <= len(ids) <= min(5, row["accounts"])
+        assert len(set(ids)) == len(ids)
+    top = next(r for r in rows if r["tier"] == "high")
+    detail = corridor(snap, {"countries": []}, top["origin"], top["destination"])
+    assert detail is not None
+    assert (
+        top["sample_accounts"]
+        == [a["account_id"] for a in detail["top_accounts"]][: len(top["sample_accounts"])]
+    )
+
+
+def test_each_corridor_splits_its_payments_into_deposits_and_withdrawals(snap: GeoSnapshot) -> None:
+    rows = flows_payload(snap)["corridors"]
+    assert all(r["deposits"] + r["withdrawals"] == r["events"] for r in rows)

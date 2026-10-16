@@ -50,13 +50,16 @@ export function moveLabel(move: { readonly kind: ViewCommand['kind']; readonly i
   return `${KIND_WORD[move.kind]} ${move.id.replaceAll('>', ' → ')}`;
 }
 
+/** The question that has the assistant draft an account's geography paragraph for a SAR; one wording for the chip and the corridor action. */
+export const sarQuestion = (accountId: string): string => `Draft the geography paragraph for the SAR on ${accountId}.`;
+
 /** The questions offered before the first turn: fixed templates, each answered by a tool the geospatial assistant has. */
 export function geoSuggestions(selected: GeoSelection): string[] {
   const about =
     selected?.kind === 'gateway'
       ? ['Why is this exit suspicious, and who else is in its ring?']
       : selected?.kind === 'account'
-        ? [`What does ${selected.id}'s geography show?`, `Draft the geography paragraph for the SAR on ${selected.id}.`]
+        ? [`What does ${selected.id}'s geography show?`, sarQuestion(selected.id)]
         : selected?.kind === 'corridor'
           ? ['How much money moves on this corridor, and through whom?']
           : selected?.kind === 'country'
