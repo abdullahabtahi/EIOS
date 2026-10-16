@@ -111,11 +111,12 @@ describe('the Jurisdictions view and what changed on its lists', () => {
   };
   const region = () => screen.getByRole('region', { name: 'What changed on the lists' });
 
-  it('puts one small toggle on the label of the list switcher, with the count for the list in view, and no second switch', async () => {
+  it('puts one icon toggle at the far right of the list switcher row, with the count for the list in view, and no second switch', async () => {
     const toggle = await open();
     expect(toggle).toHaveTextContent('2');
     expect(toggle).toHaveAttribute('aria-pressed', 'false');
-    expect(within(toggle.parentElement as HTMLElement).getByText('Colour countries by')).toBeInTheDocument();
+    // It sits on the switcher row itself, not in a second control.
+    expect(within(screen.getByRole('group', { name: 'Risk basis' })).getByRole('button', { name: 'FATF' }).parentElement?.parentElement).toContainElement(toggle);
     expect(screen.queryByRole('button', { name: /Where we stand/ })).toBeNull();
     expect(screen.queryByRole('group', { name: 'Which list' })).toBeNull();
     expect(screen.queryByRole('region', { name: 'What changed on the lists' })).toBeNull();
