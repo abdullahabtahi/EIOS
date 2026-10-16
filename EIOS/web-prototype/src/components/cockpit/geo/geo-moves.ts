@@ -47,7 +47,7 @@ const KIND_WORD: Readonly<Record<ViewCommand['kind'], string>> = {
 
 /** A plain label for a move or a selection, used where no richer title is at hand. */
 export function moveLabel(move: { readonly kind: ViewCommand['kind']; readonly id: string }): string {
-  return `${KIND_WORD[move.kind]} ${move.id.replace('>', ' → ')}`;
+  return `${KIND_WORD[move.kind]} ${move.id.replaceAll('>', ' → ')}`;
 }
 
 /** The questions offered before the first turn: fixed templates, each answered by a tool the geospatial assistant has. */

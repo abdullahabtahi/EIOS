@@ -31,6 +31,7 @@ describe('map moves', () => {
 
   it('labels a move in words and offers questions about what is selected', () => {
     expect(moveLabel({ kind: 'corridor', id: 'ID>MM' })).toBe('corridor ID → MM');
+    expect(moveLabel({ kind: 'corridor', id: 'ID>MM>TH' })).toBe('corridor ID → MM → TH'); // every arrow, not the first
     expect(geoSuggestions({ kind: 'gateway', id: 'GW-NG-X00' })[0]).toMatch(/exit/);
     expect(geoSuggestions(null)[0]).toBe('Where should I look first?');
   });
