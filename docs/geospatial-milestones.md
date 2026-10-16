@@ -152,3 +152,12 @@ What the plan added, from the GEOG 850 workflow (<https://courses.ems.psu.edu/ge
 - Colocation window, skipped: shared-exit precision is already 1.00.
 
 Nothing is deployed.
+
+## T1: corridor triage and the assistant dock (branch `feat/geo-corridor-triage`)
+
+- **Corridors read as routes.** Curved, directed lines merged per country pair (the return leg is a figure on the pair, not a second line), rings where several routes meet, labels only for touched countries, a quieter basemap. Colours come from the design tokens.
+- **Accounts under a corridor.** The flows payload carries the top accounts by amount and the deposit and withdrawal split per corridor, computed in `dataplane/geo_evidence.py` (no LLM figure, RL-1).
+- **What changed in a list.** An icon with the count beside the list switcher opens a Before and After view with outlines on the map and a table in the panel.
+- **The assistant** is a round launcher that opens a draggable window or docks as a left column (position and mode kept in the browser); the right-hand Ask tab is gone.
+- **Accessibility.** The map region is named and points to the list as its keyboard route; text that carries meaning is at least 4.5:1.
+- Open: a live answer in the new look and Pacific-crossing routes were not checked on screen; "reviewed" marks, if added, stay in the browser and say so.
