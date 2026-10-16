@@ -186,14 +186,14 @@ export function GovernedActionShelf() {
                             className={
                               isExpired
                                 ? 'text-cx-warn font-bold'
-                                : action.kmsSignatureBadge.verified
+                                : action.kmsSignatureBadge?.verified
                                 ? 'text-cx-ok font-bold'
                                 : 'text-cx-faint'
                             }
                           >
                             {isExpired
                               ? 'SIGNATURE EXPIRED'
-                              : action.kmsSignatureBadge.verified
+                              : action.kmsSignatureBadge?.verified
                               ? 'DIGITALLY VERIFIED'
                               : 'PENDING COMMIT'}
                           </span>

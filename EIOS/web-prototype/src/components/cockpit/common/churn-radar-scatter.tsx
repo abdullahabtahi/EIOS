@@ -45,7 +45,6 @@ export function ChurnRadarScatter() {
   const cohort = cohorts[0] ?? null;
   const cohortStaging = useStageRequest();
   const [isFullscreen, setIsFullscreen] = React.useState(false);
-  const [inspectorOpen, setInspectorOpen] = React.useState(false);
   const [filterMode, setFilterMode] = React.useState<FilterMode>('ALL');
   const [axisDimension, setAxisDimension] = React.useState<AxisDimension>('P_CHURN');
   const [viewMode, setViewMode] = React.useState<ViewMode>('INDIVIDUAL');
@@ -555,7 +554,7 @@ export function ChurnRadarScatter() {
         {/* Studio Top Control Ribbon */}
         <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-xs shrink-0">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-sharp text-lg text-red-600">radar</span>
+            <span className="material-symbols-sharp text-lg text-blue-700">track_changes</span>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900">
@@ -639,20 +638,6 @@ export function ChurnRadarScatter() {
               <span>Critical Trails</span>
             </label>
 
-            {/* Inspector Drawer Toggle */}
-            <button
-              type="button"
-              onClick={() => setInspectorOpen(!inspectorOpen)}
-              className={`px-2.5 py-1 text-xs font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
-                inspectorOpen
-                  ? 'bg-blue-50 border-blue-400 text-blue-700 font-bold shadow-2xs'
-                  : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
-              }`}
-            >
-              <span className="material-symbols-sharp text-sm">dock_to_left</span>
-              <span>Inspector ({selectedPartner.partnerId})</span>
-            </button>
-
             {/* Exit Studio Button */}
             <button
               type="button"
@@ -665,7 +650,7 @@ export function ChurnRadarScatter() {
           </div>
         </div>
 
-        {/* Studio Body: Expansive Canvas + Contextual Slide-Over Drawer */}
+        {/* Studio Body: Expansive Canvas + Contextual Diagnostic Inspector Panel (Always Visible) */}
         <div className="flex-1 flex overflow-hidden relative">
           {/* 100% Canvas Area */}
           <div className="flex-1 h-full p-4 flex flex-col justify-between overflow-hidden bg-cx-wash">
@@ -673,32 +658,23 @@ export function ChurnRadarScatter() {
               {renderSvgCanvas()}
             </div>
             <div className="mt-2 flex items-center justify-between text-label font-mono text-slate-500 px-1">
-              <span>Interactive Nodes: Click node to focus crosshairs and open inspector · Hover for rapid telemetry preview</span>
+              <span>Interactive Nodes: Click node to focus crosshairs and update diagnostic inspector · Hover for rapid telemetry preview</span>
               <span>Press Esc or click Exit Studio to return to Cockpit</span>
             </div>
           </div>
 
-          {/* Slide-over Inspector Drawer */}
-          {inspectorOpen && (
-            <div className="w-[420px] xl:w-[460px] bg-cx-wash-2 border-l border-slate-200 overflow-y-auto p-4 space-y-3 shrink-0 shadow-2xl animate-in slide-in-from-right duration-200 z-20">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="material-symbols-sharp text-sm text-cx-accent">tune</span>
-                  <span className="text-xs font-bold font-mono uppercase text-slate-900">
-                    Diagnostic Inspector · {selectedPartner.partnerId}
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setInspectorOpen(false)}
-                  className="size-6 flex items-center justify-center text-slate-500 hover:text-slate-900 cursor-pointer"
-                >
-                  <span className="material-symbols-sharp text-sm">close</span>
-                </button>
+          {/* Diagnostic Inspector Panel (Always Visible in Studio View) */}
+          <div className="w-[420px] xl:w-[460px] bg-cx-wash-2 border-l border-slate-200 overflow-y-auto p-4 space-y-3 shrink-0 shadow-xl z-20">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-sharp text-sm text-cx-accent">tune</span>
+                <span className="text-xs font-bold font-mono uppercase text-slate-900">
+                  Diagnostic Inspector · {selectedPartner.partnerId}
+                </span>
               </div>
-              {renderDiagnosticInspector()}
             </div>
-          )}
+            {renderDiagnosticInspector()}
+          </div>
         </div>
       </div>
     );
@@ -716,105 +692,95 @@ export function ChurnRadarScatter() {
       )}
 
       {/* Header & Telemetry Ribbon */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-sharp text-base text-red-600">radar</span>
-            <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
-              Partner Churn Hazard Radar: P(churn) × Value at Risk (VaR)
-            </h3>
+      <div className="space-y-2.5 border-b border-slate-200 pb-3">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-sharp text-base text-blue-700">track_changes</span>
+              <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
+                Partner Churn Hazard Radar: P(churn) × Value at Risk (VaR)
+              </h3>
+            </div>
+            <p className="text-label text-slate-500 mt-0.5">
+              Synchronized 2D Cartesian Survival Hazard Radar with High-Density Portfolio Triage.
+            </p>
           </div>
-          <p className="text-label text-slate-500 mt-0.5">
-            Synchronized 2D Cartesian Survival Hazard Radar with High-Density Portfolio Triage.
-          </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* View Mode Toggle */}
-          <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-label font-mono">
-            <button
-              type="button"
-              onClick={() => setViewMode('INDIVIDUAL')}
-              className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                viewMode === 'INDIVIDUAL' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              NODES ({partners.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('COHORT')}
-              className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                viewMode === 'COHORT' ? 'bg-red-50 text-red-800 border border-red-200' : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              COHORTS
-            </button>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {/* Controls: Nodes -> Critical Nodes & Trails (Start Left) */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* View Mode Toggle */}
+            <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-label font-mono">
+              <button
+                type="button"
+                onClick={() => setViewMode('INDIVIDUAL')}
+                className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
+                  viewMode === 'INDIVIDUAL' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                NODES ({partners.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('COHORT')}
+                className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
+                  viewMode === 'COHORT' ? 'bg-red-50 text-red-800 border border-red-200' : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                COHORTS
+              </button>
+            </div>
+
+            {/* Segmented Filter */}
+            <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-label font-mono">
+              <button
+                type="button"
+                onClick={() => setFilterMode('ALL')}
+                className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
+                  filterMode === 'ALL' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                ALL ({partners.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterMode('CRITICAL')}
+                className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
+                  filterMode === 'CRITICAL' ? 'bg-red-50 text-red-700 border border-red-200' : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                CRITICAL ({partners.filter((p) => p.pChurn >= 0.5).length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterMode('STABLE')}
+                className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
+                  filterMode === 'STABLE' ? 'bg-green-50 text-green-700 border border-green-200' : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                STABLE ({partners.filter((p) => p.pChurn < 0.5).length})
+              </button>
+            </div>
+
+            {/* Show All Trails Toggle */}
+            <label className="hidden sm:flex items-center gap-1 text-label font-mono text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showAllTrails}
+                onChange={(e) => setShowAllTrails(e.target.checked)}
+                className="rounded-2xs accent-blue-700"
+              />
+              <span>Critical Trails</span>
+            </label>
           </div>
 
-          {/* Segmented Filter */}
-          <div className="flex items-center border border-slate-200 bg-slate-50 p-0.5 text-label font-mono">
-            <button
-              type="button"
-              onClick={() => setFilterMode('ALL')}
-              className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                filterMode === 'ALL' ? 'bg-white shadow-2xs text-slate-900' : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              ALL ({partners.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterMode('CRITICAL')}
-              className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                filterMode === 'CRITICAL' ? 'bg-red-50 text-red-700 border border-red-200' : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              CRITICAL ({partners.filter((p) => p.pChurn >= 0.5).length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilterMode('STABLE')}
-              className={`px-2 py-0.5 font-bold cursor-pointer transition-colors ${
-                filterMode === 'STABLE' ? 'bg-green-50 text-green-700 border border-green-200' : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              STABLE ({partners.filter((p) => p.pChurn < 0.5).length})
-            </button>
-          </div>
-
-          {/* Show All Trails Toggle */}
-          <label className="hidden sm:flex items-center gap-1 text-label font-mono text-slate-600 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showAllTrails}
-              onChange={(e) => setShowAllTrails(e.target.checked)}
-              className="rounded-2xs accent-blue-700"
-            />
-            <span>Critical Trails</span>
-          </label>
-
-          {/* Inspector Toggle Button */}
-          <button
-            type="button"
-            onClick={() => setInspectorOpen(!inspectorOpen)}
-            className={`px-2.5 py-1 text-label font-mono font-bold border flex items-center gap-1 cursor-pointer transition-colors ${
-              inspectorOpen
-                ? 'bg-blue-50 border-blue-400 text-blue-700'
-                : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
-            }`}
-            title="Toggle Diagnostic Counterfactual Inspector"
-          >
-            <span className="material-symbols-sharp text-xs">tune</span>
-            <span>Inspector</span>
-          </button>
-
-          {/* Fullscreen Studio Trigger */}
+          {/* Fullscreen Studio Trigger (Most Right) */}
           <button
             type="button"
             id="churn-radar-fullscreen-toggle"
             onClick={() => setIsFullscreen(true)}
-            className="px-2.5 py-1 text-label font-mono font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 cursor-pointer flex items-center gap-1 transition-colors"
+            className="px-2.5 py-1 text-label font-mono font-bold text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300 cursor-pointer flex items-center gap-1 transition-colors ml-auto"
             title="Expand to Fullscreen Studio (Keyboard shortcut: F)"
           >
             <span className="material-symbols-sharp text-sm">fullscreen</span>
@@ -894,20 +860,16 @@ export function ChurnRadarScatter() {
         </div>
       </div>
 
-      {/* Optional Collapsible Diagnostic Inspector (accessible via Inspector button or in DOM) */}
-      <div id="radar-embedded-inspector" className={inspectorOpen ? 'block pt-2 animate-in fade-in duration-150' : 'hidden'}>
+      {/* Diagnostic Inspector (Shown by default) */}
+      <div id="radar-embedded-inspector" className="block pt-2">
         <div className="bg-cx-wash border border-slate-200 p-4 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-            <span className="text-xs font-bold font-mono uppercase text-slate-800">
-              Diagnostic Deep-Dive &amp; What-If Counterfactuals ({selectedPartner.partnerId})
-            </span>
-            <button
-              type="button"
-              onClick={() => setInspectorOpen(false)}
-              className="text-slate-500 hover:text-slate-900 text-xs font-mono cursor-pointer"
-            >
-              Close ✕
-            </button>
+            <div className="flex items-center gap-2">
+              <span className="material-symbols-sharp text-sm text-cx-accent">tune</span>
+              <span className="text-xs font-bold font-mono uppercase text-slate-800">
+                Diagnostic Deep-Dive &amp; What-If Counterfactuals ({selectedPartner.partnerId})
+              </span>
+            </div>
           </div>
           {renderDiagnosticInspector()}
         </div>

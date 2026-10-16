@@ -36,6 +36,10 @@ yarn-error.log*
 .env.*
 .env*.local
 !.env.example
+.testsprite/
+testsprite.json
+.testsprite.json
+testsprite-artifacts/
 
 # vercel
 .vercel

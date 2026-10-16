@@ -31,6 +31,15 @@ export function PartnerTriageGrid({
   const [searchQuery, setSearchQuery] = React.useState('');
   const [sortField, setSortField] = React.useState<SortField>('valueAtRiskUsd');
   const [sortDirection, setSortDirection] = React.useState<SortDirection>('desc');
+  const [riskBand, setRiskBand] = React.useState<'ALL' | 'CRITICAL' | 'HIGH' | 'HIGH_VAR' | 'IMMINENT'>('ALL');
+
+  const counts = React.useMemo(() => ({
+    all: partners.length,
+    critical: partners.filter((p) => p.pChurn >= 0.7).length,
+    high: partners.filter((p) => p.pChurn >= 0.5 && p.pChurn < 0.7).length,
+    highVaR: partners.filter((p) => p.valueAtRiskUsd >= 1000000).length,
+    imminent: partners.filter((p) => p.daysToChurn <= 30).length,
+  }), [partners]);
 
   // Handle column header sort toggle
   const handleSort = (field: SortField) => {
@@ -47,6 +56,12 @@ export function PartnerTriageGrid({
     const q = searchQuery.trim().toLowerCase();
 
     const filtered = partners.filter((p) => {
+      // Risk band preset filter
+      if (riskBand === 'CRITICAL' && p.pChurn < 0.7) return false;
+      if (riskBand === 'HIGH' && (p.pChurn < 0.5 || p.pChurn >= 0.7)) return false;
+      if (riskBand === 'HIGH_VAR' && p.valueAtRiskUsd < 1000000) return false;
+      if (riskBand === 'IMMINENT' && p.daysToChurn > 30) return false;
+
       // Quadrant filter if passed from parent
       if (filterQuadrant && filterQuadrant !== 'ALL') {
         const matchesQuadrant =
@@ -103,7 +118,7 @@ export function PartnerTriageGrid({
       }
       return sortDirection === 'asc' ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
     });
-  }, [partners, searchQuery, sortField, sortDirection, filterQuadrant]);
+  }, [partners, searchQuery, sortField, sortDirection, filterQuadrant, riskBand]);
 
   const totalFilteredVaR = React.useMemo(() => {
     return processedPartners.reduce((acc, p) => acc + p.valueAtRiskUsd, 0);
@@ -115,44 +130,71 @@ export function PartnerTriageGrid({
       data-testid="partner-triage-grid"
     >
       {/* Triage Search & Filter Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-3 py-2.5 bg-slate-50 border-b border-slate-200">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <input
-            type="text"
-            role="searchbox"
-            aria-label="Filter partners by ID, name, region, or driver"
-            placeholder="Search partners, regions, cohorts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-8 pl-8 pr-3 text-xs bg-white border border-slate-300 rounded-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-700 focus:border-blue-700"
-          />
-          <svg
-            className="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 text-xs"
-              title="Clear search"
+      <div className="p-3 bg-slate-50 border-b border-slate-200 space-y-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-sm">
+            <input
+              type="text"
+              role="searchbox"
+              aria-label="Filter partners by ID, name, region, or driver"
+              placeholder="Search partners, regions, cohorts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-8 pl-8 pr-3 text-xs bg-white border border-slate-300 rounded-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-700 focus:border-blue-700"
+            />
+            <svg
+              className="absolute left-2.5 top-2 w-3.5 h-3.5 text-slate-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
             >
-              ✕
-            </button>
-          )}
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-2 text-slate-400 hover:text-slate-600 text-xs cursor-pointer"
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 text-label font-mono text-slate-500">
+            <span>
+              SHOWING <strong className="text-slate-800">{processedPartners.length}</strong> / {partners.length}
+            </span>
+            <span className="text-slate-300">|</span>
+            <span>
+              TOTAL VaR <strong className="text-slate-800">${(totalFilteredVaR / 1000).toFixed(0)}K</strong>
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3 text-label font-mono text-slate-500">
-          <span>
-            SHOWING <strong className="text-slate-800">{processedPartners.length}</strong> / {partners.length}
-          </span>
-          <span className="text-slate-300">|</span>
-          <span>
-            TOTAL VaR <strong className="text-slate-800">${(totalFilteredVaR / 1000).toFixed(0)}K</strong>
-          </span>
+        {/* Quick Cohort & Risk Presets */}
+        <div className="flex flex-wrap items-center gap-1.5 font-mono text-label pt-0.5">
+          <span className="text-slate-400 text-label uppercase font-bold mr-1">Filter Preset:</span>
+          {[
+            { id: 'ALL', label: `ALL (${counts.all})` },
+            { id: 'CRITICAL', label: `CRITICAL ≥70% (${counts.critical})` },
+            { id: 'HIGH', label: `HIGH 50-70% (${counts.high})` },
+            { id: 'HIGH_VAR', label: `VaR >$1M (${counts.highVaR})` },
+            { id: 'IMMINENT', label: `IMMINENT ≤30D (${counts.imminent})` },
+          ].map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              onClick={() => setRiskBand(b.id as any)}
+              className={`px-2 py-0.5 border text-label transition-colors cursor-pointer ${
+                riskBand === b.id
+                  ? 'bg-slate-900 border-slate-900 text-white font-bold shadow-2xs'
+                  : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700'
+              }`}
+            >
+              {b.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -308,13 +350,15 @@ export function PartnerTriageGrid({
                     </td>
 
                     {/* Drift Trend */}
-                    <td className="py-2.5 px-3 text-center font-mono text-label">
-                      {partner.historicalDrift?.driftVelocityPct ? (
-                        <span className="text-red-600 font-medium">
-                          +{partner.historicalDrift.driftVelocityPct.toFixed(0)}%
+                    <td className="py-2.5 px-3 text-center font-mono text-label tabular-nums">
+                      {partner.historicalDrift?.driftVelocityPct !== undefined && partner.historicalDrift.driftVelocityPct !== 0 ? (
+                        <span className={partner.historicalDrift.driftVelocityPct > 0 ? 'text-red-600 font-medium' : 'text-green-700 font-medium'}>
+                          {partner.historicalDrift.driftVelocityPct > 0
+                            ? `+${partner.historicalDrift.driftVelocityPct.toFixed(0)}%`
+                            : `${partner.historicalDrift.driftVelocityPct.toFixed(0)}%`}
                         </span>
                       ) : (
-                        <span className="text-slate-400 font-normal">--</span>
+                        <span className="text-slate-400 font-normal">—</span>
                       )}
                     </td>
 

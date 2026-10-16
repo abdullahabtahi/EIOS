@@ -48,9 +48,9 @@ export function KineticCanvas({ onCollapse }: { onCollapse?: () => void } = {}) 
         return {
           tabs: [
             { id: 'radar', label: 'Radar', title: '2D Churn Radar', anchor: 'panel-radar' },
-            { id: 'grid', label: 'Portfolio', title: 'Portfolio Table Matrix', anchor: 'panel-grid' },
             { id: 'tree', label: 'Affiliates', title: 'Sub-Affiliate Tree', anchor: 'panel-tree' },
             { id: 'ontology', label: 'Ontology', title: 'Ontology 360', anchor: 'panel-ontology' },
+            { id: 'grid', label: 'Portfolio', title: 'Portfolio Table Matrix', anchor: 'panel-grid' },
           ],
         };
       case 'compliance_auditor':
@@ -76,7 +76,6 @@ export function KineticCanvas({ onCollapse }: { onCollapse?: () => void } = {}) 
           tabs: [
             { id: 'dag', label: 'Causal DAG', title: 'Causal DAG', anchor: 'panel-dag' },
             { id: 'whatif', label: 'What-If', title: 'What-If Waterfall', anchor: 'panel-whatif' },
-            { id: 'briefing', label: 'Briefing', title: 'Morning Briefing', anchor: 'panel-briefing' },
             { id: 'tradeoffs', label: 'Trade-offs', title: 'Strategic Trade-offs', anchor: 'panel-tradeoffs' },
           ],
         };
@@ -125,8 +124,18 @@ export function KineticCanvas({ onCollapse }: { onCollapse?: () => void } = {}) 
   const handleTabClick = (tab: (typeof allTabs)[number]) => {
     setActiveTabId(tab.id);
     if (tab.anchor) {
+      const container = scrollContainerRef.current;
       const el = document.getElementById(tab.anchor);
-      if (el) {
+      if (container && el) {
+        if (tab.id === allTabs[0].id) {
+          container.scrollTo?.({ top: 0, behavior: 'smooth' });
+        } else {
+          const containerRect = container.getBoundingClientRect();
+          const elRect = el.getBoundingClientRect();
+          const targetScrollTop = container.scrollTop + (elRect.top - containerRect.top);
+          container.scrollTo?.({ top: Math.max(0, targetScrollTop), behavior: 'smooth' });
+        }
+      } else if (el) {
         el.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
       }
     }

@@ -1,7 +1,9 @@
 {
   "enabledPlugins": {
     "data-agent-kit-starter-pack@anthropic-plugin-directory": false,
-    "gcp-devkit@anthropic-plugin-directory": true,
-    "google-cloud-storage@anthropic-plugin-directory": true
+    "gcp-devkit@anthropic-plugin-directory": false,
+    "google-cloud-storage@anthropic-plugin-directory": false,
+    "bigquery@google-plugins": true,
+    "data-agent-kit@google-plugins": false
   }
 }

@@ -1505,34 +1505,6 @@ export function TopologicalGraphCanvas() {
             ))}
           </div>
 
-          {/* CGNAT Hub Filter Toggle */}
-          <button
-            type="button"
-            aria-label={suppressCgnat ? 'CGNAT Suppressed' : 'Show Full Hairball'}
-            onClick={() => setSuppressCgnat(!suppressCgnat)}
-            title="Toggle Carrier-Grade NAT Proxy Aggregation (k > 100)"
-            className={`h-7 px-2 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
-              suppressCgnat
-                ? isFullscreen
-                  ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
-                  : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'
-                : isFullscreen
-                ? 'bg-amber-950/80 border-amber-500 text-amber-200 font-bold'
-                : 'bg-amber-50 border-amber-400 text-amber-900 font-bold shadow-xs'
-            }`}
-          >
-            <span
-              className={`material-symbols-sharp text-sm ${
-                suppressCgnat
-                  ? isFullscreen ? 'text-slate-400' : 'text-slate-500'
-                  : 'text-amber-500'
-              }`}
-            >
-              {suppressCgnat ? 'visibility_off' : 'visibility'}
-            </span>
-            <span>{suppressCgnat ? 'CGNAT (k>100)' : 'Show Full Hairball'}</span>
-          </button>
-
           {/* Vertical Divider */}
           <div
             className={`h-4 w-[1px] ${
@@ -1540,108 +1512,102 @@ export function TopologicalGraphCanvas() {
             }`}
           />
 
-          {/* Forensic Lens: Detect Loops (Cycles) */}
-          <button
-            type="button"
-            onClick={() => setHighlightCycles(!highlightCycles)}
-            title="Detect Circular Flows and Layering Wash-Trade Loops"
-            className={`h-7 px-2 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
-              highlightCycles
-                ? isFullscreen
-                  ? 'bg-red-950/90 border-red-500 text-red-200 font-bold shadow-xs'
-                  : 'bg-red-50 border-red-400 text-red-800 font-bold shadow-xs'
-                : isFullscreen
-                ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
-                : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'
+          {/* Forensic Analysis Lenses Segmented Group */}
+          <div
+            className={`inline-flex items-center border p-0.5 gap-0.5 ${
+              isFullscreen ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'
             }`}
           >
-            <span
-              className={`material-symbols-sharp text-sm ${
+            {/* CGNAT Hub Filter Toggle */}
+            <button
+              type="button"
+              aria-label={suppressCgnat ? 'CGNAT Suppressed' : 'Show Full Hairball'}
+              onClick={() => setSuppressCgnat(!suppressCgnat)}
+              title="Toggle Carrier-Grade NAT Proxy Aggregation (k > 100)"
+              className={`h-6 px-2 text-label font-mono flex items-center gap-1 cursor-pointer transition-colors ${
+                suppressCgnat
+                  ? isFullscreen
+                    ? 'text-slate-300 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  : isFullscreen
+                  ? 'bg-amber-950/80 text-amber-200 font-bold shadow-xs'
+                  : 'bg-amber-50 text-amber-900 font-bold shadow-xs'
+              }`}
+            >
+              <span
+                className={`material-symbols-sharp text-xs ${
+                  suppressCgnat
+                    ? isFullscreen ? 'text-slate-400' : 'text-slate-500'
+                    : 'text-amber-500'
+                }`}
+              >
+                {suppressCgnat ? 'visibility_off' : 'visibility'}
+              </span>
+              <span>{suppressCgnat ? 'CGNAT (k>100)' : 'Show Full Hairball'}</span>
+            </button>
+
+            {/* Forensic Lens: Detect Loops (Cycles) */}
+            <button
+              type="button"
+              onClick={() => setHighlightCycles(!highlightCycles)}
+              title="Detect Circular Flows and Layering Wash-Trade Loops"
+              className={`h-6 px-2 text-label font-mono flex items-center gap-1 cursor-pointer transition-colors ${
                 highlightCycles
-                  ? isFullscreen ? 'text-red-400' : 'text-red-600'
-                  : isFullscreen ? 'text-slate-400' : 'text-slate-500'
+                  ? isFullscreen
+                    ? 'bg-red-950/90 text-red-200 font-bold shadow-xs'
+                    : 'bg-red-50 text-red-800 font-bold shadow-xs'
+                  : isFullscreen
+                  ? 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              all_inclusive
-            </span>
-            <span>{highlightCycles ? 'Loops Active' : 'Detect Loops'}</span>
-          </button>
+              <span
+                className={`material-symbols-sharp text-xs ${
+                  highlightCycles
+                    ? isFullscreen ? 'text-red-400' : 'text-red-600'
+                    : isFullscreen ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                all_inclusive
+              </span>
+              <span>{highlightCycles ? 'Loops Active' : 'Loops'}</span>
+            </button>
 
-          {/* Forensic Lens: Trace Path */}
-          <button
-            type="button"
-            onClick={() => {
-              setPathfindingMode(!pathfindingMode);
-              if (!pathfindingMode) {
-                setPathStartNode(selectedNode?.id || 'CR84920');
-                setPathEndNode(null);
-              } else {
-                setActivePathNodeIds(new Set());
-              }
-            }}
-            title="Trace Shortest Money Laundering Path Between 2 Entities"
-            className={`h-7 px-2 text-label font-mono border flex items-center gap-1.5 cursor-pointer transition-colors ${
-              pathfindingMode
-                ? isFullscreen
-                  ? 'bg-blue-950/80 border-blue-400 text-blue-200 font-bold shadow-xs'
-                  : 'bg-blue-50 border-blue-400 text-blue-800 font-bold shadow-xs'
-                : isFullscreen
-                ? 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
-                : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            <span
-              className={`material-symbols-sharp text-sm ${
+            {/* Forensic Lens: Trace Path */}
+            <button
+              type="button"
+              onClick={() => {
+                setPathfindingMode(!pathfindingMode);
+                if (!pathfindingMode) {
+                  setPathStartNode(selectedNode?.id || 'CR84920');
+                  setPathEndNode(null);
+                } else {
+                  setActivePathNodeIds(new Set());
+                }
+              }}
+              title="Trace Shortest Money Laundering Path Between 2 Entities"
+              className={`h-6 px-2 text-label font-mono flex items-center gap-1 cursor-pointer transition-colors ${
                 pathfindingMode
-                  ? isFullscreen ? 'text-blue-400' : 'text-blue-600'
-                  : isFullscreen ? 'text-slate-400' : 'text-slate-500'
+                  ? isFullscreen
+                    ? 'bg-blue-950/80 text-blue-200 font-bold shadow-xs'
+                    : 'bg-blue-50 text-blue-800 font-bold shadow-xs'
+                  : isFullscreen
+                  ? 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
-              route
-            </span>
-            <span>Trace Path</span>
-          </button>
-        </div>
-
-        {/* Right HUD Overlays Toggles (Mini-Map & Legend) */}
-        <div className="flex items-center gap-1 shrink-0 pl-2">
-          {/* Mini-Map Toggle */}
-          <button
-            type="button"
-            onClick={() => setShowMiniMap(!showMiniMap)}
-            title={showMiniMap ? 'Hide Radar Mini-Map' : 'Show Radar Mini-Map'}
-            className={`h-7 px-2 text-label font-mono border flex items-center gap-1 cursor-pointer transition-colors ${
-              showMiniMap
-                ? isFullscreen
-                  ? 'bg-slate-800 border-slate-600 text-slate-200 font-semibold'
-                  : 'bg-slate-200/80 border-slate-300 text-slate-800 font-semibold'
-                : isFullscreen
-                ? 'bg-slate-900 border-slate-700 text-slate-500 hover:text-slate-300'
-                : 'bg-white border-slate-300 text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <span className="material-symbols-sharp text-sm">map</span>
-            <span className="hidden md:inline">Radar</span>
-          </button>
-
-          {/* Legend Toggle */}
-          <button
-            type="button"
-            onClick={() => setShowLegend(!showLegend)}
-            title={showLegend ? 'Hide Legend' : 'Show Legend'}
-            className={`h-7 px-2 text-label font-mono border flex items-center gap-1 cursor-pointer transition-colors ${
-              showLegend
-                ? isFullscreen
-                  ? 'bg-slate-800 border-slate-600 text-slate-200 font-semibold'
-                  : 'bg-slate-200/80 border-slate-300 text-slate-800 font-semibold'
-                : isFullscreen
-                ? 'bg-slate-900 border-slate-700 text-slate-500 hover:text-slate-300'
-                : 'bg-white border-slate-300 text-slate-500 hover:text-slate-800'
-            }`}
-          >
-            <span className="material-symbols-sharp text-sm">info</span>
-            <span className="hidden md:inline">Legend</span>
-          </button>
+              <span
+                className={`material-symbols-sharp text-xs ${
+                  pathfindingMode
+                    ? isFullscreen ? 'text-blue-400' : 'text-blue-600'
+                    : isFullscreen ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
+                route
+              </span>
+              <span>Path</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1671,6 +1637,52 @@ export function TopologicalGraphCanvas() {
               onClick={handleClick}
               onWheel={handleWheel}
             />
+
+            {/* Floating HUD Overlays Toggles (Radar & Legend) in Left Corner */}
+            <div
+              className={`absolute top-2.5 left-2.5 z-10 inline-flex items-center border p-0.5 gap-0.5 shadow-sm backdrop-blur-md ${
+                isFullscreen ? 'border-slate-700 bg-slate-900/90' : 'border-slate-300 bg-white/95'
+              }`}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {/* Mini-Map Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowMiniMap(!showMiniMap)}
+                title={showMiniMap ? 'Hide Radar Mini-Map' : 'Show Radar Mini-Map'}
+                className={`h-6 px-2 text-label font-mono flex items-center gap-1 cursor-pointer transition-colors ${
+                  showMiniMap
+                    ? isFullscreen
+                      ? 'bg-slate-800 text-slate-200 font-semibold'
+                      : 'bg-slate-200/80 text-slate-800 font-semibold'
+                    : isFullscreen
+                    ? 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span className="material-symbols-sharp text-xs">map</span>
+                <span>Radar</span>
+              </button>
+
+              {/* Legend Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowLegend(!showLegend)}
+                title={showLegend ? 'Hide Legend' : 'Show Legend'}
+                className={`h-6 px-2 text-label font-mono flex items-center gap-1 cursor-pointer transition-colors ${
+                  showLegend
+                    ? isFullscreen
+                      ? 'bg-slate-800 text-slate-200 font-semibold'
+                      : 'bg-slate-200/80 text-slate-800 font-semibold'
+                    : isFullscreen
+                    ? 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span className="material-symbols-sharp text-xs">info</span>
+                <span>Legend</span>
+              </button>
+            </div>
 
             {/* Radar Mini-Map Viewport Overlay */}
             {showMiniMap && (

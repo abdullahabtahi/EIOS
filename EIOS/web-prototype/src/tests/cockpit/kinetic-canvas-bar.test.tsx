@@ -38,7 +38,7 @@ describe('Kinetic Canvas studio bar', () => {
 
   it('uses short single-line section tabs only (no Diagnostics: that lives in System status)', () => {
     renderCanvas();
-    expect(tabs().map((t) => t.textContent)).toEqual(['Causal DAG', 'What-If', 'Briefing', 'Trade-offs']);
+    expect(tabs().map((t) => t.textContent)).toEqual(['Causal DAG', 'What-If', 'Trade-offs']);
     expect(tabs()[1]).toHaveAttribute('title', 'What-If Waterfall');
     expect(screen.queryByRole('tab', { name: /Diagnostics/i })).not.toBeInTheDocument();
     expect(tabs().filter((t) => t.getAttribute('aria-selected') === 'true')).toHaveLength(1);
@@ -60,11 +60,11 @@ describe('Kinetic Canvas studio bar', () => {
     fireEvent.keyDown(first, { key: 'ArrowRight' });
     expect(tabs()[1]).toHaveAttribute('aria-selected', 'true');
     fireEvent.keyDown(tabs()[1], { key: 'End' });
-    expect(tabs()[3]).toHaveAttribute('aria-selected', 'true');
-    fireEvent.keyDown(tabs()[3], { key: 'ArrowRight' });
+    expect(tabs()[2]).toHaveAttribute('aria-selected', 'true');
+    fireEvent.keyDown(tabs()[2], { key: 'ArrowRight' });
     expect(tabs()[0]).toHaveAttribute('aria-selected', 'true');
     fireEvent.keyDown(tabs()[0], { key: 'ArrowLeft' });
-    expect(tabs()[3]).toHaveAttribute('aria-selected', 'true');
+    expect(tabs()[2]).toHaveAttribute('aria-selected', 'true');
   });
 
   it('only the selected tab is in the tab order (roving tabindex)', () => {
