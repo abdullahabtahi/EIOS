@@ -268,7 +268,7 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
         <div className="border-t border-slate-200/90 bg-slate-50/70 px-5 sm:px-6 py-3 font-mono">
           <div className="grid grid-cols-1 @[640px]:grid-cols-3 gap-3 @[640px]:gap-0 divide-y @[640px]:divide-y-0 @[640px]:divide-x divide-slate-200 text-slate-600">
             {/* Benchmark */}
-            <div className="@[640px]:pr-5 flex items-center">
+            <div className="@[640px]:pr-5 flex items-start">
               <p className="leading-relaxed text-[11px] text-slate-600">
                 <span className="text-slate-400 font-medium">Backtested on {forecast.origins} past forecasts:</span>{' '}
                 its error was{' '}
@@ -280,7 +280,7 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
             </div>
 
             {/* Calibration */}
-            <div className="@[640px]:px-5 pt-2.5 @[640px]:pt-0 flex items-center">
+            <div className="@[640px]:px-5 pt-2.5 @[640px]:pt-0 flex items-start">
               <p className="leading-relaxed text-[11px] text-slate-600">
                 <span className="text-slate-400 font-medium">Calibration:</span>{' '}
                 <span className="text-slate-700 font-medium">
@@ -292,7 +292,7 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
 
             {/* Prior Assumption */}
             {forecast.assumption && (
-              <div className="@[640px]:pl-5 pt-2.5 @[640px]:pt-0 flex items-center">
+              <div className="@[640px]:pl-5 pt-2.5 @[640px]:pt-0 flex items-start">
                 <p className="leading-relaxed text-[11px] text-slate-600">
                   <span className="text-slate-400 font-medium">Assumption:</span>{' '}
                   Assumes the {forecast.assumption}.
