@@ -11,9 +11,10 @@ import type { MetricProvenance } from '../state/cockpit-types';
 import { signed, usd, type BoardForecast, type Horizon } from './board';
 
 export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
+  const nominalPct = Math.round((forecast.nominal ?? 0.9) * 100);
   const interval =
     forecast.low !== null && forecast.high !== null
-      ? `${Math.round((forecast.nominal ?? 0) * 100)}% interval ${usd(forecast.low)} to ${usd(forecast.high)}`
+      ? `${nominalPct}% interval ${usd(forecast.low)} to ${usd(forecast.high)}`
       : 'No interval was measured for this projection.';
 
   // Compute point estimate position relative to the low/high confidence envelope
@@ -23,33 +24,35 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
     return Math.min(Math.max(raw, 4), 96);
   }, [forecast.point, forecast.low, forecast.high]);
 
-  // Generate mathematically accurate Gaussian probability density curve
+  // Generate mathematically accurate Gaussian probability density curve with elevated height
   const gaussian = React.useMemo(() => {
     if (forecast.low === null || forecast.high === null) return null;
     const x0 = 50 + (envelopePct / 100) * 400; // Peak mode coordinate in 500px width
     const sigma = 105;
+    const yBaseline = 90;
+    const amplitude = 72;
     const pts: [number, number][] = [];
     for (let x = 10; x <= 490; x += 6) {
       const exponent = -0.5 * Math.pow((x - x0) / sigma, 2);
-      const y = 58 - 48 * Math.exp(exponent);
+      const y = yBaseline - amplitude * Math.exp(exponent);
       pts.push([x, y]);
     }
     const fullPath = `M ${pts.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L ')}`;
-    // Shaded 90% confidence region between x = 50 and x = 450
+    // Shaded confidence mass between x = 50 and x = 450
     const shaded = pts.filter(([x]) => x >= 50 && x <= 450);
-    const yLow = 58 - 48 * Math.exp(-0.5 * Math.pow((50 - x0) / sigma, 2));
-    const yHigh = 58 - 48 * Math.exp(-0.5 * Math.pow((450 - x0) / sigma, 2));
-    const areaPath = `M 50,58 L 50,${yLow.toFixed(1)} L ${shaded.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L ')} L 450,${yHigh.toFixed(1)} L 450,58 Z`;
-    return { fullPath, areaPath, x0, yPeak: 10, yLow, yHigh };
+    const yLow = yBaseline - amplitude * Math.exp(-0.5 * Math.pow((50 - x0) / sigma, 2));
+    const yHigh = yBaseline - amplitude * Math.exp(-0.5 * Math.pow((450 - x0) / sigma, 2));
+    const areaPath = `M 50,${yBaseline} L 50,${yLow.toFixed(1)} L ${shaded.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' L ')} L 450,${yHigh.toFixed(1)} L 450,${yBaseline} Z`;
+    return { fullPath, areaPath, x0, yPeak: yBaseline - amplitude, yLow, yHigh, yBaseline };
   }, [forecast.low, forecast.high, envelopePct]);
 
   return (
     <section
       aria-label="Net revenue projection"
-      className="bg-white border border-slate-200 shadow-xs select-none text-slate-900 overflow-hidden"
+      className="@container bg-white border border-slate-200 shadow-xs select-none text-slate-900 overflow-hidden"
     >
       {/* Header Ribbon */}
-      <div className="flex flex-wrap items-center justify-between gap-3 px-6 py-3.5 border-b border-slate-200/90 bg-slate-50/50">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 sm:px-6 py-3.5 border-b border-slate-200/90 bg-slate-50/50">
         <div className="flex items-center gap-2.5">
           <span className="material-symbols-sharp text-lg text-blue-700">trending_up</span>
           <h3 className="text-sm font-sans font-semibold text-slate-900 tracking-tight">
@@ -66,21 +69,21 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
         </div>
       </div>
 
-      {/* Primary KPI & Visual Confidence Envelope */}
-      <div className="p-6 grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-        {/* Left: Point Estimate */}
-        <div className="xl:col-span-5 space-y-3">
+      {/* Primary KPI & Visual Confidence Envelope (Responsive Container Query Grid) */}
+      <div className="p-5 sm:p-6 grid grid-cols-1 @[840px]:grid-cols-12 gap-6 sm:gap-8 items-start">
+        {/* Left: Point Estimate & Calibrated Interval */}
+        <div className="@[840px]:col-span-5 space-y-4 min-w-0">
           <div className="text-label font-mono uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-2 h-6">
-            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block" />
-            Expected Projected Revenue
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block shrink-0" />
+            <span>Expected Projected Revenue</span>
           </div>
           <div className="space-y-2">
-            <div className="flex items-baseline gap-2.5 font-mono">
-              <span className="text-3xl font-extrabold text-slate-900 tabular-nums tracking-tight">
+            <div className="flex flex-wrap items-baseline gap-2 sm:gap-2.5 font-mono">
+              <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tabular-nums tracking-tight">
                 {usd(forecast.point)}
               </span>
               <span
-                className={`text-label font-medium px-2 py-0.5 border tabular-nums whitespace-nowrap ${
+                className={`text-label font-medium px-2 py-0.5 border tabular-nums ${
                   forecast.deltaPct < 0
                     ? 'bg-amber-50 border-amber-300 text-amber-800'
                     : 'bg-green-50 border-green-300 text-green-800'
@@ -93,82 +96,104 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
               Synthesized from historical payout velocity, partner attrition risk, and deposit momentum.
             </p>
           </div>
+
+          {/* Relocated Part: Confidence Interval Meta Card */}
+          <div className="p-3 bg-slate-50/80 border border-slate-200/90 rounded-xs space-y-1.5 font-mono">
+            <div className="flex items-center justify-between text-label">
+              <span className="font-semibold uppercase tracking-tight text-slate-600 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
+                {nominalPct}% Confidence Interval
+              </span>
+              <span className="text-blue-800 bg-blue-50 border border-blue-200 px-1.5 py-0.2 text-[10px] font-bold">
+                P05 — P95
+              </span>
+            </div>
+            <div className="text-sm font-bold text-slate-800 tabular-nums flex items-center gap-1.5">
+              {forecast.low !== null && forecast.high !== null ? (
+                <>
+                  <span>{usd(forecast.low)}</span>
+                  <span className="text-slate-400 font-normal text-xs">to</span>
+                  <span>{usd(forecast.high)}</span>
+                </>
+              ) : (
+                <span className="text-xs text-slate-500 font-normal">Not measured</span>
+              )}
+            </div>
+            <div className="text-[11px] text-slate-500 font-sans leading-normal">
+              Empirical holdout-calibrated probability density envelope.
+            </div>
+          </div>
         </div>
 
         {/* Right: Palantir Gaussian Probability Distribution Envelope */}
-        <div className="xl:col-span-7 space-y-3">
-          <div className="flex items-center gap-2 text-label font-mono h-6 overflow-hidden">
+        <div className="@[840px]:col-span-7 space-y-3 min-w-0">
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 text-label font-mono min-h-6">
             <span className="font-semibold uppercase tracking-tight text-slate-500 flex items-center gap-1.5 shrink-0">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block" />
-              90% Confidence Probability Density
+              Probability Density Distribution (Gaussian)
             </span>
-            <span className="text-slate-300 font-light select-none shrink-0">·</span>
-            <span className="text-slate-600 font-mono text-label tabular-nums shrink-0">
-              {forecast.low !== null && forecast.high !== null ? (
-                <>
-                  <span className="text-slate-500 font-medium">90% interval</span>{' '}
-                  <span className="font-bold text-slate-800">{usd(forecast.low)}</span>{' '}
-                  <span className="text-slate-400 font-normal">to</span>{' '}
-                  <span className="font-bold text-slate-800">{usd(forecast.high)}</span>
-                </>
-              ) : (
-                <span className="text-slate-500">{interval}</span>
-              )}
+            <span className="text-slate-500 font-mono text-label tabular-nums">
+              Mode: <strong className="text-slate-800 font-bold">{usd(forecast.point)}</strong>
             </span>
           </div>
 
           {gaussian && (
             <div className="space-y-3">
-              {/* Gaussian Bell Curve SVG */}
-              <div className="bg-slate-50/70 border border-slate-200/90 p-3 rounded-xs">
+              {/* Elevated Gaussian Bell Curve SVG */}
+              <div className="bg-slate-50/70 border border-slate-200/90 p-3 rounded-xs overflow-hidden">
                 <svg
                   role="img"
                   aria-label="Gaussian probability density curve"
-                  className="w-full h-16 select-none"
-                  viewBox="0 0 500 70"
+                  className="w-full h-24 sm:h-28 select-none"
+                  viewBox="0 0 500 106"
                 >
-                  {/* Shaded 90% Confidence Mass */}
-                  <path d={gaussian.areaPath} className="fill-blue-100/70" />
+                  {/* Shaded Confidence Mass */}
+                  <path d={gaussian.areaPath} className="fill-blue-100/75" />
 
                   {/* Baseline Axis */}
-                  <line x1="10" y1="58" x2="490" y2="58" className="stroke-slate-300 stroke-1" />
+                  <line x1="10" y1={gaussian.yBaseline} x2="490" y2={gaussian.yBaseline} className="stroke-slate-300 stroke-1" />
 
                   {/* Low Boundary Dashed Marker (P05) */}
-                  <line x1="50" y1={gaussian.yLow} x2="50" y2="58" strokeDasharray="3 2" className="stroke-blue-400 stroke-1" />
+                  <line x1="50" y1={gaussian.yLow} x2="50" y2={gaussian.yBaseline} strokeDasharray="3 2" className="stroke-blue-400 stroke-1" />
 
                   {/* High Boundary Dashed Marker (P95) */}
-                  <line x1="450" y1={gaussian.yHigh} x2="450" y2="58" strokeDasharray="3 2" className="stroke-blue-400 stroke-1" />
+                  <line x1="450" y1={gaussian.yHigh} x2="450" y2={gaussian.yBaseline} strokeDasharray="3 2" className="stroke-blue-400 stroke-1" />
 
                   {/* Continuous Probability Curve */}
                   <path d={gaussian.fullPath} fill="none" className="stroke-blue-600 stroke-1.5" />
 
                   {/* Mode / Expected Needle */}
-                  <line x1={gaussian.x0} y1={gaussian.yPeak} x2={gaussian.x0} y2="58" className="stroke-slate-900 stroke-1.5" />
-                  <circle cx={gaussian.x0} cy={gaussian.yPeak} r="3" className="fill-slate-900 stroke-white stroke-1" />
+                  <line x1={gaussian.x0} y1={gaussian.yPeak} x2={gaussian.x0} y2={gaussian.yBaseline} className="stroke-slate-900 stroke-1.5" />
+                  <circle cx={gaussian.x0} cy={gaussian.yPeak} r="3.5" className="fill-slate-900 stroke-white stroke-1" />
+
+                  {/* Axis Legend Markers */}
+                  <text x="50" y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-400 font-mono text-[9px] font-semibold">P05</text>
+                  <text x={gaussian.x0} y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-700 font-mono text-[9px] font-bold">MODE</text>
+                  <text x="450" y={gaussian.yBaseline + 12} textAnchor="middle" className="fill-slate-400 font-mono text-[9px] font-semibold">P95</text>
                 </svg>
               </div>
 
               {/* 3 Spacious Intuitive Metric Cards */}
-              <div className="grid grid-cols-3 gap-3 font-mono">
+              <div className="grid grid-cols-1 sm:grid-cols-3 @[480px]:grid-cols-3 gap-2.5 sm:gap-3 font-mono">
                 {/* 1. Floor */}
-                <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-label text-slate-500 uppercase font-semibold">Conservative Floor (P05)</div>
-                  <div className="text-base font-bold text-slate-900 tabular-nums">{usd(forecast.low!)}</div>
-                  <div className="text-label text-slate-500 font-sans">Downside planning buffer</div>
+                <div className="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 space-y-1 min-w-0">
+                  <div className="text-[10px] sm:text-label text-slate-500 uppercase font-semibold tracking-tight truncate">Floor (P05)</div>
+                  <div className="text-sm sm:text-base font-bold text-slate-900 tabular-nums truncate">{usd(forecast.low!)}</div>
+                  <div className="text-[10px] sm:text-label text-slate-500 font-sans leading-tight">Downside buffer</div>
                 </div>
 
                 {/* 2. Mode Expected */}
-                <div className="p-3 bg-blue-50/70 border border-blue-200 space-y-1">
-                  <div className="text-label text-blue-800 uppercase font-bold">Most Likely (Mode)</div>
-                  <div className="text-base font-bold text-blue-950 tabular-nums">{usd(forecast.point)}</div>
-                  <div className="text-label text-blue-700/80 font-sans">Peak density forecast</div>
+                <div className="p-2.5 sm:p-3 bg-blue-50/70 border border-blue-200 space-y-1 min-w-0">
+                  <div className="text-[10px] sm:text-label text-blue-800 uppercase font-bold tracking-tight truncate">Expected (Mode)</div>
+                  <div className="text-sm sm:text-base font-bold text-blue-950 tabular-nums truncate">{usd(forecast.point)}</div>
+                  <div className="text-[10px] sm:text-label text-blue-700/80 font-sans leading-tight">Peak forecast</div>
                 </div>
 
                 {/* 3. Ceiling */}
-                <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
-                  <div className="text-label text-slate-500 uppercase font-semibold">Optimistic Ceiling (P95)</div>
-                  <div className="text-base font-bold text-slate-900 tabular-nums">{usd(forecast.high!)}</div>
-                  <div className="text-label text-slate-500 font-sans">Upside target threshold</div>
+                <div className="p-2.5 sm:p-3 bg-slate-50 border border-slate-200 space-y-1 min-w-0">
+                  <div className="text-[10px] sm:text-label text-slate-500 uppercase font-semibold tracking-tight truncate">Ceiling (P95)</div>
+                  <div className="text-sm sm:text-base font-bold text-slate-900 tabular-nums truncate">{usd(forecast.high!)}</div>
+                  <div className="text-[10px] sm:text-label text-slate-500 font-sans leading-tight">Upside threshold</div>
                 </div>
               </div>
             </div>
@@ -178,8 +203,8 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
 
       {/* Model Telemetry & Audit Footer Strip */}
       {forecast.skill !== null && forecast.coverage !== null && forecast.origins !== null && (
-        <div className="border-t border-slate-200/90 bg-slate-50/70 px-6 py-3.5 text-label font-mono">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 divide-y md:divide-y-0 md:divide-x divide-slate-200 text-slate-600">
+        <div className="border-t border-slate-200/90 bg-slate-50/70 px-5 sm:px-6 py-3.5 text-label font-mono">
+          <div className="grid grid-cols-1 @[640px]:grid-cols-3 gap-4 @[640px]:gap-5 divide-y @[640px]:divide-y-0 @[640px]:divide-x divide-slate-200 text-slate-600">
             {/* Benchmark */}
             <div className="flex items-start gap-2.5">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
@@ -194,7 +219,7 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
             </div>
 
             {/* Calibration */}
-            <div className="flex items-start gap-2.5 md:pl-4 pt-2.5 md:pt-0">
+            <div className="flex items-start gap-2.5 @[640px]:pl-4 pt-2.5 @[640px]:pt-0">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
               <span className="leading-relaxed text-[11px] text-slate-600">
                 <span className="text-slate-400 font-medium">Calibration:</span>{' '}
@@ -207,7 +232,7 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
 
             {/* Prior Assumption */}
             {forecast.assumption && (
-              <div className="flex items-start gap-2.5 md:pl-4 pt-2.5 md:pt-0">
+              <div className="flex items-start gap-2.5 @[640px]:pl-4 pt-2.5 @[640px]:pt-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
                 <span className="leading-relaxed text-[11px] text-slate-600">
                   <span className="text-slate-400 font-medium">Assumption:</span>{' '}

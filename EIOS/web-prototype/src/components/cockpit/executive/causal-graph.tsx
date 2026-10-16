@@ -66,11 +66,11 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
       </div>
 
       {/* Blueprint Analytical Topology Canvas */}
-      <div className="relative border border-slate-200 overflow-hidden bg-slate-50">
+      <div className="relative border border-slate-200 overflow-x-auto bg-slate-50">
         <svg
           role="img"
           aria-label="Causal graph"
-          className="w-full h-56 select-none"
+          className="w-full min-w-[680px] h-56 select-none"
           viewBox={`0 0 ${W} ${H}`}
         >
           <defs>
