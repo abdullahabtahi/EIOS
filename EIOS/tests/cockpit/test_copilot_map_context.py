@@ -42,7 +42,9 @@ def test_the_map_context_reaches_the_turn_and_the_moves_come_back(
     client: TestClient, seen: _Spy
 ) -> None:
     context = {"view": "logins", "selection": {"kind": "gateway", "id": "GW-NG-X00"}}
-    response = client.post(PATH, json={"query": "why?", "role": "geospatial", "mapContext": context})
+    response = client.post(
+        PATH, json={"query": "why?", "role": "geospatial", "mapContext": context}
+    )
     assert response.status_code == 200
     assert seen.calls[-1]["entity_context"] == {**context, "basis": None}
     assert response.json()["view_commands"] == [MOVE]
@@ -60,7 +62,9 @@ def test_the_map_context_reaches_the_turn_and_the_moves_come_back(
 def test_a_map_context_outside_the_vocabulary_is_refused(
     client: TestClient, seen: _Spy, context: dict[str, Any]
 ) -> None:
-    response = client.post(PATH, json={"query": "why?", "role": "geospatial", "mapContext": context})
+    response = client.post(
+        PATH, json={"query": "why?", "role": "geospatial", "mapContext": context}
+    )
     assert response.status_code == 422 and seen.calls == []
 
 

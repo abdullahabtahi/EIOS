@@ -44,7 +44,9 @@ def test_the_eu_change_names_the_delisted_countries_with_their_exposure(
 
 
 def test_an_unknown_list_is_refused(client: TestClient, served: StaticGeo) -> None:
-    assert client.get("/api/cockpit/geo/list-changes", params={"list_id": "ofac"}).status_code == 422
+    assert (
+        client.get("/api/cockpit/geo/list-changes", params={"list_id": "ofac"}).status_code == 422
+    )
 
 
 def test_without_an_engine_plane_it_is_a_plain_503(
