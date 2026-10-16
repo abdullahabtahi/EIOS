@@ -12,9 +12,9 @@ from eios.warm.sink import LocalWarmSink
 from eios.warm.store import (
     BigQueryWarmStore,
     LocalWarmStore,
-    is_valid_label,
     WarmQueryRefused,
     WarmUnavailable,
+    is_valid_label,
 )
 
 NOW = datetime(2026, 10, 15, tzinfo=UTC)
