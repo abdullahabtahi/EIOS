@@ -226,3 +226,30 @@ def test_with_plain_figures_off_every_figure_must_still_be_a_placeholder() -> No
         settings=replace(SETTINGS, plain_figures=False),
     )
     assert _turn(runtime).answer.attempts == 2
+
+
+def test_every_turn_runs_with_message_content_kept_off_spans_and_events(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Checked on what the runner is actually called with, so a second call site cannot bypass it."""
+    from google.adk.runners import Runner
+    from google.adk.telemetry.context import ContentCapturingMode
+
+    from eios.assistant import runtime as runtime_module
+
+    seen: list[object] = []
+
+    class RecordingRunner(Runner):
+        async def run_async(self, **kwargs):  # type: ignore[no-untyped-def]
+            seen.append(kwargs["run_config"])
+            async for event in super().run_async(**kwargs):
+                yield event
+
+    monkeypatch.setattr(runtime_module, "Runner", RecordingRunner)
+    runtime, _ = make_runtime([DOSSIER, draft(f"The discrepancy is {FIGURE}.")])
+    _turn(runtime)
+    assert seen, "the runner was never called"
+    for config in seen:
+        assert config.max_llm_calls == SETTINGS.max_llm_calls
+        assert config.telemetry.capture_message_content is ContentCapturingMode.NO_CONTENT
+        assert not config.telemetry.should_add_content_to_legacy_spans

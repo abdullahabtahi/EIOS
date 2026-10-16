@@ -94,6 +94,11 @@ class _CorrelationSpanProcessor(SpanProcessor):
         span.set_attribute("correlation_id", current_id() or _NO_ID)
 
 
+def correlation_span_processor() -> SpanProcessor:
+    """A span processor that stamps the request's correlation id on each span, for a tracer provider built elsewhere."""
+    return _CorrelationSpanProcessor()
+
+
 class _ContextFilter(logging.Filter):
     """Adds correlation id, service and active trace ids to each record."""
 
