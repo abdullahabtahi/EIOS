@@ -15,6 +15,7 @@ from typing import Any
 
 from google.adk.agents.run_config import RunConfig
 from google.adk.apps.app import App
+from google.adk.events.event import Event
 from google.adk.models.base_llm import BaseLlm
 from google.adk.plugins.base_plugin import BasePlugin
 from google.adk.plugins.context_filter_plugin import ContextFilterPlugin
@@ -45,7 +46,7 @@ from eios.assistant.tools import (
     PROPOSALS_KEY,
     SOURCES_KEY,
 )
-from eios.llm_gateway.providers.adk_types import text_of, user_message
+from eios.llm_gateway.providers.adk_types import model_message, text_of, user_message
 from eios.llm_gateway.providers.registry import ModelRegistry, load_registry
 from eios.observability.cloud_trace import run_telemetry
 from eios.ontology.omcp.port.principal import Principal
@@ -224,6 +225,7 @@ class AssistantRuntime:
                 timeout=self._settings.turn_deadline_s,
             )
         except TimeoutError:
+            await self._close_thread(principal, entity_id, TIMEOUT_TEXT)
             return log.outcome(
                 _unavailable(TIMEOUT_TEXT, "turn deadline exceeded"),
                 status="timeout",
@@ -236,6 +238,7 @@ class AssistantRuntime:
             logger.exception(
                 "assistant turn failed for workstation %s", principal.workstation.value
             )
+            await self._close_thread(principal, entity_id, UNAVAILABLE_TEXT)
             return log.outcome(
                 _unavailable(UNAVAILABLE_TEXT, type(exc).__name__),
                 status="error",
@@ -246,6 +249,30 @@ class AssistantRuntime:
         return TurnOutcome(
             **{**outcome.__dict__, "latency_ms": wall, "timing": log.timer.breakdown(wall)}
         )
+
+    async def _close_thread(self, principal: Principal, entity_id: str | None, text: str) -> None:
+        """Answer a failed turn's question in the thread with the plain failure, so the next turn is not handed an
+        unanswered question to summarise along with its own. Best effort: a store that is down is why we are here."""
+        try:
+            found = await self._sessions.get_session(
+                app_name=APP_NAME,
+                user_id=principal.uid,
+                session_id=session_key(principal.workstation.value, entity_id),
+            )
+            spoken = [e for e in (found.events if found else []) if e.content]
+            last = spoken[-1] if spoken else None
+            if (
+                found is None
+                or last is None
+                or (last.author != "user" and last.is_final_response())
+            ):
+                return  # nothing was asked, or a reply already closes it
+            reply = Event(
+                author=f"{principal.workstation.value}_assistant", content=model_message(text)
+            )
+            await self._sessions.append_event(found, reply)
+        except Exception:
+            logger.warning("could not close a failed turn in its thread", exc_info=True)
 
     async def _consume(
         self,
