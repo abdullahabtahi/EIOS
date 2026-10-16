@@ -107,6 +107,22 @@ def test_no_turns_means_not_measured() -> None:
     assert latency_summary([])["p95_ms"] is None
 
 
+def _with_calls(*errors: str | None) -> dict[str, object]:
+    return {**_turn(1000.0), "tool_calls": [{"error": e} for e in errors]}
+
+
+def test_turns_whose_every_tool_found_no_data_are_counted_and_shown() -> None:
+    turns = [
+        _with_calls("DATA_UNAVAILABLE", "DATA_UNAVAILABLE"),  # starved
+        _with_calls("DATA_UNAVAILABLE", None),  # one tool had data
+        _with_calls(),  # a refusal calls no tool; not starved
+    ]
+    summary = latency_summary(turns)
+    assert summary["no_data"] == 1
+    report = {**build_report("adk", [], {}), "latency_all_turns": summary}
+    assert "Turns where every tool found no data: 1 of 3" in render_markdown(report)
+
+
 def test_only_selects_golden_scenarios_and_attacks_by_id_and_refuses_an_unknown_id() -> None:
     from pathlib import Path
 
