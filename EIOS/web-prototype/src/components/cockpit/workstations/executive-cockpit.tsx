@@ -29,11 +29,11 @@ export function ExecutiveCockpitView() {
   }, []);
 
   if (load.status === 'loading') {
-    return <p className="p-4 text-xs text-cx-muted bg-cx-sub border border-cx-line">Loading the executive board…</p>;
+    return <p className="p-4 text-xs text-slate-500 bg-slate-50 border border-slate-200 font-mono">Loading executive decision board…</p>;
   }
   if (load.status === 'error') {
     return (
-      <p role="alert" className="p-4 text-xs text-cx-bad bg-white border border-cx-line">
+      <p role="alert" className="p-4 text-xs text-red-700 bg-red-50 border border-red-200 font-mono">
         The executive board could not be loaded. Nothing is shown in its place.
       </p>
     );
@@ -41,20 +41,28 @@ export function ExecutiveCockpitView() {
 
   const { board } = load;
   return (
-    <div className="space-y-6 text-cx-ink pb-10">
-      <div className="flex justify-end text-label font-mono text-cx-muted">
-        as of {board.asOf.slice(0, 16).replace('T', ' ')} UTC · {board.dataOrigin}
-      </div>
+    <div className="space-y-4 text-slate-900 pb-12 select-none">
+      {/* 1. Hero 28-Day Net Revenue Projection & Credible Interval Envelope */}
       <ForecastCard forecast={board.forecast} />
-      <BriefingCards horizons={board.horizons} />
+
+      {/* Morning Briefing: Screen-reader accessible to avoid duplicating Copilot Dossier */}
+      <div role="region" id="panel-briefing" aria-label="Morning Briefing" className="sr-only">
+        <BriefingCards horizons={board.horizons} />
+      </div>
+
+      {/* 2. Causal Topology Graph Fitted from Historical Observations */}
       <div role="tabpanel" id="panel-dag" aria-label="Causal DAG Canvas">
         <CausalGraph nodes={board.nodes} edges={board.edges} />
       </div>
-      <div role="tabpanel" id="panel-whatif" aria-label="What-If Parametric Waterfall">
-        {board.shocks[0] && <WhatIfPanel shock={board.shocks[0]} />}
-      </div>
-      <div role="tabpanel" id="panel-tradeoffs" aria-label="Strategic Trade-offs">
-        <OpportunitiesPanel risks={board.risks} opportunities={board.opportunities} />
+
+      {/* 3. Co-Primary Execution Deck: What-If Parametric Simulation + Strategic Play Staging */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-stretch">
+        <div role="tabpanel" id="panel-whatif" aria-label="What-If Parametric Waterfall" className="h-full">
+          {board.shocks[0] && <WhatIfPanel shock={board.shocks[0]} />}
+        </div>
+        <div role="tabpanel" id="panel-tradeoffs" aria-label="Strategic Trade-offs" className="h-full">
+          <OpportunitiesPanel risks={board.risks} opportunities={board.opportunities} />
+        </div>
       </div>
     </div>
   );

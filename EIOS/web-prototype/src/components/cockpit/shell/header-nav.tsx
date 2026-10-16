@@ -44,7 +44,7 @@ export function HeaderNav({
     <header className="w-full bg-white border-b border-slate-200 select-none z-30 shrink-0 shadow-2xs">
       {/* Top Utility & Identity Bar */}
       <div className="h-11 px-4 flex items-center justify-between bg-cockpit-rail text-slate-100">
-        <ChromeBrand section="OPERATOR COCKPIT v2.4" />
+        <ChromeBrand section="OPERATOR COCKPIT v2.4" heading />
 
         {/* Center / Right Telemetry & Controls */}
         <div className="flex items-center gap-2.5">
