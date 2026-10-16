@@ -76,7 +76,7 @@ export function GeoPanel({ view, flows, reference, visible, onToggle, selected, 
     <div id={VIEW_PANEL_ID} role="tabpanel" aria-labelledby={viewTabId(view.id)} className="flex h-full flex-col overflow-y-auto">
       <div className="space-y-5 p-4">
         <header className="space-y-3">
-          <h2 className="text-balance text-sm font-semibold leading-snug text-cx-ink">{view.question}</h2>
+          <h2 className="text-pretty text-sm font-semibold leading-snug text-cx-ink">{view.question}</h2>
           {view.id === 'jurisdictions' && ref && (
             <GeoBasisSwitcher current={basis} onChange={onBasis} changeCount={changeCount} changing={changing} onToggleChange={onMode ? () => onMode(!changing) : undefined} />
           )}
