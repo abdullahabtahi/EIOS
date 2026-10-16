@@ -89,7 +89,7 @@ describe('GeoWorkspace', () => {
     const list = await screen.findByRole('region', { name: 'Where to look first' });
     const rows = within(list).getAllByRole('button');
     expect(rows[0]).toHaveTextContent('Norway → Iran');
-    expect(within(list).getByRole('heading', { name: 'High risk' })).toBeInTheDocument();
+    expect(rows[0]).toHaveTextContent('High');
     expect(rows[1]).toHaveTextContent('Kenya → The Bahamas');
     expect(screen.getByRole('list', { name: 'Map legend' }).parentElement).toHaveTextContent('Showing 3 of 3 corridors');
   });

@@ -14,8 +14,6 @@ export interface Lead {
   /** Only elevated tiers are flagged; everything else stays quiet. */
   readonly tier: Extract<RiskTier, 'high' | 'medium'> | null;
   readonly group?: string;
-  /** This row's volume as a share of the list's largest (0 to 1), for a bar; never shown as a figure. */
-  readonly share?: number;
 }
 
 const COUNT = new Intl.NumberFormat('en-US');
@@ -23,17 +21,10 @@ const plural = (n: number, one: string, many: string = `${one}s`): string => `${
 const TOP_OFFSHORE = 5;
 const TOP_BASEL = 10;
 
-const CORRIDOR_GROUP: Readonly<Record<'high' | 'medium' | 'other', string>> = {
-  high: 'High risk',
-  medium: 'Medium risk',
-  other: 'Other corridors',
-};
-
 /** One row per pair of countries: the two directions of a pair are one lead, led by the bigger and saying so when money runs both ways. */
 function corridorLeads(flows: GeoFlows, reference: GeoReference | null): readonly Lead[] {
   const pairs = pairUp(rankedCorridors(flows), flows.corridors);
-  const largest = Math.max(0, ...pairs.map((p) => p.gross));
-  return pairs.map(({ lead, back, gross, tier }) => {
+  return pairs.map(({ lead, back, tier }) => {
     const ends = `${nameOf(reference, lead.origin)} ${back ? '↔' : '→'} ${nameOf(reference, lead.destination)}`;
     const accounts = back && back.accounts !== lead.accounts ? `${COUNT.format(lead.accounts)} and ${COUNT.format(back.accounts)} accounts` : plural(lead.accounts, 'account');
     return {
@@ -42,8 +33,6 @@ function corridorLeads(flows: GeoFlows, reference: GeoReference | null): readonl
       title: ends,
       detail: back ? `${formatUsd(lead.volume_usd)} · ${formatUsd(back.volume_usd)} back · ${accounts}` : `${formatUsd(lead.volume_usd)} · ${accounts}`,
       tier: tier === 'high' || tier === 'medium' ? tier : null,
-      group: CORRIDOR_GROUP[tier === 'high' || tier === 'medium' ? tier : 'other'],
-      share: largest > 0 ? gross / largest : 0,
     };
   });
 }
