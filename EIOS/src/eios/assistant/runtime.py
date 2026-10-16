@@ -30,6 +30,7 @@ from eios.assistant.assembler_agent import (
 )
 from eios.assistant.config import AssistantSettings
 from eios.assistant.intent import BROAD_KEY, ON_SCREEN_KEY, is_broad, resolve_entity
+from eios.assistant.origin_guard import GUARDED
 from eios.assistant.prefetch import PLATFORM_CALL, PREFETCH_KEY
 from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED, SCREENED_KEY
 from eios.assistant.sessions import APP_NAME, session_key, valid_entity_id
@@ -117,9 +118,9 @@ def _model_calls(events: list[Any]) -> int:
         if e.author == "drafter"
         and e.content
         and e.content.role == "model"
-        and not (e.custom_metadata or {}).get(
-            PLATFORM_CALL
-        )  # a tool the platform ran is not a model call
+        # A tool the platform ran, or an answer a guard wrote in the model's place, is not a model call.
+        and not (e.custom_metadata or {}).get(PLATFORM_CALL)
+        and not (e.custom_metadata or {}).get(GUARDED)
     )
 
 

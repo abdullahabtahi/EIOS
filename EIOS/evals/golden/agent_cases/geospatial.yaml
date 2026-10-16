@@ -29,7 +29,8 @@
      expected_capabilities: [{capability: geo.leads, order_index: 0}], allowed_extra_capabilities: [geo.overview]}]}
 - {scenario_id: geo_sar_geography, workstation: geospatial, split: dev, description: "The SAR's geography paragraph, every figure from a tool.",
    turns: [{turn_index: 1, user_query: "Draft the geography paragraph for the SAR on CR11568.",
-     expected_capabilities: [{capability: geo.account, order_index: 0}], allowed_extra_capabilities: [aml.dossier, aml.sar_draft, geo.exit],
+     expected_capabilities: [{capability: geo.account, order_index: 0}, {capability: knowledge.regulation, order_index: 1}],
+     allowed_extra_capabilities: [aml.dossier, aml.sar_draft, geo.exit],
      trajectory_match: any_order,
      expected_facts: [{capability: geo.account, path: foreign_logins, unit: sessions}]}]}
 - {scenario_id: geo_propose_hold, workstation: geospatial, split: dev, description: "Propose from the map, never approve.",

@@ -1,5 +1,7 @@
 """The agent-port adapter: records are complete, identity is verified, figures are bound to their results (spec 021 FR-019)."""
 
+import re
+
 from eios.agent_gates.adapters.adk import AdkRuntime
 from eios.agent_gates.port import TurnRequest
 from eios.agent_gates.records import IdentitySource, Outcome, Role
@@ -59,3 +61,12 @@ def test_a_timed_out_turn_keeps_its_latency_rounds_and_tool_calls(monkeypatch) -
     assert record.outcome is Outcome.INCONCLUSIVE
     assert record.inconclusive_reason and record.inconclusive_reason.startswith("deadline")
     assert record.latency_ms > 0
+
+
+def test_a_figure_binds_only_where_it_is_written_whole() -> None:
+    # A live run bound "$0" to an account count because a plain "0" was cited elsewhere in the answer.
+    from eios.agent_gates.adapters.adk import _standalone
+
+    text = "0 accounts, $0 volume, 0% share, 0x, 0.5, 10, 0."
+    found = [m.start() for m in re.finditer(_standalone("0"), text)]
+    assert found == [0, text.rindex("0")]  # the bare zeros, never the digits of $0, 0%, 0x, 0.5, 10

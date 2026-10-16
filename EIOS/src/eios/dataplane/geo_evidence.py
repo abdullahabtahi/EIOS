@@ -206,6 +206,31 @@ def overview(snap: GeoSnapshot) -> dict[str, Any]:
         "top_exits": _exit_rows(snap)[:TOP],
         "top_corridors": elevated[:TOP],
         "top_accounts": _account_rows(snap, TOP),
+        **_hotspots(snap),
+    }
+
+
+def _hotspots(snap: GeoSnapshot) -> dict[str, Any]:
+    """Login countries that foreign accounts keep returning to beyond chance (FDR 5%, hubs set aside under RL-4).
+
+    Being listed is the decision. The q-values stay in the engine's table: they are mostly far below anything a
+    reader would act on (around 1e-18 for Nigeria), and six equal floored values could not be told apart in an answer.
+    """
+    table = snap.hotspots
+    if table is None:
+        return {"hotspots_tested": None, "login_hotspots": []}
+    found = table[table["hotspot"]]
+    return {
+        "hotspots_tested": len(table),
+        "login_hotspots": [
+            {
+                "iso2": str(iso2),
+                "country": country_name(str(iso2)),
+                "foreign_accounts": int(r["accounts"]),
+                "returning_accounts": int(r["returning"]),
+            }
+            for iso2, r in found.iterrows()
+        ],
     }
 
 

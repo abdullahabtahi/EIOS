@@ -59,6 +59,46 @@ def _jumps(raw: dict[str, Any] | None) -> dict[str, Any] | None:
     }
 
 
+def _benign(p: dict[str, Any], exit_flagged: bool) -> list[dict[str, str]]:
+    """The innocent explanations this account's own data supports (false-lead control). Each is read from a field of
+    the evidence; none carries a number, so none adds a figure the assembler would have to trace."""
+    found: list[dict[str, str]] = []
+    hubs = [g["gateway_id"] for g in p["gateways"] if g.get("hub")]
+    if hubs:
+        found.append(
+            {
+                "code": "shared_infrastructure",
+                "reading": f"Sessions through {', '.join(hubs)} pass a gateway that many unrelated accounts use "
+                "(a carrier NAT or a commercial VPN); it is set aside under RL-4 and ties the account to no one.",
+            }
+        )
+    jumps = p.get("jumps")
+    if jumps and jumps["via_hub"]:
+        found.append(
+            {
+                "code": "hub_position",
+                "reading": "Some of the jumps start or end at a hub, whose location is the gateway's, not the user's.",
+            }
+        )
+    foreign = {c["iso2"] for c in p["login_countries"] if c["iso2"] != p["kyc_country"]}
+    if len(foreign) == 1 and not exit_flagged:
+        found.append(
+            {
+                "code": "single_country_abroad",
+                "reading": f"Logins abroad come from {next(iter(foreign))} only, through no shared exit: "
+                "consistent with travel or living abroad.",
+            }
+        )
+    if not p["payments"]:
+        found.append(
+            {
+                "code": "no_money_abroad",
+                "reading": "No money moved across a border: the geography is in the logins alone.",
+            }
+        )
+    return found
+
+
 def _neighbourhood(raw: dict[str, Any]) -> dict[str, Any]:
     rows = raw.get("rows")
     return {
@@ -111,7 +151,9 @@ def account_evidence(
         "kyc_country": p["kyc_country"],
         "sessions": p["sessions"],
         "login_countries": p["login_countries"],
+        "login_country_count": len(p["login_countries"]),
         "gateways": p["gateways"],
+        "gateway_count": len(p["gateways"]),
         "foreign_logins": sum(
             c["sessions"] for c in p["login_countries"] if c["iso2"] != p["kyc_country"]
         ),
@@ -120,6 +162,7 @@ def account_evidence(
         "jumps": _jumps(p["jumps"]),
         "payments": p["payments"],
         "findings": _findings(lenses, p["jumps"] is not None),
+        "benign_readings": _benign(p, exit_gateway is not None),
         "rule": {
             "min_exit_sessions": MIN_EXIT_SESSIONS,
             "min_jumps": MIN_JUMPS,

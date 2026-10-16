@@ -102,8 +102,9 @@ DESCRIPTIONS: dict[str, str] = {
     "geo.overview": (
         "Where to look first in the book's geography: for each lens (shared foreign exit, impossible travel, login "
         "country against registered country, risky payment corridor) how many accounts it flags and how many it can "
-        "judge at all, with the top shared exits, elevated corridors and accounts. Use it for a question about the "
-        "whole book, or when nothing is selected on the map."
+        "judge at all, with the top shared exits, elevated corridors and accounts, and the login hotspots: countries "
+        "that foreign accounts keep returning to beyond chance, after a false discovery rate control and with hub "
+        "gateways set aside. Use it for a question about the whole book, or when nothing is selected on the map."
     ),
     "geo.leads": (
         "A ranked list of one kind of geography lead, in the order the map draws them: shared exits, payment "

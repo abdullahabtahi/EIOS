@@ -136,6 +136,10 @@ def _country(f: Found) -> dict[str, Any] | None:
     return {"country_id": f.country} if f.country else None
 
 
+def _reporting_duty(_f: Found) -> dict[str, Any]:
+    return {"query": "duty to report a suspicious transaction", "jurisdiction": "MT"}
+
+
 def _list(f: Found) -> dict[str, Any]:
     return {"list_id": "eu" if _LIST_EU.search(f.question) else "fatf"}
 
@@ -165,6 +169,8 @@ ROUTES: tuple[Route, ...] = (
     _r(r"corridor", ("get_corridor", _corridor), unless=r"\brank\b|\btop\b"),
     _r(r"exposure|jurisdiction", ("get_jurisdiction", _country), unless=r"plenary|delist"),
     _r(r"where should i (?:look|start)|geography of|whole book", ("get_geo_overview", _none)),
+    # A SAR's geography paragraph reads the account and the licensing jurisdiction's duty to report (geo rule 17).
+    _r(r"\bSAR\b", ("get_geo_account", _acct), ("search_regulations", _reporting_duty)),
     _r(
         r"log(?:s|ged)? in from|travel|geograph",
         ("get_geo_account", _acct),

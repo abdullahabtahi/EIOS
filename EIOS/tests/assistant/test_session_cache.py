@@ -298,7 +298,7 @@ def test_every_turn_runs_its_own_prefetch_with_write_behind_sessions() -> None:
     from .conftest import SETTINGS, make_runtime
 
     runtime, llm = make_runtime(
-        [draft("One."), draft("Two.")],
+        [draft("First answer."), draft("Second answer.")],
         settings=replace(SETTINGS, prefetch=True),
         sessions=WriteBehindSessionService(SlowStore(), retry_delay_s=0.0),
     )

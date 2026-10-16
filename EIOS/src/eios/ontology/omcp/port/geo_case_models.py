@@ -51,6 +51,14 @@ class LensFinding(StrictModel):
     assessable: bool | None  # None: the lens judges every account it sees (the shared exit)
 
 
+class BenignReading(StrictModel):
+    """An innocent explanation the account's own data supports. Read from the evidence, never guessed; carries no
+    number, so it adds no figure to check."""
+
+    code: str
+    reading: str
+
+
 class LensRule(StrictModel):
     """The thresholds the lenses apply, so "why was it flagged" is answered from the rule, not from a guess."""
 
@@ -82,7 +90,10 @@ class GeoAccountEvidence(ToolResult):
     kyc_country: str
     sessions: int
     login_countries: list[LoginCountry]
+    # Counts the reader states ("two countries") come from here, never from the model counting a list (RL-1).
+    login_country_count: int
     gateways: list[AccountGateway]
+    gateway_count: int
     foreign_logins: int
     exit_gateway_id: str | None
     exit_sessions: int
@@ -91,6 +102,8 @@ class GeoAccountEvidence(ToolResult):
     )  # None: no country positions here, so travel cannot be judged (not "no jumps")
     payments: list[CrossBorder]
     findings: list[LensFinding]
+    # What else could explain the pattern: false-lead control, stated beside the findings (geo rule 18).
+    benign_readings: list[BenignReading]
     rule: LensRule
     geo_score: float
     neighbourhood: Neighbourhood
@@ -99,6 +112,8 @@ class GeoAccountEvidence(ToolResult):
 
 ACCOUNT_UNITS = {
     "sessions": "sessions",
+    "login_country_count": "countries",
+    "gateway_count": "gateways",
     "login_countries[].sessions": "sessions",
     "gateways[].sessions": "sessions",
     "gateways[].accounts": "accounts",

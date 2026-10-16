@@ -98,7 +98,15 @@ function stageRequestOf(raw: unknown): StageRequest | undefined {
     severity: text(r.severity, 'HIGH'),
     requires_four_eyes: r.requires_four_eyes !== false,
     metadata: r.metadata && typeof r.metadata === 'object' ? (r.metadata as Record<string, unknown>) : {},
+    ...(bundleIdOf(r.evidence_bundle_id) ? { evidence_bundle_id: bundleIdOf(r.evidence_bundle_id) } : {}),
   };
+}
+
+const BUNDLE_ID = /^[0-9a-f]{64}$/;
+
+/** A sealed evidence bundle's id (64 lowercase hex), or undefined for anything else. */
+export function bundleIdOf(raw: unknown): string | undefined {
+  return typeof raw === 'string' && BUNDLE_ID.test(raw) ? raw : undefined;
 }
 
 /** Normalize one assistant proposal. A proposal without a usable stage request cannot be acted on, so it is dropped. */

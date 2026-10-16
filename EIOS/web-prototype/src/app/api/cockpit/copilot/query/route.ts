@@ -8,6 +8,7 @@ import {
   normalizeCitedMetric,
   normalizeProposal,
   normalizeSource,
+  bundleIdOf,
   normalizeViewCommands,
 } from '@/lib/server/normalize';
 
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest) {
     steps: Array.isArray(data.steps) ? data.steps.filter((s: unknown): s is string => typeof s === 'string') : [],
     proposals: rawProposals.map(normalizeProposal).filter((p): p is NonNullable<typeof p> => p !== undefined),
     viewCommands: normalizeViewCommands(data.view_commands),
+    evidenceBundleId: bundleIdOf(data.evidence_bundle_id),
     turnLatencyMs: typeof data.turn_latency_ms === 'number' ? data.turn_latency_ms : undefined,
     fallbackReason: typeof data.fallback_reason === 'string' ? data.fallback_reason : undefined,
     timestamp: data.timestamp ?? new Date().toISOString(),

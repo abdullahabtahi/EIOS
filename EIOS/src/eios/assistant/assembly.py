@@ -24,6 +24,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 
 from eios.assistant.answer import Answer, FigureRef, SourceRef
+from eios.assistant.spelled_numbers import spelled_numbers
 from eios.knowledge.highlight import body_sentences
 from eios.ontology.auditor.normalizer import MONTH_PATTERN, NumericTokenNormalizer
 from eios.ontology.omcp.port.contracts import DataOrigin
@@ -270,6 +271,11 @@ def _typed_numbers(draft: str, identifiers: frozenset[str]) -> list[_Typed | str
     for n in _NORMALIZER.extract_numbers(prose):
         report = _where(prose, n.raw_string, n.start_char)
         found.append(_written(prose, n.start_char, report) or report)
+    # A number in words is a figure too ("two countries"); checked like digits, so a count cannot slip past RL-1.
+    for s in spelled_numbers(prose):
+        words = prose[s.start : s.end]
+        after = " ".join(_WORD.findall(prose[s.end : s.end + _AFTER_CHARS].lower())[:_AFTER_WORDS])
+        found.append(_Typed(_where(prose, words, s.start), s.value, 0, s.scale, s.symbol, after))
     return found
 
 

@@ -28,7 +28,17 @@ def latency_summary(records: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         "p95_ms": _p95([float(r["latency_ms"]) for r in ran]),
         "turns": len(ran),
         "timed_out": sum(1 for r in ran if _timed_out(r)),
+        "no_data": sum(1 for r in ran if _found_no_data(r)),
     }
+
+
+def _found_no_data(record: Mapping[str, Any]) -> bool:
+    """Every tool the turn called returned DATA_UNAVAILABLE.
+
+    Right for a case that asks about data nobody holds, so it is reported, not judged. When it is most of a run, the
+    run measured a plane with no data: a live geo run on the fixture plane once passed 19 of 22 turns this way."""
+    calls = record.get("tool_calls") or []
+    return bool(calls) and all(c.get("error") == "DATA_UNAVAILABLE" for c in calls)
 
 
 def _timed_out(record: Mapping[str, Any]) -> bool:
@@ -110,10 +120,15 @@ def _latency_all_turns_line(report: Mapping[str, Any]) -> list[str]:
     summary = report.get("latency_all_turns")
     if not summary:
         return []
-    return [
+    lines = [
         f"- p95 over every turn, timeouts counted: {_fmt(summary['p95_ms'], '{:.0f} ms')} "
         f"({summary['turns']} turns, {summary['timed_out']} timed out)"
     ]
+    if "no_data" in summary:
+        lines.append(
+            f"- Turns where every tool found no data: {summary['no_data']} of {summary['turns']}"
+        )
+    return lines
 
 
 def render_markdown(report: Mapping[str, Any]) -> str:

@@ -79,9 +79,9 @@ class AdkRuntime:
             offline and models.knowledge is None
         ):  # the scripted run still exercises retrieval, on labelled test passages
             models = replace(models, knowledge=offline_index())
-        if (
-            offline and models.geo is None
-        ):  # a fixture plane serves no world; the scripted run builds the seeded one
+        # A fixture plane serves no geo world; a scripted or a live run builds the seeded one, so a live geo turn is
+        # judged on data rather than on tools that all return DATA_UNAVAILABLE.
+        if models.geo is None:
             models = replace(models, geo=offline_geo())
         self._port = build_port(models)
         self._settings = AssistantSettings.from_env(
@@ -185,8 +185,9 @@ def _live_env() -> dict[str, str]:
 
 
 def _standalone(text: str) -> str:
-    """The figure's text, not inside a longer number (0.8 must not match within 0.8044)."""
-    return rf"(?<![\d.,]){re.escape(text)}(?![\d]|[.,]\d)"
+    """The figure's text as a whole figure: not inside a longer number (0.8 within 0.8044), and not the bare digits of
+    another figure ("0" within "$0", "0%" or "0x", which a live run once bound to an account count)."""
+    return rf"(?<![\d.,$]){re.escape(text)}(?![\d%]|[.,]\d|[xX]\b|[KMB]\b)"
 
 
 def _bindings(answer: Answer, calls: list[ToolCall]) -> list[Binding]:

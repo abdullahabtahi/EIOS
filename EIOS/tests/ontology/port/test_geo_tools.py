@@ -10,6 +10,7 @@ import pytest
 from eios.dataplane.geo_evidence import LEAD_KINDS
 from eios.ontology.omcp.port.catalogue import all_specs, build_port
 from eios.ontology.omcp.port.contracts import ToolErrorCode
+from eios.ontology.omcp.port.geo_account import _benign
 from eios.ontology.omcp.port.geo_tools import LeadKind
 from eios.ontology.omcp.port.principal import Workstation
 from eios.ontology.omcp.port.readmodels import ReadModels
@@ -120,6 +121,50 @@ def test_an_account_carries_each_lens_finding_and_the_rule_behind_it(
     assert p["jumps"]["examples"][0]["km"] >= p["rule"]["min_jump_km"]
     assert ("gateway", p["exit_gateway_id"]) in _targets(p)
     assert p["neighbourhood"]["source"] == "graph.local:aml_geo"
+
+
+def test_a_ring_member_is_not_offered_the_travel_excuse_and_readings_carry_no_number(
+    port: GovernedToolPort,
+) -> None:
+    p = _call(port, "get_geo_account", {"entity_id": "CR11568"})
+    codes = {r["code"] for r in p["benign_readings"]}
+    assert "single_country_abroad" not in codes  # its logins abroad go through a shared exit
+    assert not any(
+        ch.isdigit() for r in p["benign_readings"] for ch in r["reading"].replace("RL-4", "")
+    )
+
+
+def _evidence(**overrides: Any) -> dict[str, Any]:
+    base: dict[str, Any] = {
+        "kyc_country": "TH",
+        "gateways": [{"gateway_id": "GW-TH-R01", "hub": False}],
+        "jumps": {"count": 1, "via_hub": 0, "examples": []},
+        "login_countries": [{"iso2": "TH", "sessions": 9}, {"iso2": "JP", "sessions": 3}],
+        "payments": [],
+    }
+    return {**base, **overrides}
+
+
+@pytest.mark.parametrize(
+    ("evidence", "exit_flagged", "codes"),
+    [
+        (_evidence(), False, ["single_country_abroad", "no_money_abroad"]),  # a trip, nothing else
+        (_evidence(), True, ["no_money_abroad"]),  # abroad through a shared exit: not a trip
+        (
+            _evidence(
+                gateways=[{"gateway_id": "GW-TH-C01", "hub": True}],
+                jumps={"count": 2, "via_hub": 2, "examples": []},
+                payments=[{"iso2": "MM"}],
+            ),
+            False,
+            ["shared_infrastructure", "hub_position", "single_country_abroad"],
+        ),
+    ],
+)
+def test_benign_readings_are_read_from_the_evidence(
+    evidence: dict[str, Any], exit_flagged: bool, codes: list[str]
+) -> None:
+    assert [r["code"] for r in _benign(evidence, exit_flagged)] == codes
 
 
 def test_a_jurisdiction_says_which_reference_layer_it_read(port: GovernedToolPort) -> None:
