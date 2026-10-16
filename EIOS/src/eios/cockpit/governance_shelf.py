@@ -315,6 +315,10 @@ class GovernedActionShelf:
             )
         )
 
+    def list_cards_with_tokens(self) -> list[tuple[GovernedActionCard, ActionIntentToken]]:
+        """Every card with the token behind it from one listing, so a caller never re-reads a token per card."""
+        return [(self.present_card(t), t) for t in self._all_tokens()]
+
     def list_cards(self) -> list[GovernedActionCard]:
         """Lists all action cards in the shelf, oldest first."""
         return [self.present_card(t) for t in self._all_tokens()]

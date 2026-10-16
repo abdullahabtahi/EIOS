@@ -121,6 +121,10 @@ class _TokenBook:
     def __contains__(self, intent_id: str) -> bool:
         return self._records.get(intent_id) is not None
 
+    def get(self, intent_id: str) -> ActionIntentToken | None:
+        """One read: the token, or None. (`in` then `[]` is two round trips on Firestore.)"""
+        return self._models.get(intent_id)
+
     def __getitem__(self, intent_id: str) -> ActionIntentToken:
         token = self._models.get(intent_id)
         if token is None:
@@ -554,7 +558,7 @@ class ActionIntentHub:
 
     def find(self, intent_id: str) -> ActionIntentToken | None:
         """Return the token, or None when the intent does not exist."""
-        return self._tokens[intent_id] if intent_id in self._tokens else None
+        return self._tokens.get(intent_id)
 
     def list_tokens(self) -> list[ActionIntentToken]:
         """All tokens, oldest first."""
