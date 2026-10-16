@@ -1609,53 +1609,6 @@ export function TopologicalGraphCanvas() {
             </button>
           </div>
         </div>
-
-        {/* Right HUD Overlays Toggles (Mini-Map & Legend) */}
-        <div className="flex items-center gap-1 shrink-0 pl-2">
-          <div
-            className={`inline-flex items-center border p-0.5 gap-0.5 ${
-              isFullscreen ? 'border-slate-700 bg-slate-900' : 'border-slate-300 bg-white'
-            }`}
-          >
-            {/* Mini-Map Toggle */}
-            <button
-              type="button"
-              onClick={() => setShowMiniMap(!showMiniMap)}
-              title={showMiniMap ? 'Hide Radar Mini-Map' : 'Show Radar Mini-Map'}
-              className={`h-6 px-2 text-label font-mono flex items-center gap-1 cursor-pointer transition-colors ${
-                showMiniMap
-                  ? isFullscreen
-                    ? 'bg-slate-800 text-slate-200 font-semibold'
-                    : 'bg-slate-200/80 text-slate-800 font-semibold'
-                  : isFullscreen
-                  ? 'text-slate-400 hover:text-slate-200'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <span className="material-symbols-sharp text-xs">map</span>
-              <span className="hidden md:inline">Radar</span>
-            </button>
-
-            {/* Legend Toggle */}
-            <button
-              type="button"
-              onClick={() => setShowLegend(!showLegend)}
-              title={showLegend ? 'Hide Legend' : 'Show Legend'}
-              className={`h-6 px-2 text-label font-mono flex items-center gap-1 cursor-pointer transition-colors ${
-                showLegend
-                  ? isFullscreen
-                    ? 'bg-slate-800 text-slate-200 font-semibold'
-                    : 'bg-slate-200/80 text-slate-800 font-semibold'
-                  : isFullscreen
-                  ? 'text-slate-400 hover:text-slate-200'
-                  : 'text-slate-500 hover:text-slate-800'
-              }`}
-            >
-              <span className="material-symbols-sharp text-xs">info</span>
-              <span className="hidden md:inline">Legend</span>
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Main Work Area */}
@@ -1684,6 +1637,52 @@ export function TopologicalGraphCanvas() {
               onClick={handleClick}
               onWheel={handleWheel}
             />
+
+            {/* Floating HUD Overlays Toggles (Radar & Legend) in Right Corner */}
+            <div
+              className={`absolute top-2.5 right-2.5 z-10 inline-flex items-center border p-0.5 gap-0.5 shadow-sm backdrop-blur-md ${
+                isFullscreen ? 'border-slate-700 bg-slate-900/90' : 'border-slate-300 bg-white/95'
+              }`}
+              onMouseDown={(e) => e.stopPropagation()}
+            >
+              {/* Mini-Map Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowMiniMap(!showMiniMap)}
+                title={showMiniMap ? 'Hide Radar Mini-Map' : 'Show Radar Mini-Map'}
+                className={`h-6 px-2 text-label font-mono flex items-center gap-1 cursor-pointer transition-colors ${
+                  showMiniMap
+                    ? isFullscreen
+                      ? 'bg-slate-800 text-slate-200 font-semibold'
+                      : 'bg-slate-200/80 text-slate-800 font-semibold'
+                    : isFullscreen
+                    ? 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span className="material-symbols-sharp text-xs">map</span>
+                <span>Radar</span>
+              </button>
+
+              {/* Legend Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowLegend(!showLegend)}
+                title={showLegend ? 'Hide Legend' : 'Show Legend'}
+                className={`h-6 px-2 text-label font-mono flex items-center gap-1 cursor-pointer transition-colors ${
+                  showLegend
+                    ? isFullscreen
+                      ? 'bg-slate-800 text-slate-200 font-semibold'
+                      : 'bg-slate-200/80 text-slate-800 font-semibold'
+                    : isFullscreen
+                    ? 'text-slate-400 hover:text-slate-200'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                <span className="material-symbols-sharp text-xs">info</span>
+                <span>Legend</span>
+              </button>
+            </div>
 
             {/* Radar Mini-Map Viewport Overlay */}
             {showMiniMap && (

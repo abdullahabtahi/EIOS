@@ -554,7 +554,7 @@ export function ChurnRadarScatter() {
         {/* Studio Top Control Ribbon */}
         <div className="px-4 py-2.5 bg-white border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-xs shrink-0">
           <div className="flex items-center gap-3">
-            <span className="material-symbols-sharp text-lg text-red-600">radar</span>
+            <span className="material-symbols-sharp text-lg text-blue-700">track_changes</span>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900">
@@ -696,7 +696,7 @@ export function ChurnRadarScatter() {
         <div className="flex items-center justify-between gap-2">
           <div>
             <div className="flex items-center gap-2">
-              <span className="material-symbols-sharp text-base text-red-600">radar</span>
+              <span className="material-symbols-sharp text-base text-blue-700">track_changes</span>
               <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
                 Partner Churn Hazard Radar: P(churn) × Value at Risk (VaR)
               </h3>
