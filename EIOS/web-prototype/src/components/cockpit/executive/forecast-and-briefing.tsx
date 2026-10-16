@@ -114,8 +114,8 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
 
       {/* Primary KPI & Visual Confidence Envelope (Responsive Container Query Grid) */}
       <div className="p-5 sm:p-6 grid grid-cols-1 @[840px]:grid-cols-12 gap-6 sm:gap-8 items-start">
-        {/* Left: Point Estimate & Natural Relocated Telemetry (No Rectangle, Airy Hierarchy) */}
-        <div className="@[840px]:col-span-5 min-w-0 flex flex-col justify-between self-stretch py-0.5">
+        {/* Left: Point Estimate */}
+        <div className="@[840px]:col-span-5 min-w-0 space-y-3">
           {/* Hero Point Estimate */}
           <div className="space-y-3">
             <div className="text-label font-mono uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-2 h-6">
@@ -142,26 +142,6 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
               </p>
             </div>
           </div>
-
-          {/* Relocated Part: Left Bottom Corner, Natural Hierarchy, NO RECTANGLE */}
-          <div className="pt-5 mt-6 border-t border-slate-100 space-y-1.5 font-mono">
-            <div className="text-label uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block shrink-0" />
-              <span>{nominalPct}% Confidence Probability Density</span>
-            </div>
-            <div className="text-xs text-slate-700 font-mono tabular-nums">
-              {forecast.low !== null && forecast.high !== null ? (
-                <>
-                  <span className="text-slate-500 font-medium">{nominalPct}% interval</span>{' '}
-                  <span className="font-bold text-slate-900">{usd(forecast.low)}</span>{' '}
-                  <span className="text-slate-400 font-normal">to</span>{' '}
-                  <span className="font-bold text-slate-900">{usd(forecast.high)}</span>
-                </>
-              ) : (
-                <span className="text-slate-500">{interval}</span>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Right: Interactive Normal Distribution Chart & Metric Cards (No Header Clutter) */}
@@ -179,6 +159,15 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
                   onMouseMove={handleMouseMove}
                   onMouseLeave={handleMouseLeave}
                 >
+                  {/* Mini Small Confidence Probability Density Label Inside Graph */}
+                  <text
+                    x="18"
+                    y="18"
+                    className="fill-slate-400 font-mono text-[9px] font-semibold tracking-wider uppercase select-none pointer-events-none"
+                  >
+                    {nominalPct}% Confidence Probability Density
+                  </text>
+
                   {/* Shaded Confidence Mass */}
                   <path d={gaussian.areaPath} className="fill-blue-100/75 pointer-events-none" />
 
@@ -276,41 +265,38 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
 
       {/* Model Telemetry & Audit Footer Strip */}
       {forecast.skill !== null && forecast.coverage !== null && forecast.origins !== null && (
-        <div className="border-t border-slate-200/90 bg-slate-50/70 px-5 sm:px-6 py-3.5 text-label font-mono">
-          <div className="grid grid-cols-1 @[640px]:grid-cols-3 gap-4 @[640px]:gap-5 divide-y @[640px]:divide-y-0 @[640px]:divide-x divide-slate-200 text-slate-600">
+        <div className="border-t border-slate-200/90 bg-slate-50/70 px-5 sm:px-6 py-3 font-mono">
+          <div className="grid grid-cols-1 @[640px]:grid-cols-3 gap-3 @[640px]:gap-0 divide-y @[640px]:divide-y-0 @[640px]:divide-x divide-slate-200 text-slate-600">
             {/* Benchmark */}
-            <div className="flex items-start gap-2.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
-              <span className="leading-relaxed text-[11px] text-slate-600">
+            <div className="@[640px]:pr-5 flex items-center">
+              <p className="leading-relaxed text-[11px] text-slate-600">
                 <span className="text-slate-400 font-medium">Backtested on {forecast.origins} past forecasts:</span>{' '}
                 its error was{' '}
-                <span className="text-slate-700">
+                <span className="text-slate-700 font-medium">
                   {forecast.skill.toFixed(2)}× the error of carrying
                 </span>{' '}
                 today&apos;s value forward
-              </span>
+              </p>
             </div>
 
             {/* Calibration */}
-            <div className="flex items-start gap-2.5 @[640px]:pl-4 pt-2.5 @[640px]:pt-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
-              <span className="leading-relaxed text-[11px] text-slate-600">
+            <div className="@[640px]:px-5 pt-2.5 @[640px]:pt-0 flex items-center">
+              <p className="leading-relaxed text-[11px] text-slate-600">
                 <span className="text-slate-400 font-medium">Calibration:</span>{' '}
-                <span className="text-slate-700">
+                <span className="text-slate-700 font-medium">
                   interval held {(forecast.coverage * 100).toFixed(0)}%
                 </span>{' '}
                 of the time on holdouts
-              </span>
+              </p>
             </div>
 
             {/* Prior Assumption */}
             {forecast.assumption && (
-              <div className="flex items-start gap-2.5 @[640px]:pl-4 pt-2.5 @[640px]:pt-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
-                <span className="leading-relaxed text-[11px] text-slate-600">
+              <div className="@[640px]:pl-5 pt-2.5 @[640px]:pt-0 flex items-center">
+                <p className="leading-relaxed text-[11px] text-slate-600">
                   <span className="text-slate-400 font-medium">Assumption:</span>{' '}
                   Assumes the {forecast.assumption}.
-                </span>
+                </p>
               </div>
             )}
           </div>
