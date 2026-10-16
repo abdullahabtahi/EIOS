@@ -9,9 +9,9 @@ import * as React from 'react';
 import type { GraphEdge, GraphNode } from './board';
 
 const COLUMNS = ['Competitive', 'Partner', 'Client', 'Financial'];
-const W = 880;
+const W = 960;
 const H = 200;
-const BOX = { w: 140, h: 46 };
+const BOX = { w: 168, h: 48 };
 
 function place(nodes: GraphNode[]): Record<string, { x: number; y: number }> {
   const seen: Record<string, number> = {};
@@ -85,6 +85,10 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
             <marker id="causal-arrow-unverified" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto">
               <path d="M 0 2 L 6 5 L 0 8 z" className="fill-amber-600" />
             </marker>
+            {/* Accessible Node Content Clipping Protection */}
+            <clipPath id="node-text-clip">
+              <rect x="0" y="0" width={BOX.w - 12} height={BOX.h} />
+            </clipPath>
           </defs>
 
           {/* Dot Matrix Background */}
@@ -154,7 +158,14 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
             const p = pos[n.id];
             if (!p) return null;
             return (
-              <g key={n.id} transform={`translate(${p.x},${p.y})`} className="cursor-pointer">
+              <g
+                key={n.id}
+                transform={`translate(${p.x},${p.y})`}
+                className="cursor-pointer"
+                role="group"
+                aria-label={`${n.label} (${n.domain})`}
+              >
+                <title>{n.label} — {n.domain}</title>
                 {/* Card Base */}
                 <rect
                   width={BOX.w}
@@ -164,14 +175,17 @@ export function CausalGraph({ nodes, edges }: { nodes: GraphNode[]; edges: Graph
                 />
                 {/* Unified Structural Accent Stripe (Palantir & QuantumBlack standard) */}
                 <rect width={BOX.w} height={3} rx={1} className={NODE_STRIPE} />
-                {/* Node Label */}
-                <text x={10} y={22} className="fill-slate-900 text-[11px] font-bold font-sans">
-                  {n.label}
-                </text>
-                {/* Node Domain */}
-                <text x={10} y={37} className="fill-slate-500 text-[10px] font-mono tracking-wider uppercase font-semibold">
-                  {n.domain}
-                </text>
+                {/* Accessible Text Container with Guaranteed Bounds */}
+                <g clipPath="url(#node-text-clip)">
+                  {/* Node Label */}
+                  <text x={10} y={23} className="fill-slate-900 text-[10.5px] font-bold font-sans tracking-tight">
+                    {n.label}
+                  </text>
+                  {/* Node Domain */}
+                  <text x={10} y={38} className="fill-slate-500 text-[9.5px] font-mono tracking-wider uppercase font-semibold">
+                    {n.domain}
+                  </text>
+                </g>
               </g>
             );
           })}
