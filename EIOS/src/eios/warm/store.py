@@ -25,6 +25,11 @@ DEFAULT_MAX_BYTES = (
     100 * 1024 * 1024
 )  # [ASSUMPTION] 100 MB per query; the tables are tiny at demo scale
 _PARAM = re.compile(r":([a-z_]+)")
+_LABEL = re.compile(
+    r"[a-z][a-z0-9_-]{0,62}"
+)  # a BigQuery label key; values may also start with a digit
+_LABEL_VALUE = re.compile(r"[a-z0-9_-]{0,63}")
+BASE_LABELS = {"app": "eios", "component": "warm-tier"}
 
 
 class WarmError(RuntimeError):
@@ -92,6 +97,14 @@ class LocalWarmStore:
         return WarmResult(rows, 0, f"warm.local:{spec.dataset}.{spec.table}")
 
 
+def _valid_labels(labels: Mapping[str, str]) -> dict[str, str]:
+    """The labels BigQuery would accept; the rest are dropped with a warning, never sent to fail a query."""
+    kept = {k: v for k, v in labels.items() if _LABEL.fullmatch(k) and _LABEL_VALUE.fullmatch(v)}
+    if dropped := sorted(set(labels) - set(kept)):
+        _LOG.warning("warm query labels dropped (not valid BigQuery labels): %s", dropped)
+    return kept
+
+
 class BigQueryWarmStore:
     backend = "bigquery"
 
@@ -102,12 +115,14 @@ class BigQueryWarmStore:
         client: Any = None,
         max_bytes: int = DEFAULT_MAX_BYTES,
         location: str = "us-central1",
+        labels: Mapping[str, str] | None = None,
     ) -> None:
         if client is None:
             from google.cloud import bigquery
 
             client = bigquery.Client(project=project, location=location)
         self._client, self._project, self._max_bytes = client, project, max_bytes
+        self._labels = {**_valid_labels(labels or {}), **BASE_LABELS}
 
     def run(self, query: str, params: Mapping[str, Any]) -> WarmResult:
         from google.api_core.exceptions import BadRequest, GoogleAPICallError
@@ -125,7 +140,12 @@ class BigQueryWarmStore:
             job = self._client.query(
                 sql,
                 job_config=bigquery.QueryJobConfig(
-                    query_parameters=parameters, maximum_bytes_billed=self._max_bytes
+                    query_parameters=parameters,
+                    maximum_bytes_billed=self._max_bytes,
+                    labels={
+                        **self._labels,
+                        "query": named.name,
+                    },  # spend per named query: INFORMATION_SCHEMA.JOBS
                 ),
             )
             rows = [_plain(dict(r.items())) for r in job.result()]

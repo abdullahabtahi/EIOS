@@ -155,6 +155,29 @@ def test_a_real_run_carries_the_cap_the_named_parameters_and_the_qualified_table
     assert result.bytes_processed == 500
 
 
+def test_every_job_is_labelled_so_its_spend_can_be_attributed_to_the_named_query() -> None:
+    client = _Client(estimate=500)
+    BigQueryWarmStore("proj", client=client, labels={"environment": "prod-like"}).run(
+        "account_daily_activity", PARAMS
+    )
+    labels = client.configs[-1][1].labels
+    assert labels == {
+        "app": "eios",
+        "component": "warm-tier",
+        "query": "account_daily_activity",
+        "environment": "prod-like",
+    }
+
+
+def test_a_label_the_warehouse_would_reject_is_dropped_not_sent() -> None:
+    """BigQuery labels are lowercase letters, digits, underscores and dashes, 63 characters at most."""
+    client = _Client(estimate=500)
+    BigQueryWarmStore(
+        "proj", client=client, labels={"Environment": "Prod Like", "x" * 64: "v", "ok": "y" * 64}
+    ).run("account_daily_activity", PARAMS)
+    assert set(client.configs[-1][1].labels) == {"app", "component", "query"}
+
+
 def test_a_warehouse_failure_is_a_labelled_unavailable_not_an_empty_answer() -> None:
     from google.api_core.exceptions import ServiceUnavailable
 

@@ -30,6 +30,7 @@ BACKEND_ENV = "EIOS_WARM_BACKEND"
 PROJECT_ENV = "EIOS_WARM_PROJECT"
 MAX_BYTES_ENV = "EIOS_WARM_MAX_BYTES"
 LOCATION_ENV = "EIOS_WARM_LOCATION"
+ENVIRONMENT_ENV = "EIOS_ENVIRONMENT"
 
 
 class WarmConfigError(ValueError):
@@ -80,5 +81,6 @@ def build_warm_store(world: AmlWorld, env: Mapping[str, str] | None = None) -> W
             project,
             max_bytes=int(source.get(MAX_BYTES_ENV, DEFAULT_MAX_BYTES)),
             location=source.get(LOCATION_ENV, "us-central1"),
+            labels={"environment": source.get(ENVIRONMENT_ENV, "").strip().lower()},
         )
     raise WarmConfigError(f"{BACKEND_ENV} must be bigquery, local or off, not {backend!r}")
