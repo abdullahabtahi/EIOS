@@ -90,9 +90,17 @@ export function CopilotDossier() {
           {dossier.headline}
         </h2>
 
-        <p className="text-xs text-cx-muted leading-relaxed font-sans">
-          {dossier.executiveSummary}
-        </p>
+        {/* Suppress summary when it duplicates the individual section cards below (e.g. morning briefing synthesis) */}
+        {dossier.executiveSummary &&
+          dossier.entityId !== 'ENTERPRISE-GLOBAL' &&
+          !dossier.headline?.includes('Morning Briefing') &&
+          !dossier.sections?.some(
+            (s: DossierSection) => s.narrativeText && dossier.executiveSummary.includes(s.narrativeText),
+          ) && (
+            <p className="text-xs text-cx-muted leading-relaxed font-sans">
+              {dossier.executiveSummary}
+            </p>
+          )}
       </div>
 
       {/* Dossier Scrollable Narrative Sections */}
