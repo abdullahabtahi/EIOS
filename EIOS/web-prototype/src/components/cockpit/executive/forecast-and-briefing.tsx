@@ -67,20 +67,20 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
       </div>
 
       {/* Primary KPI & Visual Confidence Envelope */}
-      <div className="p-6 grid grid-cols-1 xl:grid-cols-12 gap-8 items-center">
+      <div className="p-6 grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
         {/* Left: Point Estimate */}
-        <div className="xl:col-span-4 space-y-2.5">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 inline-block" />
+        <div className="xl:col-span-5 space-y-3">
+          <div className="text-[10px] font-mono uppercase tracking-wider text-slate-500 font-semibold flex items-center gap-2 h-6">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block" />
             Expected Projected Revenue
           </div>
-          <div className="space-y-1.5">
-            <div className="flex flex-wrap items-baseline gap-3 font-mono">
-              <span className="text-4xl font-extrabold text-slate-900 tabular-nums tracking-tight">
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-2.5 font-mono">
+              <span className="text-3xl font-extrabold text-slate-900 tabular-nums tracking-tight">
                 {usd(forecast.point)}
               </span>
               <span
-                className={`text-xs font-bold px-2 py-0.5 border tabular-nums ${
+                className={`text-[11px] font-medium px-2 py-0.5 border tabular-nums whitespace-nowrap ${
                   forecast.deltaPct < 0
                     ? 'bg-amber-50 border-amber-300 text-amber-800'
                     : 'bg-green-50 border-green-300 text-green-800'
@@ -89,17 +89,17 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
                 {signed(forecast.deltaPct)}% against today
               </span>
             </div>
-            <p className="text-xs text-slate-500 font-sans leading-relaxed">
+            <p className="text-xs text-slate-500 font-sans leading-relaxed max-w-sm">
               Synthesized from historical payout velocity, partner attrition risk, and deposit momentum.
             </p>
           </div>
         </div>
 
         {/* Right: Palantir Gaussian Probability Distribution Envelope */}
-        <div className="xl:col-span-8 space-y-3">
-          <div className="flex items-center justify-between text-label font-mono">
+        <div className="xl:col-span-7 space-y-3">
+          <div className="flex items-center justify-between text-label font-mono h-6">
             <span className="font-semibold uppercase tracking-wider text-slate-500 text-[10px] flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block" />
               90% Confidence Probability Density
             </span>
             <span className="text-slate-800 font-bold bg-slate-100 px-2 py-0.5 border border-slate-200 text-[11px]">
@@ -173,23 +173,24 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
             {/* Benchmark */}
             <div className="flex items-start gap-2.5">
               <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
-              <span className="leading-relaxed text-[11px]">
-                Backtested on {forecast.origins} past forecasts: its error was{' '}
-                <strong className="text-slate-900 font-semibold">
+              <span className="leading-relaxed text-[11px] text-slate-600">
+                <span className="text-slate-400 font-medium">Backtested on {forecast.origins} past forecasts:</span>{' '}
+                its error was{' '}
+                <span className="text-slate-700">
                   {forecast.skill.toFixed(2)}× the error of carrying
-                </strong>{' '}
+                </span>{' '}
                 today&apos;s value forward
               </span>
             </div>
 
             {/* Calibration */}
             <div className="flex items-start gap-2.5 md:pl-4 pt-2.5 md:pt-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-600 mt-1.5 shrink-0" />
-              <span className="leading-relaxed text-[11px]">
-                Calibration:{' '}
-                <strong className="text-slate-900 font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
+              <span className="leading-relaxed text-[11px] text-slate-600">
+                <span className="text-slate-400 font-medium">Calibration:</span>{' '}
+                <span className="text-slate-700">
                   interval held {(forecast.coverage * 100).toFixed(0)}%
-                </strong>{' '}
+                </span>{' '}
                 of the time on holdouts
               </span>
             </div>
@@ -197,8 +198,9 @@ export function ForecastCard({ forecast }: { forecast: BoardForecast }) {
             {/* Prior Assumption */}
             {forecast.assumption && (
               <div className="flex items-start gap-2.5 md:pl-4 pt-2.5 md:pt-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />
-                <span className="leading-relaxed text-[11px] text-slate-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mt-1.5 shrink-0" />
+                <span className="leading-relaxed text-[11px] text-slate-600">
+                  <span className="text-slate-400 font-medium">Assumption:</span>{' '}
                   Assumes the {forecast.assumption}.
                 </span>
               </div>
