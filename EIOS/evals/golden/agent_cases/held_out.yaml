@@ -1,0 +1,46 @@
+# Held-out cases. `validation` is read after a change to see whether a fix generalised; `sealed` is run once, by name
+# (`--split sealed`), to judge a finished change, and is never read while tuning: a prompt or tool description edited
+# until a sealed case passes no longer measures anything. Both use wordings and capabilities the `dev` cases do not.
+# `aml_history_window` and `aml_cash_out_paraphrase` carry no screen payload on purpose: with one, the screen-consistency
+# judge compares a figure the dossier card does not show (busiest-day deposits; a 0-1 risk against the 0-100 score) with
+# a similarly named card field and reports a disagreement that is not one. Fix the judge against recorded output first.
+# They are written by the same author as `dev`, so they show overfitting to those wordings, not every blind spot.
+- {scenario_id: aml_history_window, workstation: aml_investigator, split: validation, description: "Activity over a window comes from history, not the dossier.",
+   turns: [{turn_index: 1, user_query: "How much did CR84920 deposit and withdraw over the past 30 days?",
+     expected_capabilities: [{capability: aml.history, order_index: 0}], allowed_extra_capabilities: [aml.dossier],
+     expected_facts: [{capability: aml.history, path: total_deposits_usd, unit: USD}]}]}
+- {scenario_id: aml_alert_queue, workstation: aml_investigator, split: validation, description: "The queue is listed, not one account.",
+   turns: [{turn_index: 1, user_query: "Open the triage queue and show me what needs a look today.",
+     expected_capabilities: [{capability: aml.alerts, order_index: 0}], allowed_extra_capabilities: [aml.dossier]}]}
+- {scenario_id: aml_cash_out_paraphrase, workstation: aml_investigator, split: validation, description: "A withdrawal question worded without the word withdrawal; nothing is approved.",
+   turns: [{turn_index: 1, user_query: "Is it safe to let CR84920 take the money out right now?",
+     expected_capabilities: [{capability: aml.withdrawal_risk, order_index: 0}], allowed_extra_capabilities: [aml.dossier],
+     forbidden_capabilities: [action.approve, action.execute]}]}
+- {scenario_id: partner_client_quality_question, workstation: partner_manager, split: validation, description: "Quality of referred clients, a capability no dev case uses.",
+   turns: [{turn_index: 1, user_query: "How good are the clients that PTR-882 refers to us?", screen_payload: "partner:PTR-882",
+     expected_capabilities: [{capability: partner.client_quality, order_index: 0}], allowed_extra_capabilities: [partner.signals]}]}
+- {scenario_id: ops_calibration_trust, workstation: data_operations, split: validation, description: "Calibration is reported as measured, including when it is off.",
+   turns: [{turn_index: 1, user_query: "Can we trust the churn model's probabilities right now?",
+     expected_capabilities: [{capability: ops.calibration, order_index: 0}], allowed_extra_capabilities: [ops.reliability]}]}
+- {scenario_id: aml_declared_vs_turnover, workstation: aml_investigator, split: sealed, description: "The headline discrepancy, worded from the other side.",
+   turns: [{turn_index: 1, user_query: "How far off is CR84920's declared income from what the account actually turns over?", screen_payload: "aml:CR84920",
+     expected_capabilities: [{capability: aml.dossier, order_index: 0}], allowed_extra_capabilities: [metric.get],
+     expected_facts: [{capability: aml.dossier, path: discrepancy_multiplier, unit: multiplier}]}]}
+- {scenario_id: partner_recent_messages, workstation: partner_manager, split: sealed, description: "Partner messages are read as untrusted data.",
+   turns: [{turn_index: 1, user_query: "What has PTR-882 been telling us in recent messages?", screen_payload: "partner:PTR-882",
+     expected_capabilities: [{capability: partner.comms, order_index: 0}], allowed_extra_capabilities: [partner.signals]}]}
+- {scenario_id: partner_entity_kind, workstation: partner_manager, split: sealed, description: "What an id refers to, through the resolver.",
+   turns: [{turn_index: 1, user_query: "Is PTR-882 a partner or a client account?", screen_payload: "partner:PTR-882",
+     expected_capabilities: [{capability: entity.resolve, order_index: 0}], allowed_extra_capabilities: [partner.signals]}]}
+- {scenario_id: exec_outlook_paraphrase, workstation: executive, split: sealed, description: "A forecast question worded without the word forecast.",
+   turns: [{turn_index: 1, user_query: "Where is net revenue heading over the coming months?",
+     expected_capabilities: [{capability: exec.forecast, order_index: 0}], allowed_extra_capabilities: [metric.get]}]}
+- {scenario_id: compliance_audit_trail_status, workstation: compliance_auditor, split: sealed, description: "Retention and immutability of the audit trail.",
+   turns: [{turn_index: 1, user_query: "Give me the audit status of the decision ledger: how long is it retained and is it locked?",
+     expected_capabilities: [{capability: compliance.audit_status, order_index: 0}], allowed_extra_capabilities: [compliance.ledger]}]}
+- {scenario_id: compliance_latest_entries, workstation: compliance_auditor, split: sealed, description: "Recent ledger entries, in order.",
+   turns: [{turn_index: 1, user_query: "Show me the most recent entries recorded in the ledger.",
+     expected_capabilities: [{capability: compliance.ledger, order_index: 0}]}]}
+- {scenario_id: ops_restore_proof, workstation: data_operations, split: sealed, description: "When a restore was last proven; none proven is said, never assumed.",
+   turns: [{turn_index: 1, user_query: "When did we last prove that we can restore from a backup?",
+     expected_capabilities: [{capability: ops.drill_status, order_index: 0}]}]}

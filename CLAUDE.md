@@ -29,7 +29,7 @@ Backend, from `EIOS/`:
 - Network/cloud tests are off by default: `EIOS_TEST_NETWORK=1` (markers `requires_network`, `requires_emulator`, `requires_cloud`)
 - Gateway: `PYTHONPATH=src uv run uvicorn eios.cockpit.server:app --port 8002` (what `api-bridge.ts` falls back to on localhost). The assistant also needs `GOOGLE_GENAI_USE_VERTEXAI=true` and the GCP vars in section 6, else every copilot query is a 503.
 - Agent quality gates (spec 022; code `src/eios/agent_gates/`, cases `evals/golden/`, suites `evals/agent/`), run with `PYTHONPATH=src:.`:
-  - Baseline offline: `python -m evals.agent.baseline --runtime adk` (scripted model, free). Do not run live or multi-repeat evals unless the user asks.
+  - Baseline offline: `python -m evals.agent.baseline --runtime adk` (scripted model, free; splits `dev,validation` by default, `--split sealed` only to judge a finished change, `docs/agent-eval-splits.md`). Do not run live or multi-repeat evals unless the user asks.
   - Live (spends money, needs `EIOS_AGENT_EVAL_MAX_TURNS` and the GCP vars in section 6): add `--live --repeats 1 --out evals/reports/agent_baseline_live`
   - Re-grade a saved run with no model call: `--runtime recorded --records <records.jsonl>`
   - Faithfulness over stored turns: `python -m evals.agent.faithfulness_suite --records evals/recorded --twice`

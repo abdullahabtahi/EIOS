@@ -65,7 +65,16 @@ def _fmt(value: float, unit: str, label: str) -> str:
     )
 
 
-_PROSE_FIGURE = re.compile(r"(?<![A-Za-z0-9_-])\d[\d,.]*%?(?![A-Za-z0-9_-])")
+_UNIT = r"(?:ms|s|min|minutes?|hours?|h|days?|d|seconds?|weeks?|months?|years?)"
+_NUMBER_WORDS = (  # "one" is left out: "no one" and "one of" are not figures
+    r"two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|"
+    r"eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion"
+)
+# A digit run (with %, or a glued or hyphenated unit such as 60s or 15-minute) not inside an identifier, or a number word.
+_PROSE_FIGURE = re.compile(
+    rf"(?<![A-Za-z0-9_-])\d[\d,.]*(?:%|-?{_UNIT}\b)?(?![A-Za-z0-9_-])|\b(?:{_NUMBER_WORDS})\b",
+    re.IGNORECASE,
+)
 
 
 def _scalar(key: str, value: Any, unit: str | None) -> str | None:

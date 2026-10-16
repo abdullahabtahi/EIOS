@@ -1,0 +1,22 @@
+# Held-out agent cases
+
+**Why.** All 32 golden cases were `dev`, and fixes since the first live baseline (PR #61 among them) were made against that same set. A pass on cases you tuned against does not show a fix generalises; the eval skill's rule is to hold cases back. The `Split` enum already had `dev`, `validation` and `sealed`; nothing used the last two and nothing selected by split.
+
+**What changed.**
+- `python -m evals.agent.baseline --split dev,validation,sealed`. The default is `dev,validation`; `sealed` runs only when named, and a report records the splits it ran (`meta.splits`).
+- 12 new cases in `evals/golden/agent_cases/held_out.yaml`: 5 `validation` (read after a change to see whether it generalised), 7 `sealed` (run once, to judge a finished change; a fix fitted to a sealed case no longer measures anything).
+- Every reachable capability now has a case. Before, 9 live capabilities had none, among them `aml.history`, `aml.alerts`, `partner.client_quality`, `partner.comms`, `ops.calibration` and `ops.drill_status`; `tests/agent_gates/test_golden_splits.py` fails if one loses its case (two fixture-only or computed-only capabilities are excluded by name, with the reason).
+- The same test fails if a held-out question repeats a `dev` question, if a split is empty, or if `sealed` would run by default.
+- The offline question router gained routes for the new capabilities (it is a harness, not the agent).
+
+**Measured, offline (scripted model, no spend) `[MEASURED]`.** All splits, one repeat: 111 turns pass, 0 fail. Default splits: 94 pass, 0 fail. This shows the cases load, route and grade; it says nothing about the live model.
+
+**Not measured.** No live run: whether the model passes the held-out cases is unknown until someone approves one (`--live --repeats 1 --split validation` first). The cases are written by the author of `dev`, so they show overfitting to those wordings, not every blind spot.
+
+**A finding.** With a `screen_payload`, two of the new cases failed the screen-consistency judge although the tools agreed (the history total equalled the dossier's 30-day volume): the judge matched the answer's "busiest day deposits" and a 0-1 withdrawal risk to similarly named card fields. That is the grader-false-positive class already listed in `docs/assistant-latency.md`. The two cases carry no screen payload until the judge is fixed against recorded live output.
+
+**Found by the held-out cases, fixed.** The reference renderer (`agent_gates/adapters/toolport_render.py`) is meant to repeat a number only when a typed field backs it, but its prose filter missed a unit glued to the number (`60s`), a hyphenated one (`15-minute`) and a number spelled out ("Two payout tickets"). The unit tests for it are in `tests/agent_gates/test_toolport_render.py`.
+
+**Found, open.** Two faithfulness judge edge cases remain on the reference runtime (not the ADK runtime, which passes every case offline), both on `sealed` cases: a one-digit severity label such as `SEV-1` is not identifier-shaped, so its `1` reads as a figure; and two fields that both hold the value 1 (a topic count and a message count) make the judge bind the figure to the wrong field. Fix the judge against recorded live output, as the rule in `CLAUDE.md` says, not against these cases. Until then the reference-runtime whole-suite test runs the default splits only.
+
+**A note on sealing.** The sealed cases were run offline by their author while the renderer was fixed. The seal protects judging a prompt, tool or model change with a live run; once a live run reads them, anyone fitting to the result should write new sealed cases first.

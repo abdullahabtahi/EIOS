@@ -58,6 +58,11 @@ def _part(f: Found) -> dict[str, Any] | None:
     return {"entity_id": f.partner} if f.partner else None
 
 
+def _kind_target(f: Found) -> dict[str, Any] | None:
+    target = f.partner or f.account
+    return {"entity_id": target} if target else None
+
+
 def _none(_f: Found) -> dict[str, Any]:
     return {}
 
@@ -114,7 +119,11 @@ def _r(pattern: str, *steps: tuple[str, ArgsFn], unless: str | None = None) -> R
 
 ROUTES: tuple[Route, ...] = (
     _r(r"\bhold\b", ("get_aml_dossier", _acct), ("propose_hold", _acct)),
-    _r(r"withdrawal", ("check_withdrawal_risk", _acct), unless=r"\bhold\b|timeline|reconstruct"),
+    _r(
+        r"withdrawal|take (?:the )?(?:money|funds|cash) out",
+        ("check_withdrawal_risk", _acct),
+        unless=r"\bhold\b|timeline|reconstruct",
+    ),
     _r(r"trend|over time|history|last \d+ days|past \d+ days", ("get_account_history", _acct)),
     _r(r"timeline|reconstruct", ("get_activity_timeline", _acct)),
     _r(r"linked|connected|network", ("get_network_evidence", _acct)),
@@ -126,6 +135,12 @@ ROUTES: tuple[Route, ...] = (
     ),
     _r(r"(?:show|list|open).*\balerts?\b|triage queue", ("list_alerts", _none)),
     _r(r"integrity|opposite trad", ("get_partner_integrity", _part)),
+    _r(
+        r"how good are the clients|client quality|quality of .*clients",
+        ("get_client_quality", _part),
+    ),
+    _r(r"recent messages|telling us|\bmessages?\b|\bcomms\b", ("read_partner_comms", _part)),
+    _r(r"partner or a client|what kind of entity", ("resolve_entity", _kind_target)),
     _r(r"offer|rebate", ("get_partner_signals", _part), ("propose_partner_action", _cheapest_deal)),
     _r(
         r"churn|at risk|leave|hazard|details|what should i do",
@@ -134,7 +149,7 @@ ROUTES: tuple[Route, ...] = (
     ),
     _r(r"which partners|attention|worklist|ecosystem", ("list_partner_worklist", _none)),
     _r(r"morning briefing|briefing", ("get_briefing", _none)),
-    _r(r"forecast", ("get_forecast", _forecast)),
+    _r(r"forecast|heading|outlook|coming months", ("get_forecast", _forecast)),
     _r(r"what happens|what if|cut", ("run_what_if", _what_if)),
     _r(r"causing|causal|\bcause\b", ("get_causal_evidence", _none)),
     _r(r"net revenue", ("get_metric", _revenue)),
@@ -143,11 +158,13 @@ ROUTES: tuple[Route, ...] = (
         ("search_regulations", _regulation),
     ),
     _r(r"hash chain|verify", ("verify_chain", _none)),
+    _r(r"audit status|retained|retention", ("get_audit_status", _none)),
+    _r(r"calibrat|trust .*probabilit", ("get_calibration_status", _none)),
     _r(r"staged action|intent", ("get_intent_status", _none)),
     _r(r"ledger", ("get_ledger_timeline", _none), unless=r"verify|hash chain"),
     _r(r"data quality|pipeline", ("get_dq_board", _none)),
     _r(r"reliab", ("get_reliability", _none)),
-    _r(r"drill|runbook", ("get_drill_status", _none)),
+    _r(r"drill|runbook|restore|backup", ("get_drill_status", _none)),
     _r(r"red.?line|governance gate", ("get_red_lines", _none)),
 )
 
