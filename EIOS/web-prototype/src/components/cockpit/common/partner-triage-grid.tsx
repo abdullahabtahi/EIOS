@@ -118,7 +118,7 @@ export function PartnerTriageGrid({
       }
       return sortDirection === 'asc' ? Number(valA) - Number(valB) : Number(valB) - Number(valA);
     });
-  }, [partners, searchQuery, sortField, sortDirection, filterQuadrant]);
+  }, [partners, searchQuery, sortField, sortDirection, filterQuadrant, riskBand]);
 
   const totalFilteredVaR = React.useMemo(() => {
     return processedPartners.reduce((acc, p) => acc + p.valueAtRiskUsd, 0);

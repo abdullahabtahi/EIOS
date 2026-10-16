@@ -48,9 +48,9 @@ export function KineticCanvas({ onCollapse }: { onCollapse?: () => void } = {}) 
         return {
           tabs: [
             { id: 'radar', label: 'Radar', title: '2D Churn Radar', anchor: 'panel-radar' },
-            { id: 'grid', label: 'Portfolio', title: 'Portfolio Table Matrix', anchor: 'panel-grid' },
             { id: 'tree', label: 'Affiliates', title: 'Sub-Affiliate Tree', anchor: 'panel-tree' },
             { id: 'ontology', label: 'Ontology', title: 'Ontology 360', anchor: 'panel-ontology' },
+            { id: 'grid', label: 'Portfolio', title: 'Portfolio Table Matrix', anchor: 'panel-grid' },
           ],
         };
       case 'compliance_auditor':

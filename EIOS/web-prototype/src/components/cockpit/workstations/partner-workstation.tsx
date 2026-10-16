@@ -43,7 +43,27 @@ export function PartnerWorkstationView() {
         <ChurnRadarScatter />
       </div>
 
-      {/* Surface 2: High-Density Portfolio Matrix (Anchor: panel-grid) */}
+      {/* Surface 2: 3-Tier Sub-Affiliate Tree & Mirror Trading Collusion Detection (Anchor: panel-tree) */}
+      <div
+        role="tabpanel"
+        id="panel-tree"
+        aria-label="Sub-Affiliate Tree and Collusion Detection"
+        className="block"
+      >
+        <PartnerTree />
+      </div>
+
+      {/* Surface 3: Sovereign Kinetic Ontology 360 Inspector (Anchor: panel-ontology) */}
+      <div
+        role="tabpanel"
+        id="panel-ontology"
+        aria-label="Sovereign Kinetic Ontology 360"
+        className="block"
+      >
+        <PartnerOntologyInspector />
+      </div>
+
+      {/* Surface 4: High-Density Portfolio Matrix (Anchor: panel-grid) */}
       <div
         role="tabpanel"
         id="panel-grid"
@@ -57,26 +77,6 @@ export function PartnerWorkstationView() {
             onSelectPartner={(p) => selectEntity(p.partnerId)}
           />
         </div>
-      </div>
-
-      {/* Surface 3: 3-Tier Sub-Affiliate Tree & Mirror Trading Collusion Detection (Anchor: panel-tree) */}
-      <div
-        role="tabpanel"
-        id="panel-tree"
-        aria-label="Sub-Affiliate Tree and Collusion Detection"
-        className="block"
-      >
-        <PartnerTree />
-      </div>
-
-      {/* Surface 4: Sovereign Kinetic Ontology 360 Inspector (Anchor: panel-ontology) */}
-      <div
-        role="tabpanel"
-        id="panel-ontology"
-        aria-label="Sovereign Kinetic Ontology 360"
-        className="block"
-      >
-        <PartnerOntologyInspector />
       </div>
     </div>
   );
