@@ -7,7 +7,7 @@ nothing is filled in.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, replace
 from typing import Any
@@ -58,16 +58,23 @@ def read_ledger(
     sequencer: LedgerSequencer,
     worm: WORMAnchorService | None,
     hub: ActionIntentHub | None,
-    tokens: Sequence[ActionIntentToken] | None = None,
+    list_tokens: Callable[[], Sequence[ActionIntentToken]] | None = None,
 ) -> LedgerRead:
     """List the ledger, the intents and the checkpoints once each, concurrently (each is a round trip on Firestore).
 
-    A caller that has already listed the hub's intents (the action shelf does, on every request) passes them in.
+    A caller that is already listing the hub's intents (the action shelf does, on every request) passes
+    `list_tokens`, which returns that listing, so the intents are read once and the reads overlap.
     """
     with ThreadPoolExecutor(max_workers=3) as pool:
         entries = pool.submit(lambda: tuple(sequencer.entries))
         listed = pool.submit(
-            lambda: tuple(tokens) if tokens is not None else tuple(hub.list_tokens()) if hub else ()
+            lambda: (
+                tuple(list_tokens())
+                if list_tokens is not None
+                else tuple(hub.list_tokens())
+                if hub
+                else ()
+            )
         )
         checkpoints = pool.submit(lambda: tuple(worm.get_checkpoints()) if worm else ())
         read = LedgerRead(

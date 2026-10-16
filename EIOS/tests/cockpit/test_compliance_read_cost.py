@@ -92,7 +92,7 @@ def test_intents_the_caller_already_listed_are_not_listed_again(
     rt, counts = staged
     listed = rt.hub.list_tokens()
     counts.clear()
-    triage, _, _ = compliance_view.workstation(_svc(rt), NOW, tokens=listed)
+    triage, _, _ = compliance_view.workstation(_svc(rt), NOW, list_tokens=lambda: listed)
     assert counts == {"checkpoints": 1, "entries": 1}
     assert triage  # the view is still built
 

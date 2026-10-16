@@ -14,6 +14,18 @@ export type WorkstationResult =
   /** The backend did not answer in time, twice. The caller decides between stale data and a labelled replay. */
   | { kind: 'unavailable'; retryable?: boolean };
 
+/** Every workstation, in the order a prefetch warms them. */
+export const ALL_ROLES: readonly PersonaRole[] = [
+  'executive',
+  'aml_investigator',
+  'partner_manager',
+  'compliance_auditor',
+  'data_operations',
+];
+
+/** Wait this long after the visible workstation is live before warming the others, so it never competes with it. */
+export const PREFETCH_DELAY_MS = 1000;
+
 type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
 
 interface LoadOptions {
@@ -41,6 +53,26 @@ async function attempt(
   const data: WorkstationApiResponse = await res.json();
   // The proxy answers 200 with a labelled replay when the backend timed out; that is not a live answer.
   return data.isLiveConnected && !data.isCachedFallback ? { kind: 'live', data } : { kind: 'unavailable' };
+}
+
+/**
+ * Warm the cache for the workstations the operator is not looking at: one at a time, one attempt each, no retry,
+ * and silent on failure (the real load runs when they switch). Stops when the signal aborts.
+ */
+export async function prefetchWorkstations(
+  roles: readonly PersonaRole[],
+  options: { fetcher: Fetcher; signal: AbortSignal; onLive: (role: PersonaRole, data: WorkstationApiResponse) => void },
+): Promise<void> {
+  for (const role of roles) {
+    if (options.signal.aborted) return;
+    try {
+      const result = await attempt(options.fetcher, role, options.signal, false);
+      if (result.kind === 'denied') return;
+      if (result.kind === 'live' && !options.signal.aborted) options.onLive(role, result.data);
+    } catch {
+      // A failed prefetch costs nothing: the switch fetches normally.
+    }
+  }
 }
 
 /**

@@ -104,6 +104,30 @@ describe('Workstation switching: stale-while-revalidate', () => {
     expect(screen.getByTestId('status')).not.toHaveTextContent('Replay');
   });
 
+  it('warms the other workstations once the visible one is live, so the first switch is instant', async () => {
+    mount();
+    await waitFor(() => expect(screen.getByTestId('title')).toHaveTextContent(/^executive-/));
+    await waitFor(
+      () => expect(new Set(calls.map((c) => c.split('/').pop()))).toEqual(
+        new Set(['executive', 'aml_investigator', 'partner_manager', 'compliance_auditor', 'data_operations']),
+      ),
+      { timeout: 4000 },
+    );
+    behaviour.aml_investigator = 'hang';
+    await click('go-aml');
+    expect(screen.getByTestId('loading')).toHaveTextContent('false');
+    expect(screen.getByTestId('title')).toHaveTextContent(/^aml_investigator-/);
+  });
+
+  it('does not warm anything while the backend is not answering live', async () => {
+    behaviour.executive = 'fail';
+    mount();
+    await waitFor(() => expect(screen.getByTestId('status')).toHaveTextContent('Replay'));
+    const before = calls.length;
+    await new Promise((r) => setTimeout(r, 1300));
+    expect(calls.length).toBe(before);
+  });
+
   it('falls back to the labelled replay when there is nothing live to keep', async () => {
     behaviour.executive = 'fail';
     mount();

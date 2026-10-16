@@ -18,7 +18,13 @@ import React, {
 } from 'react';
 import { authFetch } from '@/lib/auth/token';
 import { useAuth } from '@/lib/auth/auth-context';
-import { loadWorkstation, type WorkstationFreshness } from './workstation-fetch';
+import {
+  ALL_ROLES,
+  PREFETCH_DELAY_MS,
+  loadWorkstation,
+  prefetchWorkstations,
+  type WorkstationFreshness,
+} from './workstation-fetch';
 import {
   PersonaRole,
   WorkstationApiResponse,
@@ -663,6 +669,33 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
       dispatch({ type: 'LOAD_WORKSTATION_SUCCESS', payload: { ...getFallbackWorkstationData(role), isLiveConnected: false, isCachedFallback: true } });
     }
   }, []);
+
+  // Once the workstation in view is live, warm the others behind it so most switches start from cached data.
+  const settledLive =
+    !state.isLoading &&
+    state.workstationFreshness === 'fresh' &&
+    state.isLiveConnected &&
+    !state.isCachedFallback &&
+    !state.isSimulatedOutage;
+  useEffect(() => {
+    if (!settledLive) return;
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      const others = ALL_ROLES.filter((r) => r !== displayedRole.current && !lastLive.current.has(r));
+      void prefetchWorkstations(others, {
+        fetcher: authFetch,
+        signal: controller.signal,
+        // Never over a newer answer the operator's own load already stored.
+        onLive: (role, data) => {
+          if (!lastLive.current.has(role)) lastLive.current.set(role, data);
+        },
+      });
+    }, PREFETCH_DELAY_MS);
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
+    };
+  }, [settledLive, operatorUid]);
 
   useEffect(() => {
     fetchWorkstation(state.activeRole, state.isSimulatedOutage);

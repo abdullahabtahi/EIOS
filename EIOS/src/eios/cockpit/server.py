@@ -21,6 +21,7 @@ import hashlib
 import logging
 import os
 import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from typing import Any, cast
 
@@ -672,15 +673,21 @@ def _build_contract_state(  # noqa: C901, PLR0915
 
     elif norm_role in ("compliance_auditor", "compliance", "audit"):
         role_enum = "compliance_auditor"
-        # The shelf lists the intents on every request; the compliance view reads the same listing.
-        shelf_pairs = action_shelf.list_cards_with_tokens()
-        triage_items, active_dossier, kinetic_canvas = compliance_view.workstation(
-            compliance_svc,
-            now_iso,
-            tokens=[t for _, t in shelf_pairs]
-            if compliance_svc.hub is not None and compliance_svc.hub is action_shelf.intent_hub
-            else None,
+        # The shelf lists the intents on every request; the compliance view reads that same listing, and the
+        # listing overlaps the ledger and checkpoint reads instead of running before them.
+        shared_hub = (
+            compliance_svc.hub is not None and compliance_svc.hub is action_shelf.intent_hub
         )
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            shelf_listing = pool.submit(action_shelf.list_cards_with_tokens)
+            triage_items, active_dossier, kinetic_canvas = compliance_view.workstation(
+                compliance_svc,
+                now_iso,
+                list_tokens=(lambda: [t for _, t in shelf_listing.result()])
+                if shared_hub
+                else None,
+            )
+            shelf_pairs = shelf_listing.result()
 
     elif (
         operations_engine_service() is not None

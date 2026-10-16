@@ -6,7 +6,7 @@ so; nothing claims a storage retention lock the platform does not hold.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import datetime
 from typing import Any
 
@@ -19,10 +19,11 @@ _ENGINE = "ContinuousAuditWalker"
 
 
 def ledger_payload(
-    svc: ComplianceExplorerService, tokens: Sequence[ActionIntentToken] | None = None
+    svc: ComplianceExplorerService,
+    list_tokens: Callable[[], Sequence[ActionIntentToken]] | None = None,
 ) -> dict[str, Any]:
     """Entries newest first, every intent's sign-offs, the checkpoints and a fresh audit walk."""
-    read = svc.read_ledger(tokens)  # one listing of each collection for the whole request
+    read = svc.read_ledger(list_tokens)  # one listing of each collection for the whole request
     return {
         "entries": list(reversed(svc.get_ledger_timeline(start_seq=1, limit=10_000, read=read)))[
             :TIMELINE_LIMIT
@@ -95,10 +96,10 @@ def _checkpoint_section(proof: dict[str, Any] | None, now_iso: str) -> dict[str,
 def workstation(
     svc: ComplianceExplorerService,
     now_iso: str,
-    tokens: Sequence[ActionIntentToken] | None = None,
+    list_tokens: Callable[[], Sequence[ActionIntentToken]] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, Any], dict[str, Any]]:
     """Triage items, dossier and canvas for the compliance auditor."""
-    payload = ledger_payload(svc, tokens)
+    payload = ledger_payload(svc, list_tokens)
     proof = payload["checkpoints"][-1] if payload["checkpoints"] else None
     dossier = {
         "dossier_id": "dos_compliance_timeline",

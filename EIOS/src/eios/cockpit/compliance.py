@@ -7,7 +7,7 @@ SHA-256 hash chain verification bar, immutable WORM checkpoint proofs, and Four-
 from __future__ import annotations
 
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from datetime import UTC, datetime
 from typing import Any
 
@@ -82,15 +82,15 @@ class ComplianceExplorerService:
         )
 
     def read_ledger(
-        self, tokens: Sequence[ActionIntentToken] | None = None
+        self, list_tokens: Callable[[], Sequence[ActionIntentToken]] | None = None
     ) -> ledger.LedgerRead | None:
         """List the ledger, intents and checkpoints once, for a request that needs several views; None if simulated.
 
-        `tokens` are this hub's intents when the caller has already listed them.
+        `list_tokens` returns this hub's intents when the caller is already listing them.
         """
         if self.sequencer is None:
             return None
-        return ledger.read_ledger(self.sequencer, self.worm_service, self.hub, tokens)
+        return ledger.read_ledger(self.sequencer, self.worm_service, self.hub, list_tokens)
 
     def get_ledger_timeline(
         self, start_seq: int = 1, limit: int = 20, read: ledger.LedgerRead | None = None
