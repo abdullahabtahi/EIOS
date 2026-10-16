@@ -26,7 +26,7 @@ type Reply = { status: number; body?: unknown };
 /** Route the two endpoints independently, as the backend does. */
 function serve(reference: Reply, flows: Reply) {
   authFetch.mockImplementation(async (url: string) => {
-    const r = url.includes('/geo/flows') ? flows : reference;
+    const r = url.includes('/geo/flows') ? flows : url.includes('/geo/list-changes') ? DOWN : reference;
     return { ok: r.status >= 200 && r.status < 300, status: r.status, json: async () => r.body ?? {} };
   });
 }

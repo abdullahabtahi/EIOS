@@ -15,7 +15,7 @@ import { GeoStatus } from './geo-status';
 import { GeoSummary } from './geo-summary';
 import { VIEW_PANEL_ID, viewTabId } from './geo-view-switcher';
 import { dataOf, type ResourceState } from './use-geo-resource';
-import type { GeoAccount, GeoFlows, GeoReference, GeoSelection, LayerId } from './geo-types';
+import type { GeoAccount, GeoFlows, GeoReference, GeoSelection, LayerId, ListId } from './geo-types';
 import type { GeoView } from './geo-views';
 
 export interface GeoPanelProps {
@@ -33,6 +33,10 @@ export interface GeoPanelProps {
   /** Which list colours the Jurisdictions map, and the way to change it. */
   readonly basis: BasisId;
   readonly onBasis: (id: BasisId) => void;
+  /** Countries each list's latest change names, the list whose change is open, and how to open one. */
+  readonly changes?: Readonly<Partial<Record<ListId, number>>>;
+  readonly comparing?: ListId | null;
+  readonly onCompare?: (id: ListId) => void;
   /** The list-change comparison, shown in the Jurisdictions view (what the latest FATF or EU change does to us). */
   readonly listChange?: React.ReactNode;
 }
@@ -49,7 +53,7 @@ export function disabledLayers(flows: GeoFlows | null, reference: GeoReference |
  * The right-hand panel, read top to bottom: the question this view answers, how big the picture is, the picked
  * mark in full, then where to look first. Layers and sources sit below, collapsed.
  */
-export function GeoPanel({ view, flows, reference, visible, onToggle, selected, onSelect, onClear, onPickAccount, account, basis, onBasis, listChange }: GeoPanelProps) {
+export function GeoPanel({ view, flows, reference, visible, onToggle, selected, onSelect, onClear, onPickAccount, account, basis, onBasis, changes, comparing, onCompare, listChange }: GeoPanelProps) {
   const ref = dataOf(reference);
   const fl = dataOf(flows);
   const leads = leadsFor(view.id, fl, ref, basis);
@@ -67,7 +71,7 @@ export function GeoPanel({ view, flows, reference, visible, onToggle, selected, 
       <div className="space-y-5 p-4">
         <header className="space-y-3">
           <h2 className="text-balance text-sm font-semibold leading-snug text-cx-ink">{view.question}</h2>
-          {view.id === 'jurisdictions' && ref && <GeoBasisSwitcher current={basis} onChange={onBasis} />}
+          {view.id === 'jurisdictions' && ref && <GeoBasisSwitcher current={basis} onChange={onBasis} changes={changes} comparing={comparing} onCompare={onCompare} />}
           {view.id === 'jurisdictions' && listChange}
           {waiting.length === 0 && <GeoSummary view={view.id} flows={fl} reference={ref} basis={basis} />}
           {view.id === 'logins' && (

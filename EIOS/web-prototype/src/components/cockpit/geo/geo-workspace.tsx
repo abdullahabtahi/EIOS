@@ -9,6 +9,8 @@ import { useGeoAccount } from './geo-account';
 import { GeoAsk } from './geo-ask';
 import { describeSelection } from './geo-format';
 import { focusFor } from './geo-focus';
+import { beforeTiers, changeCount } from './geo-compare';
+import { type CompareSide, GeoCompareBar } from './geo-compare-bar';
 import { GeoListChangePanel } from './geo-list-change';
 import { mapContextOf, type MapState, moveLabel, stateAfterMove } from './geo-moves';
 import { GeoMoveToast } from './geo-move-toast';
@@ -58,6 +60,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   const [target, setTarget] = React.useState<CameraTarget | null>(null);
   const [panel, setPanel] = React.useState<SidePanel>('explore');
   const [compare, setCompare] = React.useState<ListId | null>(null);
+  const [side, setSide] = React.useState<CompareSide>('after');
   const [history, setHistory] = React.useState<readonly MapState[]>([]);
   const [notice, setNotice] = React.useState<MoveNotice | null>(null);
   const flownToInitial = React.useRef(false);
@@ -65,7 +68,16 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
 
   const referenceData = dataOf(reference);
   const flowData = dataOf(flows);
-  const listChange = useListChange(compare);
+  // Both lists' latest changes are read once the Jurisdictions view is open, so each list can say how many countries it moved.
+  const onJurisdictions = view === 'jurisdictions';
+  const fatfChange = useListChange(onJurisdictions ? 'fatf' : null);
+  const euChange = useListChange(onJurisdictions ? 'eu' : null);
+  const changes = { fatf: fatfChange, eu: euChange };
+  const listChange = compare ? changes[compare] : null;
+  const changeCounts: Partial<Record<ListId, number>> = {
+    ...(fatfChange?.status === 'ready' ? { fatf: changeCount(fatfChange.data) } : {}),
+    ...(euChange?.status === 'ready' ? { eu: changeCount(euChange.data) } : {}),
+  };
 
   const changeView = React.useCallback(
     (id: ViewId) => {
@@ -179,26 +191,32 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
     return () => observer.disconnect();
   }, []);
   const marks = React.useMemo(() => (view === 'jurisdictions' ? marksOf(listChange?.status === 'ready' ? listChange.data : null) : null), [view, listChange]);
+  const earlier = React.useMemo(
+    () => (view === 'jurisdictions' && side === 'before' && listChange?.status === 'ready' ? beforeTiers(listChange.data) : null),
+    [view, side, listChange],
+  );
   const layers = React.useMemo(
-    () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }, highlight, basis, marks),
-    [flowData, referenceData, visible, selected, onHover, highlight, basis, marks],
+    () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }, highlight, basis, marks, earlier),
+    [flowData, referenceData, visible, selected, onHover, highlight, basis, marks, earlier],
   );
   const focus = React.useMemo(() => focusFor(view, flowData, referenceData), [view, flowData, referenceData]);
 
   const tip = hover ? describeSelection(flowData, referenceData, hover.selection) : null;
   const waitingOnFlows = view !== 'jurisdictions' && flows.status === 'loading';
   const listChangeSlot = compare ? (
-    <GeoListChangePanel listId={compare} state={listChange} onList={setCompare} onClose={() => setCompare(null)} onSelect={pickFromList} />
-  ) : (
-    <button
-      type="button"
-      onClick={() => setCompare('fatf')}
-      className="flex w-full cursor-pointer items-center gap-2 border border-cx-line bg-cx-sub px-3 py-2 text-left text-xs font-semibold text-cx-ink-soft hover:bg-cx-sub-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent"
-    >
-      <Icon icon="compare_arrows" size="sm" />
-      What did the latest list change do to us?
-    </button>
-  );
+    <GeoListChangePanel state={listChange} onClose={() => setCompare(null)} onSelect={pickFromList} />
+  ) : null;
+  // The comparison belongs to one list: moving the basis to the other list moves it, and a list with no change ends it.
+  const changeBasis = (id: BasisId) => {
+    setBasis(id);
+    setCompare((now) => (now && (id === 'fatf' || id === 'eu') ? id : null));
+  };
+  const openCompare = (id: ListId) => {
+    setBasis(id);
+    setCompare(id);
+    setSide('after');
+  };
+  const compareLabel = listChange?.status === 'ready' ? listChange.data.after.label : 'Reading the change…';
 
   return (
     <div className="flex h-full min-h-0 flex-col lg:flex-row">
@@ -207,6 +225,11 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
         <div className="absolute left-3 top-3 z-10">
           <GeoViewSwitcher current={view} onChange={changeView} />
         </div>
+        {compare && view === 'jurisdictions' && (
+          <div className="absolute left-3 top-14 z-10">
+            <GeoCompareBar side={side} onSide={setSide} label={compareLabel} />
+          </div>
+        )}
         {waitingOnFlows && (
           <p role="status" className="absolute left-1/2 top-3 z-10 flex -translate-x-1/2 items-center gap-2 border border-cx-line bg-white px-3 py-1.5 text-xs text-cx-ink-soft shadow-md">
             <Icon icon="progress_activity" size="sm" className="animate-spin text-cx-accent motion-reduce:animate-none" />
@@ -238,7 +261,10 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
               onPickAccount={pickAccount}
               account={account}
               basis={basis}
-              onBasis={setBasis}
+              onBasis={changeBasis}
+              changes={changeCounts}
+              comparing={compare}
+              onCompare={openCompare}
               listChange={listChangeSlot}
             />
           }

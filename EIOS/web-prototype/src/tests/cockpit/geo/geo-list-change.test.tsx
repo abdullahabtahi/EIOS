@@ -50,35 +50,64 @@ const CHANGE: GeoListChange = {
 };
 
 describe('what a list change does to the book', () => {
-  it('names each country, what the book does there and the exits located there', () => {
-    render(<GeoListChangePanel listId="eu" state={{ status: 'ready', data: CHANGE }} onList={vi.fn()} onClose={vi.fn()} onSelect={vi.fn()} />);
-    expect(screen.getByText(/Added to the list · 16 accounts touched/)).toBeInTheDocument();
-    expect(screen.getByText(/16 pay through it \(\$131\.1K\)/)).toBeInTheDocument();
+  const panel = (state: Parameters<typeof GeoListChangePanel>[0]['state'] = { status: 'ready', data: CHANGE }, onSelect = vi.fn(), onClose = vi.fn()) =>
+    render(<GeoListChangePanel state={state} onClose={onClose} onSelect={onSelect} />);
+
+  it('is one table, one row per country, the most exposed first, saying what happened to each', () => {
+    panel();
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toHaveTextContent('Nigeria');
+    expect(rows[0]).toHaveTextContent('Removed · was EU high-risk');
+    expect(rows[0]).toHaveTextContent('330');
+    expect(rows[0]).toHaveTextContent('100.0%');
+    expect(rows[1]).toHaveTextContent('British Virgin Islands');
+    expect(rows[1]).toHaveTextContent('Added · EU high-risk');
+    expect(rows[1]).toHaveTextContent('16');
+    expect(rows[1]).toHaveTextContent('—');
+  });
+
+  it('names the edition change once, and the duty that ends when a country leaves a list', () => {
+    panel();
+    expect(screen.getByText('Compared with EU list before January 2026.')).toBeInTheDocument();
+    expect(screen.getByText(/the activity below continues|the activity continues/)).toBeInTheDocument();
+  });
+
+  it('keeps what the book does in a country behind its row, and says what it cannot know', () => {
+    panel();
+    expect(screen.queryByText('Shared exit here: GW-NG-X00')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Nigeria/ }));
     expect(screen.getByText('Shared exit here: GW-NG-X00')).toBeInTheDocument();
-    expect(screen.getByText(/the activity below continues/)).toBeInTheDocument();
-    expect(screen.getByText('EU high-risk → not listed')).toBeInTheDocument();
+    expect(screen.getByText(/266 registered there/)).toBeInTheDocument();
+    expect(screen.getByText(/Links not available: the graph could not be reached/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /British Virgin Islands/ }));
+    expect(screen.getByText(/16 pay through it \(\$131\.1K\)/)).toBeInTheDocument();
+  });
+
+  it('picks the country on the map when its row is opened, and closes the facts again', () => {
+    const onSelect = vi.fn();
+    panel({ status: 'ready', data: CHANGE }, onSelect);
+    const row = screen.getByRole('button', { name: /Nigeria/ });
+    fireEvent.click(row);
+    expect(onSelect).toHaveBeenCalledWith({ kind: 'country', id: 'NG' });
+    expect(row).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(row);
+    expect(row).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('says the graph links are unavailable instead of showing zero', () => {
-    render(<GeoListChangePanel listId="eu" state={{ status: 'ready', data: CHANGE }} onList={vi.fn()} onClose={vi.fn()} onSelect={vi.fn()} />);
-    expect(screen.getByText(/Links not available: the graph could not be reached/)).toBeInTheDocument();
+    panel();
+    fireEvent.click(screen.getByText('Sources and method'));
     expect(screen.getByText(/Links unavailable: warehouse unreachable/)).toBeInTheDocument();
   });
 
-  it('selects a country on the map and switches between the two lists', () => {
-    const onSelect = vi.fn();
-    const onList = vi.fn();
-    render(<GeoListChangePanel listId="eu" state={{ status: 'ready', data: CHANGE }} onList={onList} onClose={vi.fn()} onSelect={onSelect} />);
-    fireEvent.click(screen.getByText('Nigeria'));
-    expect(onSelect).toHaveBeenCalledWith({ kind: 'country', id: 'NG' });
-    fireEvent.click(screen.getByRole('radio', { name: 'FATF, June 2026 plenary' }));
-    expect(onList).toHaveBeenCalledWith('fatf');
-  });
-
-  it('shows the load state and a failure with its status', () => {
-    const { rerender } = render(<GeoListChangePanel listId="fatf" state={{ status: 'loading' }} onList={vi.fn()} onClose={vi.fn()} onSelect={vi.fn()} />);
+  it('shows the load state and a failure with its status, and closes', () => {
+    const onClose = vi.fn();
+    const { rerender } = render(<GeoListChangePanel state={{ status: 'loading' }} onClose={onClose} onSelect={vi.fn()} />);
     expect(screen.getByRole('status')).toBeInTheDocument();
-    rerender(<GeoListChangePanel listId="fatf" state={{ status: 'error', httpStatus: 503, reload: vi.fn() }} onList={vi.fn()} onClose={vi.fn()} onSelect={vi.fn()} />);
+    rerender(<GeoListChangePanel state={{ status: 'error', httpStatus: 503, reload: vi.fn() }} onClose={onClose} onSelect={vi.fn()} />);
     expect(screen.getByText(/503/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onClose).toHaveBeenCalled();
   });
 });

@@ -244,7 +244,13 @@ function areaFeatures(reference: GeoReference): readonly AreaFeature[] {
   return built;
 }
 
-function riskAreaLayer(reference: GeoReference, selection: GeoSelection, handlers: LayerHandlers, basis: BasisId): GeoJsonLayer<AreaFeature['properties']> {
+function riskAreaLayer(
+  reference: GeoReference,
+  selection: GeoSelection,
+  handlers: LayerHandlers,
+  basis: BasisId,
+  override: ReadonlyMap<string, RiskTier | null> | null,
+): GeoJsonLayer<AreaFeature['properties']> {
   const picked = (c: ReferenceCountry) => selection?.kind === 'country' && selection.id === c.iso2;
   return new GeoJsonLayer<AreaFeature['properties']>({
     id: 'geo-risk',
@@ -255,14 +261,15 @@ function riskAreaLayer(reference: GeoReference, selection: GeoSelection, handler
     lineWidthMinPixels: 1,
     lineWidthUnits: 'pixels',
     getFillColor: (f) => {
-      const tier = areaTier((f as unknown as AreaFeature).properties.country, basis);
+      const country = (f as unknown as AreaFeature).properties.country;
+      const tier = override?.has(country.iso2) ? (override.get(country.iso2) ?? null) : areaTier(country, basis);
       if (!tier) return NO_FILL;
       const [r, g, b] = TIER_COLOR[tier];
       return [r, g, b, AREA_FILL_ALPHA];
     },
     getLineColor: (f) => (picked((f as unknown as AreaFeature).properties.country) ? SELECTED_COLOR : OUTLINE_COLOR),
     getLineWidth: (f) => (picked((f as unknown as AreaFeature).properties.country) ? 3 : 1),
-    updateTriggers: { getFillColor: [basis], getLineColor: [selection?.kind, selection?.id], getLineWidth: [selection?.kind, selection?.id] },
+    updateTriggers: { getFillColor: [basis, override], getLineColor: [selection?.kind, selection?.id], getLineWidth: [selection?.kind, selection?.id] },
     onHover: (info) => handlers.onHover?.(info.object ? countryRef((info.object as unknown as AreaFeature).properties.country) : null, point(info)),
     onClick: (info) => handlers.onSelect?.(info.object ? countryRef((info.object as unknown as AreaFeature).properties.country) : null),
   });
@@ -349,10 +356,12 @@ export function buildLayers(
   highlight: readonly HighlightArc[] = [],
   basis: BasisId = DEFAULT_BASIS,
   listChange: ListChangeMarks | null = null,
+  /** Tiers that replace the list's own for named countries: the earlier edition, while a comparison shows "Before". */
+  tierOverride: ReadonlyMap<string, RiskTier | null> | null = null,
 ): Layer[] {
   const layers: Layer[] = [];
   const outlined = reference && listChange ? listChangeLayer(reference, listChange) : null;
-  if (reference && visible.has('risk')) layers.push(riskAreaLayer(reference, selection, handlers, basis));
+  if (reference && visible.has('risk')) layers.push(riskAreaLayer(reference, selection, handlers, basis, tierOverride));
   if (reference && visible.has('offshore')) layers.push(offshoreLayer(reference, handlers));
   if (flows && reference && visible.has('corridors')) {
     layers.push(pathLayer('geo-corridors', corridorRows(flows, reference, selection), handlers));

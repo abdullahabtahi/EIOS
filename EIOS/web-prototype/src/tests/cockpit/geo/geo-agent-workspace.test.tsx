@@ -101,13 +101,14 @@ describe('the assistant on the map', () => {
 });
 
 describe('what the latest list change does to us', () => {
-  it('opens from the Jurisdictions view and lists the countries the change names', async () => {
+  it('opens from the badge on the list and shows the countries the change names, most exposed first', async () => {
     render(<GeoWorkspace initialSearch="?view=jurisdictions" />);
-    fireEvent.click(await screen.findByText('What did the latest list change do to us?'));
-    expect(await screen.findByText(/Added to the list · 3 accounts touched/)).toBeInTheDocument();
-    expect(screen.getByText('Shared exit here: GW-KE-X00')).toBeInTheDocument();
-    expect(screen.getByText(/Links from BigQuery Graph in 1.8 s/)).toBeInTheDocument();
-    fireEvent.click(within(screen.getByRole('region', { name: 'Added to the list' })).getByText('Kenya'));
+    fireEvent.click(await screen.findByRole('button', { name: /Compare FATF/ }));
+    const region = await screen.findByRole('region', { name: 'What changed on the lists' });
+    expect(await within(region).findByText('Kenya')).toBeInTheDocument();
+    expect(within(region).getByText(/Links from BigQuery Graph in 1.8 s/)).toBeInTheDocument();
+    fireEvent.click(within(region).getByRole('button', { name: /Kenya/ }));
+    expect(within(region).getByText('Shared exit here: GW-KE-X00')).toBeInTheDocument();
     await waitFor(() => expect(window.location.search).toContain('sel=country%3AKE'));
   });
 });
