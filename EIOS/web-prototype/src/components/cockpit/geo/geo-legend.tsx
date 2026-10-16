@@ -22,11 +22,11 @@ const KEYS: readonly Key[] = [
   { layer: 'risk', basis: 'basel', swatch: 'h-3 bg-cx-warn/30 border border-cx-warn', label: `Medium risk (${BASEL_BREAKS.medium} to ${BASEL_BREAKS.higher})` },
   { layer: 'risk', basis: 'basel', swatch: 'h-3 bg-slate-400/30 border border-slate-400', label: `Lower risk (below ${BASEL_BREAKS.medium})` },
   { layer: 'risk', basis: 'basel', swatch: 'h-3 border border-dashed border-cx-line', label: 'No fill: not in the public index' },
-  { layer: 'offshore', swatch: 'h-3 bg-cx-accent/60 rounded-full', label: 'Offshore entities (size = count)' },
+  { layer: 'offshore', swatch: 'h-3 bg-cx-muted/60 rounded-full', label: 'Offshore entities (size = count)' },
   { layer: 'corridors', kind: 'high', swatch: 'h-0.5 bg-cx-bad', label: 'High-risk corridor' },
   { layer: 'corridors', kind: 'medium', swatch: 'h-0.5 bg-cx-warn-solid', label: 'Medium-risk corridor' },
   { layer: 'corridors', kind: 'other', swatch: 'h-0.5 bg-cx-faint', label: 'Other corridor' },
-  { layer: 'mismatches', swatch: 'h-0.5 bg-cx-accent', label: 'Registered here, logging in there' },
+  { layer: 'mismatches', swatch: 'h-0.5 bg-cx-ink', label: 'Registered here, logging in there' },
 ];
 
 /** What is drawn but not all of what exists: the counts come from the same ranking the layers use. */
@@ -45,8 +45,8 @@ export function GeoLegend({ visible, flows, basis = 'fatf' }: { readonly visible
   const notes = drawnCounts(flows, visible);
   if (keys.length === 0) return null;
   return (
-    <div className="hidden w-56 border border-cx-line bg-white/95 p-2.5 text-label text-cx-ink-soft shadow-md sm:block">
-      <ul aria-label="Map legend" className="space-y-1.5">
+    <div className="w-56 border border-cx-line bg-white p-2.5 text-label text-cx-ink-soft">
+      <ul aria-label="Map legend" className="hidden space-y-1.5 sm:block">
         {keys.map((k) => (
           <li key={k.label} className="flex items-center gap-2">
             <span aria-hidden="true" className={`inline-block w-4 shrink-0 ${k.swatch}`} />
@@ -54,8 +54,9 @@ export function GeoLegend({ visible, flows, basis = 'fatf' }: { readonly visible
           </li>
         ))}
       </ul>
+      {visible.has('corridors') && flows && <p className="mt-2 hidden border-t border-cx-line-soft pt-1.5 text-cx-muted sm:block">A line darkens toward where the money goes. A ring marks where several routes meet.</p>}
       {visible.has('offshore') && <p className="mt-2 border-t border-cx-line-soft pt-1.5 text-cx-muted">{OFFSHORE_NOTICE}</p>}
-      {notes.length > 0 && <p className="mt-2 border-t border-cx-line-soft pt-1.5 text-cx-muted">Showing {notes.join(' · ')}</p>}
+      {notes.length > 0 && <p className="border-cx-line-soft text-cx-muted sm:mt-2 sm:border-t sm:pt-1.5">Showing {notes.join(' · ')}</p>}
     </div>
   );
 }
