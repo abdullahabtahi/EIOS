@@ -13,6 +13,7 @@ import logging
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import Any, Protocol
 
 import duckdb
@@ -25,6 +26,14 @@ DEFAULT_MAX_BYTES = (
     100 * 1024 * 1024
 )  # [ASSUMPTION] 100 MB per query; the tables are tiny at demo scale
 _PARAM = re.compile(r":([a-z_]+)")
+LABEL_MAX_LEN = 63  # BigQuery's limit for a label key or value
+# The ASCII subset of what BigQuery accepts: lowercase letters, digits, underscore and dash; a key starts with a letter.
+_LABEL_KEY = re.compile(rf"[a-z][a-z0-9_-]{{0,{LABEL_MAX_LEN - 1}}}")
+_LABEL_VALUE = re.compile(
+    rf"[a-z0-9_-]{{1,{LABEL_MAX_LEN}}}"
+)  # an empty value is left out, not sent
+BASE_LABELS: Mapping[str, str] = MappingProxyType({"app": "eios", "component": "warm-tier"})
+RESERVED_LABELS = frozenset({*BASE_LABELS, "query"})
 
 
 class WarmError(RuntimeError):
@@ -92,6 +101,27 @@ class LocalWarmStore:
         return WarmResult(rows, 0, f"warm.local:{spec.dataset}.{spec.table}")
 
 
+def is_valid_label(key: str, value: str) -> bool:
+    return bool(_LABEL_KEY.fullmatch(key) and _LABEL_VALUE.fullmatch(value))
+
+
+def _valid_labels(labels: Mapping[str, str]) -> dict[str, str]:
+    """The caller's labels BigQuery would accept. Empty values are left out quietly (an unset environment); reserved
+    keys and invalid labels are dropped with a warning, so a bad label can never fail a query."""
+    reserved = sorted(set(labels) & RESERVED_LABELS)
+    kept = {
+        k: v
+        for k, v in labels.items()
+        if k not in RESERVED_LABELS and (v == "" or is_valid_label(k, v))
+    }
+    invalid = sorted(set(labels) - set(kept) - set(reserved))
+    if reserved or invalid:
+        _LOG.warning(
+            "warm query labels dropped: reserved %s, not valid for BigQuery %s", reserved, invalid
+        )
+    return {k: v for k, v in kept.items() if v != ""}
+
+
 class BigQueryWarmStore:
     backend = "bigquery"
 
@@ -102,12 +132,14 @@ class BigQueryWarmStore:
         client: Any = None,
         max_bytes: int = DEFAULT_MAX_BYTES,
         location: str = "us-central1",
+        labels: Mapping[str, str] | None = None,
     ) -> None:
         if client is None:
             from google.cloud import bigquery
 
             client = bigquery.Client(project=project, location=location)
         self._client, self._project, self._max_bytes = client, project, max_bytes
+        self._labels = {**_valid_labels(labels or {}), **BASE_LABELS}
 
     def run(self, query: str, params: Mapping[str, Any]) -> WarmResult:
         from google.api_core.exceptions import BadRequest, GoogleAPICallError
@@ -125,7 +157,12 @@ class BigQueryWarmStore:
             job = self._client.query(
                 sql,
                 job_config=bigquery.QueryJobConfig(
-                    query_parameters=parameters, maximum_bytes_billed=self._max_bytes
+                    query_parameters=parameters,
+                    maximum_bytes_billed=self._max_bytes,
+                    labels={
+                        **self._labels,
+                        "query": named.name,
+                    },  # spend per named query: INFORMATION_SCHEMA.JOBS
                 ),
             )
             rows = [_plain(dict(r.items())) for r in job.result()]

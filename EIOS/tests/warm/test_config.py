@@ -49,6 +49,24 @@ def test_bigquery_reads_its_cap_and_project(
     assert isinstance(store, BigQueryWarmStore) and store.__dict__["max_bytes"] == 5000
 
 
+def test_bigquery_jobs_are_labelled_with_the_environment(
+    small_world: AmlWorld, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "eios.warm.store.BigQueryWarmStore.__init__",
+        lambda self, project, **kw: self.__dict__.update(project=project, **kw),
+    )
+    store = build_warm_store(
+        small_world,
+        {
+            "EIOS_WARM_BACKEND": "bigquery",
+            "EIOS_WARM_PROJECT": "p",
+            "EIOS_ENVIRONMENT": "Prod-Like",
+        },
+    )
+    assert store.__dict__["labels"] == {"environment": "prod-like"}
+
+
 def test_an_unknown_backend_is_a_start_up_error(small_world: AmlWorld) -> None:
     with pytest.raises(WarmConfigError):
         build_warm_store(small_world, {"EIOS_WARM_BACKEND": "postgres"})
