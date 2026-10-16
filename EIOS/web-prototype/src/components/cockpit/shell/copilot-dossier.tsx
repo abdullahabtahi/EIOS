@@ -105,8 +105,16 @@ export function CopilotDossier() {
 
       {/* Dossier Scrollable Narrative Sections */}
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-5">
-        {/* Semantic Narrative Sections */}
-        {(dossier.sections || []).map((section: DossierSection, idx: number) => {
+        {(dossier.sections || [])
+          .filter((section: DossierSection) => {
+            if (state.activeRole === 'aml_investigator') {
+              if (section.sectionId === 'sec_sar_draft' || section.title === 'Near-Final SAR Draft Narrative') {
+                return false;
+              }
+            }
+            return true;
+          })
+          .map((section: DossierSection, idx: number) => {
           const sectionId = section.sectionId || `sec_${idx}`;
           const title = section.title || 'Operational Assessment';
           const citations = Array.isArray(section.citations) ? section.citations : [];
@@ -244,31 +252,6 @@ export function CopilotDossier() {
           </section>
         )}
 
-        {/* SAR Draft Preview (AML Investigator) */}
-        {dossier.sarDraft && (
-          <section className="p-3.5 bg-cx-warn-bg border border-cx-warn-line space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold font-mono text-cx-warn uppercase flex items-center gap-1">
-                <span className="material-symbols-sharp text-sm text-cx-warn">description</span>
-                Near-Final SAR Draft Narrative
-              </span>
-              <span className="text-label font-mono text-cx-warn bg-cx-warn-bg-2 border border-cx-warn-line px-1.5 py-0.2">
-                Status: {dossier.sarDraft.status}
-              </span>
-            </div>
-
-            <p className="text-xs text-cx-ink leading-relaxed font-sans">
-              {dossier.sarDraft.summaryNarrative}
-            </p>
-
-            <div className="grid grid-cols-2 gap-2 text-label font-mono pt-1 text-cx-muted">
-              <div>Turnover: ${dossier.sarDraft.totalTurnover.toLocaleString()}</div>
-              {dossier.sarDraft.netLossProfitRatio !== undefined && (
-                <div>Loss/Profit Ratio: {dossier.sarDraft.netLossProfitRatio}x</div>
-              )}
-            </div>
-          </section>
-        )}
 
         {/* Disaster Recovery Runbook Proof Callout (Feature 015) */}
         {state.activeDrProofs.length > 0 && (
