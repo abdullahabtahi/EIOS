@@ -26,6 +26,7 @@ from eios.agent_gates.cases import (
     AttackCase,
     GoldenCase,
     GoldenTurn,
+    Split,
     load_attack_cases,
     load_golden_cases,
 )
@@ -356,6 +357,40 @@ def _port(
     return AlwaysAnswerStandin("42")
 
 
+DEFAULT_SPLITS: tuple[Split, ...] = (Split.DEV, Split.VALIDATION)  # sealed runs only when named
+
+
+def parse_splits(raw: str | None) -> tuple[Split, ...]:
+    """`--split dev,validation` as splits; unset means the ones we tune against, never `sealed`."""
+    if raw is None:
+        return DEFAULT_SPLITS
+    names = [name.strip() for name in raw.split(",") if name.strip()]
+    if not names:
+        raise ValueError("--split names no split; use dev, validation or sealed")
+    known = {s.value for s in Split}
+    if unknown := sorted(set(names) - known):
+        raise ValueError(f"unknown split: {', '.join(unknown)} (known: {', '.join(sorted(known))})")
+    return tuple(Split(name) for name in names)
+
+
+def explain_unselected(
+    golden: list[GoldenCase], splits: Sequence[Split], only: Sequence[str] | None
+) -> None:
+    """`--only` names a golden case whose split was not selected: say so, instead of "unknown case id"."""
+    by_id = {c.scenario_id: c for c in golden}
+    for name in only or ():
+        case = by_id.get(name.removesuffix(_turn_suffix(name)))
+        if case is not None and case.split not in splits:
+            raise ValueError(
+                f"{case.scenario_id} is in split '{case.split.value}', which this run does not include; "
+                f"add --split {case.split.value}"
+            )
+
+
+def select_splits(golden: list[GoldenCase], splits: Sequence[Split]) -> list[GoldenCase]:
+    return [c for c in golden if c.split in splits]
+
+
 def select_cases(
     golden: list[GoldenCase], attacks: list[AttackCase], only: Sequence[str] | None
 ) -> tuple[list[GoldenCase], list[AttackCase]]:
@@ -394,6 +429,11 @@ def main(argv: Sequence[str]) -> int:
     ap.add_argument("--out", type=Path, default=Path("evals/reports/agent_baseline"))
     ap.add_argument("--compare", type=Path)
     ap.add_argument(
+        "--split",
+        help="comma-separated golden splits: dev, validation, sealed (default: dev,validation). "
+        "Run sealed only to judge a finished change; a fix fitted to it no longer measures anything.",
+    )
+    ap.add_argument(
         "--only", help="comma-separated golden scenario ids or attack case ids; default is all"
     )
     args = ap.parse_args(argv)
@@ -407,9 +447,11 @@ def main(argv: Sequence[str]) -> int:
             load_golden_cases(GOLDEN / "agent_cases"),
             load_attack_cases(GOLDEN / "attacks"),
         )
-        golden, attacks = select_cases(
-            golden, attacks, [x.strip() for x in args.only.split(",")] if args.only else None
-        )
+        splits = parse_splits(args.split)
+        only = [x.strip() for x in args.only.split(",")] if args.only else None
+        explain_unselected(golden, splits, only)
+        golden = select_splits(golden, splits)
+        golden, attacks = select_cases(golden, attacks, only)
         turns = sum(len(c.turns) for c in golden) + len(attacks)
         cap = os.getenv("EIOS_AGENT_EVAL_MAX_TURNS")
         check_spend_cap(turns, args.repeats, args.live, int(cap) if cap else None)
@@ -420,6 +462,7 @@ def main(argv: Sequence[str]) -> int:
         _port(args.runtime, args.live, args.records, args.model), golden, attacks, args.repeats
     )
     report["meta"]["thresholds_version"] = thresholds.get("version")
+    report["meta"]["splits"] = [s.value for s in splits]
     markdown = render_markdown(report)
     if args.compare:
         diff = compare_reports(json.loads(args.compare.read_text(encoding="utf-8")), report)
