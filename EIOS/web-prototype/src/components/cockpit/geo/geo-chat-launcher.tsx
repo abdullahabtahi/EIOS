@@ -3,6 +3,9 @@
 import * as React from 'react';
 import { Icon } from '@/components/ui/icon';
 
+/** The glyph the cockpit rail already uses for "Ask copilot", so the assistant has one face wherever it appears. */
+export const ASSISTANT_ICON = 'terminal';
+
 export type LauncherStatus = 'idle' | 'pending' | 'unread';
 
 const STATUS_WORD: Readonly<Record<LauncherStatus, string>> = {
@@ -32,10 +35,10 @@ export function GeoChatLauncher({ status, hint, onOpen }: { readonly status: Lau
         aria-label={`Ask the assistant${STATUS_WORD[status]}`}
         title="Ask the assistant (/)"
         onClick={() => onOpen()}
-        className="relative flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full bg-cx-ink text-white shadow-lg outline-none transition-transform hover:scale-105 hover:bg-black focus-visible:ring-2 focus-visible:ring-cx-accent focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:scale-100">
-        <span key={hint ?? 'rest'} aria-hidden="true" className="geo-ask-ping pointer-events-none absolute inset-0 rounded-full border-2 border-cx-accent" />
-        <Icon icon={status === 'pending' ? 'progress_activity' : 'auto_awesome'} size="lg" className={status === 'pending' ? 'animate-spin motion-reduce:animate-none' : ''} />
-        {status === 'unread' && <span aria-hidden="true" className="absolute right-0 top-0 size-3 rounded-full border-2 border-white bg-cx-accent" />}
+        className="relative flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-full border border-chrome-line bg-cockpit-rail text-chrome-accent shadow-lg outline-none transition-[transform,filter] hover:scale-105 hover:brightness-125 focus-visible:ring-2 focus-visible:ring-chrome-accent focus-visible:ring-offset-2 motion-reduce:transition-none motion-reduce:hover:scale-100">
+        <span key={hint ?? 'rest'} aria-hidden="true" className="geo-ask-ping pointer-events-none absolute -inset-px rounded-full border-2 border-chrome-accent" />
+        <Icon icon={status === 'pending' ? 'progress_activity' : ASSISTANT_ICON} className={status === 'pending' ? 'animate-spin motion-reduce:animate-none' : ''} />
+        {status === 'unread' && <span aria-hidden="true" className="absolute right-0 top-0 size-3 rounded-full border-2 border-cockpit-rail bg-chrome-accent" />}
       </button>
     </div>
   );

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { Icon } from '@/components/ui/icon';
+import { ASSISTANT_ICON } from './geo-chat-launcher';
 import { type Box, clampPosition, defaultPosition, type DockMode, nudge, type Point, windowSize } from './geo-chat-dock';
 
 export interface GeoChatWindowProps {
@@ -80,7 +81,7 @@ export function GeoChatWindow({ mode, pos, bounds, onMove, onSettle, onDock, onF
           </button>
         ) : (
           <h2 className="flex min-w-0 flex-1 items-center gap-1.5 px-2 py-3 text-sm font-semibold text-cx-ink">
-            <Icon icon="auto_awesome" size="sm" className="text-cx-accent" />
+            <Icon icon={ASSISTANT_ICON} size="sm" className="text-cx-accent" />
             Ask
           </h2>
         )}
