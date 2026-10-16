@@ -90,6 +90,40 @@ def test_a_turn_over_its_deadline_is_reported_as_a_timeout() -> None:
     assert out.answer.text == TIMEOUT_TEXT
 
 
+@pytest.mark.parametrize("failure", ["outage", "deadline"])
+def test_a_failed_turn_is_closed_in_the_thread_so_the_next_one_answers_only_its_own_question(
+    failure: str,
+) -> None:
+    sessions = build_session_service(SETTINGS)
+    settings = (
+        AssistantSettings.from_env(
+            {"EIOS_ENVIRONMENT": "test", "EIOS_ASSISTANT_TURN_DEADLINE_S": "0.2"}
+        )
+        if failure == "deadline"
+        else SETTINGS
+    )
+    runtime, llm = make_runtime([DOSSIER], sessions=sessions, settings=settings)
+    if failure == "outage":
+        llm.fail_with = "model unavailable"
+    else:
+        llm.delay_s = 2.0
+    out = _turn(runtime, question="Why was the first account flagged?")
+    assert out.status in {"error", "timeout"}
+
+    async def thread() -> list[tuple[str | None, str | None]]:
+        key = session_key("aml_investigator", "CR84920")
+        found = await sessions.get_session(app_name=APP_NAME, user_id="alice", session_id=key)
+        assert found is not None
+        return [(e.content.role, e.content.parts[0].text) for e in found.events if e.content]
+
+    roles = asyncio.run(thread())
+    assert roles[0] == ("user", "Why was the first account flagged?")
+    assert roles[-1] == (
+        "model",
+        out.answer.text,
+    )  # the question is answered, with the plain failure
+
+
 def test_each_operator_has_a_private_thread_per_entity() -> None:
     sessions = build_session_service(SETTINGS)
     runtime, _ = make_runtime([DOSSIER, draft(f"It is {FIGURE}.")], sessions=sessions)

@@ -44,6 +44,10 @@ def user_message(text: str) -> _types.Content:
     return _types.Content(role="user", parts=[_types.Part.from_text(text=text)])
 
 
+def model_message(text: str) -> _types.Content:
+    return _types.Content(role="model", parts=[_types.Part.from_text(text=text)])
+
+
 def text_of(content: _types.Content | None) -> str:
     """All text parts of a model message joined, or an empty string; never raises on a missing message."""
     if content is None or not content.parts:
