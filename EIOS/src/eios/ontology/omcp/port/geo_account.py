@@ -111,7 +111,9 @@ def account_evidence(
         "kyc_country": p["kyc_country"],
         "sessions": p["sessions"],
         "login_countries": p["login_countries"],
+        "login_country_count": len(p["login_countries"]),
         "gateways": p["gateways"],
+        "gateway_count": len(p["gateways"]),
         "foreign_logins": sum(
             c["sessions"] for c in p["login_countries"] if c["iso2"] != p["kyc_country"]
         ),

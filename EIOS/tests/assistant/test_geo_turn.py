@@ -11,6 +11,7 @@ import pytest
 from eios.assistant.assembly import FAIL_CLOSED_TEXT
 from eios.assistant.config import AssistantSettings
 from eios.assistant.geo_context import GEO_RULES, MapContext, describe_map, geo_steps
+from eios.assistant.origin_guard import REFUSAL
 from eios.assistant.runtime import AssistantRuntime, TurnOutcome
 from eios.assistant.scripted_model import ScriptedLlm, Step, call, draft
 from eios.assistant.sessions import build_session_service
@@ -105,6 +106,23 @@ def test_a_list_change_question_runs_the_list_comparison() -> None:
     assert out.tool_calls[0].arguments == {"list_id": "fatf"}
 
 
+@pytest.mark.parametrize(
+    "question",
+    [
+        "Which nationality launders the most money in our book?",
+        "Are clients of some religion riskier?",
+    ],
+)
+def test_a_question_about_people_by_origin_is_refused_with_no_tool_and_no_model_call(
+    question: str,
+) -> None:
+    # The scripted model would call a tool; the guard answers before it is ever asked.
+    runtime, llm = _runtime([call("get_geo_overview"), draft("Nigeria.")])
+    out = _turn(runtime, question, {"view": "corridors"})
+    assert out.answer.text == REFUSAL and out.answer.figures == ()
+    assert out.tool_calls == () and out.model_calls == 0 and llm.seen == []
+
+
 def test_another_workstation_can_never_move_the_map() -> None:
     aml = principal_for("alice", "aml_investigator")
     runtime, _ = _runtime(
@@ -170,6 +188,21 @@ def test_another_workstation_can_never_move_the_map() -> None:
             [("get_jurisdiction", {"country_id": "IQ"})],
         ),
         ("Which nationality launders the most money?", None, None, []),  # nothing read ahead for it
+        (
+            "Rank the top corridors by risk for me.",
+            None,
+            None,
+            [("list_geo_leads", {"kind": "corridor"})],
+        ),
+        (
+            "What are the riskiest shared exits?",
+            None,
+            None,
+            [("list_geo_leads", {"kind": "shared_exit"})],
+        ),
+        ("Top accounts, please", None, None, [("list_geo_leads", {"kind": "account"})]),
+        ("Rank accounts by ethnicity", None, None, []),  # refused, so nothing is read for it
+        ("Where should I look first?", None, None, [("get_geo_overview", {})]),
     ],
 )
 def test_the_prefetch_plan_follows_the_question_then_the_map(

@@ -50,6 +50,9 @@ Geography rules for this workstation:
     carries an error, say the graph could not be reached and answer from the rest of the result.
 15. A list change ends or starts a duty to apply enhanced measures; it does not change what the accounts did. When a
     country leaves a list, say what activity there continues.
+16. Never count the items of a list yourself, in digits or in words ("two countries", "four lenses"). State a count only
+    when a result returns it (login_country_count, gateway_count, lens_count, accounts, home_countries); otherwise name
+    the items instead of counting them.
 """
 
 _VIEW = {"corridors": "Corridors", "logins": "Login vs KYC", "jurisdictions": "Jurisdictions"}
@@ -82,6 +85,17 @@ _WHERE_TO_LOOK = re.compile(
     r"stands? out|anything (?:new|unusual)|whole book|what should i (?:look|check))\b",
     re.IGNORECASE,
 )
+# "Rank the top corridors": a ranking of one kind of lead reads that list, not the overview (which shows only a few).
+_RANKING = re.compile(
+    r"\b(?:rank\w*|top|largest|biggest|highest|riskiest|most (?:suspicious|elevated|unusual))\b",
+    re.IGNORECASE,
+)
+_LEAD_WORDS = (
+    (re.compile(r"\bcorridors?\b", re.IGNORECASE), "corridor"),
+    (re.compile(r"\b(?:shared )?(?:exits?|gateways?)\b", re.IGNORECASE), "shared_exit"),
+    (re.compile(r"\blogin.country pairs?\b|\bmismatch\w*\b", re.IGNORECASE), "login_country"),
+    (re.compile(r"\baccounts?\b", re.IGNORECASE), "account"),
+)
 _SELECTION_TOOL = {
     "account": ("get_geo_account", "entity_id"),
     "gateway": ("get_shared_exit", "gateway_id"),
@@ -99,6 +113,25 @@ def _named_step(question: str) -> tuple[str, dict[str, Any]] | None:
     return None
 
 
+_PROTECTED = re.compile(
+    r"\b(?:nationalit\w*|ethnic\w*|race|racial\w*|religio\w*|citizenship|immigrants?|"
+    r"(?:people|clients|customers|users) (?:from|born in) (?:which|what)|country of birth)\b",
+    re.IGNORECASE,
+)
+
+
+def asks_about_origin(question: str) -> bool:
+    """Does the question ask to judge people by nationality, ethnicity, race or religion (refused, rule 10)?"""
+    return bool(_PROTECTED.search(question))
+
+
+def _ranked_kind(question: str) -> str | None:
+    """The lead kind a ranking question asks for ("rank the top corridors" is corridor), or None."""
+    if not _RANKING.search(question):
+        return None
+    return next((kind for pattern, kind in _LEAD_WORDS if pattern.search(question)), None)
+
+
 def geo_steps(
     question: str, named: str | None, context: Mapping[str, Any] | None
 ) -> list[tuple[str, dict[str, Any]]]:
@@ -107,7 +140,10 @@ def geo_steps(
     In order: a list change runs the list comparison; an account, exit, corridor or country code the question names runs
     its own tool; a selection on the map runs its tool (a login-country pair has none of its own, so the model chooses);
     with nothing selected, only a where-to-look question reads the overview. A wrong guess costs a tool call, never a
-    wrong answer: the result passes through the same port and the same assembler."""
+    wrong answer: the result passes through the same port and the same assembler. A question about people by origin
+    reads nothing: the drafter refuses it before the model runs (origin_guard.py)."""
+    if asks_about_origin(question):
+        return []
     if _LIST_CHANGE.search(question):
         return [("get_list_change_impact", {"list_id": "eu" if _EU.search(question) else "fatf"})]
     if named:
@@ -116,6 +152,8 @@ def geo_steps(
         return [step]
     found = parse(context)
     if found is None or found.selection is None:
+        if (kind := _ranked_kind(question)) is not None:
+            return [("list_geo_leads", {"kind": kind})]
         return [("get_geo_overview", {})] if _WHERE_TO_LOOK.search(question) else []
     selected = _SELECTION_TOOL.get(found.selection.kind)
     return [(selected[0], {selected[1]: found.selection.id})] if selected else []

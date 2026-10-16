@@ -19,6 +19,7 @@ from eios.assistant.assembler_agent import DRAFT_KEY, FEEDBACK_KEY, AnswerAssemb
 from eios.assistant.assembly import MAX_ATTEMPTS
 from eios.assistant.geo_context import GEO_RULES, describe_map
 from eios.assistant.intent import BROAD_KEY, ON_SCREEN_KEY
+from eios.assistant.origin_guard import refuse_by_origin
 from eios.assistant.prefetch import Prefetcher
 from eios.assistant.timing import TimedLlm, timed
 from eios.assistant.tools import build_toolset
@@ -219,6 +220,8 @@ def build_agent(
         instruction=instruction_for(workstation, plain_figures),
         tools=list(build_toolset(port, principal)),
         output_key=DRAFT_KEY,
+        # On the geo workstation a question about people by origin is refused before the model runs (origin_guard.py).
+        before_model_callback=refuse_by_origin if workstation is Workstation.GEOSPATIAL else None,
         generate_content_config=generation_config(
             temperature=0.2,
             max_output_tokens=DRAFT_MAX_OUTPUT_TOKENS,

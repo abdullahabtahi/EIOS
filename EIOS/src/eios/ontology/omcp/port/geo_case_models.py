@@ -82,7 +82,10 @@ class GeoAccountEvidence(ToolResult):
     kyc_country: str
     sessions: int
     login_countries: list[LoginCountry]
+    # Counts the reader states ("two countries") come from here, never from the model counting a list (RL-1).
+    login_country_count: int
     gateways: list[AccountGateway]
+    gateway_count: int
     foreign_logins: int
     exit_gateway_id: str | None
     exit_sessions: int
@@ -99,6 +102,8 @@ class GeoAccountEvidence(ToolResult):
 
 ACCOUNT_UNITS = {
     "sessions": "sessions",
+    "login_country_count": "countries",
+    "gateway_count": "gateways",
     "login_countries[].sessions": "sessions",
     "gateways[].sessions": "sessions",
     "gateways[].accounts": "accounts",

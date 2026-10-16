@@ -111,6 +111,7 @@ def _lead_units(prefix: str) -> dict[str, str]:
 class GeoOverview(ToolResult):
     clients: int
     lenses: list[LensCount]
+    lens_count: int  # stated from here, never counted by the model (RL-1)
     shared_exits: int | None
     hubs_suppressed: int | None
     elevated_corridors: int | None
@@ -122,6 +123,7 @@ class GeoOverview(ToolResult):
 
 OVERVIEW_UNITS = {
     "clients": "accounts",
+    "lens_count": "lenses",
     "lenses[].flagged": "accounts",
     "lenses[].assessable": "accounts",
     "shared_exits": "exits",
