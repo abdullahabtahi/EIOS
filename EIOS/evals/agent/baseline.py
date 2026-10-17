@@ -429,6 +429,19 @@ def _turn_suffix(name: str) -> str:
     return f".{tail}" if head and tail.startswith("t") and tail[1:].isdigit() else ""
 
 
+def _provenance(model: str | None) -> dict[str, Any]:
+    """What produced the run, so two reports can be compared knowing what differed: the model key and a SHA-256 of
+    each workstation's instruction wording (empty where the code under test has no such digest)."""
+    try:
+        from eios.assistant.agents import instruction_digest
+        from eios.ontology.omcp.port.principal import Workstation
+
+        digests = {w.value: instruction_digest(w, True) for w in Workstation}
+    except ImportError:
+        digests = {}
+    return {"model": model or "registry default", "instruction_sha256": digests}
+
+
 def main(argv: Sequence[str]) -> int:
     ap = argparse.ArgumentParser(prog="python -m evals.agent.baseline")
     ap.add_argument(
@@ -478,6 +491,7 @@ def main(argv: Sequence[str]) -> int:
         _port(args.runtime, args.live, args.records, args.model), golden, attacks, args.repeats
     )
     report["meta"]["thresholds_version"] = thresholds.get("version")
+    report["meta"].update(_provenance(args.model))
     report["meta"]["splits"] = [s.value for s in splits]
     markdown = render_markdown(report)
     if args.compare:
