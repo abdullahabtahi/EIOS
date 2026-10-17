@@ -123,7 +123,7 @@ function privateJson(req: NextRequest, body: unknown): NextResponse {
   const stable: Record<string, unknown> = { ...(body as Record<string, unknown>) };
   delete stable.asOfTimestamp;
   delete stable.session;
-  const etag = `"${createHash('sha1').update(JSON.stringify(stable)).digest('base64url')}"`;
+  const etag = `"${createHash('sha256').update(JSON.stringify(stable)).digest('base64url')}"`;
   const headers = { 'Cache-Control': 'private, no-cache', ETag: etag };
   if (req.headers.get('if-none-match') === etag) return new NextResponse(null, { status: 304, headers });
   return new NextResponse(payload, { status: 200, headers: { ...headers, 'Content-Type': 'application/json' } });

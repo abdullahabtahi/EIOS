@@ -60,7 +60,8 @@ async def _drain_worker(app: FastAPI, flush_interval: float = 0.5) -> None:
                         "Failed to export lakehouse batch for %s: %s", prod, exc, exc_info=True
                     )
         except asyncio.CancelledError:
-            break
+            logger.info("Background drain worker received cancellation; shutting down")
+            raise
         except Exception as exc:
             logger.warning("Error in background drain worker: %s", exc)
 
@@ -76,7 +77,8 @@ async def _eviction_worker(app: FastAPI, check_interval: float = 3600.0) -> None
                 except Exception as exc:
                     logger.warning("Eviction skipped for product %s: %s", prod, exc)
         except asyncio.CancelledError:
-            break
+            logger.info("Background eviction worker received cancellation; shutting down")
+            raise
         except Exception as exc:
             logger.warning("Error in background eviction worker: %s", exc)
 

@@ -97,6 +97,9 @@ ignore = [
 # Existing structural debt (complexity, argument counts, ...) carries an inline `# noqa` so that new
 # violations fail while old ones are visible. RUF100 turns a noqa that no longer matches a violation
 # into an error, so the debt can only shrink.
+[tool.ruff.lint.isort]
+known-first-party = ["eios", "evals", "tools"]
+
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI dependency injection is a call in an argument default by design.
 extend-immutable-calls = ["fastapi.Depends", "fastapi.Query", "fastapi.Header", "fastapi.Body"]

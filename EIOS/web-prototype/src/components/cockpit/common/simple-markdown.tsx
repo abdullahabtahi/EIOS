@@ -6,7 +6,7 @@ import * as React from 'react';
  * Built from React elements, never from HTML strings, so a draft cannot inject markup.
  */
 
-const INLINE = /(\*\*[^*]+\*\*|(?<![A-Za-z0-9])__[^_]+__(?![A-Za-z0-9])|(?<![A-Za-z0-9])_[^_\s][^_]*_(?![A-Za-z0-9]))/g;
+const INLINE = /(\*\*[^*\n]+\*\*|(?<![A-Za-z0-9])__[^_\n]+__(?![A-Za-z0-9])|(?<![A-Za-z0-9])_[^_\s\n][^_\n]*?_(?![A-Za-z0-9]))/g;
 
 function inline(text: string): React.ReactNode[] {
   return text.split(INLINE).map((part, i) => {

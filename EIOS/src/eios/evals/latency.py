@@ -1,5 +1,6 @@
 """High-resolution turn latency tracking and percentile SLA aggregation (T051)."""
 
+import math
 import time
 from typing import Self
 
@@ -21,14 +22,14 @@ class LatencyTimer:
         return self
 
     def record_first_token(self) -> None:
-        if self.first_token_time == 0.0:
+        if math.isclose(self.first_token_time, 0.0, abs_tol=1e-9):
             self.first_token_time = time.perf_counter()
             self.first_token_latency_ms = (self.first_token_time - self.start_time) * 1000.0
 
     def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
         self.end_time = time.perf_counter()
         self.total_latency_ms = (self.end_time - self.start_time) * 1000.0
-        if self.first_token_latency_ms == 0.0:
+        if math.isclose(self.first_token_latency_ms, 0.0, abs_tol=1e-9):
             self.first_token_latency_ms = self.total_latency_ms
 
 

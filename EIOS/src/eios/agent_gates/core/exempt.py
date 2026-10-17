@@ -57,7 +57,7 @@ _PATTERNS: tuple[tuple[str, int, re.Pattern[str]], ...] = (
         r"|(?<=\bby )(?:19|20)\d{2}\b|(?<=\byear )(?:19|20)\d{2}\b"
     )),
     ("quantile_label", 3, re.compile(r"\b[pP]\d{2,3}\b")),
-    ("identifier", 4, re.compile(r"\b[A-Za-z][A-Za-z0-9_-]*\d{2,}[A-Za-z0-9_-]*\b")),
+    ("identifier", 4, re.compile(r"\b[A-Za-z][A-Za-z0-9_-]*?\d{2,}[A-Za-z0-9_-]*\b")),
     ("structure_count", 5, re.compile(
         rf"\b\d+\s+(?:[A-Za-z-]+\s+){{0,2}}{_STRUCTURE_NOUNS}\b"
         rf"|\b{_SMALL_WORDS}\s+(?:[A-Za-z-]+\s+){{0,2}}{_STRUCTURE_NOUNS}\b", re.I)),

@@ -70,7 +70,7 @@ export function ChurnRadarScatter() {
       if (isMounted) setCohorts(found);
     }
 
-    loadRadar();
+    void loadRadar();
 
     return () => {
       isMounted = false;
@@ -179,10 +179,10 @@ export function ChurnRadarScatter() {
   // Simulated coordinate when What-If concession slider is applied
   const getSimulatedCoordinates = (p: PartnerChurnItem, width: number, height: number) => {
     const base = getCoordinates(p, width, height);
-    const liftPct = (whatIfResponse?.projected_retention_lift_pct ?? p.projectedLiftPct ?? 0) / 100;
+    const liftPct = (whatIfResponse?.projected_retention_lift_pct ?? p.projectedLiftPct ?? 18.5) / 100;
     const reduction = liftPct * (concessionSlider / 100);
     const simPChurn = Math.max(0, p.pChurn * (1 - reduction));
-    const simNormX = simPChurn;
+    const simNormX = axisDimension === 'P_CHURN' ? simPChurn : Math.max(0, base.normX * (1 - reduction));
     const simCx = base.leftPad + simNormX * base.plotWidth;
 
     return { ...base, simCx, simPChurn };
@@ -308,8 +308,8 @@ export function ChurnRadarScatter() {
                 strokeWidth="1.5"
                 strokeDasharray="4,4"
               />
-              <rect x={cx - 110} y={minY - 14} width="220" height="15" fill="#faf3f3" stroke="#ebc9c9" strokeWidth="0.8" rx="1" />
-              <text x={cx} y={minY - 4} fill="#761f1f" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+              <rect x={cx - 110} y={Math.max(topPad + 14, minY + 6)} width="220" height="15" fill="#faf3f3" stroke="#ebc9c9" strokeWidth="0.8" rx="1" />
+              <text x={cx} y={Math.max(topPad + 14, minY + 6) + 11} fill="#761f1f" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
                 {cohort ? `${cohort.region} cohort: ${cohort.partnerCount} partners, ${compactUsd(cohort.valueAtRiskUsd)} volume` : ''}
               </text>
             </g>
@@ -359,8 +359,8 @@ export function ChurnRadarScatter() {
               />
               <circle cx={sim.simCx} cy={base.cy} r={10} fill="rgba(14, 92, 138, 0.15)" stroke="#0e5c8a" strokeWidth="1.8" />
               <circle cx={sim.simCx} cy={base.cy} r={4} fill="#0e5c8a" />
-              <rect x={sim.simCx - 36} y={base.cy - 20} width="72" height="13" fill="#0e5c8a" rx="1" />
-              <text x={sim.simCx} y={base.cy - 11} fill="#FFFFFF" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
+              <rect x={sim.simCx - 57} y={base.cy - 20} width="114" height="14" fill="#0e5c8a" rx="2" />
+              <text x={sim.simCx} y={base.cy - 10} fill="#FFFFFF" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
                 Risk (sim) = {sim.simPChurn.toFixed(2)}
               </text>
             </g>

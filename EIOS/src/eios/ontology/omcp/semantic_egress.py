@@ -58,7 +58,7 @@ class SemanticEgressGate:
     PROVENANCE_TAG_PATTERN = re.compile(r"\[(BRIEF|ASSUMPTION|TARGET|SPIKE|ILLUSTRATIVE)\]")
 
     NUMERIC_PATTERN = re.compile(
-        r"(?<![A-Za-z0-9_$-])(?:\$[0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?|[0-9]+(?:\.[0-9]+)?%)(?![A-Za-z0-9_])"
+        r"(?<![\w$])(?:\$\d{1,3}(?:,\d{3})+(?:\.\d+)?|\$\d+(?:\.\d+)?|\d+(?:\.\d+)?%)(?!\w)"
     )
 
     def __init__(self, strict_provenance: bool = False) -> None:

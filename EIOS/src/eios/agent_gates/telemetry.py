@@ -15,7 +15,7 @@ from eios.agent_gates.records import TurnRecord
 
 EXCERPT_LIMIT = 200
 _EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
-_IDENT = re.compile(r"\b[A-Za-z][A-Za-z0-9_-]*\d{2,}[A-Za-z0-9_-]*\b")
+_IDENT = re.compile(r"\b[A-Za-z][A-Za-z0-9_-]*?\d{2,}[A-Za-z0-9_-]*\b")
 _SCANNED_TEXT_FIELDS = (
     "question_excerpt",
     "fallback_reason",

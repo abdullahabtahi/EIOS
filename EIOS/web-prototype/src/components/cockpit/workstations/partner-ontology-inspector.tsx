@@ -73,10 +73,13 @@ export function PartnerOntologyInspector() {
     if (!partnerId) return;
     let active = true;
     setLoad({ status: 'loading' });
-    setOpenLink(null);
-    fetchPartnerOntology(partnerId).then((data) => {
-      if (active) setLoad(data ? { status: 'ready', data } : { status: 'error' });
-    });
+    void fetchPartnerOntology(partnerId)
+      .then((data) => {
+        if (active) setLoad(data ? { status: 'ready', data } : { status: 'error' });
+      })
+      .catch(() => {
+        if (active) setLoad({ status: 'error' });
+      });
     return () => {
       active = false;
     };

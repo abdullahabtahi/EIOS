@@ -18,7 +18,7 @@ MAP_KINDS = ("country", "corridor", "mismatch", "gateway", "account")
 MAX_MAP_COMMANDS = (
     3  # [ASSUMPTION] the first is selected and framed; more than a few moves is not a direction
 )
-_MAP = re.compile(r"\{\{map:([^{}:]*):([^{}]*)\}\}")
+_MAP = re.compile(r"\{\{map:([a-zA-Z0-9_-]+):([^{}\s]+)\}\}")
 _SPACE_BEFORE_PUNCT = re.compile(r"[ \t]+([.,;:!?)])")
 _RUNS = re.compile(r"[ \t]{2,}")
 

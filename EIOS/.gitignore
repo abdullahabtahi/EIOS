@@ -28,6 +28,7 @@ crash.log
 # Evaluation reports are generated; keep the directory only
 evals/reports/*
 !evals/reports/.gitkeep
+!evals/reports/*.py
 
 # Local environment and secrets (never commit)
 .env

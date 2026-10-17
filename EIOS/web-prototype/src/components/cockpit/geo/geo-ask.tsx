@@ -34,7 +34,7 @@ const STEP_LABEL: Readonly<Record<string, string>> = {
   search_regulations: 'regulation search',
 };
 
-const newId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+const newId = (prefix: string) => `${prefix}_${Date.now()}_${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Math.random().toString(36).slice(2, 8)}`;
 const timeLabel = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
 class AskError extends Error {

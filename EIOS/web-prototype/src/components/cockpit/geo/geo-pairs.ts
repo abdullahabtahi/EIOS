@@ -10,7 +10,7 @@ export interface CorridorPair {
 }
 
 const RANK: Readonly<Record<RiskTier, number>> = { low: 0, medium: 1, high: 2 };
-const key = (c: FlowCorridor): string => [c.origin, c.destination].sort().join('|');
+const key = (c: FlowCorridor): string => [c.origin, c.destination].sort((a, b) => a.localeCompare(b)).join('|');
 
 function higher(a: RiskTier | null, b: RiskTier | null): RiskTier | null {
   if (a === null) return b;

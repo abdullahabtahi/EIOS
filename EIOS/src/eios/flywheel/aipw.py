@@ -94,8 +94,8 @@ class AIPWCausalEstimator:
         if n < 4:
             raise ValueError(f"Estimation requires at least 4 samples, got {n}")
 
-        treatment_count = int(np.sum(W == 1.0))
-        control_count = int(np.sum(W == 0.0))
+        treatment_count = int(np.sum(np.isclose(W, 1.0, atol=1e-9)))
+        control_count = int(np.sum(np.isclose(W, 0.0, atol=1e-9)))
         if treatment_count < 1 or control_count < 1:
             raise ValueError(
                 f"Both treated (got {treatment_count}) and control (got {control_count}) units required"

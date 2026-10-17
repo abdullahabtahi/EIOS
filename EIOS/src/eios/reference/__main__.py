@@ -30,9 +30,9 @@ def main(argv: Sequence[str]) -> int:
     if args.command == "lists":
         summary = build_lists(args.project)
         print("warm_reference lists reloaded:", ", ".join(f"{t}={n}" for t, n in summary.items()))
-        return 0
     if not (args.icij_entities and args.icij_as_of):
-        ap.error("build needs --icij-entities and --icij-as-of")
+        sys.stderr.write("error: build needs --icij-entities and --icij-as-of\n")
+        return 2
     summary = build_reference(args.project, args.icij_entities, args.icij_as_of)
     print("warm_reference built:", ", ".join(f"{t}={n}" for t, n in summary.items()))
     return 0

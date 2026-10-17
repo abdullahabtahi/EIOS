@@ -20,9 +20,13 @@ export function ExecutiveCockpitView() {
 
   React.useEffect(() => {
     let active = true;
-    fetchExecutiveBoard().then((board) => {
-      if (active) setLoad(board ? { status: 'ready', board } : { status: 'error' });
-    });
+    void fetchExecutiveBoard()
+      .then((board) => {
+        if (active) setLoad(board ? { status: 'ready', board } : { status: 'error' });
+      })
+      .catch(() => {
+        if (active) setLoad({ status: 'error' });
+      });
     return () => {
       active = false;
     };
