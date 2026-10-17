@@ -62,6 +62,7 @@ def seal_turn(principal: Principal, question: str, outcome: TurnOutcome) -> str 
                 for t in outcome.tool_calls
             ],
             model_key=outcome.model_key,
+            manifest=_json(outcome.manifest) if outcome.manifest is not None else None,
         )
     except BundleTooLarge as exc:
         _LOG.warning("decision turn not sealed: %s", exc)
@@ -127,6 +128,9 @@ def read_bundle(bundle_id: str) -> dict[str, Any]:
         "workstation": bundle["workstation"],
         "question": bundle["question"],
         "answer": bundle["answer"].get("text"),
+        "manifest": bundle.get(
+            "manifest"
+        ),  # None on a v1 bundle, sealed before manifests were kept
         "calls": [
             {"name": c["name"], "arguments": c["arguments"], "error": c.get("error")}
             for c in bundle["calls"]

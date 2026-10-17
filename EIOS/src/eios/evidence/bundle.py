@@ -16,7 +16,7 @@ from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from typing import Any
 
-SCHEMA = "eios.evidence_bundle/v1"
+SCHEMA = "eios.evidence_bundle/v2"  # v2 adds `manifest`; a v1 bundle stays valid: its id hashes its own content
 REF_PREFIX = "evidence-bundle:sha256:"
 # [ASSUMPTION] a turn's results are tens of kilobytes; the bound keeps a bundle inside one Firestore document (1 MiB).
 MAX_BYTES = 900_000
@@ -41,7 +41,7 @@ def is_decision(tool_names: Iterable[str]) -> bool:
     return any(name in DECISION_TOOLS for name in tool_names)
 
 
-def seal(
+def seal(  # noqa: PLR0913 - keyword-only: each part of the bundle is named at the call
     *,
     workstation: str,
     operator_id: str,
@@ -49,11 +49,13 @@ def seal(
     answer: Mapping[str, Any],
     calls: Iterable[Mapping[str, Any]],
     model_key: str | None,
+    manifest: Mapping[str, Any] | None = None,
     sealed_at: datetime | None = None,
 ) -> dict[str, Any]:
     """The sealed bundle: its content plus `bundle_id`, the SHA-256 of that content.
 
-    `answer` and each call's `result` must already be JSON-safe (a model dumped in JSON mode)."""
+    `manifest` is what produced the answer (assistant/manifest.py); `answer`, `manifest` and each call's `result`
+    must already be JSON-safe (a model dumped in JSON mode)."""
     content = {
         "schema": SCHEMA,
         "sealed_at": (sealed_at or datetime.now(UTC)).isoformat(),
@@ -61,6 +63,7 @@ def seal(
         "operator_id": operator_id,
         "question": question,
         "model_key": model_key,
+        "manifest": dict(manifest) if manifest is not None else None,
         "answer": dict(answer),
         "calls": [
             {

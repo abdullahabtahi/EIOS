@@ -30,6 +30,7 @@ from eios.assistant.assembler_agent import (
 )
 from eios.assistant.config import AssistantSettings
 from eios.assistant.intent import BROAD_KEY, ON_SCREEN_KEY, is_broad, resolve_entity
+from eios.assistant.manifest import build_manifest
 from eios.assistant.origin_guard import GUARDED
 from eios.assistant.prefetch import PLATFORM_CALL, PREFETCH_KEY
 from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED, SCREENED_KEY
@@ -46,7 +47,7 @@ from eios.assistant.tools import (
     SOURCES_KEY,
 )
 from eios.llm_gateway.providers.adk_types import model_message, text_of, user_message
-from eios.llm_gateway.providers.registry import ModelRegistry, load_registry
+from eios.llm_gateway.providers.registry import ModelChoice, ModelRegistry, load_registry
 from eios.observability.cloud_trace import run_telemetry
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
@@ -83,6 +84,8 @@ class TurnOutcome:
         default_factory=dict
     )  # model, tools, other (ms) and each model call
     events: tuple[Any, ...] = field(default=(), repr=False)
+    # what produced this answer (manifest.py); sealed into the evidence bundle of a decision turn
+    manifest: dict[str, Any] | None = None
 
 
 @dataclass
@@ -93,6 +96,7 @@ class _TurnLog:
     events: list[Any] = field(default_factory=list)
     timer: TurnTimer = field(default_factory=TurnTimer)
     model_key: str | None = None
+    manifest: dict[str, Any] | None = None
 
     def outcome(
         self, answer: Answer, *, status: str, error: str | None, latency_ms: float
@@ -108,6 +112,7 @@ class _TurnLog:
             model_key=self.model_key,
             timing=self.timer.breakdown(latency_ms),
             events=tuple(self.events),
+            manifest=self.manifest,
         )
 
 
@@ -171,6 +176,8 @@ class AssistantRuntime:
         self._sessions, self._model = TimedSessionService(session_service), model
         self._registry = registry or load_registry()
         self._llms: dict[str, BaseLlm] = {}  # one model client per model id, reused by every turn
+        # the manifest of a turn depends on the workstation and the model only, and hashing the tool schemas is not free
+        self._manifests: dict[tuple[str, str | None, str], dict[str, Any]] = {}
         # What the model reads of earlier turns is bounded by `history_turns` in the instruction (history.py); the
         # stored thread keeps everything.
         self._plugins = (TimingPlugin(), *plugins)
@@ -181,6 +188,21 @@ class AssistantRuntime:
         if llm is None:
             llm = self._llms[model_id] = build_llm(model_id, self._settings.hedge_after_s)
         return llm
+
+    def _manifest(self, principal: Principal, choice: ModelChoice) -> dict[str, Any]:
+        """What produces this turn's answer, built once per workstation and model."""
+        model_key = None if self._model else choice.key
+        model_id = self._model.model if self._model else choice.id
+        key = (principal.workstation.value, model_key, model_id)
+        if key not in self._manifests:
+            self._manifests[key] = build_manifest(
+                principal=principal,
+                tools=list(self._port.list_tools(principal)),
+                settings=self._settings,
+                model_key=model_key,
+                model_id=model_id,
+            )
+        return self._manifests[key]
 
     @property
     def registry(self) -> ModelRegistry:
@@ -214,7 +236,11 @@ class AssistantRuntime:
             raise ValueError("entity id is not a valid identifier")
         choice = self._registry.resolve(model_key)  # raises UnknownModelError before any work
         started = time.perf_counter()
-        log = _TurnLog(model_key=None if self._model else choice.key, timer=start_turn_timer())
+        log = _TurnLog(
+            model_key=None if self._model else choice.key,
+            timer=start_turn_timer(),
+            manifest=self._manifest(principal, choice),
+        )
         try:
             outcome = await asyncio.wait_for(
                 self._consume(principal, question, entity_id, entity_context, log, choice.id),

@@ -8,7 +8,9 @@ capabilities, so there is no routing to get wrong.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable
+from types import SimpleNamespace
 
 from google.adk.agents.llm_agent import Agent
 from google.adk.agents.loop_agent import LoopAgent
@@ -203,6 +205,29 @@ def instruction_for(
         return "\n".join(parts)
 
     return provide
+
+
+def instruction_digest(
+    workstation: Workstation,
+    plain_figures: bool = False,
+    history_turns: int = DEFAULT_HISTORY_TURNS,
+) -> str:
+    """SHA-256 of the instruction with every conditional part switched on, so a change to any wording changes it.
+
+    The per-turn parts (the entity, the map, earlier turns) are stood in for by fixed text; what is hashed is the
+    wording that ships with the code."""
+    probe = SimpleNamespace(
+        state={
+            "entity_id": "ENTITY",
+            "entity_context": {},
+            ON_SCREEN_KEY: "ELSEWHERE",
+            BROAD_KEY: True,
+            FEEDBACK_KEY: "FEEDBACK",
+        },
+        session=None,
+    )
+    text = instruction_for(workstation, plain_figures, history_turns)(probe)  # type: ignore[arg-type]
+    return hashlib.sha256(text.encode()).hexdigest()
 
 
 def build_llm(model_id: str, hedge_after_s: float = 0.0) -> BaseLlm:

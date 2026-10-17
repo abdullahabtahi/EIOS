@@ -94,6 +94,9 @@ def test_a_hold_proposed_from_the_map_is_sealed_signed_approved_and_replays_equa
     shown = client.get(f"/api/cockpit/evidence/{bundle_id}").json()
     assert shown["intact"] and shown["question"] == HOLD
     assert [c["name"] for c in shown["calls"]] == ["propose_hold"]
+    manifest = shown["manifest"]  # what produced the answer is sealed with what it read
+    assert manifest["workstation"] == "geospatial" and shown["schema"].endswith("/v2")
+    assert len(manifest["instruction_sha256"]) == 64 and len(manifest["toolset"]["sha256"]) == 64
 
     replayed = client.post(f"/api/cockpit/evidence/{bundle_id}/replay").json()
     assert replayed["intact"] and replayed["equal"]
