@@ -6,7 +6,7 @@ const SELECTION_WORD = { corridor: 'corridor', mismatch: 'login pair', gateway: 
 
 /** A pick in words: a route reads "NO to IR", anything else keeps its id. */
 function pickedText(selection: NonNullable<GeoSelection>): string {
-  const id = selection.kind === 'corridor' || selection.kind === 'mismatch' ? selection.id.replace('>', ' to ') : selection.id;
+  const id = selection.kind === 'corridor' || selection.kind === 'mismatch' ? selection.id.split('>').join(' to ') : selection.id;
   return `${SELECTION_WORD[selection.kind]} ${id}`;
 }
 

@@ -16,6 +16,10 @@ describe('the map described in words', () => {
     expect(describeMap('jurisdictions', viewOf('jurisdictions').layers, FLOWS, { kind: 'country', id: 'KE' })).toContain('Picked: country KE');
   });
 
+  it('replaces every arrow in a route id, not only the first', () => {
+    expect(describeMap('corridors', viewOf('corridors').layers, FLOWS, { kind: 'corridor', id: 'NO>IR>KE' })).toContain('corridor NO to IR to KE');
+  });
+
   it('describes a view with no flows yet without inventing counts', () => {
     const text = describeMap('jurisdictions', viewOf('jurisdictions').layers, null, null);
     expect(text).toContain('Jurisdictions map');
