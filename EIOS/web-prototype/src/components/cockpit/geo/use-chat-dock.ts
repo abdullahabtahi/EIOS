@@ -23,15 +23,15 @@ export interface ChatDock {
 }
 
 /**
- * Where the assistant is: closed, floating or docked. It always starts closed, as a launcher; the choice between floating and
- * docked and the window's position are remembered in this browser.
+ * Where the assistant is: closed, floating or docked. It starts closed, as a launcher, and every launch opens the floating
+ * window; docking lasts only until it is closed. The window's position and size are remembered in this browser.
  */
 export function useChatDock(): ChatDock {
   // Read on the first render. The window is closed then, and closed looks the same whatever was remembered, so the
   // server's markup and the browser's first render agree; what was remembered only shows once it is opened.
   const [prefs] = React.useState<DockPrefs>(() => loadPrefs());
   const [open, setOpen] = React.useState(false);
-  const [way, setWay] = React.useState<OpenMode>(prefs.open);
+  const [way, setWay] = React.useState<OpenMode>('floating');
   const [pos, setPos] = React.useState<Point | null>(prefs.pos);
   const [size, setSize] = React.useState<Box | null>(prefs.size);
   // What is remembered is read from a ref, so the actions below stay the same functions from one render to the next.
@@ -42,15 +42,17 @@ export function useChatDock(): ChatDock {
     savePrefs(next);
   }, []);
   const show = React.useCallback(() => setOpen(true), []);
-  const close = React.useCallback(() => setOpen(false), []);
+  // Docking lasts until the window is closed: every launch starts as the floating window that can be moved.
+  const close = React.useCallback(() => {
+    setOpen(false);
+    setWay('floating');
+  }, []);
   const dock = React.useCallback(() => {
     setWay('docked');
-    remember({ ...current.current, open: 'docked' });
-  }, [remember]);
+  }, []);
   const float = React.useCallback(() => {
     setWay('floating');
-    remember({ ...current.current, open: 'floating' });
-  }, [remember]);
+  }, []);
   const settle = React.useCallback(
     (p: Point) => {
       setPos(p);

@@ -1,7 +1,7 @@
 /**
  * Where the assistant lives on the geospatial page: not open at all, a window floating over the map, or docked as a
- * column at the left. The geometry is pure so it can be tested; what is remembered is only the choice between
- * floating and docked and where the window was left, never the conversation.
+ * column at the left. The geometry is pure so it can be tested; what is remembered is only where the window was left
+ * and how big it was made, never the conversation and never the choice of docking: every launch is the floating window.
  */
 
 export type DockMode = 'closed' | 'floating' | 'docked';
@@ -77,7 +77,6 @@ export function nudge(pos: Point, key: string, big: boolean): Point | null {
 }
 
 export interface DockPrefs {
-  readonly open: OpenMode;
   readonly pos: Point | null;
   /** The size the analyst dragged the window to; null until they do. */
   readonly size: Box | null;
@@ -88,7 +87,7 @@ export interface DockStorage {
 }
 
 export const DOCK_KEY = 'eios.geo.chat';
-const FIRST: DockPrefs = { open: 'floating', pos: null, size: null };
+const FIRST: DockPrefs = { pos: null, size: null };
 
 const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
 
@@ -97,12 +96,11 @@ export function loadPrefs(storage: DockStorage | null = browserStorage()): DockP
   try {
     const raw = storage?.getItem(DOCK_KEY);
     if (!raw) return FIRST;
-    const parsed = JSON.parse(raw) as { open?: unknown; pos?: { x?: unknown; y?: unknown } | null; size?: { width?: unknown; height?: unknown } | null };
-    const open: OpenMode = parsed.open === 'docked' ? 'docked' : 'floating';
+    const parsed = JSON.parse(raw) as { pos?: { x?: unknown; y?: unknown } | null; size?: { width?: unknown; height?: unknown } | null };
     const pos = parsed.pos && finite(parsed.pos.x) && finite(parsed.pos.y) ? { x: parsed.pos.x, y: parsed.pos.y } : null;
     const sized = (n: unknown, min: number): n is number => finite(n) && n >= min && n <= MAX_REMEMBERED;
     const size = parsed.size && sized(parsed.size.width, MIN_CHAT_SIZE.width) && sized(parsed.size.height, MIN_CHAT_SIZE.height) ? { width: parsed.size.width, height: parsed.size.height } : null;
-    return { open, pos, size };
+    return { pos, size };
   } catch {
     return FIRST;
   }

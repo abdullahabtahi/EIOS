@@ -127,14 +127,25 @@ describe('the assistant as a launcher, a window and a docked column', () => {
     expect(win().compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('remembers docked or floating, and reopens the same way', () => {
+  it('always launches as the floating window, even after being docked and closed, or with an old docked choice stored', () => {
+    window.localStorage.setItem('eios.geo.chat', JSON.stringify({ open: 'docked' }));
     const first = render(<GeoWorkspace initialSearch="" />);
     fireEvent.click(launcher());
+    expect(win()).toHaveAttribute('data-mode', 'floating');
     fireEvent.click(screen.getByRole('button', { name: 'Dock chat to the left' }));
+    expect(win()).toHaveAttribute('data-mode', 'docked');
     fireEvent.click(screen.getByRole('button', { name: 'Close chat' }));
     first.unmount();
     render(<GeoWorkspace initialSearch="" />);
     fireEvent.click(launcher());
+    expect(win()).toHaveAttribute('data-mode', 'floating');
+  });
+
+  it('stays docked while it is open: asking from the keyboard does not pull it back to floating', () => {
+    render(<GeoWorkspace initialSearch="" />);
+    fireEvent.click(launcher());
+    fireEvent.click(screen.getByRole('button', { name: 'Dock chat to the left' }));
+    fireEvent.keyDown(document.body, { key: '/' });
     expect(win()).toHaveAttribute('data-mode', 'docked');
   });
 });

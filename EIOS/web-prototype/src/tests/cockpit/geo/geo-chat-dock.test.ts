@@ -44,27 +44,27 @@ describe('the chat window geometry', () => {
 });
 
 describe('what the chat remembers', () => {
-  it('opens floating, with no position, the first time', () => {
-    expect(loadPrefs(memory())).toEqual({ open: 'floating', pos: null, size: null });
+  it('has no position or size the first time', () => {
+    expect(loadPrefs(memory())).toEqual({ pos: null, size: null });
   });
 
-  it('remembers whether it was docked and where the window was left', () => {
+  it('remembers where the window was left and how big it was made', () => {
     const store = memory();
-    savePrefs({ open: 'docked', pos: { x: 12, y: 34 }, size: { width: 400, height: 500 } }, store);
-    expect(loadPrefs(store)).toEqual({ open: 'docked', pos: { x: 12, y: 34 }, size: { width: 400, height: 500 } });
+    savePrefs({ pos: { x: 12, y: 34 }, size: { width: 400, height: 500 } }, store);
+    expect(loadPrefs(store)).toEqual({ pos: { x: 12, y: 34 }, size: { width: 400, height: 500 } });
   });
 
-  it('ignores anything it cannot trust: bad JSON, an unknown mode, a position that is not numbers', () => {
-    expect(loadPrefs(memory({ 'eios.geo.chat': '{nope' }))).toEqual({ open: 'floating', pos: null, size: null });
-    expect(loadPrefs(memory({ 'eios.geo.chat': JSON.stringify({ open: 'sideways', pos: { x: 'a', y: 1 } }) }))).toEqual({ open: 'floating', pos: null, size: null });
-    expect(loadPrefs(memory({ 'eios.geo.chat': JSON.stringify({ open: 'docked', pos: { x: NaN, y: 1 } }) }))).toEqual({ open: 'docked', pos: null, size: null });
+  it('ignores anything it cannot trust: bad JSON, a position that is not numbers, an old docked choice', () => {
+    expect(loadPrefs(memory({ 'eios.geo.chat': '{nope' }))).toEqual({ pos: null, size: null });
+    expect(loadPrefs(memory({ 'eios.geo.chat': JSON.stringify({ open: 'docked', pos: { x: 'a', y: 1 } }) }))).toEqual({ pos: null, size: null });
+    expect(loadPrefs(memory({ 'eios.geo.chat': JSON.stringify({ open: 'docked', pos: { x: NaN, y: 1 } }) }))).toEqual({ pos: null, size: null });
   });
 
   it('works without storage, and when storage throws', () => {
     const broken: DockStorage = { getItem: () => { throw new Error('blocked'); }, setItem: () => { throw new Error('blocked'); } };
-    expect(loadPrefs(broken)).toEqual({ open: 'floating', pos: null, size: null });
-    expect(() => savePrefs({ open: 'docked', pos: null, size: null }, broken)).not.toThrow();
-    expect(loadPrefs(null)).toEqual({ open: 'floating', pos: null, size: null });
+    expect(loadPrefs(broken)).toEqual({ pos: null, size: null });
+    expect(() => savePrefs({ pos: null, size: null }, broken)).not.toThrow();
+    expect(loadPrefs(null)).toEqual({ pos: null, size: null });
   });
 });
 
@@ -107,7 +107,7 @@ describe('resizing the chat window', () => {
   });
 
   it('drops a remembered size that is not numbers or is out of range', () => {
-    const bad = (size: unknown) => loadPrefs(memory({ 'eios.geo.chat': JSON.stringify({ open: 'floating', size }) })).size;
+    const bad = (size: unknown) => loadPrefs(memory({ 'eios.geo.chat': JSON.stringify({ size }) })).size;
     expect(bad({ width: 'a', height: 400 })).toBeNull();
     expect(bad({ width: 10, height: 10 })).toBeNull();
     expect(bad({ width: 99999, height: 400 })).toBeNull();
