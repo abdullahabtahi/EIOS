@@ -17,6 +17,7 @@ from google.adk.tools.base_tool import BaseTool
 from google.adk.tools.tool_context import ToolContext
 
 from eios.assistant.map_commands import targets_of
+from eios.assistant.visuals import sources_of
 from eios.llm_gateway.providers.adk_types import FunctionDeclaration
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.proposals import Proposal, stage_request
@@ -29,6 +30,7 @@ SOURCES_KEY = "temp:sources"
 PASSAGES_KEY = "temp:passages"  # passage id -> a regulation passage a tool returned this turn
 ORIGINS_KEY = "temp:data_origins"
 PROPOSALS_KEY = "temp:proposals"
+TABLES_KEY = "temp:tables"  # `<tool>.<field>` -> a list of records a tool returned, as a table or chart may show it
 MAP_TARGETS_KEY = (
     "temp:map_targets"  # `kind:ID` of every object a trusted result offered to the map
 )
@@ -146,9 +148,14 @@ def record_result(
     raw = outcome.payload()
     if outcome.result is None:
         return raw
+    expanded = expand_fact_ids(raw)
     payload = _model_view(
-        expand_fact_ids(raw)
+        expanded
     )  # what the model sees; the facts are read from the result as the port gave it
+    tables = sources_of(spec.name, raw, expanded)
+    if tables:  # the lists this result offers for a table or chart, by the name the draft writes
+        payload = {**payload, "visual_sources": sorted(tables)}
+        state[TABLES_KEY] = {**state.get(TABLES_KEY, {}), **tables}
     state[FACTS_KEY] = {**state.get(FACTS_KEY, {}), **_turn_facts(raw)}
     state[PASSAGES_KEY] = {**state.get(PASSAGES_KEY, {}), **_turn_passages(raw)}
     state[SOURCES_KEY] = [*state.get(SOURCES_KEY, []), payload["source"]]

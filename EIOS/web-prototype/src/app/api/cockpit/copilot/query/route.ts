@@ -11,6 +11,7 @@ import {
   bundleIdOf,
   normalizeViewCommands,
 } from '@/lib/server/normalize';
+import { normalizeVisuals } from '@/lib/server/normalize-visuals';
 
 // A live Gemini turn with tool calls can take well over the default proxy timeout.
 const COPILOT_TIMEOUT_MS = 90_000;
@@ -63,6 +64,7 @@ export async function POST(req: NextRequest) {
     dataOrigin: dataOriginOf(data.data_origin),
     steps: Array.isArray(data.steps) ? data.steps.filter((s: unknown): s is string => typeof s === 'string') : [],
     proposals: rawProposals.map(normalizeProposal).filter((p): p is NonNullable<typeof p> => p !== undefined),
+    visuals: normalizeVisuals(data.visuals),
     viewCommands: normalizeViewCommands(data.view_commands),
     evidenceBundleId: bundleIdOf(data.evidence_bundle_id),
     turnLatencyMs: typeof data.turn_latency_ms === 'number' ? data.turn_latency_ms : undefined,

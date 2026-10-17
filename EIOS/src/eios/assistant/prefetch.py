@@ -33,6 +33,7 @@ from eios.assistant.tools import (
     PASSAGES_KEY,
     PROPOSALS_KEY,
     SOURCES_KEY,
+    TABLES_KEY,
     record_result,
 )
 from eios.llm_gateway.providers.adk_types import platform_tool_call, platform_tool_result, text_of
@@ -133,6 +134,7 @@ class Prefetcher(BaseAgent):
                     NUMBERS_KEY,
                     PROPOSALS_KEY,
                     MAP_TARGETS_KEY,
+                    TABLES_KEY,
                 )
             }
         )
@@ -175,6 +177,7 @@ class _Defaulting(dict[str, Any]):
         NUMBERS_KEY: [],
         PROPOSALS_KEY: [],
         MAP_TARGETS_KEY: [],
+        TABLES_KEY: {},
     }
 
     def get(self, key: str, default: Any = None) -> Any:

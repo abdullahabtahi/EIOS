@@ -18,7 +18,6 @@ from google.adk.apps.app import App
 from google.adk.events.event import Event
 from google.adk.models.base_llm import BaseLlm
 from google.adk.plugins.base_plugin import BasePlugin
-from google.adk.plugins.context_filter_plugin import ContextFilterPlugin
 from google.adk.runners import Runner
 from google.adk.sessions.base_session_service import BaseSessionService
 
@@ -31,6 +30,7 @@ from eios.assistant.assembler_agent import (
 )
 from eios.assistant.config import AssistantSettings
 from eios.assistant.intent import BROAD_KEY, ON_SCREEN_KEY, is_broad, resolve_entity
+from eios.assistant.manifest import build_manifest
 from eios.assistant.origin_guard import GUARDED
 from eios.assistant.prefetch import PLATFORM_CALL, PREFETCH_KEY
 from eios.assistant.safety import BLOCKED_METADATA_KEY, INPUT_BLOCKED, SCREENED_KEY
@@ -45,9 +45,15 @@ from eios.assistant.tools import (
     PASSAGES_KEY,
     PROPOSALS_KEY,
     SOURCES_KEY,
+    TABLES_KEY,
 )
 from eios.llm_gateway.providers.adk_types import model_message, text_of, user_message
-from eios.llm_gateway.providers.registry import ModelRegistry, load_registry
+from eios.llm_gateway.providers.registry import (
+    ModelChoice,
+    ModelRegistry,
+    UnknownModelError,
+    load_registry,
+)
 from eios.observability.cloud_trace import run_telemetry
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
@@ -84,6 +90,8 @@ class TurnOutcome:
         default_factory=dict
     )  # model, tools, other (ms) and each model call
     events: tuple[Any, ...] = field(default=(), repr=False)
+    # what produced this answer (manifest.py); sealed into the evidence bundle of a decision turn
+    manifest: dict[str, Any] | None = None
 
 
 @dataclass
@@ -94,6 +102,7 @@ class _TurnLog:
     events: list[Any] = field(default_factory=list)
     timer: TurnTimer = field(default_factory=TurnTimer)
     model_key: str | None = None
+    manifest: dict[str, Any] | None = None
 
     def outcome(
         self, answer: Answer, *, status: str, error: str | None, latency_ms: float
@@ -109,6 +118,7 @@ class _TurnLog:
             model_key=self.model_key,
             timing=self.timer.breakdown(latency_ms),
             events=tuple(self.events),
+            manifest=self.manifest,
         )
 
 
@@ -151,6 +161,7 @@ def _fresh_turn_state(
         NUMBERS_KEY: [],
         PROPOSALS_KEY: [],
         MAP_TARGETS_KEY: [],
+        TABLES_KEY: {},
         "entity_id": entity_id,
         "entity_context": entity_context or {},
     }
@@ -172,12 +183,11 @@ class AssistantRuntime:
         self._sessions, self._model = TimedSessionService(session_service), model
         self._registry = registry or load_registry()
         self._llms: dict[str, BaseLlm] = {}  # one model client per model id, reused by every turn
-        # ADK's own filter bounds what the model reads; the stored thread keeps everything.
-        self._plugins = (
-            ContextFilterPlugin(num_invocations_to_keep=settings.history_turns),
-            TimingPlugin(),
-            *plugins,
-        )
+        # the manifest of a turn depends on the workstation and the model only, and hashing the tool schemas is not free
+        self._manifests: dict[tuple[str, str | None, str], dict[str, Any]] = {}
+        # What the model reads of earlier turns is bounded by `history_turns` in the instruction (history.py); the
+        # stored thread keeps everything.
+        self._plugins = (TimingPlugin(), *plugins)
 
     def _llm(self, model_id: str) -> BaseLlm:
         """The model for this id, built on first use and then shared: its connection and token outlive a turn."""
@@ -185,6 +195,31 @@ class AssistantRuntime:
         if llm is None:
             llm = self._llms[model_id] = build_llm(model_id, self._settings.hedge_after_s)
         return llm
+
+    def _manifest(self, principal: Principal, choice: ModelChoice) -> dict[str, Any]:
+        """What produces this turn's answer, built once per workstation and model."""
+        model_key = None if self._model else choice.key
+        model_id = self._model.model if self._model else choice.id
+        key = (principal.workstation.value, model_key, model_id)
+        if key not in self._manifests:
+            self._manifests[key] = build_manifest(
+                principal=principal,
+                tools=list(self._port.list_tools(principal)),
+                settings=self._settings,
+                model_key=model_key,
+                model_id=model_id,
+            )
+        return self._manifests[key]
+
+    def current_manifest(
+        self, principal: Principal, model_key: str | None
+    ) -> dict[str, Any] | None:
+        """What would produce an answer now for this workstation and the model key a bundle recorded, or None when
+        that model is no longer offered. A replay compares it with the manifest sealed in the bundle."""
+        try:
+            return self._manifest(principal, self._registry.resolve(model_key))
+        except UnknownModelError:
+            return None
 
     @property
     def registry(self) -> ModelRegistry:
@@ -218,7 +253,11 @@ class AssistantRuntime:
             raise ValueError("entity id is not a valid identifier")
         choice = self._registry.resolve(model_key)  # raises UnknownModelError before any work
         started = time.perf_counter()
-        log = _TurnLog(model_key=None if self._model else choice.key, timer=start_turn_timer())
+        log = _TurnLog(
+            model_key=None if self._model else choice.key,
+            timer=start_turn_timer(),
+            manifest=self._manifest(principal, choice),
+        )
         try:
             outcome = await asyncio.wait_for(
                 self._consume(principal, question, entity_id, entity_context, log, choice.id),
@@ -290,6 +329,7 @@ class AssistantRuntime:
             prefetch=self._settings.prefetch,
             hedge_after_s=self._settings.hedge_after_s,
             plain_figures=self._settings.plain_figures,
+            history_turns=self._settings.history_turns,
         )
         app = App(name=APP_NAME, root_agent=agent, plugins=list(self._plugins))
         runner = Runner(app=app, session_service=self._sessions, auto_create_session=True)

@@ -168,6 +168,7 @@ def response_body(query: str, outcome: TurnOutcome) -> dict[str, Any]:
         "steps": list(outcome.steps),
         "proposals": [_proposal_view(p) for p in answer.proposed_actions],
         # map moves the assembler accepted: each names an object a tool of this turn returned (map_commands.py)
+        "visuals": [v.model_dump(mode="json") for v in answer.visuals],
         "view_commands": [dict(c) for c in answer.view_commands],
         "data_origin": answer.data_origin.value,
         "verification": {

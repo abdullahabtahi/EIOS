@@ -62,6 +62,7 @@ def seal_turn(principal: Principal, question: str, outcome: TurnOutcome) -> str 
                 for t in outcome.tool_calls
             ],
             model_key=outcome.model_key,
+            manifest=_json(outcome.manifest) if outcome.manifest is not None else None,
         )
     except BundleTooLarge as exc:
         _LOG.warning("decision turn not sealed: %s", exc)
@@ -127,11 +128,28 @@ def read_bundle(bundle_id: str) -> dict[str, Any]:
         "workstation": bundle["workstation"],
         "question": bundle["question"],
         "answer": bundle["answer"].get("text"),
+        "manifest": bundle.get(
+            "manifest"
+        ),  # None on a v1 bundle, sealed before manifests were kept
         "calls": [
             {"name": c["name"], "arguments": c["arguments"], "error": c.get("error")}
             for c in bundle["calls"]
         ],
     }
+
+
+def _current_manifest(bundle: dict[str, Any], principal: Principal) -> dict[str, Any] | None:
+    """The setup that would answer now, for the replay to compare with the one sealed. None when the assistant cannot
+    be built here (the report then says so) or the bundle's model is gone."""
+    from eios.cockpit.assistant_gateway import (
+        get_runtime,
+    )  # the gateway imports this module's neighbours
+
+    try:
+        return get_runtime().current_manifest(principal, bundle.get("model_key"))
+    except Exception:
+        _LOG.warning("could not build the current manifest for a replay", exc_info=True)
+        return None
 
 
 @router.post(REPLAY_PATH, dependencies=[Depends(limit_verify)])
@@ -143,7 +161,9 @@ def replay_bundle(
         principal = principal_for(operator.uid if operator else None, bundle["workstation"])
     except PortError as exc:
         raise HTTPException(status_code=422, detail=exc.error.message) from exc
-    report = replay(bundle, _port(), principal)
+    report = replay(
+        bundle, _port(), principal, current_manifest=_current_manifest(bundle, principal)
+    )
     if not report["equal"]:
         _LOG.warning(
             "evidence replay of %s differs: %s figures", bundle_id, report.get("differing")

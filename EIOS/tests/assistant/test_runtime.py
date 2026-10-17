@@ -145,7 +145,8 @@ def test_the_second_turn_continues_the_same_thread() -> None:
     _turn(runtime, "What is the discrepancy?")
     _turn(runtime, "And again?")
     first_turn_text = str(llm.seen[0].contents)
-    assert "What is the discrepancy?" in str(llm.seen[-1].contents)
+    # earlier turns reach the model through the instruction, as what the operator read (history.py)
+    assert "What is the discrepancy?" in str(llm.seen[-1].config.system_instruction)
     assert "What is the discrepancy?" in first_turn_text
 
 
@@ -287,3 +288,16 @@ def test_every_turn_runs_with_message_content_kept_off_spans_and_events(
         assert config.max_llm_calls == SETTINGS.max_llm_calls
         assert config.telemetry.capture_message_content is ContentCapturingMode.NO_CONTENT
         assert not config.telemetry.should_add_content_to_legacy_spans
+
+
+def test_the_hedge_does_not_carry_its_own_retries() -> None:
+    from eios.assistant.agents import HEDGE_RETRY, MODEL_RETRY, build_llm
+    from eios.assistant.timing import TimedLlm
+    from eios.llm_gateway.providers.hedged import HedgedLlm
+
+    llm = build_llm("a-model", hedge_after_s=3.0)
+    assert isinstance(llm, TimedLlm) and isinstance(llm.inner, HedgedLlm)
+    assert llm.inner.inner.retry_options.attempts == MODEL_RETRY.attempts  # type: ignore[attr-defined]
+    assert llm.inner.hedge_inner is not None
+    assert llm.inner.hedge_inner.retry_options.attempts == HEDGE_RETRY.attempts == 1  # type: ignore[attr-defined]
+    assert not isinstance(build_llm("a-model", hedge_after_s=0.0).inner, HedgedLlm)  # type: ignore[attr-defined]

@@ -8,7 +8,9 @@ capabilities, so there is no routing to get wrong.
 
 from __future__ import annotations
 
+import hashlib
 from collections.abc import Callable
+from types import SimpleNamespace
 
 from google.adk.agents.llm_agent import Agent
 from google.adk.agents.loop_agent import LoopAgent
@@ -17,7 +19,9 @@ from google.adk.models.base_llm import BaseLlm
 
 from eios.assistant.assembler_agent import DRAFT_KEY, FEEDBACK_KEY, AnswerAssembler
 from eios.assistant.assembly import MAX_ATTEMPTS
+from eios.assistant.config import DEFAULT_HISTORY_TURNS
 from eios.assistant.geo_context import GEO_RULES, describe_map
+from eios.assistant.history import render_history
 from eios.assistant.intent import BROAD_KEY, ON_SCREEN_KEY
 from eios.assistant.origin_guard import refuse_by_origin
 from eios.assistant.prefetch import Prefetcher
@@ -39,9 +43,16 @@ DRAFT_MAX_OUTPUT_TOKENS = 8192
 # ADK retries a model call twice by default; a quota error (429) on the shared project needs longer backoff.
 # [ASSUMPTION] attempts and delays. A 10 s per-call limit was tried and removed: the final drafting call of a list or
 # proposal answer takes 7 to 13 s [MEASURED, diagnostic run 2], so the limit turned slow answers into 504s.
+# Waits before attempts 2 to 5 are up to 3, 5, 9 and 17 s (initial delay x base^n plus jitter, capped), so with the
+# 30 s turn deadline the fifth attempt can never start: the deadline cancels a retry that is still waiting. The policy is
+# kept as it was chosen for the quota case; what bounds the requests is the deadline.
 MODEL_RETRY = HttpRetryOptions(
     attempts=5, initial_delay=2.0, max_delay=30.0, exp_base=2.0, jitter=1.0
 )
+# The hedge is itself the second chance for a slow call, so it does not retry (llm_gateway/providers/hedged.py): a
+# throttled call then costs at most attempts + 1 requests, not attempts x 2. ADK counts both as one model call, so
+# `max_llm_calls` does not bound them; the turn deadline does.
+HEDGE_RETRY = HttpRetryOptions(attempts=1)
 
 TITLES: dict[Workstation, str] = {
     Workstation.AML_INVESTIGATOR: "AML investigator",
@@ -142,18 +153,33 @@ show an internal id such as a playbook id; name the thing by its title.
 Do not pad: leave out a heading the data does not support, and never fill it with a guess."""
 
 
+# `{{...}}` here is the placeholder itself, not a format field: this text is added after `_RULES` is formatted.
+_VISUALS = """\
+Tables and charts: a tool result that returned a list of records names it in `visual_sources`. To show such a list,
+write {{table:SOURCE}} or {{chart:SOURCE}} on its own line, with SOURCE copied from the `visual_sources` of a result you
+received in this turn. The platform draws it from the tool's data: never type rows or plotted values yourself, and use
+the sentences for what the list means. Use a table for records and a chart for a trend over dates or a split across
+categories. Show at most two."""
+
+
 def instruction_for(
-    workstation: Workstation, plain_figures: bool = False
+    workstation: Workstation,
+    plain_figures: bool = False,
+    history_turns: int = DEFAULT_HISTORY_TURNS,
 ) -> Callable[[ReadonlyContext], str]:
     figure, listing = (
         (_PLAIN_FIGURES, _PLAIN_LIST)
         if plain_figures
         else (_PLACEHOLDER_FIGURES, _PLACEHOLDER_LIST)
     )
-    base = _RULES.format(
-        title=TITLES[workstation],
-        figure_rule=figure.format(),
-        list_rule=listing.format(),
+    base = (
+        _RULES.format(
+            title=TITLES[workstation],
+            figure_rule=figure.format(),
+            list_rule=listing.format(),
+        )
+        + "\n"
+        + _VISUALS
     )
 
     geo = workstation is Workstation.GEOSPATIAL
@@ -168,6 +194,9 @@ def instruction_for(
             parts.append(describe_map(state.get("entity_context"), named=entity))
         else:
             parts.append(f"Entity on screen: {entity}." if entity else "No entity is on screen.")
+        session = getattr(ctx, "session", None)
+        if earlier := render_history(getattr(session, "events", ()), history_turns):
+            parts.append(earlier)
         if elsewhere := state.get(ON_SCREEN_KEY):
             parts.append(
                 f"The question names {entity}, not {elsewhere} which is on screen: answer about {entity}, "
@@ -191,10 +220,34 @@ def instruction_for(
     return provide
 
 
+def instruction_digest(
+    workstation: Workstation,
+    plain_figures: bool = False,
+    history_turns: int = DEFAULT_HISTORY_TURNS,
+) -> str:
+    """SHA-256 of the instruction with every conditional part switched on, so a change to any wording changes it.
+
+    The per-turn parts (the entity, the map, earlier turns) are stood in for by fixed text; what is hashed is the
+    wording that ships with the code."""
+    probe = SimpleNamespace(
+        state={
+            "entity_id": "ENTITY",
+            "entity_context": {},
+            ON_SCREEN_KEY: "ELSEWHERE",
+            BROAD_KEY: True,
+            FEEDBACK_KEY: "FEEDBACK",
+        },
+        session=None,
+    )
+    text = instruction_for(workstation, plain_figures, history_turns)(probe)  # type: ignore[arg-type]
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
 def build_llm(model_id: str, hedge_after_s: float = 0.0) -> BaseLlm:
     """The drafting model: ADK's Gemini with its retry policy, hedged, timed. Build it once and reuse it: a new one
     opens a new connection and fetches a new token, which cost about 0.8 s per turn [MEASURED, from a laptop]."""
-    return timed(hedged(retrying_gemini(model_id, MODEL_RETRY), hedge_after_s))
+    second = retrying_gemini(model_id, HEDGE_RETRY) if hedge_after_s > 0 else None
+    return timed(hedged(retrying_gemini(model_id, MODEL_RETRY), hedge_after_s, hedge_inner=second))
 
 
 def _timed_model(model: str | BaseLlm, hedge_after_s: float) -> BaseLlm:
@@ -212,12 +265,16 @@ def build_agent(
     prefetch: bool = False,
     hedge_after_s: float = 0.0,
     plain_figures: bool = False,
+    history_turns: int = DEFAULT_HISTORY_TURNS,
 ) -> LoopAgent:
     workstation = principal.workstation
     drafter = Agent(
         name="drafter",
         model=_timed_model(model, hedge_after_s),
-        instruction=instruction_for(workstation, plain_figures),
+        instruction=instruction_for(workstation, plain_figures, history_turns),
+        # Only this turn's question and tool results are replayed as messages; earlier turns arrive through the
+        # instruction as what the operator read (history.py), never as drafts the assembler rejected.
+        include_contents="none",
         tools=list(build_toolset(port, principal)),
         output_key=DRAFT_KEY,
         # On the geo workstation a question about people by origin is refused before the model runs (origin_guard.py).

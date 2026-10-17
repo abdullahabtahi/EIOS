@@ -37,7 +37,9 @@ from eios.assistant.tools import (
     PASSAGES_KEY,
     PROPOSALS_KEY,
     SOURCES_KEY,
+    TABLES_KEY,
 )
+from eios.assistant.visuals import extract as extract_visuals
 from eios.llm_gateway.providers.adk_types import Content, Part
 from eios.ontology.omcp.port.contracts import DataOrigin, weakest
 
@@ -112,17 +114,21 @@ class AnswerAssembler(BaseAgent):
         attempt = int(state.get(ATTEMPT_KEY, 0)) + 1
         origin = _origin(list(state.get(ORIGINS_KEY, [])))
         moves = extract_map_commands(str(state.get(DRAFT_KEY, "")), state.get(MAP_TARGETS_KEY, []))
+        shown = extract_visuals(moves.text, state.get(TABLES_KEY, {}))
         result = assemble_draft(
-            moves.text,
+            shown.text,
             facts=_turn_facts(state.get(FACTS_KEY, {})),
             identifiers=frozenset(state.get(IDENTIFIERS_KEY, [])),
             passages=_turn_passages(state.get(PASSAGES_KEY, {})),
             numbers=frozenset(state.get(NUMBERS_KEY, [])),
             trace_typed=self.trace_typed,
         )
-        if moves.problems:  # a map move nothing returned is rejected like a figure nothing returned
+        extra = (*moves.problems, *shown.problems)
+        if (
+            extra
+        ):  # a map move or a table nothing returned is rejected like a figure nothing returned
             earlier = result.problems if isinstance(result, Rejected) else ()
-            result = Rejected((*earlier, *moves.problems))
+            result = Rejected((*earlier, *extra))
         if isinstance(result, Assembled):
             answer = Answer(
                 text=result.text,
@@ -130,6 +136,7 @@ class AnswerAssembler(BaseAgent):
                 sources=result.sources,
                 citations=tuple(dict.fromkeys(state.get(SOURCES_KEY, []))),
                 proposed_actions=tuple(state.get(PROPOSALS_KEY, [])),
+                visuals=shown.visuals,
                 view_commands=moves.commands,
                 data_origin=origin,
                 attempts=attempt,

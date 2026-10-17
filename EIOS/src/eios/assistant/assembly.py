@@ -197,6 +197,26 @@ class _Typed:
     symbol: str  # "", "$", "%" or "x"
     # The few words written right after it ("impossible jumps"), to tell equal values apart.
     after: str = ""
+    negative: bool = False  # written with a minus directly on it ("-$32,500", "-4.1%")
+
+
+_SIGNS = "-\u2212"  # a hyphen-minus or a true minus sign
+
+
+def _signed(prose: str, match: re.Match[str]) -> bool:
+    """Is the number written with a minus on it? Only a sign touching the figure counts, and not a dash between
+    numbers or words ("3-5", "step-2"), which is a range or a hyphen."""
+    for group in ("usd", "int"):
+        start = match.start(group)
+        if start < 0:
+            continue
+        if (
+            start > 0
+            and prose[start - 1] in _SIGNS
+            and not (start > 1 and prose[start - 2].isalnum())
+        ):
+            return True
+    return False
 
 
 _WRITTEN = re.compile(
@@ -215,7 +235,11 @@ def _written(prose: str, at: int, report: str) -> _Typed | None:
     suffix = (match.group("suffix") or "").lower()
     symbol = (
         "$"
-        if match.group("usd") or suffix in {"usd", "dollar", "dollars"}
+        if match.group("usd")
+        or prose[: match.start("int")]
+        .rstrip(_SIGNS)
+        .endswith("$")  # "$-32,500": the sign sits after the symbol
+        or suffix in {"usd", "dollar", "dollars"}
         else "%"
         if suffix in {"%", "pct", "percent"}
         else "x"
@@ -227,7 +251,15 @@ def _written(prose: str, at: int, report: str) -> _Typed | None:
     after = " ".join(
         _WORD.findall(prose[match.end() : match.end() + _AFTER_CHARS].lower())[:_AFTER_WORDS]
     )
-    return _Typed(report, float(f"{whole}.{dec or '0'}"), len(dec), scale, symbol, after)
+    return _Typed(
+        report,
+        float(f"{whole}.{dec or '0'}"),
+        len(dec),
+        scale,
+        symbol,
+        after,
+        _signed(prose, match),
+    )
 
 
 _WORD = re.compile(r"[a-z]+")
@@ -290,9 +322,19 @@ def _near(shown: float, decimals: int, scale: float, candidate: float) -> bool:
     return abs(shown * scale - candidate) <= tolerance * (1 + 1e-9)
 
 
+def _sign_agrees(typed: _Typed, fact: TurnFact) -> bool:
+    """A loss written as a gain is a different claim: the sign written must be the sign returned."""
+    return typed.negative == (fact.value < 0)
+
+
 def _fits(typed: _Typed, fact: TurnFact) -> bool:
     """A typed figure matches a returned fact when the value agrees at the precision written and the unit agrees."""
-    unit, value = fact.unit, fact.value
+    unit, value = (
+        fact.unit,
+        abs(fact.value),
+    )  # the sign is checked on its own, and the written value has none
+    if not _sign_agrees(typed, fact):
+        return False
     if typed.symbol == "$":
         return unit == "USD" and _near(typed.value, typed.decimals, typed.scale, value)
     if typed.symbol == "%":
