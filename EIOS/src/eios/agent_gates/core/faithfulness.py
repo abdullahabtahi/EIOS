@@ -36,6 +36,7 @@ from typing import Any
 from .exempt import find_exempt
 from .facts import Fact, flatten_facts
 from .figures import Figure, extract_figures
+from .labels import label_spans
 from .quotes import verified_quotes
 from .text import DERIVED_WORDS
 
@@ -259,7 +260,8 @@ def judge(
     answer = str(record.get("answer", ""))
     exempt, ungrounded = find_exempt(answer, _grounded_identifiers(record))
     quotes = verified_quotes(answer, record.get("tool_calls", []))
-    masked = [(s.start, s.end) for s in exempt + ungrounded] + quotes
+    labels = label_spans(answer, record.get("tool_calls", []))
+    masked = [(s.start, s.end) for s in exempt + ungrounded] + quotes + labels
     facts = flatten_facts(record.get("tool_calls", []), aliases)
     figures = extract_figures(answer, masked)
     bindings = record.get("bindings")
@@ -274,6 +276,9 @@ def judge(
     verdicts += [
         FigureVerdict(answer[a:b].strip(), a, b, "exempt", "exempt:verified_quote")
         for a, b in quotes
+    ]
+    verdicts += [
+        FigureVerdict(answer[a:b].strip(), a, b, "exempt", "exempt:label") for a, b in labels
     ]
     verdicts += [
         FigureVerdict(s.text, s.start, s.end, "unsupported", "ungrounded_identifier")

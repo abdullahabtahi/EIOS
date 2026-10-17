@@ -168,7 +168,10 @@ ROUTES: tuple[Route, ...] = (
     _r(r"\brank\b|\btop\b.*\b(?:corridors|accounts|exits)\b", ("list_geo_leads", _lead_kind)),
     _r(r"corridor", ("get_corridor", _corridor), unless=r"\brank\b|\btop\b"),
     _r(r"exposure|jurisdiction", ("get_jurisdiction", _country), unless=r"plenary|delist"),
-    _r(r"where should i (?:look|start)|geography of|whole book", ("get_geo_overview", _none)),
+    _r(
+        r"where should i (?:look|start)|geography of|whole book|overview of what each lens",
+        ("get_geo_overview", _none),
+    ),
     # A SAR's geography paragraph reads the account and the licensing jurisdiction's duty to report (geo rule 17).
     _r(r"\bSAR\b", ("get_geo_account", _acct), ("search_regulations", _reporting_duty)),
     _r(
@@ -220,7 +223,11 @@ ROUTES: tuple[Route, ...] = (
         r"\bring\b.*(?:causal|correlation)|(?:causal|correlation).*\bring\b",
         ("get_aml_dossier", _acct),
     ),
-    _r(r"causing|causal|\bcause\b", ("get_causal_evidence", _none), unless=r"\bring\b"),
+    _r(
+        r"causing|causal|\bcause\b|why did .* (?:move|change)|what drives",
+        ("get_causal_evidence", _none),
+        unless=r"\bring\b",
+    ),
     _r(r"net revenue", ("get_metric", _revenue)),
     _r(
         r"regulat|guideline|circular|\bfiau\b|labuan|red.?flag|filing threshold",
@@ -231,7 +238,7 @@ ROUTES: tuple[Route, ...] = (
     _r(r"calibrat|trust .*probabilit", ("get_calibration_status", _none)),
     _r(r"staged action|intent", ("get_intent_status", _none)),
     _r(r"ledger", ("get_ledger_timeline", _none), unless=r"verify|hash chain"),
-    _r(r"data quality|pipeline", ("get_dq_board", _none)),
+    _r(r"data[ -]?quality|pipeline|data product|incident", ("get_dq_board", _none)),
     _r(r"reliab", ("get_reliability", _none)),
     _r(r"drill|runbook|restore|backup", ("get_drill_status", _none)),
     _r(r"red.?line|governance gate", ("get_red_lines", _none)),

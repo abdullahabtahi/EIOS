@@ -30,6 +30,7 @@ from eios.agent_gates.cases import (
     load_attack_cases,
     load_golden_cases,
 )
+from eios.agent_gates.core.conduct import judge_conduct
 from eios.agent_gates.core.consistency import compare_to_payload
 from eios.agent_gates.core.faithfulness import judge
 from eios.agent_gates.core.safety import judge_attack, pass_all
@@ -163,6 +164,12 @@ def _diff_text(diffs: Sequence[dict[str, Any]]) -> str:
     )
 
 
+def _scripted(port: AgentPort) -> bool:
+    """A runtime whose answers are written by a script (the reference routes or the offline model), not a model or a
+    recording of one. A recorded run is graded on every turn it holds."""
+    return bool(getattr(port, "offline", False)) or port.runtime_name == "toolport"
+
+
 def _golden_rows(
     port: AgentPort, case: GoldenCase, turn: GoldenTurn, repeats: int, records: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -171,14 +178,19 @@ def _golden_rows(
         case.workstation.value,
         _runtime_key(port.runtime_name),
     )
+    if turn.live_only and _scripted(port):
+        return []  # a scripted runtime cannot answer it; a live run grades it
     got: list[TurnRecord] = []
+    multi = (
+        len(case.turns) > 1
+    )  # the turns of one case are one conversation, so a follow-up sees what came before
     for r in range(repeats):
         request = TurnRequest(
             question=turn.user_query,
             role=case.workstation,
             operator_id=OPERATOR,
-            session_id=f"{cid}.{r}",
-            turn_index=1,
+            session_id=f"{case.scenario_id}.{r}" if multi else f"{cid}.{r}",
+            turn_index=turn.turn_index if multi else 1,
             case_id=cid,
             repeat=r,
             entity_context=None,
@@ -187,11 +199,11 @@ def _golden_rows(
         records.append(got[-1].to_json_dict())
     done = [g for g in got if g.outcome is Outcome.COMPLETED]
     if not done and _crashed(got[0]):
-        return [_failed_row(cid, ws, s, got[0]) for s in ("faithfulness", "trajectory")]
+        return [_failed_row(cid, ws, s, got[0]) for s in ("faithfulness", "trajectory", "conduct")]
     if not done:
         return [
             _inconclusive(cid, ws, s, got[0].inconclusive_reason or "no turn completed")
-            for s in ("faithfulness", "trajectory")
+            for s in ("faithfulness", "trajectory", "conduct")
         ]
     aliases = turn.aliases or None
     judged = [judge(g.to_json_dict(), aliases) for g in done]
@@ -219,6 +231,16 @@ def _golden_rows(
         for t in trajectories
     ]
     rows.append(_row(cid, ws, "trajectory", verdicts, capability_missing=missing, **_meta(done[0])))
+    conduct = [judge_conduct(g.to_json_dict(), turn_dict) for g in done]
+    rows.append(
+        _row(
+            cid,
+            ws,
+            "conduct",
+            [(c["passed"], f"{cid}: " + "; ".join(c["reasons"])) for c in conduct],
+            **_meta(done[0]),
+        )
+    )
     if turn.screen_payload:
         payload = load_payload(turn.screen_payload)
         diffs = [compare_to_payload(g.to_json_dict(), payload, aliases) for g in done]
@@ -413,6 +435,19 @@ def _turn_suffix(name: str) -> str:
     return f".{tail}" if head and tail.startswith("t") and tail[1:].isdigit() else ""
 
 
+def _provenance(model: str | None) -> dict[str, Any]:
+    """What produced the run, so two reports can be compared knowing what differed: the model key and a SHA-256 of
+    each workstation's instruction wording (empty where the code under test has no such digest)."""
+    try:
+        from eios.assistant.agents import instruction_digest
+        from eios.ontology.omcp.port.principal import Workstation
+
+        digests = {w.value: instruction_digest(w, True) for w in Workstation}
+    except ImportError:
+        digests = {}
+    return {"model": model or "registry default", "instruction_sha256": digests}
+
+
 def main(argv: Sequence[str]) -> int:
     ap = argparse.ArgumentParser(prog="python -m evals.agent.baseline")
     ap.add_argument(
@@ -462,6 +497,7 @@ def main(argv: Sequence[str]) -> int:
         _port(args.runtime, args.live, args.records, args.model), golden, attacks, args.repeats
     )
     report["meta"]["thresholds_version"] = thresholds.get("version")
+    report["meta"].update(_provenance(args.model))
     report["meta"]["splits"] = [s.value for s in splits]
     markdown = render_markdown(report)
     if args.compare:

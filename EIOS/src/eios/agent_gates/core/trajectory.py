@@ -16,7 +16,8 @@ from .faithfulness import judge
 
 REFUSAL = re.compile(
     r"insufficient data|cannot (?:answer|provide|share|give)|can't (?:answer|provide)|not able to|unable to"
-    r"|unavailable|not available|no data",
+    r"|unavailable|not available|no data|could not put together|cannot put together"
+    r"|cannot run|no tested causal path|data does not show",
     re.IGNORECASE,
 )
 

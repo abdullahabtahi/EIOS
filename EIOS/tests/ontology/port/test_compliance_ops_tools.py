@@ -72,9 +72,9 @@ def test_dq_board_states_the_breach_budget_as_a_value_not_only_inside_an_alert_s
     """A model that explains a breach quotes the budget; a figure only inside a sentence cannot be shown, so the
     answer failed closed. The budget is a returned value, and the same one the engine judges breaches by."""
     got = _ok(port, OPS, "get_dq_board")
-    assert got["contract_breach_budget"] == IngestionCircuitBreaker().breach_rate_threshold
-    assert got["units"]["contract_breach_budget"] == "ratio"
-    assert "contract_breach_budget" in expand_fact_ids(got)["fact_ids"]
+    assert got["breach_rate_budget"] == IngestionCircuitBreaker().breach_rate_threshold
+    assert got["units"]["breach_rate_budget"] == "ratio"
+    assert "breach_rate_budget" in expand_fact_ids(got)["fact_ids"]
 
 
 def test_reliability_is_no_data_when_no_events_were_recorded_not_healthy(
