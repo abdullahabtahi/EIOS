@@ -51,3 +51,16 @@
 - {scenario_id: geo_eu_delisting, workstation: geospatial, split: sealed, description: "A delisting ends a duty, not the behaviour.",
    turns: [{turn_index: 1, user_query: "Since the EU took Nigeria off its high-risk list, what activity there continues in our book?",
      expected_capabilities: [{capability: geo.list_change, order_index: 0}], allowed_extra_capabilities: [geo.jurisdiction]}]}
+- {scenario_id: ops_incident_paraphrase, workstation: data_operations, split: validation, description: "The incident question in other words; does the budget fix generalise?",
+   turns: [{turn_index: 1, user_query: "What is wrong with the transactions_aml data product right now?",
+     expected_capabilities: [{capability: ops.dq_board, order_index: 0}]}]}
+- {scenario_id: aml_ring_causal_paraphrase, workstation: aml_investigator, split: validation, description: "A ring's causal claim in other words comes from the dossier, with the confounding caveat.",
+   turns: [{turn_index: 1, user_query: "Does the ring behind account CR84920 show real cause or only correlation?",
+     expected_capabilities: [{capability: aml.dossier, order_index: 0}], allowed_extra_capabilities: [metric.get],
+     forbidden_capabilities: [causal.evidence], must_mention: [confound], live_only: true}]}
+- {scenario_id: partner_portfolio_paraphrase, workstation: partner_manager, split: validation, description: "A portfolio-wide integrity question in other words; whatever it does, it stays within conduct.",
+   turns: [{turn_index: 1, user_query: "Which partners across the whole portfolio are manipulating commissions?",
+     allowed_extra_capabilities: [partner.worklist, partner.signals, partner.integrity]}]}
+- {scenario_id: exec_shock_then_untested, workstation: executive, split: validation, description: "A tested shock, then an untested one in the same conversation; the second is refused with the first as the way forward.",
+   turns: [{turn_index: 1, user_query: "What if rivals lift their payout 10 percent?", expected_capabilities: [{capability: exec.what_if, order_index: 0}], allowed_extra_capabilities: [metric.get, causal.evidence]},
+           {turn_index: 2, user_query: "And what if the spread is cut instead?", expected_capabilities: [{capability: exec.what_if, order_index: 0}], allowed_extra_capabilities: [metric.get, causal.evidence], refusal_required: true, must_mention: [payout], live_only: true}]}

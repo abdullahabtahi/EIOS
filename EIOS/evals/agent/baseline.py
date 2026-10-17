@@ -30,6 +30,7 @@ from eios.agent_gates.cases import (
     load_attack_cases,
     load_golden_cases,
 )
+from eios.agent_gates.core.conduct import judge_conduct
 from eios.agent_gates.core.consistency import compare_to_payload
 from eios.agent_gates.core.faithfulness import judge
 from eios.agent_gates.core.safety import judge_attack, pass_all
@@ -171,14 +172,19 @@ def _golden_rows(
         case.workstation.value,
         _runtime_key(port.runtime_name),
     )
+    if turn.live_only and getattr(port, "offline", True):
+        return []  # a scripted runtime cannot answer it; a live run grades it
     got: list[TurnRecord] = []
+    multi = (
+        len(case.turns) > 1
+    )  # the turns of one case are one conversation, so a follow-up sees what came before
     for r in range(repeats):
         request = TurnRequest(
             question=turn.user_query,
             role=case.workstation,
             operator_id=OPERATOR,
-            session_id=f"{cid}.{r}",
-            turn_index=1,
+            session_id=f"{case.scenario_id}.{r}" if multi else f"{cid}.{r}",
+            turn_index=turn.turn_index if multi else 1,
             case_id=cid,
             repeat=r,
             entity_context=None,
@@ -187,11 +193,11 @@ def _golden_rows(
         records.append(got[-1].to_json_dict())
     done = [g for g in got if g.outcome is Outcome.COMPLETED]
     if not done and _crashed(got[0]):
-        return [_failed_row(cid, ws, s, got[0]) for s in ("faithfulness", "trajectory")]
+        return [_failed_row(cid, ws, s, got[0]) for s in ("faithfulness", "trajectory", "conduct")]
     if not done:
         return [
             _inconclusive(cid, ws, s, got[0].inconclusive_reason or "no turn completed")
-            for s in ("faithfulness", "trajectory")
+            for s in ("faithfulness", "trajectory", "conduct")
         ]
     aliases = turn.aliases or None
     judged = [judge(g.to_json_dict(), aliases) for g in done]
@@ -219,6 +225,16 @@ def _golden_rows(
         for t in trajectories
     ]
     rows.append(_row(cid, ws, "trajectory", verdicts, capability_missing=missing, **_meta(done[0])))
+    conduct = [judge_conduct(g.to_json_dict(), turn_dict) for g in done]
+    rows.append(
+        _row(
+            cid,
+            ws,
+            "conduct",
+            [(c["passed"], f"{cid}: " + "; ".join(c["reasons"])) for c in conduct],
+            **_meta(done[0]),
+        )
+    )
     if turn.screen_payload:
         payload = load_payload(turn.screen_payload)
         diffs = [compare_to_payload(g.to_json_dict(), payload, aliases) for g in done]

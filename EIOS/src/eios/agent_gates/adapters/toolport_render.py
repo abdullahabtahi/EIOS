@@ -37,7 +37,10 @@ _SKIP = frozenset(
     }
 )
 _BARE_UNITS = frozenset({"ratio", "score", "sequence", "model weight", "points"})
-REFUSAL = "I cannot answer that from the governed data available to this workstation."
+REFUSAL = (
+    "I cannot answer that from the governed data available to this workstation. "
+    "I can answer questions about this workstation's own data instead."
+)
 
 
 def _label(path: str) -> str:

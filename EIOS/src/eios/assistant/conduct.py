@@ -12,21 +12,12 @@ from __future__ import annotations
 import re
 from functools import lru_cache
 
+from eios.agent_gates.core.conduct import ABOUT_RULES as _ABOUT_RULES
+from eios.agent_gates.core.conduct import NARRATION as _NARRATION
+
 # Consecutive words copied from the instruction before it counts as an echo. Short shared phrases ("answer in plain
 # language") are ordinary; a run this long is the instruction being repeated.
 ECHO_WORDS = 12
-
-# A line that opens by narrating a step instead of answering. "Wait," needs its comma or colon so "Wait times rose" passes.
-_NARRATION = re.compile(
-    r"(?im)^\W*(?:wait[,.:!]|hmm\b|okay[,.]?\s+(?:so|let)\b|let me\b|let's\b|i need to\b|i should\b|"
-    r"i will (?:now|first)\b|the user (?:is asking|wants|asks)\b|first,?\s+i(?:'ll| will)\b)"
-)
-
-# Talk about the rules themselves. "Rule 7 says" is the model reading its instructions aloud.
-_ABOUT_RULES = re.compile(
-    r"(?i)\b(?:(?:my|your|these|the)\s+(?:instructions|rules|system\s+prompt))\b|"
-    r"\brule\s+\d+\s+(?:says|states|tells|requires)\b"
-)
 
 # Wording the instruction tells the model to say, so saying it is not a leak. Each is cut out of the instruction before
 # the echo runs are built; the rest of a rule read out loud is still an echo.
