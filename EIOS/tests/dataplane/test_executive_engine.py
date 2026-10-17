@@ -121,6 +121,14 @@ def test_a_shock_with_no_tested_path_is_refused(executive_service: EngineExecuti
         executive_service.simulate_what_if_shock("competitor_spread_cut", 10.0)
 
 
+def test_the_refusal_names_the_shock_that_can_be_run(
+    executive_service: EngineExecutiveService,
+) -> None:
+    """A refusal that stops there leaves the operator with nothing; it says which shock has a tested path."""
+    with pytest.raises(UnsupportedShockError, match=SHOCK):
+        executive_service.simulate_what_if_shock("competitor_spread_cut", 10.0)
+
+
 # --- the tool port on the engine plane -----------------------------------------------------------------------
 
 
