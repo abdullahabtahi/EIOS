@@ -24,6 +24,7 @@ from dataclasses import dataclass, replace
 from datetime import datetime
 
 from eios.assistant.answer import Answer, FigureRef, SourceRef
+from eios.assistant.conduct import conduct_problems
 from eios.assistant.spelled_numbers import spelled_numbers
 from eios.knowledge.highlight import body_sentences
 from eios.ontology.auditor.normalizer import MONTH_PATTERN, NumericTokenNormalizer
@@ -472,11 +473,14 @@ def assemble_draft(
     passages: Mapping[str, TurnPassage] | None = None,
     numbers: frozenset[float] = frozenset(),
     trace_typed: bool = False,
+    instruction: str = "",
 ) -> Assembled | Rejected:
     if not draft.strip():
         return Rejected(("the draft is empty",))
     if _SENTINEL in draft:
         return Rejected(("the draft contains a control character",))
+    if conduct := conduct_problems(draft, instruction):
+        return Rejected(conduct)
     state = _Fill(facts, passages or {})
     text = _PLACEHOLDER.sub(state.fill, _QUOTE.sub(state.mark, draft))
     problems = state.problems

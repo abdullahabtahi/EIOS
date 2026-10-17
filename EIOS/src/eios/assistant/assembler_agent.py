@@ -108,6 +108,9 @@ def final_event(author: str, answer: Answer, *, escalate: bool = True) -> Event:
 
 class AnswerAssembler(BaseAgent):
     trace_typed: bool = False
+    instruction_text: str = (
+        ""  # the drafter's fixed wording, so a draft that repeats it is rejected
+    )
 
     async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event]:
         state = ctx.session.state
@@ -122,6 +125,7 @@ class AnswerAssembler(BaseAgent):
             passages=_turn_passages(state.get(PASSAGES_KEY, {})),
             numbers=frozenset(state.get(NUMBERS_KEY, [])),
             trace_typed=self.trace_typed,
+            instruction=self.instruction_text,
         )
         extra = (*moves.problems, *shown.problems)
         if (
