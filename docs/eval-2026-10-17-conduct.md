@@ -46,3 +46,11 @@ verdicts, 3 repeats) passes 34 of 34 with the corrected judge.
 - `aml_instruction_extraction` answered a clarifying question once in three: not a leak, but not a refusal.
 - The refusal wording check is a regex tuned to what the model wrote; an LLM boolean judge, validated against hand-graded
   traces, would generalise better.
+
+## How to run it
+From `EIOS/`, with the live env of `docs/runbooks/cockpit-deploy.md` section 6 (Vertex, `GOOGLE_CLOUD_QUOTA_PROJECT`, the warm-tier and knowledge variables) and `EIOS_AGENT_EVAL_MAX_TURNS=400`:
+
+- Live, default model: `PYTHONPATH=src:. uv run python -m evals.agent.baseline --runtime adk --live --repeats 3 --split dev,validation --out evals/reports/live_<label>` (about 237 turns, 25 minutes). `--split` adds `sealed` only to judge a finished change, once.
+- Re-grade a saved run for free after a judge change: `--runtime recorded --records evals/reports/live_<label>/records.jsonl --split dev,validation --repeats 3` (add `--only` for a partial run, otherwise the cases it lacks count as failures).
+- Compare two reports per case: read `cases` in each `report.json` (`pass` or `fail` per `<suite>:<case>`), and `meta.instruction_sha256` to see whether the instruction changed.
+- Offline, no spend: `--runtime adk` (the scripted model; passes by construction on routed cases, `live_only` turns are skipped).
