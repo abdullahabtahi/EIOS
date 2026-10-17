@@ -127,8 +127,7 @@ Remaining work is tracked as GitHub issues #70-#76 (read them first). Phases, in
 Open items, in order of value:
 1. **Latency** (mostly done, see above). Left: a live quality baseline on the new default model (needs the owner's go), and watching a real stall to prove the hedge (the `timing_ms` field on each answer shows per-call time).
 2. **Before the next deploy** (owner approved Model Armor and Gen AI Enterprise on 2026-10-15; deploy itself still needs its own go): Model Armor templates (Terraform) and `GOOGLE_GENAI_USE_ENTERPRISE` (`docs/runbooks/cockpit-deploy.md`); without them every copilot query answers 503. Never deploy without explicit approval.
-3. **Churn hazards rank well (AUC 0.974 `[MEASURED]`) but are miscalibrated** (ECE 0.22 against a 0.15 drift line `[MEASURED]`); the status dialog reads DRIFT DETECTED truthfully. Recalibrate against observed outcomes (flywheel).
-4. Assistant follow-ups: let the model repeat a number that appears in its own quote (needs adversarial tests); a 503 turn leaves an unanswered question and the next reply summarises the backlog; SAR drafts do not cite the licensing jurisdiction's rule; "Show in dossier" does not highlight the source card.
-5. RL-2 and RL-7 are `NOT_MEASURED` on the operations board by design; the nine runbooks other than warm-start restore are a catalogue only; identity conflicts are not computed on the engine plane.
-6. Product direction in `docs/financial_geospatial.md`: regulator-grade AML investigator, geography as an evidence lens.
-7. Deploy via GitHub Actions workload identity (pool `eios-ci`), apply Terraform to stage and dev, close ADR-002, re-enable org-policy guardrails. The bot PR #47 conflicts and is untouched.
+3. Assistant follow-ups: let the model repeat a number that appears in its own quote (needs adversarial tests); a 503 turn leaves an unanswered question and the next reply summarises the backlog; SAR drafts do not cite the licensing jurisdiction's rule; "Show in dossier" does not highlight the source card.
+4. RL-2 and RL-7 are `NOT_MEASURED` on the operations board by design; the nine runbooks other than warm-start restore are a catalogue only; identity conflicts are not computed on the engine plane.
+5. Product direction in `docs/financial_geospatial.md`: regulator-grade AML investigator, geography as an evidence lens.
+6. Deploy via GitHub Actions workload identity (pool `eios-ci`), apply Terraform to stage and dev, close ADR-002, re-enable org-policy guardrails. The bot PR #47 conflicts and is untouched.
