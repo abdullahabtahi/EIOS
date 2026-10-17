@@ -2,8 +2,10 @@
 
 from typing import Any
 
+from eios.assistant.tools import expand_fact_ids
 from eios.cockpit.operations import DataPlatformOperationsService
 from eios.hardening.runbooks import RunbookVerificationEngine
+from eios.ingestion.circuit_breaker import IngestionCircuitBreaker
 from eios.ontology.omcp.port.contracts import ToolErrorCode
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
@@ -62,6 +64,17 @@ def test_dq_board_equals_the_screen_summary(port: GovernedToolPort) -> None:
     assert [p["product_name"] for p in got["products"]] == [
         p["product_name"] for p in screen["products"]
     ]
+
+
+def test_dq_board_states_the_breach_budget_as_a_value_not_only_inside_an_alert_sentence(
+    port: GovernedToolPort,
+) -> None:
+    """A model that explains a breach quotes the budget; a figure only inside a sentence cannot be shown, so the
+    answer failed closed. The budget is a returned value, and the same one the engine judges breaches by."""
+    got = _ok(port, OPS, "get_dq_board")
+    assert got["contract_breach_budget"] == IngestionCircuitBreaker().breach_rate_threshold
+    assert got["units"]["contract_breach_budget"] == "ratio"
+    assert "contract_breach_budget" in expand_fact_ids(got)["fact_ids"]
 
 
 def test_reliability_is_no_data_when_no_events_were_recorded_not_healthy(
