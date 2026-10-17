@@ -215,7 +215,12 @@ ROUTES: tuple[Route, ...] = (
         ("get_forecast", _forecast),
     ),
     _r(r"what happens|what if|cut", ("run_what_if", _what_if)),
-    _r(r"causing|causal|\bcause\b", ("get_causal_evidence", _none)),
+    # A ring or account is judged from its dossier; the causal graph covers business metrics, never a ring.
+    _r(
+        r"\bring\b.*(?:causal|correlation)|(?:causal|correlation).*\bring\b",
+        ("get_aml_dossier", _acct),
+    ),
+    _r(r"causing|causal|\bcause\b", ("get_causal_evidence", _none), unless=r"\bring\b"),
     _r(r"net revenue", ("get_metric", _revenue)),
     _r(
         r"regulat|guideline|circular|\bfiau\b|labuan|red.?flag|filing threshold",

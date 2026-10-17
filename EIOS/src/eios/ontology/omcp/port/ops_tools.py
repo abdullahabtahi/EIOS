@@ -1,6 +1,7 @@
 """Operations capabilities (spec 023): the data platform and reliability boards, without calling silence healthy."""
 
 from eios.common.validation import StrictModel
+from eios.ingestion.circuit_breaker import IngestionCircuitBreaker
 from eios.ontology.omcp.port.common import envelope
 from eios.ontology.omcp.port.contracts import PortError, ToolErrorCode, ToolResult
 from eios.ontology.omcp.port.principal import Principal, Workstation
@@ -45,6 +46,9 @@ class DqBoard(ToolResult):
     degraded_products: int
     breached_products: int
     sla_compliance_rate_pct: float
+    contract_breach_budget: (
+        float  # the breach rate above which a product is breached; alerts quote it in a sentence
+    )
     active_alerts_count: int
     unresolved_conflicts_count: (
         int | None
@@ -67,6 +71,7 @@ def get_dq_board(ctx: ReadModels, _who: Principal, _args: NoArgs) -> DqBoard:
                 "degraded_products": "products",
                 "breached_products": "products",
                 "sla_compliance_rate_pct": "percent",
+                "contract_breach_budget": "ratio",
                 "active_alerts_count": "alerts",
                 "unresolved_conflicts_count": "conflicts",
                 "products[].row_count": "rows",
@@ -83,6 +88,7 @@ def get_dq_board(ctx: ReadModels, _who: Principal, _args: NoArgs) -> DqBoard:
         degraded_products=b["degraded_products"],
         breached_products=b["breached_products"],
         sla_compliance_rate_pct=b["sla_compliance_rate_pct"],
+        contract_breach_budget=IngestionCircuitBreaker().breach_rate_threshold,
         active_alerts_count=b["active_alerts_count"],
         unresolved_conflicts_count=b["unresolved_conflicts_count"],
         products=[

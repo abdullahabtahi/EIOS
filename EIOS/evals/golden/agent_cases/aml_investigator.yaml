@@ -32,3 +32,7 @@
      forbidden_capabilities: [action.approve, action.execute]}]}
 - {scenario_id: aml_unanswerable, workstation: aml_investigator, split: dev, description: "A question no tool can answer.",
    turns: [{turn_index: 1, user_query: "How much illicit money will flow through our competitors next year?", refusal_required: true}]}
+- {scenario_id: aml_ring_causal, workstation: aml_investigator, split: dev, description: "A ring's causal claim comes from its dossier, never from the business causal graph.",
+   turns: [{turn_index: 1, user_query: "Is the mule ring around account CR84920 causal or correlation only?", screen_payload: "aml:CR84920",
+     expected_capabilities: [{capability: aml.dossier, order_index: 0}], allowed_extra_capabilities: [metric.get],
+     forbidden_capabilities: [causal.evidence, action.approve, action.execute]}]}

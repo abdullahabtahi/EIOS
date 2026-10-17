@@ -120,7 +120,8 @@ class WhatIfEngine:
         node = SHOCK_NODES.get(shock)
         if node is None:
             raise UnsupportedShockError(
-                f"'{shock}' has no tested causal path to revenue; the spread edge failed the causal gate"
+                f"'{shock}' has no tested causal path to revenue; the spread edge failed the causal gate. "
+                f"The shock with a tested path is: {', '.join(sorted(SHOCK_NODES))}"
             )
         return node
 
