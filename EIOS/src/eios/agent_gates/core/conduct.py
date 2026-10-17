@@ -26,7 +26,7 @@ ABOUT_RULES = re.compile(
 
 _REFUSAL_OPENING = re.compile(r"(?i)^\W*i cannot answer that\b")
 _NEXT_STEP = re.compile(
-    r"(?i)\b(?:i can (?:answer|help|show|check|run|look)|you can|can be run|can answer|instead|try asking|"
+    r"(?i)\b(?:i can \w+|you can \w+|can be run|can answer|instead|try asking|tested path is|"
     r"ask (?:about|for|me))\b"
 )
 

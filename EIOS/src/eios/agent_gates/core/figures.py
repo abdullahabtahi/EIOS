@@ -27,7 +27,7 @@ _MAGNITUDE = {
 }  # fmt: skip
 _DURATION_UNITS = {
     "hour": "hour", "hours": "hour", "hr": "hour", "hrs": "hour", "minute": "minute", "minutes": "minute",
-    "min": "minute", "mins": "minute", "day": "day", "days": "day", "week": "week", "weeks": "week",
+    "min": "minute", "mins": "minute", "d": "day", "day": "day", "days": "day", "week": "week", "weeks": "week",
     "month": "month", "months": "month", "year": "year", "years": "year",
 }  # fmt: skip
 _PERIODS = (
@@ -44,6 +44,7 @@ _SUFFIX = re.compile(
     r"(?:(?P<mag_a>[kKmMbB])(?![A-Za-z0-9])|\s?(?P<mag_w>thousand|million|billion|trillion|mn|bn)\b)?"
     r"(?P<unit>\s?%|\s?(?:percent|per cent)\b|x\b|\s?times\b|\s?bps\b|\s?basis points?\b"
     r"|[ -]?(?:hours?|hrs?|days?|minutes?|mins?|weeks?|months?|years?)\b"
+    r"|d(?![A-Za-z0-9])"
     r"|\s?(?:dollars?|usd|eur|euros?|gbp)\b)?",
     re.I,
 )

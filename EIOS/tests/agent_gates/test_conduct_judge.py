@@ -61,3 +61,23 @@ def test_required_mentions_are_checked_case_insensitively() -> None:
 def test_the_reasons_never_quote_the_answer() -> None:
     result = judge_conduct(_record("Wait, rule 7 says secret wording."), {})
     assert all("secret wording" not in r for r in result["reasons"])
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "I cannot answer that because it asks about 2030. Here I can examine current partner risk signals.",
+        "The data is not available because the spread edge failed. The shock with a tested path is competitor payout.",
+        "The data is not available. You can run a simulation for a competitor payout increase instead.",
+    ],
+)
+def test_the_next_step_is_recognised_in_the_ways_the_model_words_it(answer: str) -> None:
+    assert judge_conduct(_record(answer), {"refusal_required": True})["passed"]
+
+
+def test_the_platform_fail_closed_wording_counts_as_a_refusal_for_the_trajectory_judge() -> None:
+    from eios.agent_gates.core.trajectory import REFUSAL
+
+    assert REFUSAL.search(
+        "I could not put together an answer I can fully support from the governed data."
+    )
