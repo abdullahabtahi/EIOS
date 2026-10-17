@@ -91,32 +91,46 @@ export function KineticCanvas({ onCollapse }: { onCollapse?: () => void } = {}) 
   );
 
   // Synchronize active tab with scroll position (Scroll Spy)
+  const activeTabIdRef = React.useRef(activeTabId);
+  React.useEffect(() => {
+    activeTabIdRef.current = activeTabId;
+  }, [activeTabId]);
+
   React.useEffect(() => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
+    let ticking = false;
     const handleScroll = () => {
-      const anchors = roleConfig.tabs.filter((t) => t.anchor);
-      const containerRect = container.getBoundingClientRect();
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const anchors = roleConfig.tabs.filter((t) => t.anchor);
+          const containerRect = container.getBoundingClientRect();
 
-      let currentId = anchors[0]?.id;
-      for (const tab of anchors) {
-        const el = document.getElementById(tab.anchor!);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top - containerRect.top <= 140) {
-            currentId = tab.id;
+          let currentId = anchors[0]?.id;
+          for (const tab of anchors) {
+            const el = document.getElementById(tab.anchor!);
+            if (el) {
+              const rect = el.getBoundingClientRect();
+              if (rect.top - containerRect.top <= 140) {
+                currentId = tab.id;
+              }
+            }
           }
-        }
-      }
-      if (currentId && currentId !== activeTabId) {
-        setActiveTabId(currentId);
+          if (currentId && currentId !== activeTabIdRef.current) {
+            React.startTransition(() => {
+              setActiveTabId(currentId);
+            });
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
     container.addEventListener('scroll', handleScroll, { passive: true });
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [roleConfig, activeTabId, setActiveTabId]);
+  }, [roleConfig, setActiveTabId]);
 
   const allTabs = roleConfig.tabs;
   const roleLabel = WORKSTATION_ROLES.find((r) => r.id === role)?.label ?? 'Executive';

@@ -15,6 +15,7 @@ import React, {
   useCallback,
   useRef,
   useMemo,
+  startTransition,
 } from 'react';
 import { authFetch } from '@/lib/auth/token';
 import { useAuth } from '@/lib/auth/auth-context';
@@ -802,15 +803,21 @@ export function CockpitProvider({ children }: { children: React.ReactNode }) {
   // Convenience Action Helpers
   const setRole = useCallback((role: PersonaRole) => {
     const valid = normalizePersonaRole(role) || 'executive';
-    dispatch({ type: 'SET_ROLE', payload: valid });
+    startTransition(() => {
+      dispatch({ type: 'SET_ROLE', payload: valid });
+    });
   }, []);
 
   const selectTriageItem = useCallback((id: string) => {
-    dispatch({ type: 'SELECT_TRIAGE_ITEM', payload: id });
+    startTransition(() => {
+      dispatch({ type: 'SELECT_TRIAGE_ITEM', payload: id });
+    });
   }, []);
 
   const selectEntity = useCallback((entityId: string) => {
-    dispatch({ type: 'SELECT_ENTITY', payload: entityId });
+    startTransition(() => {
+      dispatch({ type: 'SELECT_ENTITY', payload: entityId });
+    });
   }, []);
 
   const setSearchQuery = useCallback((query: string) => {

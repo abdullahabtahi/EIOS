@@ -29,7 +29,31 @@ export function ExecutiveCockpitView() {
   }, []);
 
   if (load.status === 'loading') {
-    return <p className="p-4 text-xs text-slate-500 bg-slate-50 border border-slate-200 font-mono">Loading executive decision board…</p>;
+    return (
+      <div className="space-y-4 text-slate-900 pb-12 select-none animate-pulse">
+        {/* Skeleton ForecastCard */}
+        <div className="bg-white border border-slate-200 p-6 min-h-[280px] space-y-4 shadow-xs">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="h-4 w-52 bg-slate-200 rounded-xs" />
+            <div className="h-4 w-32 bg-slate-100 rounded-xs" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center pt-2">
+            <div className="md:col-span-5 space-y-3">
+              <div className="h-3 w-40 bg-slate-200 rounded-xs" />
+              <div className="h-8 w-48 bg-slate-300 rounded-xs" />
+              <div className="h-3 w-64 bg-slate-100 rounded-xs" />
+            </div>
+            <div className="md:col-span-7 h-28 bg-slate-50 border border-slate-200 rounded-xs" />
+          </div>
+        </div>
+
+        {/* Skeleton CausalGraph */}
+        <div className="bg-white border border-slate-200 p-4 min-h-[240px] space-y-3 shadow-xs">
+          <div className="h-4 w-60 bg-slate-200 rounded-xs" />
+          <div className="h-44 bg-slate-50 border border-slate-200 rounded-xs" />
+        </div>
+      </div>
+    );
   }
   if (load.status === 'error') {
     return (

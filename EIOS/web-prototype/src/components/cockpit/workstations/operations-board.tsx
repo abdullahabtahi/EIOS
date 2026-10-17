@@ -221,7 +221,7 @@ export function OperationsBoardView() {
         role="tabpanel"
         id="panel-slos"
         aria-label="Data Product Freshness SLOs"
-        className="block"
+        className="block min-h-[1400px]"
       >
         <section aria-label="SLA Freshness Monitors" className="bg-white border border-slate-200 p-4 shadow-sm space-y-4">
           <PanelHeader
@@ -234,7 +234,56 @@ export function OperationsBoardView() {
             }
           />
 
-          {view.source === 'unavailable' && (
+          {/* Skeleton state during loading: pre-allocates dual-section grid geometry to eliminate CLS */}
+          {state.isLoading && view.products.length === 0 && view.errorBudgets.length === 0 && (
+            <div className="space-y-6 animate-pulse">
+              {/* Domain A Skeleton: Lakehouse Data Products */}
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <div className="h-4 w-56 bg-slate-200 rounded-xs" />
+                  <div className="h-4 w-28 bg-slate-100 rounded-xs" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+                    <div key={i} className="h-32 bg-slate-50 border border-slate-200 p-3.5 flex flex-col justify-between">
+                      <div className="space-y-2">
+                        <div className="h-3 w-20 bg-slate-200 rounded-xs" />
+                        <div className="h-4 w-40 bg-slate-300 rounded-xs" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                        <div className="h-3 w-16 bg-slate-200 rounded-xs" />
+                        <div className="h-3 w-16 bg-slate-200 rounded-xs" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Domain B Skeleton: Platform SRE SLOs */}
+              <div className="space-y-2.5 pt-2">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <div className="h-4 w-64 bg-slate-200 rounded-xs" />
+                  <div className="h-4 w-28 bg-slate-100 rounded-xs" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+                    <div key={i} className="h-32 bg-slate-50 border border-slate-200 p-3.5 flex flex-col justify-between">
+                      <div className="space-y-2">
+                        <div className="h-3 w-24 bg-slate-200 rounded-xs" />
+                        <div className="h-4 w-44 bg-slate-300 rounded-xs" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                        <div className="h-3 w-16 bg-slate-200 rounded-xs" />
+                        <div className="h-3 w-16 bg-slate-200 rounded-xs" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {!state.isLoading && view.source === 'unavailable' && (
             <p role="alert" className="p-3 text-xs bg-cx-sub border border-cx-line text-cx-muted font-sans">
               No operations data was received from the backend, so nothing is shown in its place.
             </p>
@@ -326,7 +375,7 @@ export function OperationsBoardView() {
         role="tabpanel"
         id="panel-redlines"
         aria-label="Red-Line Test Gates"
-        className="block"
+        className="block min-h-[220px]"
       >
         <section aria-label="Red-Line Test Gates" className="bg-white border border-slate-200 p-4 shadow-sm space-y-3">
           <PanelHeader
@@ -364,7 +413,7 @@ export function OperationsBoardView() {
         role="tabpanel"
         id="panel-dlq"
         aria-label="DLQ Quarantine Inspector"
-        className="block"
+        className="block min-h-[160px]"
       >
         <section aria-label="Dead Letter Queue Inspector" className="bg-white border border-slate-200 p-4 shadow-sm space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
@@ -445,7 +494,7 @@ export function OperationsBoardView() {
         role="tabpanel"
         id="panel-dr"
         aria-label="Platform Disaster Recovery Proofs"
-        className="block"
+        className="block min-h-[200px]"
       >
         <div className="space-y-4">
           <DrProofCard proof={state.activeDrProofs[0]} />

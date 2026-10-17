@@ -5,6 +5,11 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  compress: true,
+  poweredByHeader: false,
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-slot'],
+  },
   allowedDevOrigins: [
     '127.0.0.1',
     'localhost',
