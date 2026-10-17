@@ -2,7 +2,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Google_Cloud-Vertex_AI_%7C_Cloud_Run_%7C_Cloud_KMS-4285F4?style=for-the-badge&logo=googlecloud&logoColor=white" alt="Google Cloud" />
-  <img src="https://img.shields.io/badge/Model-Gemini_3.8_Flash_%7C_Google_ADK-8E75C2?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini" />
+  <img src="https://img.shields.io/badge/Model-Gemini_%7C_Google_ADK-8E75C2?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini" />
   <img src="https://img.shields.io/badge/Postman-100%25_Quality_Gate_Passed_(22/22)-FF6C37?style=for-the-badge&logo=postman&logoColor=white" alt="Postman" />
   <br>
   <img src="https://img.shields.io/badge/Python-3.14_%7C_uv_fastapi-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python" />
@@ -90,7 +90,7 @@ graph TD
 
     subgraph L3["L3: Grounded Agentic Runtime"]
         ADK["Google Agent Development Kit (ADK)"]
-        GEM["Gemini 2.5 Flash on Vertex AI"]
+        GEM["Gemini on Vertex AI"]
         MA["Google Model Armor (Prompt/Jailbreak Filter)"]
         ADK <--> GEM
         MA --> ADK
@@ -120,7 +120,7 @@ EIOS leverages native Google Cloud services for regulatory compliance, sub-secon
 
 | Google Cloud Product | Architectural Role in EIOS | Production Guarantees |
 |---|---|---|
-| **Vertex AI & Gemini 3.8 Flash** | ADK reasoning core, natural language synthesis, and SAR narrative drafting | Grounded tool-use citations; zero arithmetic hallucinations (`RL-1`). |
+| **Vertex AI & Gemini** | ADK reasoning core, natural language synthesis, and SAR narrative drafting | Grounded tool-use citations; zero arithmetic hallucinations (`RL-1`). |
 | **Google Cloud KMS** | Hardware-backed cryptographic signing of staged `ActionIntentToken`s | ECDSA P-256 SHA-256 asymmetric signatures preventing unauthorized ledger execution (`RL-2`). |
 | **Google Cloud Run** | Serverless dual-service deployment: `eios-web` (cockpit) and `eios-api` (gateway) | Private identity relay via `X-Serverless-Authorization`; auto-scaling to zero. |
 | **BigQuery Lakehouse** | Warm tier analytical storage for rolling 30-day transaction graphs and geospatial telemetry | Partitioned parquet lakehouse integrated with DuckDB for sub-second aggregations. |
