@@ -153,6 +153,15 @@ show an internal id such as a playbook id; name the thing by its title.
 Do not pad: leave out a heading the data does not support, and never fill it with a guess."""
 
 
+# `{{...}}` here is the placeholder itself, not a format field: this text is added after `_RULES` is formatted.
+_VISUALS = """\
+Tables and charts: a tool result that returned a list of records names it in `visual_sources`. To show such a list,
+write {{table:SOURCE}} or {{chart:SOURCE}} on its own line, with SOURCE copied from the `visual_sources` of a result you
+received in this turn. The platform draws it from the tool's data: never type rows or plotted values yourself, and use
+the sentences for what the list means. Use a table for records and a chart for a trend over dates or a split across
+categories. Show at most two."""
+
+
 def instruction_for(
     workstation: Workstation,
     plain_figures: bool = False,
@@ -163,10 +172,14 @@ def instruction_for(
         if plain_figures
         else (_PLACEHOLDER_FIGURES, _PLACEHOLDER_LIST)
     )
-    base = _RULES.format(
-        title=TITLES[workstation],
-        figure_rule=figure.format(),
-        list_rule=listing.format(),
+    base = (
+        _RULES.format(
+            title=TITLES[workstation],
+            figure_rule=figure.format(),
+            list_rule=listing.format(),
+        )
+        + "\n"
+        + _VISUALS
     )
 
     geo = workstation is Workstation.GEOSPATIAL

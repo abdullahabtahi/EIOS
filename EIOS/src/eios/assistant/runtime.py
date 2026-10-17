@@ -45,6 +45,7 @@ from eios.assistant.tools import (
     PASSAGES_KEY,
     PROPOSALS_KEY,
     SOURCES_KEY,
+    TABLES_KEY,
 )
 from eios.llm_gateway.providers.adk_types import model_message, text_of, user_message
 from eios.llm_gateway.providers.registry import ModelChoice, ModelRegistry, load_registry
@@ -155,6 +156,7 @@ def _fresh_turn_state(
         NUMBERS_KEY: [],
         PROPOSALS_KEY: [],
         MAP_TARGETS_KEY: [],
+        TABLES_KEY: {},
         "entity_id": entity_id,
         "entity_context": entity_context or {},
     }
