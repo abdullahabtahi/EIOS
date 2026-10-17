@@ -20,7 +20,12 @@ LOCAL_ENVIRONMENTS = frozenset({"dev", "test"})
 AUTH_MODE_ENV = "EIOS_AUTH_MODE"
 ENVIRONMENT_ENV = "EIOS_ENVIRONMENT"
 CORS_ENV = "EIOS_CORS_ORIGINS"
-DEV_CORS_ORIGINS = ["http://localhost:3000", "http://127.0.0.1:3000"]
+DEV_CORS_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3012",
+    "http://127.0.0.1:3012",
+]
 
 # Closed set of roles, carried in the Firebase custom claim `role`.
 STAGE_ROLES = frozenset({"analyst", "approver", "compliance_head"})
