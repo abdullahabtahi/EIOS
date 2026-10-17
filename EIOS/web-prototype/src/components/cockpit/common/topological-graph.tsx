@@ -34,6 +34,7 @@ interface SimNode extends GraphNode {
   radius: number;
   targetX?: number;
   targetY?: number;
+  isPinned?: boolean;
 }
 
 interface SimEdge {
@@ -169,20 +170,26 @@ export function TopologicalGraphCanvas() {
   const [rawNodes, setRawNodes] = React.useState<GraphNode[]>(FALLBACK_NODES);
   const [rawEdges, setRawEdges] = React.useState<GraphEdge[]>(FALLBACK_EDGES);
 
-  // Dynamic Focal Suspect Identifier (Anchors Focal Suspect at (0, 0))
+  // Dynamic Focal Suspect Identifier (Anchors Case Focal Suspect at (0, 0))
   const focalId = React.useMemo(() => {
+    const triageSeed = state.activeTriageItemId
+      ? rawNodes.find((n) => n.id === state.activeTriageItemId)?.id
+      : null;
     return (
-      state.activeEntityId ||
+      triageSeed ||
       rawNodes.find((n) => n.id === 'CR84920' || n.id.includes('84920'))?.id ||
       rawNodes.reduce((max, n) => (n.degree > max.degree ? n : max), rawNodes[0])?.id ||
       'CR84920'
     );
-  }, [state.activeEntityId, rawNodes]);
+  }, [state.activeTriageItemId, rawNodes]);
 
   // Transform & Interaction
   const [transform, setTransform] = React.useState({ x: 0, y: 0, scale: 1 });
   const isDragging = React.useRef(false);
   const dragStart = React.useRef({ x: 0, y: 0 });
+  const draggedNodeRef = React.useRef<SimNode | null>(null);
+  const dragStartPos = React.useRef<{ clientX: number; clientY: number }>({ clientX: 0, clientY: 0 });
+  const hasDraggedRef = React.useRef<boolean>(false);
   const [hoveredNode, setHoveredNode] = React.useState<SimNode | null>(null);
   const [selectedNode, setSelectedNode] = React.useState<GraphNode | null>(FALLBACK_NODES[0]);
 
@@ -378,7 +385,15 @@ export function TopologicalGraphCanvas() {
         const live = !data.isReplay;
         setRawNodes(convertedNodes.length > 0 || live ? convertedNodes : FALLBACK_NODES);
         setRawEdges(convertedEdges.length > 0 || live ? convertedEdges : FALLBACK_EDGES);
-        if (live) setSelectedNode(convertedNodes.find((n) => n.id === data.seed_entity_id) ?? null);
+        if (live) {
+          setSelectedNode((prev) => {
+            if (prev) {
+              const matched = convertedNodes.find((n) => n.id === prev.id);
+              if (matched) return matched;
+            }
+            return convertedNodes.find((n) => n.id === data.seed_entity_id) ?? convertedNodes[0] ?? null;
+          });
+        }
       })
       .catch((err) => {
         console.warn('[Topological Graph] Serving deterministic baseline topologies:', err);
@@ -577,21 +592,21 @@ export function TopologicalGraphCanvas() {
             const minClearance = nodes[i].radius + nodes[j].radius + (isFullscreen ? 52 : 44);
             if (dist < minClearance) {
               const force = ((minClearance - dist) / dist) * 0.55;
-              if (!isIFocal) {
+              if (!isIFocal && !nodes[i].isPinned) {
                 nodes[i].vx -= dx * force * 0.10;
                 nodes[i].vy -= dy * force * 0.10;
               }
-              if (!isJFocal) {
+              if (!isJFocal && !nodes[j].isPinned) {
                 nodes[j].vx += dx * force * 0.10;
                 nodes[j].vy += dy * force * 0.10;
               }
             } else if (dist < (isFullscreen ? 200 : 150)) {
               const force = (((isFullscreen ? 200 : 150) - dist) / dist) * 0.12;
-              if (!isIFocal) {
+              if (!isIFocal && !nodes[i].isPinned) {
                 nodes[i].vx -= dx * force * 0.02;
                 nodes[i].vy -= dy * force * 0.02;
               }
-              if (!isJFocal) {
+              if (!isJFocal && !nodes[j].isPinned) {
                 nodes[j].vx += dx * force * 0.02;
                 nodes[j].vy += dy * force * 0.02;
               }
@@ -616,11 +631,11 @@ export function TopologicalGraphCanvas() {
           const baseDist = isFullscreen ? 140 : 105;
           const desired = isTier1 ? baseDist : isTier2 ? baseDist + (isFullscreen ? 80 : 65) : baseDist + (isFullscreen ? 160 : 130);
           const force = (dist - desired) * 0.025;
-          if (!isSourceFocal) {
+          if (!isSourceFocal && !e.source.isPinned) {
             e.source.vx += (dx / dist) * force;
             e.source.vy += (dy / dist) * force;
           }
-          if (!isTargetFocal) {
+          if (!isTargetFocal && !e.target.isPinned) {
             e.target.vx -= (dx / dist) * force;
             e.target.vy -= (dy / dist) * force;
           }
@@ -631,6 +646,11 @@ export function TopologicalGraphCanvas() {
           if (isFocal) {
             n.x = 0;
             n.y = 0;
+            n.vx = 0;
+            n.vy = 0;
+            continue;
+          }
+          if (n.isPinned) {
             n.vx = 0;
             n.vy = 0;
             continue;
@@ -1074,21 +1094,46 @@ export function TopologicalGraphCanvas() {
 
   // Mouse Interaction: Pan, Zoom & Node Selection
   const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    isDragging.current = true;
-    dragStart.current = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const cx = canvas.clientWidth / 2;
+    const cy = canvas.clientHeight / 2;
+    const mouseX = (e.clientX - rect.left - cx - transform.x) / transform.scale;
+    const mouseY = (e.clientY - rect.top - cy - transform.y) / transform.scale;
+
+    dragStartPos.current = { clientX: e.clientX, clientY: e.clientY };
+    hasDraggedRef.current = false;
+
+    // Detect if mouse down is on a node (radius + 8 for comfortable grab target)
+    const hit = simNodesRef.current.find(
+      (n) => Math.hypot(n.x - mouseX, n.y - mouseY) <= n.radius + 8
+    );
+
+    if (hit) {
+      draggedNodeRef.current = hit;
+      hit.isPinned = true;
+      hit.vx = 0;
+      hit.vy = 0;
+      isDragging.current = false;
+    } else {
+      draggedNodeRef.current = null;
+      isDragging.current = true;
+      dragStart.current = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    if (isDragging.current) {
-      setTransform((prev) => ({
-        ...prev,
-        x: e.clientX - dragStart.current.x,
-        y: e.clientY - dragStart.current.y,
-      }));
-      return;
+    const moveDist = Math.hypot(
+      e.clientX - dragStartPos.current.clientX,
+      e.clientY - dragStartPos.current.clientY
+    );
+    if (moveDist > 4) {
+      hasDraggedRef.current = true;
     }
 
     const rect = canvas.getBoundingClientRect();
@@ -1097,17 +1142,44 @@ export function TopologicalGraphCanvas() {
     const mouseX = (e.clientX - rect.left - cx - transform.x) / transform.scale;
     const mouseY = (e.clientY - rect.top - cy - transform.y) / transform.scale;
 
+    // 1. Dragging a specific node
+    if (draggedNodeRef.current) {
+      draggedNodeRef.current.x = mouseX;
+      draggedNodeRef.current.y = mouseY;
+      draggedNodeRef.current.vx = 0;
+      draggedNodeRef.current.vy = 0;
+      draggedNodeRef.current.isPinned = true;
+      tickCountRef.current = Math.min(tickCountRef.current, 180);
+      canvas.style.cursor = 'grabbing';
+      return;
+    }
+
+    // 2. Dragging empty canvas (panning)
+    if (isDragging.current) {
+      setTransform((prev) => ({
+        ...prev,
+        x: e.clientX - dragStart.current.x,
+        y: e.clientY - dragStart.current.y,
+      }));
+      canvas.style.cursor = 'grabbing';
+      return;
+    }
+
+    // 3. Hover detection
     const hit = simNodesRef.current.find(
       (n) => Math.hypot(n.x - mouseX, n.y - mouseY) <= n.radius + 6
     );
     setHoveredNode(hit || null);
+    canvas.style.cursor = hit ? 'grab' : 'default';
   };
 
   const handleMouseUp = () => {
     isDragging.current = false;
+    draggedNodeRef.current = null;
   };
 
   const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (hasDraggedRef.current) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
@@ -1163,11 +1235,16 @@ export function TopologicalGraphCanvas() {
       : null;
   const holdUnavailable = state.dataOrigin === 'engine' && !holdRequest;
 
-  // Selecting a node always shows it in the inspector. Only an account opens a case: a device, a payment method, a
-  // gateway or a collapsed ring has no dossier of its own, so selecting one must not ask the backend for one.
+  // Selecting a node always shows it in the inspector. Only a distinct triage queue alert opens a separate case:
+  // adjacent counterparties, devices, and proxy hubs remain inspected within the current graph without resetting the case.
   const openNode = (node: GraphNode) => {
     setSelectedNode(node);
-    if (nodeOpensCase(node, state.dataOrigin)) selectEntity(node.id);
+    const isTriageAlert = state.triageItems?.some(
+      (i) => (i.entityId === node.id || i.id === node.id) && i.entityId !== focalId
+    );
+    if (isTriageAlert && nodeOpensCase(node, state.dataOrigin)) {
+      selectEntity(node.id);
+    }
   };
 
   const handleStageHold = async () => {
@@ -1644,7 +1721,7 @@ export function TopologicalGraphCanvas() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
           {/* Canvas Viewport */}
           <div
-            className={`flex-1 relative overflow-hidden cursor-grab active:cursor-grabbing ${
+            className={`flex-1 relative overflow-hidden ${
               isFullscreen ? 'bg-cx-studio' : 'bg-cx-wash'
             }`}
           >
