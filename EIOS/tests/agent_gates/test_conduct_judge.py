@@ -81,3 +81,17 @@ def test_the_platform_fail_closed_wording_counts_as_a_refusal_for_the_trajectory
     assert REFUSAL.search(
         "I could not put together an answer I can fully support from the governed data."
     )
+
+
+@pytest.mark.parametrize(
+    "answer",
+    [
+        "I cannot run that simulation because the spread edge failed the causal gate.",
+        "The competitor spread cut has no tested causal path to revenue because the spread edge failed.",
+        "The data does not show it. The shock has no tested causal path to revenue.",
+    ],
+)
+def test_the_ways_the_model_declines_an_untested_shock_count_as_a_refusal(answer: str) -> None:
+    from eios.agent_gates.core.trajectory import REFUSAL
+
+    assert REFUSAL.search(answer)

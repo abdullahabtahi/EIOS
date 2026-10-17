@@ -164,6 +164,12 @@ def _diff_text(diffs: Sequence[dict[str, Any]]) -> str:
     )
 
 
+def _scripted(port: AgentPort) -> bool:
+    """A runtime whose answers are written by a script (the reference routes or the offline model), not a model or a
+    recording of one. A recorded run is graded on every turn it holds."""
+    return bool(getattr(port, "offline", False)) or port.runtime_name == "toolport"
+
+
 def _golden_rows(
     port: AgentPort, case: GoldenCase, turn: GoldenTurn, repeats: int, records: list[dict[str, Any]]
 ) -> list[dict[str, Any]]:
@@ -172,7 +178,7 @@ def _golden_rows(
         case.workstation.value,
         _runtime_key(port.runtime_name),
     )
-    if turn.live_only and getattr(port, "offline", True):
+    if turn.live_only and _scripted(port):
         return []  # a scripted runtime cannot answer it; a live run grades it
     got: list[TurnRecord] = []
     multi = (
