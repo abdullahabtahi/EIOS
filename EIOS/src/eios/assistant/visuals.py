@@ -117,8 +117,10 @@ def _plan(columns: list[VisualColumn], rows: tuple[dict[str, Any], ...]) -> Visu
         for r in rows
         if r.get(x.key) is not None
     )
+    # Bars compare one measure across categories; a line can carry a few that share a unit over time.
+    plotted = series if dated else series[:1]
     return VisualChart(
-        type="line" if dated else "bar", x=x.key, y=tuple(c.key for c in series), unit=unit
+        type="line" if dated else "bar", x=x.key, y=tuple(c.key for c in plotted), unit=unit
     )
 
 

@@ -99,6 +99,12 @@ def test_a_chart_needs_a_category_axis_and_a_number_to_plot() -> None:
     assert chart.chart.type == "bar"  # a category axis, not a time axis
 
 
+def test_bars_compare_one_measure_so_a_bar_plan_names_one_series() -> None:
+    sources = _sources("list_alerts", {})
+    chart = extract("{{chart:list_alerts.alerts}}", sources).visuals[0].chart
+    assert chart is not None and chart.type == "bar" and len(chart.y) == 1
+
+
 def test_a_time_axis_draws_a_line() -> None:
     sources = _sources("get_activity_timeline", {"entity_id": "CR84920"})
     shown = extract("{{chart:get_activity_timeline.events}}", sources)

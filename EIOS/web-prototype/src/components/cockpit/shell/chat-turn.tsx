@@ -10,6 +10,7 @@ import { AnswerStatusBanner } from './copilot-status';
 import { CopilotWorking } from './copilot-working';
 import { ProposalCard, ProposalState } from './copilot-proposals';
 import { SourceChips } from './source-chips';
+import { AnswerVisuals } from './answer-visuals';
 
 export interface ChatTurn {
   kind: 'turn';
@@ -96,6 +97,8 @@ export function ChatTurnView({ variant = 'default', turn, proposalStates, onStag
             source={response.responseMarkdown}
             className={`text-xs leading-relaxed font-sans ${plain ? "text-cx-ink" : "text-slate-800"}`}
           />
+
+          <AnswerVisuals visuals={response.visuals ?? []} />
 
           {figures.length > 0 && <FigureBadges figures={figures} />}
           <SourceChips sources={response.sources ?? []} />

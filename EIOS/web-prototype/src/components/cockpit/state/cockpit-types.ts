@@ -480,6 +480,40 @@ export interface ViewCommand {
   id: string;
 }
 
+/** One column of a table or chart the assistant showed: a text or a number, with the unit the tool gave it. */
+export interface VisualColumn {
+  key: string;
+  label: string;
+  kind: 'text' | 'number';
+  unit?: string;
+}
+
+export type VisualCell = string | number | null;
+
+/** How a chart plots its rows: the category or date column, and the number columns that share one unit. */
+export interface VisualChartPlan {
+  type: 'line' | 'bar';
+  x: string;
+  y: string[];
+  unit?: string;
+}
+
+/**
+ * A table or chart of a list a tool returned this turn. The model only named the list; every cell is the tool's value,
+ * and a missing value stays `null` (shown as a gap, never as zero).
+ */
+export interface AnswerVisual {
+  kind: 'table' | 'chart';
+  source: string;
+  label: string;
+  columns: VisualColumn[];
+  rows: Record<string, VisualCell>[];
+  chart?: VisualChartPlan;
+  asOf: string;
+  dataOrigin?: DataOrigin;
+  citation: string;
+}
+
 export interface CopilotQueryResponse {
   queryId: string;
   naturalLanguageQuery: string;
@@ -492,6 +526,8 @@ export interface CopilotQueryResponse {
   dataOrigin?: DataOrigin;
   steps: string[];
   proposals: AssistantProposal[];
+  /** Tables and charts drawn from this turn's tool results; empty when the answer showed none. */
+  visuals?: AnswerVisual[];
   /** Map moves the assembler accepted (geospatial workstation only); empty elsewhere. */
   viewCommands?: ViewCommand[];
   /** SHA-256 of the sealed evidence of a turn that proposed a hold or drafted a SAR; absent for any other turn. */
