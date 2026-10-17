@@ -18,6 +18,7 @@ import pandas as pd
 from eios.churn.explainer import ChurnSignalExplainer
 from eios.churn.models import CohortAnomalyAlert, SignalContribution
 from eios.churn.pipeline import ChurnRadarPipeline
+from eios.dataplane.rank_metrics import ranking_auc
 from eios.foundry.scenarios.partner_world import PartnerWorld
 from eios.fraud.models import TradingPairCorrelation
 from eios.fraud.pair_detector import TimeBucketedPairDetector
@@ -106,16 +107,6 @@ def _score(world: PartnerWorld, cutoff: date) -> tuple[pd.DataFrame, list[Cohort
     return scored, alerts
 
 
-def _auc(scores: pd.Series, positives: frozenset[str]) -> float:
-    """Probability a planted churner outranks a non-churner (Mann-Whitney)."""
-    ranks = scores.rank()
-    is_pos = scores.index.isin(list(positives))
-    n_pos, n_neg = int(is_pos.sum()), int((~is_pos).sum())
-    if n_pos == 0 or n_neg == 0:
-        return 0.0
-    return float((ranks[is_pos].sum() - n_pos * (n_pos + 1) / 2) / (n_pos * n_neg))
-
-
 def _quality(
     world: PartnerWorld,
     scored: pd.DataFrame,
@@ -133,7 +124,7 @@ def _quality(
     return PartnerQuality(
         partners=len(scored),
         planted_churners=len(churners),
-        hazard_auc=round(_auc(hazard, churners), 3),
+        hazard_auc=round(ranking_auc(hazard, churners), 3),
         precision_at_k=round(len(top & churners) / max(len(churners), 1), 3),
         seasonal_false_alarms=int(sum(hazard.get(p, 0.0) >= HIGH_RISK for p in seasonal)),
         seasonal_partners=len(seasonal),
