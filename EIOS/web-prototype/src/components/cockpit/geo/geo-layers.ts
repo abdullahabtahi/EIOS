@@ -1,3 +1,4 @@
+import { CollisionFilterExtension } from '@deck.gl/extensions';
 import { GeoJsonLayer, PathLayer, ScatterplotLayer, TextLayer } from '@deck.gl/layers';
 import type { Layer } from '@deck.gl/core';
 import type {
@@ -179,7 +180,12 @@ interface LabelRow {
   readonly iso2: string;
   readonly name: string;
   readonly position: LngLat;
+  /** Which name survives when two would overlap: the more money a country moves, the likelier its name is kept. */
+  readonly priority: number;
 }
+
+/** [ASSUMPTION] larger than any real volume, so the ends of the picked route are always named. */
+const PICKED_PRIORITY = 1e15;
 
 const LABEL_SIZE = 12;
 const LABEL_LIFT_PX = -16;
@@ -187,8 +193,16 @@ const LABEL_HALO: Rgba = [255, 255, 255, 235];
 
 /** Names for the countries a drawn route touches, each once; the basemap's own names are faint so these are the ones read. */
 function labelRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly LabelRow[] {
-  const touched = new Set(corridorPairs(flows, selection).flatMap((p) => [p.lead.origin, p.lead.destination]));
-  return reference.countries.filter((c) => touched.has(c.iso2)).map((c) => ({ iso2: c.iso2, name: c.name, position: c.position }));
+  const weight = new Map<string, number>();
+  const add = (iso2: string, n: number) => weight.set(iso2, (weight.get(iso2) ?? 0) + n);
+  for (const pair of corridorPairs(flows, selection)) {
+    const bonus = isPickedPair(pair, selection) ? PICKED_PRIORITY : 0;
+    add(pair.lead.origin, pair.gross + bonus);
+    add(pair.lead.destination, pair.gross + bonus);
+  }
+  return reference.countries
+    .filter((c) => weight.has(c.iso2))
+    .map((c) => ({ iso2: c.iso2, name: c.name, position: c.position, priority: weight.get(c.iso2) ?? 0 }));
 }
 
 function labelLayer(rows: readonly LabelRow[]): TextLayer<LabelRow> {
@@ -207,7 +221,12 @@ function labelLayer(rows: readonly LabelRow[]): TextLayer<LabelRow> {
     fontSettings: { sdf: true },
     outlineWidth: 3,
     outlineColor: LABEL_HALO,
-  });
+    // A name that would land on a bigger one is hidden until zooming in makes room, rather than printed over it.
+    extensions: [new CollisionFilterExtension()],
+    collisionEnabled: true,
+    collisionGroup: 'geo-labels',
+    getCollisionPriority: (d: LabelRow) => d.priority,
+  } as ConstructorParameters<typeof TextLayer<LabelRow>>[0]);
 }
 
 function hubLayer(hubs: readonly HubRow[], handlers: LayerHandlers): ScatterplotLayer<HubRow> {

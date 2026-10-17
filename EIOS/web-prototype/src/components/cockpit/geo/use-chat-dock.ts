@@ -1,11 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { type DockMode, type DockPrefs, loadPrefs, type OpenMode, type Point, savePrefs } from './geo-chat-dock';
+import { type Box, type DockMode, type DockPrefs, loadPrefs, type OpenMode, type Point, savePrefs } from './geo-chat-dock';
 
 export interface ChatDock {
   readonly mode: DockMode;
   readonly pos: Point | null;
+  /** The size the analyst resized the window to, or null for the default. */
+  readonly size: Box | null;
   readonly show: () => void;
   readonly close: () => void;
   readonly dock: () => void;
@@ -14,6 +16,10 @@ export interface ChatDock {
   readonly move: (pos: Point) => void;
   /** The window was let go or nudged: remember where it is. */
   readonly settle: (pos: Point) => void;
+  /** The corner is being dragged: follow the new size and position, remember nothing yet. */
+  readonly resizeTo: (size: Box, pos: Point) => void;
+  /** The corner was let go, nudged or reset (null, null): remember the size and position. */
+  readonly settleResize: (size: Box | null, pos: Point | null) => void;
 }
 
 /**
@@ -27,6 +33,7 @@ export function useChatDock(): ChatDock {
   const [open, setOpen] = React.useState(false);
   const [way, setWay] = React.useState<OpenMode>(prefs.open);
   const [pos, setPos] = React.useState<Point | null>(prefs.pos);
+  const [size, setSize] = React.useState<Box | null>(prefs.size);
   // What is remembered is read from a ref, so the actions below stay the same functions from one render to the next.
   const current = React.useRef<DockPrefs>(prefs);
 
@@ -52,5 +59,18 @@ export function useChatDock(): ChatDock {
     [remember],
   );
 
-  return { mode: open ? way : 'closed', pos, show, close, dock, float, move: setPos, settle };
+  const resizeTo = React.useCallback((next: Box, at: Point) => {
+    setSize(next);
+    setPos(at);
+  }, []);
+  const settleResize = React.useCallback(
+    (next: Box | null, at: Point | null) => {
+      setSize(next);
+      setPos(at);
+      remember({ ...current.current, size: next, pos: at });
+    },
+    [remember],
+  );
+
+  return { mode: open ? way : 'closed', pos, size, show, close, dock, float, move: setPos, settle, resizeTo, settleResize };
 }

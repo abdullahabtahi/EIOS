@@ -237,6 +237,21 @@ describe('the corridor map reads as a network, not a knot', () => {
     expect(names).toEqual(REFERENCE.countries.filter((c) => touched.has(c.iso2)).map((c) => c.name).sort());
   });
 
+  it('ranks labels by the money a country moves, so a crowded corner keeps the biggest name', () => {
+    const [labels] = buildLayers(FLOWS, REFERENCE, new Set<LayerId>(['corridors']), null).filter((l) => l.id === 'geo-labels');
+    const rows = labels.props.data as { iso2: string; priority: number }[];
+    const of = (iso2: string) => rows.find((r) => r.iso2 === iso2)!.priority;
+    // NO sits on two corridors (900k + 100k), KE on one (400k)
+    expect(of('NO')).toBeGreaterThan(of('KE'));
+    expect(of('IR')).toBeGreaterThan(of('PA'));
+  });
+
+  it('hides a label that would sit on a bigger one instead of printing over it', () => {
+    const [labels] = buildLayers(FLOWS, REFERENCE, new Set<LayerId>(['corridors']), null).filter((l) => l.id === 'geo-labels');
+    expect(labels.props.extensions?.map((e: object) => e.constructor.name)).toContain('CollisionFilterExtension');
+    expect((labels.props as { collisionEnabled?: boolean }).collisionEnabled).toBe(true);
+  });
+
   it('marks a country that four or more routes meet as a hub, and no other', () => {
     const hubIds = (flows: GeoFlows) =>
       buildLayers(flows, REFERENCE, new Set<LayerId>(['corridors']), null).filter((l) => l.id === 'geo-hubs');

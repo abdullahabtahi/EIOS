@@ -17,7 +17,7 @@ export function GeoLayerToggles({ visible, disabled, onToggle }: { readonly visi
         {ORDER.map((id) => {
           const off = disabled.has(id);
           return (
-            <label key={id} className={`flex items-center gap-2 text-xs ${off ? 'text-cx-faint' : 'cursor-pointer text-cx-ink'}`}>
+            <label key={id} className={`flex items-center gap-2 text-xs ${off ? 'text-cx-muted' : 'cursor-pointer text-cx-ink'}`}>
               <input type="checkbox" className="accent-cx-accent" disabled={off} checked={visible.has(id) && !off} onChange={() => onToggle(id)} />
               {LAYER_LABEL[id]}
             </label>

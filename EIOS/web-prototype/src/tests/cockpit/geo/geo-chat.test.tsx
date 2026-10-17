@@ -67,7 +67,7 @@ describe('the assistant as a launcher, a window and a docked column', () => {
   it('names the map for a screen reader and points at the list as its keyboard route', () => {
     render(<GeoWorkspace initialSearch="" />);
     const map = screen.getByRole('region', { name: 'World map' });
-    expect(map).toHaveAccessibleDescription(/Use the list to move through countries and corridors/);
+    expect(map).toHaveAccessibleDescription(/Move through what is drawn with the list beside the map/);
   });
 
   it('opens a floating window from the launcher, and the launcher steps aside', () => {

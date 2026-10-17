@@ -3,15 +3,21 @@
 import * as React from 'react';
 import { Icon } from '@/components/ui/icon';
 import { ASSISTANT_ICON } from './geo-chat-launcher';
-import { type Box, clampPosition, defaultPosition, type DockMode, nudge, type Point, windowSize } from './geo-chat-dock';
+import { type Box, clampPosition, cornerResize, defaultPosition, type DockMode, nudge, type Point, windowSize } from './geo-chat-dock';
 
 export interface GeoChatWindowProps {
   readonly mode: DockMode;
   readonly pos: Point | null;
+  /** The size the analyst resized it to; null for the default. */
+  readonly size: Box | null;
   /** The map's size: the window floats inside it and never leaves it. */
   readonly bounds: Box;
   readonly onMove: (pos: Point) => void;
   readonly onSettle: (pos: Point) => void;
+  /** The top left corner is being dragged: follow it (new size and position), remember nothing yet. */
+  readonly onResize: (size: Box, pos: Point) => void;
+  /** The corner was let go, nudged or reset: remember the size (null puts it back to the default) and the position. */
+  readonly onResizeSettle: (size: Box | null, pos: Point | null) => void;
   readonly onDock: () => void;
   readonly onFloat: () => void;
   readonly onClose: () => void;
@@ -30,11 +36,12 @@ const BUTTON = 'flex size-7 shrink-0 cursor-pointer items-center justify-center 
  * not shown), floating over the map (moved by its handle, with the pointer or the arrow keys), or docked as the first
  * column of the page. Its content is the caller's.
  */
-export function GeoChatWindow({ mode, pos, bounds, onMove, onSettle, onDock, onFloat, onClose, children }: GeoChatWindowProps) {
+export function GeoChatWindow({ mode, pos, size: remembered, bounds, onMove, onSettle, onResize, onResizeSettle, onDock, onFloat, onClose, children }: GeoChatWindowProps) {
   const floating = mode === 'floating';
-  const size = windowSize(bounds);
+  const size = windowSize(bounds, remembered ?? undefined);
   const at = clampPosition(pos ?? defaultPosition(size, bounds), size, bounds);
   const drag = React.useRef<Drag | null>(null);
+  const grab = React.useRef<{ from: Point; size: Box; at: Point } | null>(null);
 
   const style: React.CSSProperties =
     mode === 'closed' ? { display: 'none' } : floating ? { left: at.x, top: at.y, width: size.width, height: size.height } : {};
@@ -98,6 +105,42 @@ export function GeoChatWindow({ mode, pos, bounds, onMove, onSettle, onDock, onF
         </button>
       </header>
       <div className="flex min-h-0 flex-1 flex-col">{children}</div>
+      {floating && (
+        <button
+          type="button"
+          aria-label="Resize chat window"
+          title="Drag to resize, arrow keys to resize, double-click to reset"
+          onPointerDown={(e) => {
+            if (e.button !== 0) return;
+            grab.current = { from: { x: e.clientX, y: e.clientY }, size, at };
+            e.currentTarget.setPointerCapture?.(e.pointerId);
+          }}
+          onPointerMove={(e) => {
+            const g = grab.current;
+            if (!g) return;
+            const next = cornerResize(g.size, g.at, e.clientX - g.from.x, e.clientY - g.from.y, bounds);
+            onResize(next.size, next.pos);
+          }}
+          onPointerUp={(e) => {
+            const g = grab.current;
+            grab.current = null;
+            if (!g) return;
+            const next = cornerResize(g.size, g.at, e.clientX - g.from.x, e.clientY - g.from.y, bounds);
+            onResizeSettle(next.size, next.pos);
+          }}
+          onKeyDown={(e) => {
+            const delta = nudge({ x: 0, y: 0 }, e.key, e.shiftKey);
+            if (!delta) return;
+            e.preventDefault();
+            // Left and up move the corner outward, so they grow the window; right and down shrink it.
+            const next = cornerResize(size, at, delta.x, delta.y, bounds);
+            onResizeSettle(next.size, next.pos);
+          }}
+          onDoubleClick={() => onResizeSettle(null, null)}
+          className="absolute left-0 top-0 z-10 flex size-5 cursor-nwse-resize touch-none items-start justify-start text-cx-faint outline-none hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent">
+          <Icon icon="north_west" size="sm" />
+        </button>
+      )}
     </div>
   );
 }

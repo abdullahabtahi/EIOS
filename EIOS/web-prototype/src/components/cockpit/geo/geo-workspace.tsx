@@ -16,6 +16,7 @@ import { geoSuggestions, mapContextOf, type MapState, moveLabel, stateAfterMove 
 import { GeoMoveToast } from './geo-move-toast';
 import { formatGeoUrl, parseGeoUrl } from './geo-url';
 import { GeoLegend } from './geo-legend';
+import { describeMap } from './geo-map-describe';
 import { GeoMap } from './geo-map';
 import { GeoPanel } from './geo-panel';
 import { GeoChatLauncher, type LauncherStatus } from './geo-chat-launcher';
@@ -265,12 +266,12 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
 
   return (
     <div className="geo-inter relative flex h-full min-h-0 flex-col lg:flex-row">
-      <GeoChatWindow mode={dock.mode} pos={dock.pos} bounds={box} onMove={dock.move} onSettle={dock.settle} onDock={dock.dock} onFloat={dock.float} onClose={dock.close}>
+      <GeoChatWindow mode={dock.mode} pos={dock.pos} size={dock.size} bounds={box} onMove={dock.move} onSettle={dock.settle} onResize={dock.resizeTo} onResizeSettle={dock.settleResize} onDock={dock.dock} onFloat={dock.float} onClose={dock.close}>
         <GeoAsk context={mapContextOf(mapState)} selected={selected} onMove={applyMove} onPending={setAsking} onAnswered={answered} intent={intent} />
       </GeoChatWindow>
-      <div ref={mapBox} role="region" aria-label="World map" aria-describedby="geo-map-help" className="relative min-h-0 min-w-0 flex-[3] lg:flex-1">
+      <div ref={mapBox} role="region" aria-label="World map" aria-describedby="geo-map-help" className="relative min-h-0 min-w-0 flex-[3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-cx-accent lg:flex-1">
         <p id="geo-map-help" className="sr-only">
-          The map draws what the side panel lists. Use the list to move through countries and corridors with the arrow keys; the map itself pans with the arrow keys and zooms with plus and minus.
+          {describeMap(view, visible, flowData, selected)}
         </p>
         <GeoMap layers={layers} focus={focus} target={target} />
         <div className="absolute left-3 top-3 z-10">
