@@ -66,3 +66,21 @@ def test_roundtrip_detector_persists_to_hot_state(
     assert row[1] == 500.0
     assert row[2] == 0.01
     assert row[3] >= 0.85
+
+
+def test_roundtrip_detector_txn_id_fallback(
+    synthetic_roundtrip_history: pd.DataFrame,
+) -> None:
+    """Transaction ids come from txn_id, then transaction_id, then a placeholder."""
+    detector = RoundTripDetector()
+    id_col = "txn_id" if "txn_id" in synthetic_roundtrip_history.columns else "transaction_id"
+
+    base = detector.detect_roundtrips(synthetic_roundtrip_history, window_hours=72.0)
+    expected = [r for r in base if r.client_id == "C-AML-ROUNDTRIP-01"][0]
+    assert expected.deposit_txn_id not in ("TXN-DEP", "None")
+
+    no_ids = synthetic_roundtrip_history.drop(columns=[id_col])
+    fallback = detector.detect_roundtrips(no_ids, window_hours=72.0)
+    planted = [r for r in fallback if r.client_id == "C-AML-ROUNDTRIP-01"][0]
+    assert planted.deposit_txn_id == "TXN-DEP"
+    assert planted.withdrawal_txn_id == "TXN-WTH"
