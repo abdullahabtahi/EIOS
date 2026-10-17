@@ -65,6 +65,27 @@ does not hang on the label: with churn defined as a fall of 30% or 50% instead, 
 `[MEASURED]`, always above the line. The remedy is recalibration against observed outcomes (isotonic or Platt), which is
 the flywheel's job and is not done here.
 
+## The radar detects; it does not yet forecast (lead time)
+
+The 0.974 AUC above is the radar read at the cut, against partners already declining. The brief asks for disengagement
+caught "well before churn occurs", so `python -m evals.partner.lead_time` (`dataplane/partner_lead_time.py`) reads the
+hazards the engine scored 14 and 30 days earlier and ranks them against the planted churners. Seeded world, 240 partners,
+51 planted churners `[MEASURED]`:
+
+| Lead | AUC | Precision at k | Alerts (hazard 0.5 or more) | Alert precision | Alert recall |
+|---|---|---|---|---|---|
+| 0 days | 0.974 | 0.86 | 70 | 0.71 | 0.98 |
+| 14 days | 0.723 | 0.43 | 31 | 0.55 | 0.33 |
+| 30 days | 0.439 | 0.16 | 42 | 0.07 | 0.06 |
+
+At 30 days ahead the ranking is no better than chance (the base rate of planted churners is 0.21 `[MEASURED]`), so the
+"probability of churn in 30 days" reading is not supported by this world: the planted declines start inside the last
+30 days and the features hold no precursor yet. This is also why recalibrating against the observed 30-day volume fall
+would only flatten the score to the base rate: cross-fitted Platt or isotonic gave an ECE near 0.02 and an AUC of
+0.50 to 0.54, with no partner left above the 0.5 line `[MEASURED]`. A calibration change must therefore be judged on the
+lead-time table (ranking kept), not on ECE alone. Floors under the 0 and 14 day AUCs are in
+`tests/dataplane/test_partner_lead_time.py`.
+
 ## Calibration and the flywheel
 
 `ops.calibration` now has a real basis. The flywheel's decision-outcomes ledger is still empty, so its causal
