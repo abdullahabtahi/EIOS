@@ -5,7 +5,7 @@ This directory provides standalone, portable Postman assets to run and verify th
 ## Contents
 - **`eios_showcase.postman_collection.json`**: Complete showcase test collection covering AML triage, Google Cloud KMS Action Intent signing, DoWhy causal scenario propagation (<200ms [TARGET]), Cashier Sentinel HMAC interception (<150ms SLA [TARGET]), and deterministic figure replay.
 - **`eios_environment.postman_environment.json`**: Pre-configured environment variables for both Local (`http://127.0.0.1:8002`) and Cloud Run (`https://eios-web-562008989053.us-central1.run.app`).
-- **`openapi_contract.json`**: Full OpenAPI 3.1.0 specification defining all gateway endpoints and data schemas.
+- **Dynamic OpenAPI 3.1.0 Contract**: Served live directly by FastAPI at `/openapi.json` (and interactive Swagger documentation at `/docs`).
 
 ---
 
