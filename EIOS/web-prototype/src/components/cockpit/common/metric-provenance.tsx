@@ -71,6 +71,8 @@ export function MetricProvenanceBadge({
   return (
     <Popover>
       <PopoverTrigger
+        title={metric.name ? `${metric.name} (${metric.metricId})` : metric.metricId}
+        data-metric-id={metric.metricId}
         className={`group inline-flex items-center gap-1 cursor-pointer transition-colors focus:outline-none focus-visible:ring-1 focus-visible:ring-slate-400 ${
           displayMode === 'badge'
             ? 'px-2 py-0.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-900 text-xs font-mono rounded-none'

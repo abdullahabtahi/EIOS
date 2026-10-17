@@ -34,6 +34,8 @@ export interface OpsSummary {
 export interface OperationsView {
   readonly source: 'live' | 'unavailable';
   readonly cards: readonly OpsCard[];
+  readonly products: readonly OpsCard[];
+  readonly errorBudgets: readonly OpsCard[];
   readonly gates: readonly OpsGate[];
   readonly summary: OpsSummary;
   readonly gateSummary: OpsSummary;
@@ -160,6 +162,8 @@ function unavailableView(): OperationsView {
   return {
     source: 'unavailable',
     cards: [],
+    products: [],
+    errorBudgets: [],
     gates: [],
     summary: { tone: 'warn', label: 'NO DATA' },
     gateSummary: { tone: 'warn', label: 'NO DATA' },
@@ -171,13 +175,16 @@ export function buildOperationsView(canvasPayload: unknown): OperationsView {
   const data = canvasPayload.data;
 
   let cards: OpsCard[] = [];
+  let products: OpsCard[] = [];
+  let budgets: OpsCard[] = [];
   let gates: OpsGate[] = [];
 
   if (Array.isArray(data)) {
     cards = data.filter(isRec).map(fixtureCard);
+    budgets = cards;
   } else if (isRec(data)) {
-    const products = Array.isArray(data.sla_statuses) ? data.sla_statuses.filter(isRec).map(productCard) : [];
-    const budgets = Array.isArray(data.error_budgets) ? data.error_budgets.filter(isRec).map(budgetCard) : [];
+    products = Array.isArray(data.sla_statuses) ? data.sla_statuses.filter(isRec).map(productCard) : [];
+    budgets = Array.isArray(data.error_budgets) ? data.error_budgets.filter(isRec).map(budgetCard) : [];
     cards = [...products, ...budgets];
     gates = toGates(data.red_line_gates);
   }
@@ -188,6 +195,8 @@ export function buildOperationsView(canvasPayload: unknown): OperationsView {
   return {
     source: 'live',
     cards,
+    products,
+    errorBudgets: budgets,
     gates: finalGates,
     summary: summarizeCards(cards),
     gateSummary: summarizeGates(finalGates),

@@ -11,7 +11,7 @@
 import { useStageRequest } from '../common/use-stage-request';
 import * as React from 'react';
 import { useCockpit } from '../state/cockpit-context';
-import { MetricProvenanceBadge } from '../common/metric-provenance';
+import { MetricProvenanceBadge, MetricCitationTag } from '../common/metric-provenance';
 import { FallbackReplayBadge } from '../common/fallback-replay-badge';
 import type { DossierSection, MetricProvenance } from '../state/cockpit-types';
 import { GeoDossierCard } from '../geo/geo-dossier-card';
@@ -105,6 +105,11 @@ export function CopilotDossier() {
 
       {/* Dossier Scrollable Narrative Sections */}
       <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-5">
+        {/* Geography of the account under investigation (AML only - prioritized at top for rapid investigative triage) */}
+        {state.activeRole === 'aml_investigator' && dossier.entityId && (
+          <GeoDossierCard entityId={dossier.entityId} />
+        )}
+
         {(dossier.sections || [])
           .filter((section: DossierSection) => {
             if (state.activeRole === 'aml_investigator') {
@@ -121,24 +126,28 @@ export function CopilotDossier() {
           const narrative = section.narrativeText || '';
           const metrics = Array.isArray(section.metrics) ? section.metrics : [];
 
+          // Separate regime/status tags (e.g. [TARGET], [SPIKE], [BRIEF]) from raw telemetry keys
+          const isRegimeTag = (c: string) => c.startsWith('[') && c.endsWith(']');
+          const regimeTags = citations.filter(isRegimeTag);
+
+          // Metrics already provide rich interactive badges with verified seals and provenance popovers for their metricId
+          const anchoredMetricIds = new Set(metrics.map((m: MetricProvenance) => m.metricId));
+          // Telemetry citations not already anchored as interactive quantitative metric badges
+          const unanchoredTelemetry = citations.filter((c: string) => !isRegimeTag(c) && !anchoredMetricIds.has(c));
+
           return (
             <section
               key={sectionId}
               className="p-3.5 bg-slate-50/50 border border-slate-200 space-y-2.5 rounded-none"
             >
-              <div className="flex items-center justify-between">
-                <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900 leading-snug min-w-0">
                   {title}
                 </h3>
-                {citations.length > 0 && (
-                  <div className="flex items-center gap-1">
-                    {citations.map((c: string) => (
-                      <span
-                        key={c}
-                        className="text-label font-mono bg-cx-info-bg text-cx-accent border border-cx-info-line px-1 py-0.2"
-                      >
-                        {c}
-                      </span>
+                {regimeTags.length > 0 && (
+                  <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                    {regimeTags.map((tag: string) => (
+                      <MetricCitationTag key={tag} citation={tag} />
                     ))}
                   </div>
                 )}
@@ -148,12 +157,32 @@ export function CopilotDossier() {
                 {narrative}
               </p>
 
-              {/* Anchored Metrics Grid */}
-              {metrics.length > 0 && (
-                <div className="pt-2 border-t border-cx-line-soft flex flex-wrap gap-2">
-                  {metrics.map((m: MetricProvenance) => (
-                    <MetricProvenanceBadge key={m.metricId} metric={m} displayMode="badge" />
-                  ))}
+              {/* Anchored Grounding Metrics & Evidence */}
+              {(metrics.length > 0 || unanchoredTelemetry.length > 0) && (
+                <div className="pt-2 border-t border-cx-line-soft space-y-1.5">
+                  {metrics.length > 0 && (
+                    <div className="flex flex-wrap gap-2 items-center">
+                      {metrics.map((m: MetricProvenance) => (
+                        <MetricProvenanceBadge key={m.metricId} metric={m} displayMode="badge" />
+                      ))}
+                    </div>
+                  )}
+                  {unanchoredTelemetry.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1.5 text-label font-mono">
+                      <span className="text-label font-mono uppercase tracking-wider text-slate-400 select-none">
+                        Evidence:
+                      </span>
+                      {unanchoredTelemetry.map((c: string) => (
+                        <span
+                          key={c}
+                          className="inline-flex items-center px-1.5 py-0.2 text-label font-mono text-slate-600 bg-white border border-slate-200 rounded-none"
+                          title={`Grounding telemetry: ${c}`}
+                        >
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </section>
@@ -162,9 +191,6 @@ export function CopilotDossier() {
 
         {/* The assistant's brief, prepared ahead of time for the top alerts (AML only) */}
         {state.activeRole === 'aml_investigator' && dossier.entityId && <PreparedBriefCard entityId={dossier.entityId} />}
-
-        {/* Geography of the account under investigation (AML only) */}
-        {state.activeRole === 'aml_investigator' && dossier.entityId && <GeoDossierCard entityId={dossier.entityId} />}
 
         {/* Strategic Trade-offs (Executive Horizon) */}
         {dossier.tradeOffs && dossier.tradeOffs.length > 0 && (
