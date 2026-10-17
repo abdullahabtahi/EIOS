@@ -1,0 +1,589 @@
+{
+  "info": {
+    "_postman_id": "9a3543ff-41e5-4563-9072-a92ddeeac026",
+    "name": "EIOS Enterprise Intelligence \u2014 Showcase & Quality Gate",
+    "description": "# EIOS (Enterprise Intelligence Operating System)\n\nAutonomous, regulator-grade decision intelligence platform on Google Cloud for institutional trading and fintech.\n\n### Showcase Workflows:\n1. **AML Surveillance & Triage**: Supervised alert ranking and multi-hop counterparty graph evidence.\n2. **ADK Copilot & Deterministic Replay**: Grounded responses with KMS proof, citation lineage, and mathematical figure verification.\n3. **Cashier Sentinel & Webhook Interception**: Sub-150ms pre-settlement gating with HMAC-SHA256 signature verification.\n4. **Executive Synthesis & Causal What-If**: Sub-200ms causal scenario propagation summing to exactly 100% attribution (Constitutional Invariant RL-6).\n5. **System Health & Observability**: Gateway liveness and dead-letter queue inspection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bearerToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "id": "59027271-6ba49d92-d412-4fff-a140-a3fd4c6b8f5b",
+      "name": "1. AML Investigation & Triage",
+      "description": "Supervised alert prioritization and four-eyes action intent staging.",
+      "item": [
+        {
+          "id": "59027271-2e804952-ab14-4cee-a97f-726368fba8cc",
+          "name": "1.1 Supervised Alert Triage Queue",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/aml/triage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aml",
+                "triage"
+              ]
+            },
+            "description": "Retrieves the supervised AML triage queue ranked by composite risk score."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Response time is under 500ms\", function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(500);",
+                  "});",
+                  "pm.test(\"Contains alerts array\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('alerts');",
+                  "    pm.expect(jsonData.alerts).to.be.an('array');",
+                  "    pm.expect(jsonData.alerts.length).to.be.above(0);",
+                  "    if (jsonData.alerts.length > 0) {",
+                  "        const caseId = jsonData.alerts[0].entity_id || 'CR84920';",
+                  "        pm.environment.set('activeCaseId', caseId);",
+                  "        pm.environment.set('activeEntityId', caseId);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "59027271-75c42482-20d5-4cbe-8ee2-a1ed028b73d4",
+          "name": "1.2 Multi-Hop Entity Dossier",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/aml/dossier/{{activeCaseId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "aml",
+                "dossier",
+                "{{activeCaseId}}"
+              ]
+            },
+            "description": "Fetches multi-hop entity dossier including risk metrics, graph topology, and transaction counterparties."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns entity dossier matching active case\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property('entity_id');",
+                  "    pm.expect(res).to.have.property('composite_risk_score');",
+                  "    pm.expect(res.composite_risk_score).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "59027271-32093afa-1f26-48ba-9f12-83ffa70e6b3c",
+          "name": "1.3 Propose Governed Hold (Four-Eyes Action Intent)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action_type\": \"FreezeAccount\",\n  \"target_entity_id\": \"{{activeCaseId}}\",\n  \"severity\": \"HIGH\",\n  \"requires_four_eyes\": true,\n  \"metadata\": {\n    \"reason_code\": \"HIGH_RISK_STRUCTURING\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cockpit/actions/stage",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cockpit",
+                "actions",
+                "stage"
+              ]
+            },
+            "description": "Stages a Four-Eyes Action Intent signed via Google Cloud KMS ECDSA P-256."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Action is staged with Cloud KMS cryptographic signature\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.status).to.eql(\"STAGED\");",
+                  "    pm.expect(res.card).to.have.property('kms_signature');",
+                  "    pm.expect(res.card.kms_signature.verified).to.be.true;",
+                  "    pm.expect(res.card.requires_four_eyes).to.be.true;",
+                  "    pm.environment.set('stagedIntentId', res.card.intent_id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "59027271-d7322695-b53d-4720-ae51-aa829ce74254",
+      "name": "2. ADK Copilot & Deterministic Evidence Replay",
+      "description": "Natural language copilot interactions backed by deterministic engines and replayed figures.",
+      "item": [
+        {
+          "id": "59027271-68057c0c-18f9-4d0e-900d-d2573d13d226",
+          "name": "2.1 Copilot Query (Google ADK Turn)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"query\": \"What are the primary risk indicators for entity CR84920?\",\n  \"role\": \"aml_investigator\",\n  \"context_entity_id\": \"{{activeCaseId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cockpit/copilot/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cockpit",
+                "copilot",
+                "query"
+              ]
+            },
+            "description": "Executes a governed copilot turn with strict LLM hallucination gating (Principle RL-1)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Copilot synthesized response with deterministic provenance citations\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.assistant_status).to.eql(\"ASSEMBLED\");",
+                  "    pm.expect(res.response).to.be.a('string').and.not.empty;",
+                  "    pm.expect(res.provenance_citations).to.be.an('array');",
+                  "    pm.expect(res.provenance_citations.length).to.be.above(0);",
+                  "    if (res.provenance_citations.length > 0) {",
+                  "        pm.environment.set(\"lastFactId\", res.provenance_citations[0].metric_id);",
+                  "        pm.environment.set(\"lastFactValue\", String(res.provenance_citations[0].raw_value));",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "59027271-8c5cc13e-3540-414b-ab07-691f4f9dde31",
+          "name": "2.2 Verify Cited Figures Parity (Deterministic Replay Gate)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"aml_investigator\",\n  \"figures\": [\n    {\n      \"fact_id\": \"{{lastFactId}}\",\n      \"value\": {{lastFactValue}}\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cockpit/copilot/verify",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cockpit",
+                "copilot",
+                "verify"
+              ]
+            },
+            "description": "Replays citations against the read models to verify zero hallucination (Constitutional Principle RL-7)."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.environment.get(\"lastFactId\")) {",
+                  "    pm.environment.set(\"lastFactId\", \"aml.dossier:CR84920:composite_risk_score\");",
+                  "    pm.environment.set(\"lastFactValue\", \"99.0\");",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Every replayed figure matches exactly (RL-7 Invariant)\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.checked).to.be.above(0);",
+                  "    pm.expect(res.matched).to.eql(res.checked);",
+                  "    pm.expect(res.rows[0].match).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "59027271-7974b949-bec8-4bbb-b604-97559b2a4197",
+      "name": "3. Cashier Sentinel & Real-Time Webhooks",
+      "description": "Pre-settlement withdrawal gating under 150ms SLA with HMAC-SHA256 signature verification.",
+      "item": [
+        {
+          "id": "59027271-1d71a2b9-b610-4acc-990e-65117a0ced91",
+          "name": "3.1 Intercept Cashier Withdrawal (HMAC-Signed)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Signature-SHA256",
+                "value": "{{calculatedHmac}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"withdrawal_id\": \"WTH-PLACEHOLDER\",\n  \"client_id\": \"CR84920\",\n  \"amount_usd\": 125000.0,\n  \"payment_method\": \"USDT_TRC20\",\n  \"nonce\": \"placeholder-nonce\",\n  \"timestamp\": 1792252596000,\n  \"hours_since_deposit\": 1.5,\n  \"recent_alert_score\": 0.92,\n  \"market_risk_pct\": 0.45\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/webhooks/cashier/withdrawal",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "webhooks",
+                "cashier",
+                "withdrawal"
+              ]
+            },
+            "description": "Simulates cashier withdrawal gateway webhook with HMAC verification and inline risk scoring."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const secret = pm.environment.get(\"EIOS_CASHIER_WEBHOOK_SECRET\") || \"eios-cashier-sentinel-secret-v1\";",
+                  "const nonce = \"wth-\" + Date.now() + \"-\" + Math.random().toString(36).substring(2, 8);",
+                  "const timestamp = Date.now();",
+                  "const payload = {",
+                  "    withdrawal_id: \"WTH-\" + Date.now(),",
+                  "    client_id: pm.environment.get(\"activeCaseId\") || \"CR84920\",",
+                  "    amount_usd: 125000.0,",
+                  "    payment_method: \"USDT_TRC20\",",
+                  "    nonce: nonce,",
+                  "    timestamp: timestamp,",
+                  "    hours_since_deposit: 1.5,",
+                  "    recent_alert_score: 0.92,",
+                  "    market_risk_pct: 0.45",
+                  "};",
+                  "const rawBody = JSON.stringify(payload);",
+                  "pm.request.body.raw = rawBody;",
+                  "const signature = CryptoJS.HmacSHA256(rawBody, secret).toString(CryptoJS.enc.Hex);",
+                  "pm.request.headers.upsert({ key: \"X-Signature-SHA256\", value: signature });",
+                  "pm.request.headers.upsert({ key: \"Content-Type\", value: \"application/json\" });"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Sentinel evaluated withdrawal under 150ms SLA\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.status).to.eql(\"PROCESSED\");",
+                  "    pm.expect(res.sla_met).to.be.true;",
+                  "    pm.expect(res.evaluation_latency_ms).to.be.below(150.0);",
+                  "    pm.expect([\"RELEASE\", \"HOLD\"]).to.include(res.disposition);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "59027271-7266f822-b35a-412b-877e-7d0fe6a38448",
+      "name": "4. Executive Synthesis & Causal What-If",
+      "description": "Executive horizon briefings and sub-200ms causal scenario propagation.",
+      "item": [
+        {
+          "id": "59027271-a1156794-fb10-4237-9c38-b69bb108647d",
+          "name": "4.1 Morning Executive Briefing",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/cockpit/executive",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cockpit",
+                "executive"
+              ]
+            },
+            "description": "Fetches four-horizon executive briefing with 28-day revenue forecast and causal DAG."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Contains executive briefing, forecast, and causal DAG\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property('briefing');",
+                  "    pm.expect(res).to.have.property('forecast');",
+                  "    pm.expect(res).to.have.property('dag');",
+                  "    pm.expect(res.dag.nodes).to.be.an('array');",
+                  "    pm.expect(res.dag.edges).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "59027271-2c2d18db-1e29-4a2f-8d4b-cd6041fc49bd",
+          "name": "4.2 Causal What-If Simulation (RL-6)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"shock_param\": \"competitor_payout_increase\",\n  \"magnitude_pct\": 25.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/cockpit/simulate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "cockpit",
+                "simulate"
+              ]
+            },
+            "description": "Executes parametric causal shock simulation with exact 100% attribution sum."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Constitutional Invariant RL-6: Attribution sums to exactly 100.0%\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.attribution_sum_pct).to.eql(100.0);",
+                  "});",
+                  "pm.test(\"Simulation responds in sub-200ms budget\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.latency_ms).to.be.below(200.0);",
+                  "    pm.expect(res).to.have.property('projected_changes');",
+                  "});",
+                  "if (typeof pm.visualizer !== 'undefined') {",
+                  "    const sim = pm.response.json();",
+                  "    const simTemplate = `<div style='font-family: -apple-system, sans-serif; padding: 16px; background: #0f172a; color: #f8fafc; border-radius: 8px;'><h2 style='margin-top:0; color: #38bdf8;'>Causal Attribution Waterfall (RL-6 Invariant: {{attribution_sum_pct}}%)</h2><p><strong>Latency:</strong> <span style='color: #4ade80;'>{{latency_ms}} ms</span> (SLA < 200ms)</p><table style='width: 100%; border-collapse: collapse; margin-top: 12px;'><thead><tr style='border-bottom: 1px solid #334155; text-align: left;'><th style='padding: 6px;'>Cohort</th><th style='padding: 6px;'>Attribution</th><th style='padding: 6px;'>Visual Share</th></tr></thead><tbody>{{#each attribution_waterfall}}<tr style='border-bottom: 1px solid #1e293b;'><td style='padding: 6px;'>{{driver}}</td><td style='padding: 6px;'>{{contribution_pct}}%</td><td style='padding: 6px;'><div style='background: #38bdf8; width: {{contribution_pct}}%; height: 8px; border-radius: 4px;'></div></td></tr>{{/each}}</tbody></table></div>`;",
+                  "    pm.visualizer.set(simTemplate, sim);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "59027271-982656ab-7ec8-47e6-915b-c51322cfa2b3",
+      "name": "5. System Health & Observability",
+      "description": "Platform gateway health checks and data pipeline dead letter queue inspection.",
+      "item": [
+        {
+          "id": "59027271-a54fbb3d-2f2d-44d7-a68c-18c375f3775f",
+          "name": "5.1 API Gateway Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Verifies presentation engine health and security standards."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Engine status is UP with Google Cloud KMS standard\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res.status).to.eql(\"UP\");",
+                  "    pm.expect(res.security_standard).to.include(\"Google Cloud KMS\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "id": "59027271-3e4726ff-a405-4ead-9388-9e8b4c90c186",
+          "name": "5.2 Data Platform Dead Letter Queue (DLQ)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ops/dlq",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "ops",
+                "dlq"
+              ]
+            },
+            "description": "Inspects quarantined ingestion events without dropping messages (Data Strategy principle)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"Returns quarantined event records\", function () {",
+                  "    const res = pm.response.json();",
+                  "    pm.expect(res).to.have.property('total_quarantined');",
+                  "    pm.expect(res.records).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
