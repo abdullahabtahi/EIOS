@@ -99,7 +99,7 @@ def _summary(view: dict[str, Any], as_of: str) -> dict[str, Any]:
     reasons = view["reasons"]
     text = view["headline"] + ("." if not view["headline"].endswith(".") else "")
     if reasons:
-        text += " Why it was raised: " + "; ".join(reasons[:3]) + "."
+        text += " Why it was raised: " + "; ".join(r.rstrip(".") for r in reasons[:3]) + "."
     metrics = (
         []
         if case is None

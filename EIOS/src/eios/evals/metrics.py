@@ -1,5 +1,6 @@
 """Core mathematical metrics and vectorized bootstrap confidence interval estimators (F04)."""
 
+import math
 from collections.abc import Sequence
 
 import numpy as np
@@ -90,7 +91,7 @@ def compute_mase(
     naive_diff = np.abs(y_a[seasonality:] - y_a[:-seasonality])
     naive_mae = np.mean(naive_diff)
 
-    if naive_mae == 0.0:
+    if math.isclose(naive_mae, 0.0, abs_tol=1e-9):
         return float(forecast_mae)
 
     return float(forecast_mae / naive_mae)
@@ -107,8 +108,8 @@ def compute_lift(candidate: float, baseline: float) -> tuple[float, float]:
         Tuple of (absolute_delta, relative_lift_pct).
     """
     absolute_delta = candidate - baseline
-    if baseline == 0.0:
-        relative_lift_pct = 0.0 if candidate == 0.0 else 100.0
+    if math.isclose(baseline, 0.0, abs_tol=1e-9):
+        relative_lift_pct = 0.0 if math.isclose(candidate, 0.0, abs_tol=1e-9) else 100.0
     else:
         relative_lift_pct = (absolute_delta / baseline) * 100.0
     return absolute_delta, relative_lift_pct

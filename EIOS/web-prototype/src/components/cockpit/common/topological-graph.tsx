@@ -724,40 +724,7 @@ export function TopologicalGraphCanvas() {
           : (isFullscreen ? '#94A3B8' : '#64748B');
         ctx.fill();
 
-        // Edge Label Pill (Strict Progressive Disclosure: only on hover, active path, or cycle detector)
-        const isHoveredEdge = hoveredNode?.id === e.source.id || hoveredNode?.id === e.target.id;
-        const isCycleHighlighted = highlightCycles && isCycleEdge;
-        const isSelectedLowDegree = selectedNode && isConnectedToSelected && selectedConnectedEdges.length <= 3;
-        const showEdgeLabel = isPathEdge || isCycleHighlighted || isHoveredEdge || isSelectedLowDegree;
 
-        if (showEdgeLabel) {
-          const midX = (e.source.x + e.target.x) / 2;
-          const midY = (e.source.y + e.target.y) / 2;
-          const labelText = e.label || (e.type === 'MIRROR_TRADE' ? 'Mirror 99%' : 'Transfer');
-
-          ctx.font = '9px "Roboto Mono", monospace';
-          const textMetrics = ctx.measureText(labelText);
-          const pillWidth = textMetrics.width + 12;
-
-          ctx.fillStyle = isFullscreen ? '#0F172A' : '#FFFFFF';
-          ctx.fillRect(midX - pillWidth / 2, midY - 8, pillWidth, 16);
-          ctx.strokeStyle = isPathEdge
-            ? (isFullscreen ? '#5f9cc2' : '#106ba3')
-            : isFullscreen
-            ? 'rgba(255, 255, 255, 0.2)'
-            : '#94A3B8';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(midX - pillWidth / 2, midY - 8, pillWidth, 16);
-
-          ctx.fillStyle = isPathEdge
-            ? (isFullscreen ? '#e3eef6' : '#0e5c8a')
-            : isFullscreen
-            ? '#CBD5E1'
-            : '#1E293B';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(labelText, midX, midY);
-        }
 
         ctx.restore();
       });
@@ -852,8 +819,9 @@ export function TopologicalGraphCanvas() {
         ctx.fillText(glyph, n.x, n.y);
 
         // Accessible Human-Readable Label Formatting
+        const suspectLabel = `${focalId || 'CR84920'} (Suspect)`;
         const formatNodeLabel = (id: string) => {
-          if (id === focalId || id.includes('84920')) return 'CR84920 (Suspect)';
+          if (id === focalId || (focalId ? id === focalId : id.includes('84920'))) return suspectLabel;
           const muleMatch = id.match(/mule[-_]?(?:mp[-_]?\d+[-_]?|4920[-_]?)?(\d+)/i);
           if (muleMatch) return `Mule #${muleMatch[1]}`;
           const ringMatch = id.match(/ring[-_]?(\d+)/i);
@@ -863,9 +831,9 @@ export function TopologicalGraphCanvas() {
           return id;
         };
 
-        const isFocalNode = n.id === focalId || n.id.includes('84920') || (Math.abs(n.x) < 8 && Math.abs(n.y) < 8);
+        const isFocalNode = n.id === focalId || (!focalId && n.id.includes('84920')) || (Math.abs(n.x) < 8 && Math.abs(n.y) < 8);
         const labelText = isFocalNode
-          ? 'CR84920 (Suspect)'
+          ? suspectLabel
           : isSelected || isHovered
           ? (formatNodeLabel(n.id) !== n.id ? `${formatNodeLabel(n.id)} [${n.id}]` : n.id)
           : formatNodeLabel(n.id);
@@ -969,6 +937,59 @@ export function TopologicalGraphCanvas() {
 
         ctx.restore();
       }
+
+      // 4b. Render Edge Label Overlay (High Z-Index above node circles with perpendicular anti-collision offset)
+      simEdgesRef.current.forEach((e) => {
+        const isCycleEdge = highlightCycles && cycleNodeIds.has(e.source.id) && cycleNodeIds.has(e.target.id);
+        const isPathEdge =
+          activePathNodeIds.size > 0 &&
+          activePathNodeIds.has(e.source.id) &&
+          activePathNodeIds.has(e.target.id);
+        const isConnectedToSelected = selectedNode && (e.source.id === selectedNode.id || e.target.id === selectedNode.id);
+        const selectedConnectedEdges = selectedNode
+          ? simEdgesRef.current.filter((ed) => ed.source.id === selectedNode.id || ed.target.id === selectedNode.id)
+          : [];
+        const isHoveredEdge = hoveredNode?.id === e.source.id || hoveredNode?.id === e.target.id;
+        const isCycleHighlighted = highlightCycles && isCycleEdge;
+        const isSelectedLowDegree = selectedNode && isConnectedToSelected && selectedConnectedEdges.length <= 3;
+        const showEdgeLabel = isPathEdge || isCycleHighlighted || isHoveredEdge || isSelectedLowDegree;
+
+        if (showEdgeLabel) {
+          ctx.save();
+          const dx = e.target.x - e.source.x;
+          const dy = e.target.y - e.source.y;
+          const dist = Math.hypot(dx, dy) || 1;
+          const nx = -dy / dist;
+          const ny = dx / dist;
+          const midX = (e.source.x + e.target.x) / 2 + nx * 8;
+          const midY = (e.source.y + e.target.y) / 2 + ny * 8;
+          const labelText = e.label || (e.type === 'MIRROR_TRADE' ? 'Mirror 99%' : 'Transfer');
+
+          ctx.font = '9px "Roboto Mono", monospace';
+          const textMetrics = ctx.measureText(labelText);
+          const pillWidth = textMetrics.width + 12;
+
+          ctx.fillStyle = isFullscreen ? '#0F172A' : '#FFFFFF';
+          ctx.fillRect(midX - pillWidth / 2, midY - 8, pillWidth, 16);
+          ctx.strokeStyle = isPathEdge
+            ? (isFullscreen ? '#5f9cc2' : '#106ba3')
+            : isFullscreen
+            ? 'rgba(255, 255, 255, 0.2)'
+            : '#94A3B8';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(midX - pillWidth / 2, midY - 8, pillWidth, 16);
+
+          ctx.fillStyle = isPathEdge
+            ? (isFullscreen ? '#e3eef6' : '#0e5c8a')
+            : isFullscreen
+            ? '#CBD5E1'
+            : '#1E293B';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(labelText, midX, midY);
+          ctx.restore();
+        }
+      });
 
       ctx.restore();
 

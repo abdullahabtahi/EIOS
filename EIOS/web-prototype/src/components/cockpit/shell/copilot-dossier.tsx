@@ -390,7 +390,7 @@ function PartnerRetentionDossierView({ dossier }: { dossier: any }) {
     : `Hi ${partner.name.split(' ')[0]}, Elena from Institutional Partner Ops. We reviewed your monthly volume and have approved an exclusive +${sliderBps} bps spread rebate match with zero-swap on Gold. This protects your margins against rival offers while keeping your existing sub-IB tier active.`;
 
   const copyBattlecard = () => {
-    navigator.clipboard.writeText(battlecardScript);
+    void navigator.clipboard.writeText(battlecardScript).catch(() => {});
     setCopiedScript(true);
     setTimeout(() => setCopiedScript(false), 2000);
   };

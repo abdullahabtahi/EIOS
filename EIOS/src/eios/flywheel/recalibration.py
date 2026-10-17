@@ -33,7 +33,7 @@ def verify_dag_acyclicity(edges: Sequence[tuple[str, str]]) -> bool:
         adj[src].append(tgt)
         in_degree[tgt] += 1
         if src not in in_degree:
-            in_degree[src] = in_degree[src]
+            in_degree[src] = 0
 
     # Kahn's algorithm: queue of all nodes with in-degree 0
     queue = deque([n for n in nodes if in_degree[n] == 0])

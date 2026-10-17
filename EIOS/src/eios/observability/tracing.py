@@ -7,7 +7,6 @@ adaptive tail sampling preserving 100% of errors and long-tail latency events.
 
 from __future__ import annotations
 
-import random
 import secrets
 import threading
 import time
@@ -160,7 +159,7 @@ class OpenTelemetrySpine:
                 should_record = True
             elif duration_ms >= self.latency_tail_threshold_ms:
                 should_record = True
-            elif self.sample_rate >= 1.0 or random.random() <= self.sample_rate:  # noqa: S311
+            elif self.sample_rate >= 1.0 or secrets.SystemRandom().random() <= self.sample_rate:
                 should_record = True
 
             if should_record:

@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     queryId: data.queryId ?? `qry_${Date.now()}`,
     naturalLanguageQuery: data.query || query,
     responseMarkdown: data.response ?? '',
-    citedMetrics: rawCitations.map(normalizeCitedMetric),
+    citedMetrics: rawCitations.map((m) => normalizeCitedMetric(m)),
     sources: rawSources.map(normalizeSource).filter((s): s is AnswerSource => s !== undefined),
     assistantStatus,
     blocked: data.blocked === true,

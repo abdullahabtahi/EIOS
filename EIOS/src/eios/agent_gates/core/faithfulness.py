@@ -47,7 +47,7 @@ _COMPATIBLE = {
     "duration": {"duration", "other"},
 }
 _POWERS = (-6, -3, -2, -1, 1, 2, 3, 6)
-_IDENTIFIER = re.compile(r"\b[A-Za-z][A-Za-z0-9_-]*\d{2,}[A-Za-z0-9_-]*\b")
+_IDENTIFIER = re.compile(r"\b[A-Za-z][A-Za-z0-9_-]*?\d{2,}[A-Za-z0-9_-]*\b")
 
 
 @dataclass(frozen=True)

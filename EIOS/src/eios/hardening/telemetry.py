@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import tracemalloc
 import uuid
 from datetime import UTC, datetime
@@ -61,7 +62,7 @@ class MemoryLeakDetector:
 
         x_dev = x - np.mean(x)
         denom = float(np.sum(x_dev**2))
-        if denom == 0.0:
+        if math.isclose(denom, 0.0, abs_tol=1e-9):
             slope = 0.0
         else:
             slope = float(np.sum(x_dev * (y - np.mean(y))) / denom)

@@ -97,7 +97,6 @@ class RoundTripDetector:
                         holding_secs = 0.0
 
                     market_risk_pct = round(abs(net_pl) / max(dep_amt, 1.0), 5)
-                    (wdl_ts - dep_ts).total_seconds() / 3600.0
 
                     if pd.notna(kyc_dt) and kyc_dt is not None:
                         hours_since_kyc = max(
