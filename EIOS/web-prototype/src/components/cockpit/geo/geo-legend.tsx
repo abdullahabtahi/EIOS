@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Icon } from '@/components/ui/icon';
 import { OFFSHORE_NOTICE } from './geo-format';
 import { BASEL_BREAKS, type BasisId } from './geo-basis';
 import { drawnKinds, rankedCorridors, rankedPairs, shownCorridors, shownPairs } from './geo-rank';
@@ -46,35 +47,51 @@ export interface ChangeOutlines {
 }
 
 export function GeoLegend({ visible, flows, basis = 'fatf', outlines = null }: { readonly visible: ReadonlySet<LayerId>; readonly flows: GeoFlows | null; readonly basis?: BasisId; readonly outlines?: ChangeOutlines | null }) {
+  // Below the small breakpoint the key is a line you open: dropping it would leave the colours unexplained.
+  const [open, setOpen] = React.useState(false);
   const kinds = flows ? drawnKinds(flows) : new Set<string>();
   const keys = KEYS.filter((k) => visible.has(k.layer) && (k.basis === undefined || k.basis === basis) && (k.kind === undefined || kinds.has(k.kind)));
   const notes = drawnCounts(flows, visible);
   if (keys.length === 0 && !(outlines && visible.has('risk') && (outlines.added || outlines.removed))) return null;
+  const shown = open ? 'block' : 'hidden sm:block';
   return (
-    <div className="w-56 border border-cx-line bg-white p-2.5 text-label text-cx-ink-soft">
-      <ul aria-label="Map legend" className="hidden space-y-1.5 sm:block">
-        {keys.map((k) => (
-          <li key={k.label} className="flex items-center gap-2">
-            <span aria-hidden="true" className={`inline-block w-4 shrink-0 ${k.swatch}`} />
-            {k.label}
-          </li>
-        ))}
-        {outlines && visible.has('risk') && outlines.added && (
-          <li className="flex items-center gap-2">
-            <span aria-hidden="true" className="inline-block h-3 w-4 shrink-0 border-2 border-cx-bad" />
-            Added to the list
-          </li>
-        )}
-        {outlines && visible.has('risk') && outlines.removed && (
-          <li className="flex items-center gap-2">
-            <span aria-hidden="true" className="inline-block h-3 w-4 shrink-0 border-2 border-cx-accent" />
-            Removed from the list
-          </li>
-        )}
-      </ul>
-      {visible.has('corridors') && flows && <p className="mt-2 hidden border-t border-cx-line-soft pt-1.5 text-cx-muted sm:block">A line darkens toward where the money goes. A ring marks where several routes meet.</p>}
-      {visible.has('offshore') && <p className="mt-2 border-t border-cx-line-soft pt-1.5 text-cx-muted">{OFFSHORE_NOTICE}</p>}
-      {notes.length > 0 && <p className="border-cx-line-soft text-cx-muted sm:mt-2 sm:border-t sm:pt-1.5">Showing {notes.join(' · ')}</p>}
+    <div className="w-56 max-sm:w-auto max-sm:max-w-[calc(100vw-5rem)] border border-cx-line bg-white text-label text-cx-ink-soft">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        className="pointer-events-auto flex w-full cursor-pointer items-center gap-1.5 px-2.5 py-2 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent sm:hidden">
+        <Icon icon={open ? 'expand_more' : 'expand_less'} size="sm" className="shrink-0 text-cx-muted" />
+        <span className="font-semibold text-cx-ink">Key</span>
+        {notes.length > 0 && <span className="min-w-0 truncate text-cx-muted">Showing {notes.join(' · ')}</span>}
+      </button>
+      <div className={`p-2.5 max-sm:pt-0 ${open ? '' : 'max-sm:hidden'}`}>
+        <ul aria-label="Map legend" className={`${shown} space-y-1.5`}>
+          {keys.map((k) => (
+            <li key={k.label} className="flex items-center gap-2">
+              <span aria-hidden="true" className={`inline-block w-4 shrink-0 ${k.swatch}`} />
+              {k.label}
+            </li>
+          ))}
+          {outlines && visible.has('risk') && outlines.added && (
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="inline-block h-3 w-4 shrink-0 border-2 border-cx-bad" />
+              Added to the list
+            </li>
+          )}
+          {outlines && visible.has('risk') && outlines.removed && (
+            <li className="flex items-center gap-2">
+              <span aria-hidden="true" className="inline-block h-3 w-4 shrink-0 border-2 border-cx-accent" />
+              Removed from the list
+            </li>
+          )}
+        </ul>
+        <div data-legend-notes className={`${shown} space-y-1.5`}>
+          {visible.has('corridors') && flows && <p className="mt-2 border-t border-cx-line-soft pt-1.5 text-cx-muted">A line darkens toward where the money goes. A ring marks where several routes meet.</p>}
+          {visible.has('offshore') && <p className="mt-2 border-t border-cx-line-soft pt-1.5 text-cx-muted">{OFFSHORE_NOTICE}</p>}
+        </div>
+        {notes.length > 0 && <p className="mt-2 hidden border-t border-cx-line-soft pt-1.5 text-cx-muted sm:block">Showing {notes.join(' · ')}</p>}
+      </div>
     </div>
   );
 }

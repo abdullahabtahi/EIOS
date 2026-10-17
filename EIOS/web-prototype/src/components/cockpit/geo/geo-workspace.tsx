@@ -3,7 +3,7 @@
 import * as React from 'react';
 import type { ViewCommand } from '../state/cockpit-types';
 import { DEFAULT_BASIS, type BasisId } from './geo-basis';
-import { buildLayers, type HighlightArc, type HoverPoint, type ListChangeMarks } from './geo-layers';
+import { buildLayers, LABEL_DEFAULT_ZOOM, type HighlightArc, type HoverPoint, type ListChangeMarks } from './geo-layers';
 import { cameraFor, cameraForCodes, type CameraTarget } from './geo-camera';
 import { useGeoAccount } from './geo-account';
 import { GeoAsk } from './geo-ask';
@@ -219,6 +219,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
 
   // The map's size, so a tooltip can flip away from an edge.
   const [box, setBox] = React.useState({ width: 0, height: 0 });
+  const [zoom, setZoom] = React.useState(LABEL_DEFAULT_ZOOM);
   React.useEffect(() => {
     const el = mapBox.current;
     if (!el) return;
@@ -240,8 +241,8 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
     [view, side, listChange],
   );
   const layers = React.useMemo(
-    () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }, highlight, basis, marks, earlier),
-    [flowData, referenceData, visible, selected, onHover, highlight, basis, marks, earlier],
+    () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }, highlight, basis, marks, earlier, zoom),
+    [flowData, referenceData, visible, selected, onHover, highlight, basis, marks, earlier, zoom],
   );
   const focus = React.useMemo(() => focusFor(view, flowData, referenceData), [view, flowData, referenceData]);
 
@@ -273,7 +274,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
         <p id="geo-map-help" className="sr-only">
           {describeMap(view, visible, flowData, selected)}
         </p>
-        <GeoMap layers={layers} focus={focus} target={target} />
+        <GeoMap layers={layers} focus={focus} target={target} onZoom={setZoom} />
         <div className="absolute left-3 top-3 z-10">
           <GeoViewSwitcher current={view} onChange={changeView} />
         </div>

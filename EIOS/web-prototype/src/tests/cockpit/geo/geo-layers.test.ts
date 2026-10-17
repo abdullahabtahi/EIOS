@@ -246,10 +246,14 @@ describe('the corridor map reads as a network, not a knot', () => {
     expect(of('IR')).toBeGreaterThan(of('PA'));
   });
 
-  it('hides a label that would sit on a bigger one instead of printing over it', () => {
-    const [labels] = buildLayers(FLOWS, REFERENCE, new Set<LayerId>(['corridors']), null).filter((l) => l.id === 'geo-labels');
-    expect(labels.props.extensions?.map((e: object) => e.constructor.name)).toContain('CollisionFilterExtension');
-    expect((labels.props as { collisionEnabled?: boolean }).collisionEnabled).toBe(true);
+  it('thins labels that would overlap at a low zoom and brings them back when zoomed in', () => {
+    const names = (zoom: number) => {
+      const [labels] = buildLayers(FLOWS, REFERENCE, new Set<LayerId>(['corridors']), null, {}, [], 'fatf', null, null, zoom).filter((l) => l.id === 'geo-labels');
+      return (labels.props.data as { name: string }[]).length;
+    };
+    expect(names(1)).toBeLessThanOrEqual(names(8));
+    const touched = new Set(FLOWS.corridors.flatMap((c) => [c.origin, c.destination]));
+    expect(names(14)).toBe(REFERENCE.countries.filter((c) => touched.has(c.iso2)).length);
   });
 
   it('marks a country that four or more routes meet as a hub, and no other', () => {
