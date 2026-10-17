@@ -101,6 +101,7 @@ def test_a_hold_proposed_from_the_map_is_sealed_signed_approved_and_replays_equa
     replayed = client.post(f"/api/cockpit/evidence/{bundle_id}/replay").json()
     assert replayed["intact"] and replayed["equal"]
     assert replayed["figures"] > 0 and replayed["differing"] == 0
+    assert replayed["manifest"] == {"status": "unchanged", "changed": []}
 
 
 def test_a_replay_names_every_figure_that_changed_since_sealing(
@@ -118,6 +119,19 @@ def test_a_replay_names_every_figure_that_changed_since_sealing(
     replayed = client.post(f"/api/cockpit/evidence/{bundle_id}/replay").json()
     assert not replayed["equal"] and replayed["differing"] == 1
     assert replayed["calls"][0]["differences"][0]["fact_id"].endswith(":expected_effect_low")
+
+
+def test_a_replay_says_when_the_setup_that_answered_has_changed(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    bundle_id = _ask(client)["evidence_bundle_id"]
+    runtime = assistant_gateway.get_runtime()
+    monkeypatch.setattr(runtime, "_settings", replace(runtime._settings, plain_figures=False))
+    runtime._manifests.clear()
+    replayed = client.post(f"/api/cockpit/evidence/{bundle_id}/replay").json()
+    assert replayed["equal"]  # the data came back the same
+    assert replayed["manifest"]["status"] == "changed"
+    assert "instruction_sha256" in replayed["manifest"]["changed"]
 
 
 def test_staging_with_evidence_that_is_unknown_altered_or_about_someone_else_is_refused(

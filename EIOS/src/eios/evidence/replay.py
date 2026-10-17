@@ -53,7 +53,40 @@ def _call_again(port: _Port, principal: Principal, call: Mapping[str, Any]) -> d
     }
 
 
-def replay(bundle: Mapping[str, Any], port: _Port, principal: Principal) -> dict[str, Any]:
+def _flat(content: Mapping[str, Any], prefix: str = "") -> dict[str, Any]:
+    flat: dict[str, Any] = {}
+    for key, value in content.items():
+        path = f"{prefix}{key}"
+        if isinstance(value, Mapping):
+            flat.update(_flat(value, f"{path}."))
+        else:
+            flat[path] = value
+    return flat
+
+
+def compare_manifests(
+    sealed: Mapping[str, Any] | None, current: Mapping[str, Any] | None
+) -> dict[str, Any]:
+    """Is the setup that produced the answer still the setup now? `changed` names each part that moved, by path.
+
+    Not part of `equal`: that says whether the data came back the same. A different instruction, model or tool catalogue
+    means the same question could end differently today, which a reader should see beside it. A bundle sealed before
+    manifests were kept, or a setup that cannot be rebuilt now (a retired model), is said so, never called unchanged."""
+    if sealed is None:
+        return {"status": "unrecorded", "changed": []}
+    if current is None:
+        return {"status": "unavailable", "changed": []}
+    then, now = _flat(sealed), _flat(current)
+    changed = sorted(k for k in then.keys() | now.keys() if then.get(k) != now.get(k))
+    return {"status": "changed" if changed else "unchanged", "changed": changed}
+
+
+def replay(
+    bundle: Mapping[str, Any],
+    port: _Port,
+    principal: Principal,
+    current_manifest: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     if not intact(bundle):
         return {"bundle_id": bundle.get("bundle_id"), "intact": False, "equal": False, "calls": []}
     rows = [_call_again(port, principal, c) for c in bundle.get("calls", []) if not c.get("error")]
@@ -64,5 +97,6 @@ def replay(bundle: Mapping[str, Any], port: _Port, principal: Principal) -> dict
         "equal": bool(compared) and all(r["status"] == "equal" for r in rows),
         "figures": sum(r.get("figures", 0) for r in rows),
         "differing": sum(r.get("differing", 0) for r in rows),
+        "manifest": compare_manifests(bundle.get("manifest"), current_manifest),
         "calls": rows,
     }

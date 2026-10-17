@@ -48,7 +48,12 @@ from eios.assistant.tools import (
     TABLES_KEY,
 )
 from eios.llm_gateway.providers.adk_types import model_message, text_of, user_message
-from eios.llm_gateway.providers.registry import ModelChoice, ModelRegistry, load_registry
+from eios.llm_gateway.providers.registry import (
+    ModelChoice,
+    ModelRegistry,
+    UnknownModelError,
+    load_registry,
+)
 from eios.observability.cloud_trace import run_telemetry
 from eios.ontology.omcp.port.principal import Principal
 from eios.ontology.omcp.port.service import GovernedToolPort
@@ -205,6 +210,16 @@ class AssistantRuntime:
                 model_id=model_id,
             )
         return self._manifests[key]
+
+    def current_manifest(
+        self, principal: Principal, model_key: str | None
+    ) -> dict[str, Any] | None:
+        """What would produce an answer now for this workstation and the model key a bundle recorded, or None when
+        that model is no longer offered. A replay compares it with the manifest sealed in the bundle."""
+        try:
+            return self._manifest(principal, self._registry.resolve(model_key))
+        except UnknownModelError:
+            return None
 
     @property
     def registry(self) -> ModelRegistry:
