@@ -85,6 +85,12 @@ class GoldenTurn(StrictModel):
     expected_facts: list[ExpectedFact] = Field(default_factory=list)
     aliases: dict[str, list[str]] = Field(default_factory=dict)
     refusal_required: bool = False
+    must_mention: list[str] = Field(
+        default_factory=list
+    )  # words the answer must contain (conduct suite)
+    live_only: bool = (
+        False  # needs a real model (a follow-up, or a sentence the scripted runtime cannot write)
+    )
     max_rounds: int = Field(default=3, ge=1)
     trajectory_match: TrajectoryMatch = TrajectoryMatch.ANY_ORDER
     min_precision: float = Field(default=0.8, ge=0, le=1)
