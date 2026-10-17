@@ -13,7 +13,7 @@ _LOG = logging.getLogger("eios.llm_gateway.providers.gemini_client")
 # Gemini 3.x models are served from the `global` Vertex AI endpoint; regional endpoints return 404.
 DEFAULT_LOCATION = "global"
 DEFAULT_MODEL = "gemini-3.8-flash"
-FALLBACK_MODEL = "gemini-3.7-flash"
+FALLBACK_MODEL = "gemini-3.5-flash"
 
 
 class GeminiClientManager:
