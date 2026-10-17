@@ -145,7 +145,8 @@ def test_the_second_turn_continues_the_same_thread() -> None:
     _turn(runtime, "What is the discrepancy?")
     _turn(runtime, "And again?")
     first_turn_text = str(llm.seen[0].contents)
-    assert "What is the discrepancy?" in str(llm.seen[-1].contents)
+    # earlier turns reach the model through the instruction, as what the operator read (history.py)
+    assert "What is the discrepancy?" in str(llm.seen[-1].config.system_instruction)
     assert "What is the discrepancy?" in first_turn_text
 
 

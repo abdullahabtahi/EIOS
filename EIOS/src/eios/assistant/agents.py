@@ -17,7 +17,9 @@ from google.adk.models.base_llm import BaseLlm
 
 from eios.assistant.assembler_agent import DRAFT_KEY, FEEDBACK_KEY, AnswerAssembler
 from eios.assistant.assembly import MAX_ATTEMPTS
+from eios.assistant.config import DEFAULT_HISTORY_TURNS
 from eios.assistant.geo_context import GEO_RULES, describe_map
+from eios.assistant.history import render_history
 from eios.assistant.intent import BROAD_KEY, ON_SCREEN_KEY
 from eios.assistant.origin_guard import refuse_by_origin
 from eios.assistant.prefetch import Prefetcher
@@ -143,7 +145,9 @@ Do not pad: leave out a heading the data does not support, and never fill it wit
 
 
 def instruction_for(
-    workstation: Workstation, plain_figures: bool = False
+    workstation: Workstation,
+    plain_figures: bool = False,
+    history_turns: int = DEFAULT_HISTORY_TURNS,
 ) -> Callable[[ReadonlyContext], str]:
     figure, listing = (
         (_PLAIN_FIGURES, _PLAIN_LIST)
@@ -168,6 +172,9 @@ def instruction_for(
             parts.append(describe_map(state.get("entity_context"), named=entity))
         else:
             parts.append(f"Entity on screen: {entity}." if entity else "No entity is on screen.")
+        session = getattr(ctx, "session", None)
+        if earlier := render_history(getattr(session, "events", ()), history_turns):
+            parts.append(earlier)
         if elsewhere := state.get(ON_SCREEN_KEY):
             parts.append(
                 f"The question names {entity}, not {elsewhere} which is on screen: answer about {entity}, "
@@ -212,12 +219,16 @@ def build_agent(
     prefetch: bool = False,
     hedge_after_s: float = 0.0,
     plain_figures: bool = False,
+    history_turns: int = DEFAULT_HISTORY_TURNS,
 ) -> LoopAgent:
     workstation = principal.workstation
     drafter = Agent(
         name="drafter",
         model=_timed_model(model, hedge_after_s),
-        instruction=instruction_for(workstation, plain_figures),
+        instruction=instruction_for(workstation, plain_figures, history_turns),
+        # Only this turn's question and tool results are replayed as messages; earlier turns arrive through the
+        # instruction as what the operator read (history.py), never as drafts the assembler rejected.
+        include_contents="none",
         tools=list(build_toolset(port, principal)),
         output_key=DRAFT_KEY,
         # On the geo workstation a question about people by origin is refused before the model runs (origin_guard.py).

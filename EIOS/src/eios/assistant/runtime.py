@@ -18,7 +18,6 @@ from google.adk.apps.app import App
 from google.adk.events.event import Event
 from google.adk.models.base_llm import BaseLlm
 from google.adk.plugins.base_plugin import BasePlugin
-from google.adk.plugins.context_filter_plugin import ContextFilterPlugin
 from google.adk.runners import Runner
 from google.adk.sessions.base_session_service import BaseSessionService
 
@@ -172,12 +171,9 @@ class AssistantRuntime:
         self._sessions, self._model = TimedSessionService(session_service), model
         self._registry = registry or load_registry()
         self._llms: dict[str, BaseLlm] = {}  # one model client per model id, reused by every turn
-        # ADK's own filter bounds what the model reads; the stored thread keeps everything.
-        self._plugins = (
-            ContextFilterPlugin(num_invocations_to_keep=settings.history_turns),
-            TimingPlugin(),
-            *plugins,
-        )
+        # What the model reads of earlier turns is bounded by `history_turns` in the instruction (history.py); the
+        # stored thread keeps everything.
+        self._plugins = (TimingPlugin(), *plugins)
 
     def _llm(self, model_id: str) -> BaseLlm:
         """The model for this id, built on first use and then shared: its connection and token outlive a turn."""
@@ -290,6 +286,7 @@ class AssistantRuntime:
             prefetch=self._settings.prefetch,
             hedge_after_s=self._settings.hedge_after_s,
             plain_figures=self._settings.plain_figures,
+            history_turns=self._settings.history_turns,
         )
         app = App(name=APP_NAME, root_agent=agent, plugins=list(self._plugins))
         runner = Runner(app=app, session_service=self._sessions, auto_create_session=True)

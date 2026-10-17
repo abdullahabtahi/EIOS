@@ -238,9 +238,8 @@ def test_a_real_two_turn_conversation_runs_from_memory_and_lands_whole_in_the_st
     assert texts[0] == "first question" and "second question" in texts
     assert "First answer." in texts and "Second answer." in texts
     second_request = llm.seen[-1]
-    assert any(
-        "first question" in (p.text or "") for c in second_request.contents for p in c.parts or []
-    )
+    assert "first question" in str(second_request.config.system_instruction)
+    assert "First answer." in str(second_request.config.system_instruction)
 
 
 def test_shutdown_drains_what_the_runtime_still_holds() -> None:
