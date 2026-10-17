@@ -107,3 +107,26 @@ def test_a_real_request_with_tools_that_hold_locks_can_be_hedged() -> None:
         return [r.content.parts[0].text async for r in llm.generate_content_async(request)][0]
 
     assert asyncio.run(go()) == "answer 1" and inner.calls == 2
+
+
+def test_the_hedge_is_sent_to_its_own_model_so_it_does_not_repeat_the_retries() -> None:
+    # The first call keeps ADK's retry policy; the hedge is itself the second chance, so it must not carry
+    # another full set of retries (a quota storm would otherwise send attempts x 2 requests per model call).
+    primary = FakeLlm(delays=[5.0])
+    hedge_model = FakeLlm(delays=[0.0])
+    llm = HedgedLlm(model="fake", inner=primary, hedge_inner=hedge_model, hedge_after_s=0.2)
+    text, _ = asyncio.run(run(llm))
+    assert text == "answer 0"  # the hedge model answered
+    assert primary.calls == 1 and hedge_model.calls == 1
+
+
+def test_a_hedge_model_is_optional() -> None:
+    inner = FakeLlm(delays=[5.0, 0.0])
+    text, _ = asyncio.run(run(HedgedLlm(model="fake", inner=inner, hedge_after_s=0.2)))
+    assert text == "answer 1" and inner.calls == 2
+
+
+def test_hedged_passes_the_hedge_model_through() -> None:
+    primary, second = FakeLlm(), FakeLlm()
+    wrapped = hedged(primary, 0.3, hedge_inner=second)
+    assert isinstance(wrapped, HedgedLlm) and wrapped.hedge_inner is second

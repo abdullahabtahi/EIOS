@@ -41,9 +41,16 @@ DRAFT_MAX_OUTPUT_TOKENS = 8192
 # ADK retries a model call twice by default; a quota error (429) on the shared project needs longer backoff.
 # [ASSUMPTION] attempts and delays. A 10 s per-call limit was tried and removed: the final drafting call of a list or
 # proposal answer takes 7 to 13 s [MEASURED, diagnostic run 2], so the limit turned slow answers into 504s.
+# Waits before attempts 2 to 5 are up to 3, 5, 9 and 17 s (initial delay x base^n plus jitter, capped), so with the
+# 30 s turn deadline the fifth attempt can never start: the deadline cancels a retry that is still waiting. The policy is
+# kept as it was chosen for the quota case; what bounds the requests is the deadline.
 MODEL_RETRY = HttpRetryOptions(
     attempts=5, initial_delay=2.0, max_delay=30.0, exp_base=2.0, jitter=1.0
 )
+# The hedge is itself the second chance for a slow call, so it does not retry (llm_gateway/providers/hedged.py): a
+# throttled call then costs at most attempts + 1 requests, not attempts x 2. ADK counts both as one model call, so
+# `max_llm_calls` does not bound them; the turn deadline does.
+HEDGE_RETRY = HttpRetryOptions(attempts=1)
 
 TITLES: dict[Workstation, str] = {
     Workstation.AML_INVESTIGATOR: "AML investigator",
@@ -201,7 +208,8 @@ def instruction_for(
 def build_llm(model_id: str, hedge_after_s: float = 0.0) -> BaseLlm:
     """The drafting model: ADK's Gemini with its retry policy, hedged, timed. Build it once and reuse it: a new one
     opens a new connection and fetches a new token, which cost about 0.8 s per turn [MEASURED, from a laptop]."""
-    return timed(hedged(retrying_gemini(model_id, MODEL_RETRY), hedge_after_s))
+    second = retrying_gemini(model_id, HEDGE_RETRY) if hedge_after_s > 0 else None
+    return timed(hedged(retrying_gemini(model_id, MODEL_RETRY), hedge_after_s, hedge_inner=second))
 
 
 def _timed_model(model: str | BaseLlm, hedge_after_s: float) -> BaseLlm:

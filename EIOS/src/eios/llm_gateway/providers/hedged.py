@@ -39,6 +39,10 @@ class HedgedLlm(BaseLlm):
 
     inner: BaseLlm
     hedge_after_s: float
+    # The model the hedge is sent to. The first call may carry a retry policy; the hedge is itself the second chance,
+    # so it is given a model that does not retry, which bounds a slow, throttled call to attempts + 1 requests, not
+    # attempts x 2. None sends the hedge to `inner`.
+    hedge_inner: BaseLlm | None = None
 
     async def generate_content_async(
         self, llm_request: LlmRequest, stream: bool = False
@@ -53,7 +57,8 @@ class HedgedLlm(BaseLlm):
             await asyncio.wait({first}, timeout=self.hedge_after_s)
             if not first.done():
                 logger.info("model call slow after %.1fs; sending a hedge", self.hedge_after_s)
-                tasks.add(asyncio.create_task(_collect(self.inner, _clone(llm_request))))
+                second = self.hedge_inner or self.inner
+                tasks.add(asyncio.create_task(_collect(second, _clone(llm_request))))
             result = await self._first_success(tasks)
             if first.done() is False:
                 logger.info("the hedge answered first")
@@ -79,8 +84,10 @@ class HedgedLlm(BaseLlm):
         raise error if error is not None else RuntimeError("no model call was made")
 
 
-def hedged(inner: BaseLlm, hedge_after_s: float) -> BaseLlm:
+def hedged(inner: BaseLlm, hedge_after_s: float, hedge_inner: BaseLlm | None = None) -> BaseLlm:
     """`inner`, hedged after `hedge_after_s` seconds; the model itself when hedging is off."""
     if hedge_after_s <= 0:
         return inner
-    return HedgedLlm(model=inner.model, inner=inner, hedge_after_s=hedge_after_s)
+    return HedgedLlm(
+        model=inner.model, inner=inner, hedge_after_s=hedge_after_s, hedge_inner=hedge_inner
+    )
