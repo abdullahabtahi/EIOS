@@ -959,6 +959,10 @@ export function TopologicalGraphCanvas() {
       }
 
       // 4b. Render Edge Label Overlay (High Z-Index above node circles with perpendicular anti-collision offset)
+      const selectedConnectedEdgeCount = selectedNode
+        ? simEdgesRef.current.filter((ed) => ed.source.id === selectedNode.id || ed.target.id === selectedNode.id).length
+        : 0;
+
       simEdgesRef.current.forEach((e) => {
         const isCycleEdge = highlightCycles && cycleNodeIds.has(e.source.id) && cycleNodeIds.has(e.target.id);
         const isPathEdge =
@@ -966,12 +970,9 @@ export function TopologicalGraphCanvas() {
           activePathNodeIds.has(e.source.id) &&
           activePathNodeIds.has(e.target.id);
         const isConnectedToSelected = selectedNode && (e.source.id === selectedNode.id || e.target.id === selectedNode.id);
-        const selectedConnectedEdges = selectedNode
-          ? simEdgesRef.current.filter((ed) => ed.source.id === selectedNode.id || ed.target.id === selectedNode.id)
-          : [];
         const isHoveredEdge = hoveredNode?.id === e.source.id || hoveredNode?.id === e.target.id;
         const isCycleHighlighted = highlightCycles && isCycleEdge;
-        const isSelectedLowDegree = selectedNode && isConnectedToSelected && selectedConnectedEdges.length <= 3;
+        const isSelectedLowDegree = selectedNode && isConnectedToSelected && selectedConnectedEdgeCount <= 3;
         const showEdgeLabel = isPathEdge || isCycleHighlighted || isHoveredEdge || isSelectedLowDegree;
 
         if (showEdgeLabel) {
