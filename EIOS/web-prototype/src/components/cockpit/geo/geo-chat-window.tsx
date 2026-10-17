@@ -56,7 +56,7 @@ export function GeoChatWindow({ mode, pos, size: remembered, bounds, onMove, onS
           ? 'geo-chat-in absolute z-30 flex flex-col overflow-hidden bg-white shadow-xl'
           : 'geo-chat-in z-30 flex min-h-0 flex-col bg-white max-lg:absolute max-lg:inset-x-2 max-lg:bottom-2 max-lg:top-16 max-lg:shadow-xl lg:relative lg:w-[24rem] lg:shrink-0 lg:border-r lg:border-cx-line'
       }>
-      <header className="flex shrink-0 items-center gap-1 bg-white pl-2 pr-2">
+      <header className="flex shrink-0 items-center gap-1 border-b border-cx-line-soft bg-white pl-1.5 pr-1.5">
         {floating ? (
           <button
             type="button"
@@ -82,14 +82,14 @@ export function GeoChatWindow({ mode, pos, size: remembered, bounds, onMove, onS
               e.preventDefault();
               onSettle(clampPosition(next, size, bounds));
             }}
-            className="flex min-w-0 flex-1 cursor-grab touch-none items-center gap-1.5 px-2 py-3 text-left text-sm font-semibold text-cx-ink outline-none focus-visible:ring-2 focus-visible:ring-cx-accent active:cursor-grabbing">
-            <Icon icon="drag_indicator" size="sm" className="text-cx-muted" />
-            Ask
+            className="flex min-w-0 flex-1 cursor-grab touch-none items-center gap-2 px-2.5 py-3 text-left text-sm font-semibold text-cx-ink outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent active:cursor-grabbing">
+            <Icon icon={ASSISTANT_ICON} size="sm" className="text-cx-accent" />
+            <span className="truncate">Geospatial Agent</span>
           </button>
         ) : (
-          <h2 className="flex min-w-0 flex-1 items-center gap-1.5 px-2 py-3 text-sm font-semibold text-cx-ink">
+          <h2 className="flex min-w-0 flex-1 items-center gap-2 px-2.5 py-3 text-sm font-semibold text-cx-ink">
             <Icon icon={ASSISTANT_ICON} size="sm" className="text-cx-accent" />
-            Ask
+            <span className="truncate">Geospatial Agent</span>
           </h2>
         )}
         <button
@@ -137,8 +137,9 @@ export function GeoChatWindow({ mode, pos, size: remembered, bounds, onMove, onS
             onResizeSettle(next.size, next.pos);
           }}
           onDoubleClick={() => onResizeSettle(null, null)}
-          className="absolute left-0 top-0 z-10 flex size-5 cursor-nwse-resize touch-none items-start justify-start text-cx-muted outline-none hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent">
-          <Icon icon="north_west" size="sm" />
+          className="group absolute left-0 top-0 z-10 size-4 cursor-nwse-resize touch-none outline-none">
+          {/* No glyph at rest: the corner is a hit area, and a small bracket shows it on hover and focus. */}
+          <span aria-hidden="true" className="absolute left-0.5 top-0.5 size-2 border-l-2 border-t-2 border-cx-accent opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-visible:opacity-100 motion-reduce:transition-none" />
         </button>
       )}
     </div>
