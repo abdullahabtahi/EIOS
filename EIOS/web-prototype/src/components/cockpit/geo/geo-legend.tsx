@@ -55,7 +55,7 @@ export function GeoLegend({ visible, flows, basis = 'fatf', outlines = null }: {
   if (keys.length === 0 && !(outlines && visible.has('risk') && (outlines.added || outlines.removed))) return null;
   const shown = open ? 'block' : 'hidden sm:block';
   return (
-    <div className="w-56 max-sm:w-auto max-sm:max-w-[calc(100vw-5rem)] border border-cx-line bg-white text-label text-cx-ink-soft">
+    <div className={`w-56 border border-cx-line bg-white text-label text-cx-ink-soft ${open ? 'max-sm:w-60' : 'max-sm:w-auto max-sm:max-w-60'}`}>
       <button
         type="button"
         aria-expanded={open}

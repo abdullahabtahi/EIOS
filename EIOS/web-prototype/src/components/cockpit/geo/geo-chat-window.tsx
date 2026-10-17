@@ -83,7 +83,7 @@ export function GeoChatWindow({ mode, pos, size: remembered, bounds, onMove, onS
               onSettle(clampPosition(next, size, bounds));
             }}
             className="flex min-w-0 flex-1 cursor-grab touch-none items-center gap-1.5 px-2 py-3 text-left text-sm font-semibold text-cx-ink outline-none focus-visible:ring-2 focus-visible:ring-cx-accent active:cursor-grabbing">
-            <Icon icon="drag_indicator" size="sm" className="text-cx-faint" />
+            <Icon icon="drag_indicator" size="sm" className="text-cx-muted" />
             Ask
           </button>
         ) : (
@@ -137,7 +137,7 @@ export function GeoChatWindow({ mode, pos, size: remembered, bounds, onMove, onS
             onResizeSettle(next.size, next.pos);
           }}
           onDoubleClick={() => onResizeSettle(null, null)}
-          className="absolute left-0 top-0 z-10 flex size-5 cursor-nwse-resize touch-none items-start justify-start text-cx-faint outline-none hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent">
+          className="absolute left-0 top-0 z-10 flex size-5 cursor-nwse-resize touch-none items-start justify-start text-cx-muted outline-none hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent">
           <Icon icon="north_west" size="sm" />
         </button>
       )}
