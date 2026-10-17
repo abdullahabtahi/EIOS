@@ -83,7 +83,7 @@ export function GeoChatWindow({ mode, pos, size: remembered, bounds, onMove, onS
               onSettle(clampPosition(next, size, bounds));
             }}
             className="flex min-w-0 flex-1 cursor-grab touch-none items-center gap-2 px-2.5 py-3 text-left text-sm font-semibold text-cx-ink outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent active:cursor-grabbing">
-            <Icon icon={ASSISTANT_ICON} size="sm" className="text-cx-accent" />
+            <Icon icon="drag_indicator" size="sm" className="shrink-0 text-cx-muted" />
             <span className="truncate">Geospatial Agent</span>
           </button>
         ) : (

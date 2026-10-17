@@ -70,14 +70,15 @@ describe('the assistant as a launcher, a window and a docked column', () => {
     expect(map).toHaveAccessibleDescription(/Move through what is drawn with the list beside the map/);
   });
 
-  it('titles the window Geospatial Agent whether it floats or is docked, with no grip icon crowding the title', () => {
+  it('titles the window Geospatial Agent whether it floats or is docked; only the floating one shows the grip that says it can be moved', () => {
     render(<GeoWorkspace initialSearch="" />);
     fireEvent.click(launcher());
     expect(within(win()).getByText('Geospatial Agent')).toBeInTheDocument();
-    expect(within(win()).queryByText('drag_indicator')).toBeNull();
+    expect(within(win()).getByText('drag_indicator')).toBeInTheDocument();
     expect(within(win()).getByRole('button', { name: 'Move chat window' })).toHaveTextContent('Geospatial Agent');
     fireEvent.click(screen.getByRole('button', { name: 'Dock chat to the left' }));
-    expect(within(win()).getByRole('heading', { name: 'Geospatial Agent' })).toBeInTheDocument();
+    expect(within(win()).getByRole('heading', { name: /Geospatial Agent/ })).toBeInTheDocument();
+    expect(within(win()).queryByText('drag_indicator')).toBeNull();
   });
 
   it('keeps the resize corner as an unlabelled-by-icon hit area: named for assistive tech, no glyph drawn', () => {
