@@ -25,6 +25,25 @@ function InitialView({ focus }: { readonly focus: MapFocus | null }) {
   return null;
 }
 
+/** [ASSUMPTION] zoom is reported in half steps: labels are thinned by it, and a smooth pinch should not rebuild the layers every frame. */
+const ZOOM_STEP = 0.5;
+
+/** Tells the page the map's zoom, so the labels can be thinned to fit it. */
+function ZoomWatcher({ onZoom }: { readonly onZoom: (zoom: number) => void }) {
+  const map = useMap();
+  React.useEffect(() => {
+    if (!map) return;
+    const report = () => {
+      const zoom = map.getZoom();
+      if (zoom !== undefined) onZoom(Math.round(zoom / ZOOM_STEP) * ZOOM_STEP);
+    };
+    report();
+    const listener = map.addListener('zoom_changed', report);
+    return () => listener.remove();
+  }, [map, onZoom]);
+  return null;
+}
+
 const FIT_PADDING = { top: 96, right: 64, bottom: 96, left: 64 };
 
 /** Moves the camera when the analyst picks a lead; a new target object (not a new value) is a new request. */
@@ -42,10 +61,11 @@ export interface GeoMapProps {
   readonly layers: readonly Layer[];
   readonly focus?: MapFocus | null;
   readonly target?: CameraTarget | null;
+  readonly onZoom?: (zoom: number) => void;
 }
 
 /** Google basemap with the deck.gl evidence layers; labelled unavailable, never blank, when no key is configured. */
-export function GeoMap({ layers, focus = null, target = null }: GeoMapProps) {
+export function GeoMap({ layers, focus = null, target = null, onZoom }: GeoMapProps) {
   const config = readMapsConfig();
   if (!config) {
     return (
@@ -74,6 +94,7 @@ export function GeoMap({ layers, focus = null, target = null }: GeoMapProps) {
         className="h-full w-full">
         <InitialView focus={focus} />
         <CameraTo target={target} />
+        {onZoom && <ZoomWatcher onZoom={onZoom} />}
         <GeoDeckOverlay layers={layers} />
       </Map>
     </APIProvider>

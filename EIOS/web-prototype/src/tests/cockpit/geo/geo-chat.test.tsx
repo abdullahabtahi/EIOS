@@ -67,7 +67,25 @@ describe('the assistant as a launcher, a window and a docked column', () => {
   it('names the map for a screen reader and points at the list as its keyboard route', () => {
     render(<GeoWorkspace initialSearch="" />);
     const map = screen.getByRole('region', { name: 'World map' });
-    expect(map).toHaveAccessibleDescription(/Use the list to move through countries and corridors/);
+    expect(map).toHaveAccessibleDescription(/Move through what is drawn with the list beside the map/);
+  });
+
+  it('titles the window Geospatial Agent whether it floats or is docked; only the floating one shows the grip that says it can be moved', () => {
+    render(<GeoWorkspace initialSearch="" />);
+    fireEvent.click(launcher());
+    expect(within(win()).getByText('Geospatial Agent')).toBeInTheDocument();
+    expect(within(win()).getByText('drag_indicator')).toBeInTheDocument();
+    expect(within(win()).getByRole('button', { name: 'Move chat window' })).toHaveTextContent('Geospatial Agent');
+    fireEvent.click(screen.getByRole('button', { name: 'Dock chat to the left' }));
+    expect(within(win()).getByRole('heading', { name: /Geospatial Agent/ })).toBeInTheDocument();
+    expect(within(win()).queryByText('drag_indicator')).toBeNull();
+  });
+
+  it('keeps the resize corner as an unlabelled-by-icon hit area: named for assistive tech, no glyph drawn', () => {
+    render(<GeoWorkspace initialSearch="" />);
+    fireEvent.click(launcher());
+    const handle = within(win()).getByRole('button', { name: 'Resize chat window' });
+    expect(handle).toHaveTextContent('');
   });
 
   it('opens a floating window from the launcher, and the launcher steps aside', () => {
@@ -109,14 +127,25 @@ describe('the assistant as a launcher, a window and a docked column', () => {
     expect(win().compareDocumentPosition(map) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('remembers docked or floating, and reopens the same way', () => {
+  it('always launches as the floating window, even after being docked and closed, or with an old docked choice stored', () => {
+    window.localStorage.setItem('eios.geo.chat', JSON.stringify({ open: 'docked' }));
     const first = render(<GeoWorkspace initialSearch="" />);
     fireEvent.click(launcher());
+    expect(win()).toHaveAttribute('data-mode', 'floating');
     fireEvent.click(screen.getByRole('button', { name: 'Dock chat to the left' }));
+    expect(win()).toHaveAttribute('data-mode', 'docked');
     fireEvent.click(screen.getByRole('button', { name: 'Close chat' }));
     first.unmount();
     render(<GeoWorkspace initialSearch="" />);
     fireEvent.click(launcher());
+    expect(win()).toHaveAttribute('data-mode', 'floating');
+  });
+
+  it('stays docked while it is open: asking from the keyboard does not pull it back to floating', () => {
+    render(<GeoWorkspace initialSearch="" />);
+    fireEvent.click(launcher());
+    fireEvent.click(screen.getByRole('button', { name: 'Dock chat to the left' }));
+    fireEvent.keyDown(document.body, { key: '/' });
     expect(win()).toHaveAttribute('data-mode', 'docked');
   });
 });

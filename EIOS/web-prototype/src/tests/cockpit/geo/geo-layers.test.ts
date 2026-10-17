@@ -237,6 +237,25 @@ describe('the corridor map reads as a network, not a knot', () => {
     expect(names).toEqual(REFERENCE.countries.filter((c) => touched.has(c.iso2)).map((c) => c.name).sort());
   });
 
+  it('ranks labels by the money a country moves, so a crowded corner keeps the biggest name', () => {
+    const [labels] = buildLayers(FLOWS, REFERENCE, new Set<LayerId>(['corridors']), null).filter((l) => l.id === 'geo-labels');
+    const rows = labels.props.data as { iso2: string; priority: number }[];
+    const of = (iso2: string) => rows.find((r) => r.iso2 === iso2)!.priority;
+    // NO sits on two corridors (900k + 100k), KE on one (400k)
+    expect(of('NO')).toBeGreaterThan(of('KE'));
+    expect(of('IR')).toBeGreaterThan(of('PA'));
+  });
+
+  it('thins labels that would overlap at a low zoom and brings them back when zoomed in', () => {
+    const names = (zoom: number) => {
+      const [labels] = buildLayers(FLOWS, REFERENCE, new Set<LayerId>(['corridors']), null, {}, [], 'fatf', null, null, zoom).filter((l) => l.id === 'geo-labels');
+      return (labels.props.data as { name: string }[]).length;
+    };
+    expect(names(1)).toBeLessThanOrEqual(names(8));
+    const touched = new Set(FLOWS.corridors.flatMap((c) => [c.origin, c.destination]));
+    expect(names(14)).toBe(REFERENCE.countries.filter((c) => touched.has(c.iso2)).length);
+  });
+
   it('marks a country that four or more routes meet as a hub, and no other', () => {
     const hubIds = (flows: GeoFlows) =>
       buildLayers(flows, REFERENCE, new Set<LayerId>(['corridors']), null).filter((l) => l.id === 'geo-hubs');

@@ -1,7 +1,7 @@
 /**
  * Where the assistant lives on the geospatial page: not open at all, a window floating over the map, or docked as a
- * column at the left. The geometry is pure so it can be tested; what is remembered is only the choice between
- * floating and docked and where the window was left, never the conversation.
+ * column at the left. The geometry is pure so it can be tested; what is remembered is only where the window was left
+ * and how big it was made, never the conversation and never the choice of docking: every launch is the floating window.
  */
 
 export type DockMode = 'closed' | 'floating' | 'docked';
@@ -22,12 +22,38 @@ export const CHAT_MARGIN = 12;
 const STEP = 10;
 const BIG_STEP = 50;
 
-/** The window's size on a map of this size: full size when there is room, otherwise what fits inside the margins. */
-export function windowSize(bounds: Box): Box {
+/** [ASSUMPTION] the smallest the window can be made: a question box and a few lines of answer. */
+export const MIN_CHAT_SIZE: Box = { width: 280, height: 320 };
+const MAX_REMEMBERED = 4000;
+
+/** The window's size on a map of this size: the size asked for (the default, or what was remembered) when there is room, otherwise what fits inside the margins. */
+export function windowSize(bounds: Box, preferred: Box = CHAT_SIZE): Box {
   return {
-    width: Math.max(0, Math.min(CHAT_SIZE.width, bounds.width - 2 * CHAT_MARGIN)),
-    height: Math.max(0, Math.min(CHAT_SIZE.height, bounds.height - 2 * CHAT_MARGIN)),
+    width: Math.max(0, Math.min(preferred.width, bounds.width - 2 * CHAT_MARGIN)),
+    height: Math.max(0, Math.min(preferred.height, bounds.height - 2 * CHAT_MARGIN)),
   };
+}
+
+/** A size held between the minimum and the map's far edge, a margin from it, for a window whose top left is at `at`. */
+function clampSize(size: Box, at: Point, bounds: Box): Box {
+  const fit = (n: number, min: number, start: number, limit: number) => Math.max(Math.min(min, limit - 2 * CHAT_MARGIN), Math.min(n, limit - start - CHAT_MARGIN));
+  return { width: fit(size.width, MIN_CHAT_SIZE.width, at.x, bounds.width), height: fit(size.height, MIN_CHAT_SIZE.height, at.y, bounds.height) };
+}
+
+/** The size after the corner is dragged by (dx, dy). */
+export function resizedSize(from: Box, dx: number, dy: number, at: Point, bounds: Box): Box {
+  return clampSize({ width: from.width + dx, height: from.height + dy }, at, bounds);
+}
+
+/**
+ * Resizes from the top left corner, dragged by (dx, dy), with the bottom right held where it is: the window starts at the
+ * bottom right of the map, where the only way to grow is up and to the left. Returns the new size and top left.
+ */
+export function cornerResize(size: Box, at: Point, dx: number, dy: number, bounds: Box): { size: Box; pos: Point } {
+  const anchor = { x: at.x + size.width, y: at.y + size.height };
+  // Mirror the map so "room to grow" is the room left of the anchor, and reuse the one clamp.
+  const next = resizedSize(size, -dx, -dy, { x: bounds.width - anchor.x, y: bounds.height - anchor.y }, bounds);
+  return { size: next, pos: { x: anchor.x - next.width, y: anchor.y - next.height } };
 }
 
 /** Keeps the whole window inside the map, a margin from every edge. */
@@ -51,8 +77,9 @@ export function nudge(pos: Point, key: string, big: boolean): Point | null {
 }
 
 export interface DockPrefs {
-  readonly open: OpenMode;
   readonly pos: Point | null;
+  /** The size the analyst dragged the window to; null until they do. */
+  readonly size: Box | null;
 }
 export interface DockStorage {
   getItem(key: string): string | null;
@@ -60,7 +87,7 @@ export interface DockStorage {
 }
 
 export const DOCK_KEY = 'eios.geo.chat';
-const FIRST: DockPrefs = { open: 'floating', pos: null };
+const FIRST: DockPrefs = { pos: null, size: null };
 
 const finite = (n: unknown): n is number => typeof n === 'number' && Number.isFinite(n);
 
@@ -69,10 +96,11 @@ export function loadPrefs(storage: DockStorage | null = browserStorage()): DockP
   try {
     const raw = storage?.getItem(DOCK_KEY);
     if (!raw) return FIRST;
-    const parsed = JSON.parse(raw) as { open?: unknown; pos?: { x?: unknown; y?: unknown } | null };
-    const open: OpenMode = parsed.open === 'docked' ? 'docked' : 'floating';
+    const parsed = JSON.parse(raw) as { pos?: { x?: unknown; y?: unknown } | null; size?: { width?: unknown; height?: unknown } | null };
     const pos = parsed.pos && finite(parsed.pos.x) && finite(parsed.pos.y) ? { x: parsed.pos.x, y: parsed.pos.y } : null;
-    return { open, pos };
+    const sized = (n: unknown, min: number): n is number => finite(n) && n >= min && n <= MAX_REMEMBERED;
+    const size = parsed.size && sized(parsed.size.width, MIN_CHAT_SIZE.width) && sized(parsed.size.height, MIN_CHAT_SIZE.height) ? { width: parsed.size.width, height: parsed.size.height } : null;
+    return { pos, size };
   } catch {
     return FIRST;
   }

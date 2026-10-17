@@ -3,7 +3,7 @@
 import * as React from 'react';
 import type { ViewCommand } from '../state/cockpit-types';
 import { DEFAULT_BASIS, type BasisId } from './geo-basis';
-import { buildLayers, type HighlightArc, type HoverPoint, type ListChangeMarks } from './geo-layers';
+import { buildLayers, LABEL_DEFAULT_ZOOM, type HighlightArc, type HoverPoint, type ListChangeMarks } from './geo-layers';
 import { cameraFor, cameraForCodes, type CameraTarget } from './geo-camera';
 import { useGeoAccount } from './geo-account';
 import { GeoAsk } from './geo-ask';
@@ -16,6 +16,7 @@ import { geoSuggestions, mapContextOf, type MapState, moveLabel, stateAfterMove 
 import { GeoMoveToast } from './geo-move-toast';
 import { formatGeoUrl, parseGeoUrl } from './geo-url';
 import { GeoLegend } from './geo-legend';
+import { describeMap } from './geo-map-describe';
 import { GeoMap } from './geo-map';
 import { GeoPanel } from './geo-panel';
 import { GeoChatLauncher, type LauncherStatus } from './geo-chat-launcher';
@@ -218,6 +219,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
 
   // The map's size, so a tooltip can flip away from an edge.
   const [box, setBox] = React.useState({ width: 0, height: 0 });
+  const [zoom, setZoom] = React.useState(LABEL_DEFAULT_ZOOM);
   React.useEffect(() => {
     const el = mapBox.current;
     if (!el) return;
@@ -239,8 +241,8 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
     [view, side, listChange],
   );
   const layers = React.useMemo(
-    () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }, highlight, basis, marks, earlier),
-    [flowData, referenceData, visible, selected, onHover, highlight, basis, marks, earlier],
+    () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }, highlight, basis, marks, earlier, zoom),
+    [flowData, referenceData, visible, selected, onHover, highlight, basis, marks, earlier, zoom],
   );
   const focus = React.useMemo(() => focusFor(view, flowData, referenceData), [view, flowData, referenceData]);
 
@@ -265,14 +267,14 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
 
   return (
     <div className="geo-inter relative flex h-full min-h-0 flex-col lg:flex-row">
-      <GeoChatWindow mode={dock.mode} pos={dock.pos} bounds={box} onMove={dock.move} onSettle={dock.settle} onDock={dock.dock} onFloat={dock.float} onClose={dock.close}>
+      <GeoChatWindow mode={dock.mode} pos={dock.pos} size={dock.size} bounds={box} onMove={dock.move} onSettle={dock.settle} onResize={dock.resizeTo} onResizeSettle={dock.settleResize} onDock={dock.dock} onFloat={dock.float} onClose={dock.close}>
         <GeoAsk context={mapContextOf(mapState)} selected={selected} onMove={applyMove} onPending={setAsking} onAnswered={answered} intent={intent} />
       </GeoChatWindow>
-      <div ref={mapBox} role="region" aria-label="World map" aria-describedby="geo-map-help" className="relative min-h-0 min-w-0 flex-[3] lg:flex-1">
+      <div ref={mapBox} role="region" aria-label="World map" aria-describedby="geo-map-help" className="relative min-h-0 min-w-0 flex-[3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-cx-accent lg:flex-1">
         <p id="geo-map-help" className="sr-only">
-          The map draws what the side panel lists. Use the list to move through countries and corridors with the arrow keys; the map itself pans with the arrow keys and zooms with plus and minus.
+          {describeMap(view, visible, flowData, selected)}
         </p>
-        <GeoMap layers={layers} focus={focus} target={target} />
+        <GeoMap layers={layers} focus={focus} target={target} onZoom={setZoom} />
         <div className="absolute left-3 top-3 z-10">
           <GeoViewSwitcher current={view} onChange={changeView} />
         </div>

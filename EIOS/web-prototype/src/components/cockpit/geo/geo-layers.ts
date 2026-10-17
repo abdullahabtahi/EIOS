@@ -13,6 +13,7 @@ import { areaTier, DEFAULT_BASIS, type BasisId } from './geo-basis';
 import { rgba, type Rgba } from './geo-colors';
 import { curvePath, fadeAlong, wrapCopies } from './geo-curves';
 import { type CorridorPair, hubsOf, pairUp } from './geo-pairs';
+import { declutterLabels } from './geo-labels';
 import { corridorId, pairId, shownCorridors, shownPairs } from './geo-rank';
 
 /** Colour carries risk only: elevated tiers are red and amber; low and unrated corridors stay a quiet grey, never green. */
@@ -179,16 +180,31 @@ interface LabelRow {
   readonly iso2: string;
   readonly name: string;
   readonly position: LngLat;
+  /** Which name survives when two would overlap: the more money a country moves, the likelier its name is kept. */
+  readonly priority: number;
 }
 
+/** [ASSUMPTION] larger than any real volume, so the ends of the picked route are always named. */
+const PICKED_PRIORITY = 1e15;
+
+/** [ASSUMPTION] the zoom the map opens at, for a caller that does not track it. */
+export const LABEL_DEFAULT_ZOOM = 3;
 const LABEL_SIZE = 12;
 const LABEL_LIFT_PX = -16;
 const LABEL_HALO: Rgba = [255, 255, 255, 235];
 
-/** Names for the countries a drawn route touches, each once; the basemap's own names are faint so these are the ones read. */
+/** Names for the countries a drawn route touches, each once, with the money behind each so a crowded corner keeps the biggest; the basemap's own names are faint so these are the ones read. */
 function labelRows(flows: GeoFlows, reference: GeoReference, selection: GeoSelection): readonly LabelRow[] {
-  const touched = new Set(corridorPairs(flows, selection).flatMap((p) => [p.lead.origin, p.lead.destination]));
-  return reference.countries.filter((c) => touched.has(c.iso2)).map((c) => ({ iso2: c.iso2, name: c.name, position: c.position }));
+  const weight = new Map<string, number>();
+  const add = (iso2: string, n: number) => weight.set(iso2, (weight.get(iso2) ?? 0) + n);
+  for (const pair of corridorPairs(flows, selection)) {
+    const bonus = isPickedPair(pair, selection) ? PICKED_PRIORITY : 0;
+    add(pair.lead.origin, pair.gross + bonus);
+    add(pair.lead.destination, pair.gross + bonus);
+  }
+  return reference.countries
+    .filter((c) => weight.has(c.iso2))
+    .map((c) => ({ iso2: c.iso2, name: c.name, position: c.position, priority: weight.get(c.iso2) ?? 0 }));
 }
 
 function labelLayer(rows: readonly LabelRow[]): TextLayer<LabelRow> {
@@ -358,6 +374,8 @@ export function buildLayers(
   listChange: ListChangeMarks | null = null,
   /** Tiers that replace the list's own for named countries: the earlier edition, while a comparison shows "Before". */
   tierOverride: ReadonlyMap<string, RiskTier | null> | null = null,
+  /** The map's zoom: names that would overlap at this zoom are thinned (see geo-labels). */
+  zoom: number = LABEL_DEFAULT_ZOOM,
 ): Layer[] {
   const layers: Layer[] = [];
   const outlined = reference && listChange ? listChangeLayer(reference, listChange) : null;
@@ -367,7 +385,7 @@ export function buildLayers(
     layers.push(pathLayer('geo-corridors', corridorRows(flows, reference, selection), handlers));
     const hubs = hubRows(flows, reference, selection);
     if (hubs.length > 0) layers.push(hubLayer(hubs, handlers));
-    layers.push(labelLayer(labelRows(flows, reference, selection)));
+    layers.push(labelLayer(declutterLabels(labelRows(flows, reference, selection), zoom)));
   }
   if (flows && reference && visible.has('mismatches')) {
     layers.push(pathLayer('geo-mismatches', mismatchRows(flows, reference, selection), handlers));
