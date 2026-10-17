@@ -83,7 +83,11 @@ def spelled_numbers(prose: str) -> list[Spelled]:
         if parsed is None:
             return
         total, precision = parsed
-        if total <= _SMALL and math.isclose(precision, 1.0, rel_tol=1e-9, abs_tol=1e-9) and _STRUCTURE.match(prose, end):
+        if (
+            total <= _SMALL
+            and math.isclose(precision, 1.0, rel_tol=1e-9, abs_tol=1e-9)
+            and _STRUCTURE.match(prose, end)
+        ):
             return  # "two sources": the answer counting its own structure (the judge's small words only)
         unit = _SYMBOL.match(prose, end)
         word = (unit.group("word") or "").lower() if unit else ""

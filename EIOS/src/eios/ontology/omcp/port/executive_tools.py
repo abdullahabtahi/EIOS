@@ -233,7 +233,9 @@ def run_what_if(ctx: ReadModels, _who: Principal, args: WhatIfArgs) -> WhatIf:
         for a in out["attribution_waterfall"]
     ]
     total = round(sum(a.contribution_pct for a in attribution), 2)
-    if not math.isclose(total, 100.0, abs_tol=1e-5):  # RL-6: attribution must close to 100; a result that does not is never shown
+    if not math.isclose(
+        total, 100.0, abs_tol=1e-5
+    ):  # RL-6: attribution must close to 100; a result that does not is never shown
         raise PortError(
             ToolErrorCode.DATA_UNAVAILABLE, "the simulation's attribution did not sum to 100%"
         )

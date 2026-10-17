@@ -149,7 +149,6 @@ class AMLDataGenerator:
         ip_addresses = [f"198.51.200.{10 + i}" for i in range(4)]
 
         round_trip_tx_ids: list[str] = []
-        base_dt = datetime(2025, 3, 1, 10, 0, 0, tzinfo=UTC)
 
         for idx, _client_id in enumerate(client_uuids):
             dep_id = f"RT-DEP-{idx + 1:06d}"
