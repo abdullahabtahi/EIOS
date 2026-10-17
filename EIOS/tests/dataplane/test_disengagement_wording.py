@@ -5,9 +5,13 @@ from eios.dataplane.partner_engine import PartnerSnapshot
 from eios.dataplane.partner_service import EnginePartnerService
 
 
-def test_the_executive_briefing_does_not_call_the_score_a_30_day_probability(executive_service) -> None:  # type: ignore[no-untyped-def]
+def test_the_executive_briefing_does_not_call_the_score_a_30_day_probability(
+    executive_service,
+) -> None:  # type: ignore[no-untyped-def]
     headline = " ".join(
-        h.headline for h in executive_service.get_morning_briefing().horizons if h.horizon_name == "Partner"
+        h.headline
+        for h in executive_service.get_morning_briefing().horizons
+        if h.horizon_name == "Partner"
     )
     assert "disengagement risk" in headline
     assert "30-day churn hazard" not in headline
