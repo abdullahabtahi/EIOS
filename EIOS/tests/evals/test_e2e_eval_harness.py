@@ -9,10 +9,16 @@ Pipeline verification:
 6. Export standardized Model Card metadata and documentation
 7. Full runner entrypoint and suite execution coverage
 """
-# ruff: noqa: I001
 
 from pathlib import Path
 
+from eios.evals.models import Tier
+from evals.golden.trajectory_eval import (
+    main as trajectory_main,
+)
+from evals.golden.trajectory_eval import (
+    run_golden_dialogue_benchmarks,
+)
 from evals.reports.generator import (
     build_sample_eval_report,
     render_markdown_summary_table,
@@ -23,14 +29,6 @@ from evals.reports.model_card import (
     export_model_card_markdown,
     save_model_card,
     validate_model_card_json,
-)
-
-from eios.evals.models import Tier
-from evals.golden.trajectory_eval import (
-    main as trajectory_main,
-)
-from evals.golden.trajectory_eval import (
-    run_golden_dialogue_benchmarks,
 )
 from evals.suites.baselines.runner import main as baselines_main
 from evals.suites.baselines.runner import run_all_baselines
