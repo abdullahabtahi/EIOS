@@ -19,7 +19,7 @@ export function GeoDossierCard({ entityId }: { readonly entityId: string }) {
   const flagged =
     state.status === 'ready' && (state.data.lenses.shared_exit.flag || state.data.lenses.travel.flag || state.data.lenses.mismatch.flag);
   return (
-    <section aria-label="Geography" className="space-y-2.5 border border-slate-200 bg-slate-50/50 p-3.5">
+    <section aria-label="Geography" className="space-y-2.5 border border-slate-200 bg-slate-50/50 p-3.5 min-h-[190px]">
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-1.5 text-title font-sans font-semibold text-slate-900">
           Geography
@@ -35,7 +35,24 @@ export function GeoDossierCard({ entityId }: { readonly entityId: string }) {
       {state.status === 'ready' ? (
         <GeoAccountFacts account={state.data} />
       ) : state.status === 'loading' ? (
-        <div role="status" aria-label="Loading geography" className="h-16 animate-pulse bg-cx-sub-2 motion-reduce:animate-none" />
+        <div role="status" aria-label="Loading geography" className="space-y-2 animate-pulse motion-reduce:animate-none py-1 min-h-[130px]">
+          <div className="flex justify-between gap-3">
+            <div className="h-3 w-24 bg-slate-200 rounded-xs" />
+            <div className="h-3 w-32 bg-slate-200 rounded-xs" />
+          </div>
+          <div className="flex justify-between gap-3">
+            <div className="h-3 w-20 bg-slate-200 rounded-xs" />
+            <div className="h-3 w-40 bg-slate-200 rounded-xs" />
+          </div>
+          <div className="flex justify-between gap-3">
+            <div className="h-3 w-20 bg-slate-200 rounded-xs" />
+            <div className="h-3 w-28 bg-slate-200 rounded-xs" />
+          </div>
+          <div className="pt-2 border-t border-slate-200/80 flex justify-between gap-3">
+            <div className="h-3 w-28 bg-slate-200 rounded-xs" />
+            <div className="h-4 w-36 bg-slate-200/70 rounded-xs" />
+          </div>
+        </div>
       ) : (
         <p role="alert" className="text-xs text-cx-warn">
           Geography could not be loaded{state.httpStatus ? ` (HTTP ${state.httpStatus})` : ''}. Nothing from it is shown.

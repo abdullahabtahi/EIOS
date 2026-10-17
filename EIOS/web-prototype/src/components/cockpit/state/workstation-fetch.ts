@@ -61,22 +61,33 @@ async function attempt(
 }
 
 /**
- * Warm the cache for the workstations the operator is not looking at: one at a time, one attempt each, no retry,
- * and silent on failure (the real load runs when they switch). Stops when the signal aborts.
+ * Warm the cache for the workstations the operator is not looking at: batched in pairs of 2,
+ * one attempt each, no retry, and silent on failure (the real load runs when they switch). Stops when the signal aborts.
  */
 export async function prefetchWorkstations(
   roles: readonly PersonaRole[],
   options: { fetcher: Fetcher; signal: AbortSignal; onLive: (role: PersonaRole, data: WorkstationApiResponse) => void },
 ): Promise<void> {
-  for (const role of roles) {
-    if (options.signal.aborted) return;
-    try {
-      const result = await attempt(options.fetcher, role, options.signal, false, false);
-      if (result.kind === 'denied') return;
-      if (result.kind === 'live' && !options.signal.aborted) options.onLive(role, result.data);
-    } catch {
-      // A failed prefetch costs nothing: the switch fetches normally.
-    }
+  const BATCH_SIZE = 2;
+  let denied = false;
+  for (let i = 0; i < roles.length; i += BATCH_SIZE) {
+    if (options.signal.aborted || denied) return;
+    const batch = roles.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async (role) => {
+        if (options.signal.aborted || denied) return;
+        try {
+          const result = await attempt(options.fetcher, role, options.signal, false, false);
+          if (result.kind === 'denied') {
+            denied = true;
+            return;
+          }
+          if (result.kind === 'live' && !options.signal.aborted) options.onLive(role, result.data);
+        } catch {
+          // A failed prefetch costs nothing: the switch fetches normally.
+        }
+      }),
+    );
   }
 }
 

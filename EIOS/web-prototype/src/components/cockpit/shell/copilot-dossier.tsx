@@ -29,6 +29,36 @@ export function CopilotDossier() {
   const staging = useStageRequest();
   const dossier = state.activeDossier;
 
+  if (state.isLoading && !dossier) {
+    return (
+      <main
+        aria-label="Copilot Dossier Center Zone"
+        className="w-full min-w-0 bg-white flex flex-col h-full overflow-hidden select-none animate-pulse"
+      >
+        <div className="p-4 bg-cx-sub border-b border-cx-line space-y-2 shrink-0">
+          <div className="h-4 w-36 bg-slate-200 rounded-xs" />
+          <div className="h-6 w-3/4 bg-slate-300 rounded-xs" />
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="p-3.5 bg-slate-50 border border-slate-200 space-y-2.5">
+            <div className="h-4 w-48 bg-slate-300 rounded-xs" />
+            <div className="space-y-1.5 pt-1">
+              <div className="h-3 w-full bg-slate-200 rounded-xs" />
+              <div className="h-3 w-5/6 bg-slate-200 rounded-xs" />
+            </div>
+          </div>
+          <div className="p-3.5 bg-slate-50 border border-slate-200 space-y-2.5">
+            <div className="h-4 w-40 bg-slate-300 rounded-xs" />
+            <div className="space-y-1.5 pt-1">
+              <div className="h-3 w-full bg-slate-200 rounded-xs" />
+              <div className="h-3 w-4/6 bg-slate-200 rounded-xs" />
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
   if (!dossier) {
     return (
       <main
