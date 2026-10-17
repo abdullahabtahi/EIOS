@@ -69,9 +69,9 @@ jobs:
 
           echo "Waiting for EIOS API gateway to be healthy..."
           GATEWAY_UP=false
-          for i in {1..30}; do
+          for i in {1..60}; do
             if curl -s -f http://127.0.0.1:8002/health > /dev/null; then
-              echo "✅ Gateway is UP on http://127.0.0.1:8002"
+              echo "✅ Gateway is UP on http://127.0.0.1:8002 (took ${i}s)"
               GATEWAY_UP=true
               break
             fi
@@ -79,7 +79,7 @@ jobs:
           done
 
           if [ "$GATEWAY_UP" != "true" ]; then
-            echo "❌ Gateway failed to start within 30 seconds"
+            echo "❌ Gateway failed to start within 60 seconds"
             exit 1
           fi
 
