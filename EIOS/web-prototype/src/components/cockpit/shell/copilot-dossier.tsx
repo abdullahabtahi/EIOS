@@ -428,11 +428,11 @@ function PartnerRetentionDossierView({ dossier }: { dossier: any }) {
         {/* Diagnostic Telemetry Grid */}
         <div className="grid grid-cols-2 gap-2 text-xs font-mono">
           <div className="p-2.5 bg-slate-50 border border-slate-200">
-            <span className="text-label text-slate-500 uppercase block">Survival Hazard P(churn)</span>
+            <span className="text-label text-slate-500 uppercase block">Disengagement risk score</span>
             <div className={`text-base font-bold mt-0.5 ${partner.pChurn >= 0.5 ? 'text-red-700' : 'text-green-700'}`}>
               {(partner.pChurn * 100).toFixed(1)}%
             </div>
-            <span className="text-label text-slate-500 block">DoWhy SCM calibrated</span>
+            <span className="text-label text-slate-500 block">Detects, does not forecast</span>
           </div>
 
           <div className="p-2.5 bg-slate-50 border border-slate-200">

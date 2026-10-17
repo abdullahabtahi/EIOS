@@ -115,6 +115,8 @@ describe('Engine-backed partner workstation', () => {
     await waitFor(() => expect(screen.getAllByText('7.8 h')[0]).toBeInTheDocument());
     expect(screen.getByText(/no playbook outcomes recorded yet/)).toBeInTheDocument();
     expect(screen.getByText('89% confidence')).toBeInTheDocument();
+    expect(screen.getAllByText('Risk 0.95').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/P\(churn\)|CHURN HAZARD/)).not.toBeInTheDocument();
   });
 
   it('stages the cohort playbook the backend priced, through the intent hub', async () => {

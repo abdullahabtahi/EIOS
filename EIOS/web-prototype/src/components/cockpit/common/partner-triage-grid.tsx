@@ -227,7 +227,7 @@ export function PartnerTriageGrid({
                 className="py-2 px-3 font-semibold text-center cursor-pointer hover:bg-slate-200 transition-colors"
               >
                 <div className="flex items-center justify-center gap-1">
-                  P(churn)
+                  Risk
                   {sortField === 'pChurn' && (sortDirection === 'asc' ? ' ↑' : ' ↓')}
                 </div>
               </th>

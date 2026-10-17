@@ -137,7 +137,7 @@ export function PartnerRadarInspector(props: InspectorProps) {
       <div className="p-3 bg-white border border-cx-line space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="font-bold text-sm">{partner.name} <span className="text-label text-cx-muted">{partner.partnerId}</span></span>
-          <span className="text-label font-bold px-2 py-0.5 border border-cx-line">P(churn) {partner.pChurn.toFixed(2)}</span>
+          <span className="text-label font-bold px-2 py-0.5 border border-cx-line">Risk {partner.pChurn.toFixed(2)}</span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-label">
           <Tile label="30-day volume" value={usd(partner.valueAtRiskUsd)} />

@@ -254,13 +254,13 @@ export function ChurnRadarScatter() {
 
         {/* Quadrant Semantic Labels */}
         <text x={midX + 10} y={topPad - 9} fill="#8f2323" fontSize="10" fontFamily="monospace" fontWeight="bold">
-          HIGH VALUE / CRITICAL CHURN HAZARD
+          HIGH VALUE / HIGH DISENGAGEMENT RISK
         </text>
         <text x={leftPad + 10} y={topPad - 9} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
           HIGH VALUE / STABLE GIANTS
         </text>
         <text x={midX + 10} y={bottomPad + 29} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
-          LOW VALUE / HIGH CHURN
+          LOW VALUE / HIGH RISK
         </text>
         <text x={leftPad + 10} y={bottomPad + 29} fill="#64748B" fontSize="10" fontFamily="monospace" fontWeight="bold">
           LOW VALUE / STABLE
@@ -329,7 +329,7 @@ export function ChurnRadarScatter() {
               <rect x={cx - 32} y={bottomPad + 5} width="64" height="13" fill="#0F172A" rx="1" />
               <text x={cx} y={bottomPad + 14} fill="#FFFFFF" fontSize="10" fontFamily="monospace" textAnchor="middle">
                 {axisDimension === 'P_CHURN'
-                  ? `P = ${activeFocusPartner.pChurn.toFixed(2)}`
+                  ? `Risk ${activeFocusPartner.pChurn.toFixed(2)}`
                   : axisDimension === 'VELOCITY'
                   ? `Decay: ${activeFocusPartner.loginDecayPct}%`
                   : `Urgency: ${activeFocusPartner.daysToChurn}d`}
@@ -361,7 +361,7 @@ export function ChurnRadarScatter() {
               <circle cx={sim.simCx} cy={base.cy} r={4} fill="#0e5c8a" />
               <rect x={sim.simCx - 36} y={base.cy - 20} width="72" height="13" fill="#0e5c8a" rx="1" />
               <text x={sim.simCx} y={base.cy - 11} fill="#FFFFFF" fontSize="10" fontFamily="monospace" fontWeight="bold" textAnchor="middle">
-                P(sim) = {sim.simPChurn.toFixed(2)}
+                Risk (sim) = {sim.simPChurn.toFixed(2)}
               </text>
             </g>
           );
@@ -386,7 +386,7 @@ export function ChurnRadarScatter() {
               }}
               data-testid={`radar-node-${p.partnerId}`}
             >
-              <title>{`${p.name} (${p.partnerId}) · P(churn) ${p.pChurn.toFixed(2)} · value at risk $${Math.round(p.valueAtRiskUsd / 1000)}K`}</title>
+              <title>{`${p.name} (${p.partnerId}) · risk ${p.pChurn.toFixed(2)} · value at risk $${Math.round(p.valueAtRiskUsd / 1000)}K`}</title>
               {/* PELT Decay Pulse Halo */}
               {p.changePointDetected && (isSelected || isHovered) && (
                 <circle
@@ -513,7 +513,7 @@ export function ChurnRadarScatter() {
         {/* Dynamic Axis Description */}
         <text x={svgWidth / 2} y={svgHeight - 10} fill="#475569" fontSize="10" fontFamily="monospace" fontWeight="600" textAnchor="middle">
           {axisDimension === 'P_CHURN'
-            ? 'P(churn) Hazard Rate → (0.00 to 1.00)'
+            ? 'Disengagement risk score → (0.00 to 1.00)'
             : axisDimension === 'VELOCITY'
             ? 'Engagement Decay Rate (60d baseline) → (-100% to 0%)'
             : 'Intervention Urgency (180d down to 0d) →'}
@@ -558,7 +558,7 @@ export function ChurnRadarScatter() {
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xs font-bold font-mono uppercase tracking-wider text-slate-900">
-                  Partner Churn Hazard Radar Studio
+                  Partner Disengagement Radar Studio
                 </h2>
                 <span className="px-1.5 py-0.2 bg-slate-100 border border-slate-300 text-slate-700 text-label font-mono font-bold">
                   INSTITUTIONAL STUDIO GRADE
@@ -698,11 +698,11 @@ export function ChurnRadarScatter() {
             <div className="flex items-center gap-2">
               <span className="material-symbols-sharp text-base text-blue-700">track_changes</span>
               <h3 className="text-title font-sans font-semibold tracking-normal text-slate-900">
-                Partner Churn Hazard Radar: P(churn) × Value at Risk (VaR)
+                Partner Disengagement Radar: risk score × Value at Risk (VaR)
               </h3>
             </div>
             <p className="text-label text-slate-500 mt-0.5">
-              Synchronized 2D Cartesian Survival Hazard Radar with High-Density Portfolio Triage.
+              Synchronized 2D Cartesian Disengagement Radar with High-Density Portfolio Triage.
             </p>
           </div>
         </div>
@@ -855,7 +855,7 @@ export function ChurnRadarScatter() {
             {selectedPartner.name} ({selectedPartner.partnerId})
           </span>
           <span className={`px-1.5 py-0.5 text-label font-bold border ${selectedPartner.pChurn >= 0.5 ? 'bg-red-50 text-red-800 border-red-200' : 'bg-green-50 text-green-800 border-green-200'}`}>
-            P(churn)={(selectedPartner.pChurn * 100).toFixed(0)}%
+            Risk {selectedPartner.pChurn.toFixed(2)}
           </span>
         </div>
       </div>

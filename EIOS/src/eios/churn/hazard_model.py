@@ -52,7 +52,10 @@ class DiscreteTimeHazardModel:
         return self
 
     def predict_30d_hazard(self, df_partners: pd.DataFrame) -> pd.DataFrame:
-        """Computes cumulative 30-day disengagement probability P(churn in 30d) for each partner.
+        """Computes the cumulative 30-day hazard for each partner: a current disengagement risk score.
+
+        It ranks partners already disengaging very well (AUC 0.974 at the cut `[MEASURED]`) but is not a validated
+        forecast: scored 30 days ahead it ranks no better than chance (docs/operations-engine.md, lead-time table).
 
         Evaluates cumulative survival across 4 discrete weekly intervals:
             S(4) = Product_{w=1..4} (1 - h_w)

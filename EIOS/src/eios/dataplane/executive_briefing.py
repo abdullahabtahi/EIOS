@@ -78,7 +78,7 @@ class BriefingBuilder:
         return HorizonSummary(
             horizon_name="Partner",
             headline=(
-                f"{len(high)} partners are above a {HIGH_RISK:.0%} 30-day churn hazard and carry "
+                f"{len(high)} partners are at high disengagement risk (score {HIGH_RISK:.0%} or more) and carry "
                 f"${volume:,.0f} of 30-day volume.{tail}"
             ),
             primary_metric_id="realized_volume_30d_usd",

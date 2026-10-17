@@ -133,7 +133,7 @@ export const DOSSIER_PARTNER_AP1029: CopilotDossier = {
       metrics: [
         {
           metricId: 'churn_hazard_probability',
-          name: 'Partner Churn Hazard (DoWhy SCM)',
+          name: 'Partner Disengagement Risk',
           rawValue: 0.84,
           formattedValue: '84.0%',
           semanticDefinitionVersion: 'v1.8.0 [c4f1a0]',
@@ -849,7 +849,7 @@ export function buildPartnerRetentionDossier(partner: PartnerChurnItem): Copilot
         metrics: [
           {
             metricId: `M-${partner.partnerId}-CHURN`,
-            name: 'Survival Hazard P(churn)',
+            name: 'Disengagement risk score',
             rawValue: partner.pChurn,
             formattedValue: `${(partner.pChurn * 100).toFixed(1)}%`,
             unit: 'probability',

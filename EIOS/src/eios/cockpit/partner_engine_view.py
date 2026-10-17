@@ -84,9 +84,9 @@ def _risk_section(svc: EnginePartnerService, pid: str, as_of: str) -> dict[str, 
     trend = f" Thirty days ago it was {past:.0%}." if past is not None else ""
     return {
         "section_id": "sec_risk",
-        "title": "Churn risk",
+        "title": "Disengagement risk",
         "narrative_text": (
-            f"30-day churn hazard {item.churn_hazard_probability:.0%} on ${item.realized_volume_30d_usd:,.0f} of "
+            f"Current disengagement risk {item.churn_hazard_probability:.0%} on ${item.realized_volume_30d_usd:,.0f} of "
             f"30-day referred deposits. Primary driver: {item.primary_root_cause.lower()}.{trend}"
         ),
         "citations": ["churn_hazard_probability", "realized_volume_30d_usd"],

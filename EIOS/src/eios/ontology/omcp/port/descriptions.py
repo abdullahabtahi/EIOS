@@ -48,7 +48,7 @@ DESCRIPTIONS: dict[str, str] = {
     ),
     "partner.worklist": "The partners that need attention, ranked, with their risk quadrant.",
     "partner.signals": (
-        "One partner's risk picture: churn hazard, login and deposit decay, recent volume, main root cause, "
+        "One partner's risk picture: disengagement risk score, login and deposit decay, recent volume, main root cause, "
         "days to the intervention deadline and the retention deals available. First call for any question "
         "about why a partner is at risk."
     ),
