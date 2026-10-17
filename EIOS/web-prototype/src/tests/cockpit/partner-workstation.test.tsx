@@ -7,7 +7,7 @@ import { PartnerTriageGrid } from '@/components/cockpit/common/partner-triage-gr
 import { MOCK_PARTNERS } from '@/components/cockpit/common/churn-radar-scatter';
 
 describe('Partner Manager Workstation (Production Hardening US1-US5)', () => {
-  it('renders Churn Hazard Radar with P(churn) x VaR quadrants and historical drift trajectories', () => {
+  it('renders the Disengagement Radar with risk score x VaR quadrants and historical drift trajectories', () => {
     render(
       <CockpitProvider>
         <PartnerWorkstationView />
@@ -15,9 +15,11 @@ describe('Partner Manager Workstation (Production Hardening US1-US5)', () => {
     );
 
     expect(screen.getAllByText(/PTR-882/i)[0]).toBeInTheDocument();
-    expect(screen.getByText(/HIGH VALUE \/ CRITICAL CHURN HAZARD/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/P\(churn\) Hazard Rate/i)[0]).toBeInTheDocument();
+    expect(screen.getByText(/HIGH VALUE \/ HIGH DISENGAGEMENT RISK/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Disengagement risk score/i)[0]).toBeInTheDocument();
     expect(screen.getByTestId('partner-triage-grid')).toBeInTheDocument();
+    // The score detects disengagement under way; it is not a forecast, so no label calls it a churn probability.
+    expect(screen.queryByText(/P\(churn\)/)).not.toBeInTheDocument();
   });
 
   it('filters and sorts high-density partner triage grid with search query', () => {

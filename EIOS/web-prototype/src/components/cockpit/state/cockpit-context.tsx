@@ -287,7 +287,7 @@ function cockpitReducer(state: CockpitState, action: CockpitAction): CockpitStat
               sections: [
                 {
                   sectionId: 'sec_partner_status',
-                  title: 'Partner Engagement & Churn Hazard',
+                  title: 'Partner Engagement & Disengagement Risk',
                   narrativeText: `Partner ${entityId} is active in monitoring queue. Causal concession guardrails applied.`,
                   citations: ['churn_hazard_probability'],
                   metrics: [],

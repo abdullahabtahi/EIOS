@@ -37,7 +37,7 @@ export function PartnerWorkstationView() {
       <div
         role="tabpanel"
         id="panel-radar"
-        aria-label="2D Churn Hazard Radar"
+        aria-label="2D Disengagement Radar"
         className="block"
       >
         <ChurnRadarScatter />

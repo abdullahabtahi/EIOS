@@ -209,7 +209,7 @@ export function PartnerOntologyInspector() {
             subtext="Referred GMV"
           />
           <Property
-            label="30-DAY CHURN HAZARD"
+            label="CURRENT DISENGAGEMENT RISK"
             value={fmt.ratio(p.hazard_probability_30d)}
             badge={hazard !== null && hazard >= 0.7 ? 'CRITICAL' : hazard !== null && hazard >= 0.4 ? 'HIGH' : undefined}
             badgeType={hazard !== null && hazard >= 0.7 ? 'bad' : 'warn'}
