@@ -8,5 +8,10 @@ export async function GET(req: NextRequest) {
   }, { timeoutMs: 60_000 });
   if (!res) return backendUnavailable();
   if (!res.ok) return relayError(res);
-  return NextResponse.json(await res.json());
+  const data = await res.json();
+  return NextResponse.json(data, {
+    headers: {
+      'Cache-Control': 'private, max-age=30, stale-while-revalidate=120',
+    },
+  });
 }

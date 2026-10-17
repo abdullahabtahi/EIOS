@@ -19,6 +19,19 @@ const nextConfig: NextConfig = {
     'localhost:3012',
     '*.testsprite.net',
   ],
+  async headers() {
+    return [
+      {
+        source: '/api/cockpit/geo/reference',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=60, s-maxage=300, stale-while-revalidate=86400',
+          },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
