@@ -153,7 +153,7 @@ export function CopilotChat() {
 
   return (
     <section aria-label="Copilot chat" className="w-full min-w-0 h-full flex flex-col bg-cx-wash-0">
-      <div className="px-3 py-2 bg-cx-sub border-b border-cx-line shrink-0 flex items-center justify-between gap-2 text-xs">
+      <div className="px-3 py-2 bg-cx-sub border-b border-cx-line shrink-0 text-xs">
         <div className="min-w-0" data-testid="chat-context">
           {entityId ? (
             <>
@@ -165,39 +165,26 @@ export function CopilotChat() {
             <span className="text-cx-muted">No entity selected. Pick one from the triage rail, or ask in general.</span>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {items.length > 0 && (
-            <button
-              type="button"
-              onClick={() => patch(role, () => [])}
-              className="text-label text-slate-500 hover:text-slate-900 underline cursor-pointer shrink-0"
-              title="Clear this conversation"
-            >
-              Clear
-            </button>
-          )}
-        </div>
       </div>
 
       <div ref={listRef} className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-4">
         {items.length === 0 ? (
-          <div className="py-8 text-center space-y-4">
-            <div className="space-y-1">
-              <p className="text-xs font-semibold text-slate-800">Ask about what you are looking at</p>
-              <p className="text-label text-slate-500">Explain a risk, find what needs attention, or propose an action for a second operator to approve.</p>
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
+          <div className="space-y-2 pt-2">
+            <h3 className="text-sm font-semibold leading-snug text-cx-ink">Ask about what you are looking at</h3>
+            <p className="text-label text-cx-muted">Explain a risk, find what needs attention, or propose an action for a second operator to approve.</p>
+            <ul className="-mx-3 divide-y divide-cx-line-soft pt-1">
               {suggestions.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => ask(s)}
-                  className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-label transition-colors cursor-pointer hover:border-blue-500"
-                >
-                  {s}
-                </button>
+                <li key={s}>
+                  <button
+                    type="button"
+                    onClick={() => ask(s)}
+                    className="w-full cursor-pointer px-3 py-2 text-left text-xs text-cx-ink outline-none transition-colors hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent"
+                  >
+                    {s}
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         ) : (
           items.map((item) =>
@@ -226,6 +213,18 @@ export function CopilotChat() {
         pending={pending > 0}
         inputRef={inputRef}
         onKeyDown={(e) => e.key === 'Escape' && inputRef.current?.blur()}
+        context={
+          items.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => patch(role, () => [])}
+              title="Clear this conversation"
+              className="cursor-pointer text-label text-cx-muted outline-none hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
+            >
+              Clear conversation
+            </button>
+          ) : undefined
+        }
         accessory={<ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />}
       />
     </section>

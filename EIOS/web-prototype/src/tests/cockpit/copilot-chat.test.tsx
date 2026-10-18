@@ -166,7 +166,7 @@ describe('the chat view', () => {
     expect(screen.queryByText('Partner answer.')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('role-partner'));
     expect(await screen.findByText('Partner answer.')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear conversation' }));
     expect(screen.queryByText('Partner answer.')).not.toBeInTheDocument();
   });
 
