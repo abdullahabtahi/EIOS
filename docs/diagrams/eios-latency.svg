@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="10cm" height="11cm" viewBox="0 0 1000 1100" font-family="'Avenir Next','Helvetica Neue',Helvetica,Arial,sans-serif">
+<rect width="1000" height="1100" fill="#f7f7f5"/>
+<text x="50" y="70" font-size="50" font-weight="700" fill="#1b1d21" text-anchor="start">Where the time went</text>
+<text x="50" y="112" font-size="27" font-weight="400" fill="#464a51" text-anchor="start">One copilot turn, drawn to scale</text>
+<text x="50" y="190" font-size="34" font-weight="700" fill="#1b1d21" text-anchor="start">Before</text>
+<text x="950" y="190" font-size="52" font-weight="700" fill="#1b1d21" text-anchor="end">10.4 s</text>
+<rect x="50" y="220" width="64.0" height="96" fill="#7da2e6"/>
+<rect x="114.0" y="220" width="304.0" height="96" fill="#1a56c4"/>
+<rect x="418.0" y="220" width="62.0" height="96" fill="#1b1d21"/>
+<rect x="485.0" y="220" width="62.0" height="96" fill="#1b1d21"/>
+<rect x="552.0" y="220" width="62.0" height="96" fill="#1b1d21"/>
+<rect x="619.0" y="220" width="62.0" height="96" fill="#1b1d21"/>
+<rect x="686.0" y="220" width="62.0" height="96" fill="#1b1d21"/>
+<rect x="753.0" y="220" width="62.0" height="96" fill="#1b1d21"/>
+<rect x="820.0" y="220" width="62.0" height="96" fill="#1b1d21"/>
+<text x="132.0" y="278" font-size="28" font-weight="600" fill="#ffffff" text-anchor="start">Model 3.8 s</text>
+<text x="50" y="346" font-size="22" font-weight="500" fill="#464a51" text-anchor="start">Armor 0.8 s</text>
+<text x="882.0" y="346" font-size="24" font-weight="700" fill="#1b1d21" text-anchor="end">Firestore session writes 5.8 s</text>
+<text x="882.0" y="374" font-size="22" font-weight="400" fill="#464a51" text-anchor="end">6 to 8 transactions, each awaited</text>
+<text x="50" y="450" font-size="34" font-weight="700" fill="#1b1d21" text-anchor="start">After write-behind sessions</text>
+<text x="950" y="450" font-size="52" font-weight="700" fill="#1a56c4" text-anchor="end">4.2 s</text>
+<rect x="50" y="480" width="336.0" height="96" fill="#1a56c4"/>
+<text x="68" y="538" font-size="28" font-weight="600" fill="#ffffff" text-anchor="start">Model and screening</text>
+<rect x="386.0" y="480" width="496.0" height="96" fill="none" stroke="#464a51" stroke-width="3" stroke-dasharray="12 8"/>
+<text x="410.0" y="524" font-size="23" font-weight="500" fill="#464a51" text-anchor="start">Writes still happen, in order,</text>
+<text x="410.0" y="554" font-size="23" font-weight="500" fill="#464a51" text-anchor="start">after the reply is sent</text>
+<text x="386.0" y="606" font-size="22" font-weight="700" fill="#1a56c4" text-anchor="start">Answer returned</text>
+<text x="50" y="720" font-size="34" font-weight="700" fill="#1b1d21" text-anchor="start">Now, over 246 live turns</text>
+<text x="950" y="720" font-size="52" font-weight="700" fill="#1a56c4" text-anchor="end">2.7 s</text>
+<rect x="50" y="750" width="216.0" height="96" fill="#dbe6fa" stroke="#1a56c4" stroke-width="3"/>
+<text x="68" y="808" font-size="28" font-weight="600" fill="#1a56c4" text-anchor="start">Median</text>
+<line x1="418.0" y1="742" x2="418.0" y2="854" stroke="#1b1d21" stroke-width="4"/>
+<text x="432.0" y="808" font-size="26" font-weight="700" fill="#1b1d21" text-anchor="start">p95 4.6 s</text>
+<text x="50" y="876" font-size="22" font-weight="400" fill="#464a51" text-anchor="start">A separate run, so drawn as an outline</text>
+<line x1="50" y1="930" x2="882.0" y2="930" stroke="#464a51" stroke-width="2"/>
+<line x1="50" y1="922" x2="50" y2="938" stroke="#464a51" stroke-width="2"/>
+<text x="50" y="966" font-size="22" font-weight="400" fill="#464a51" text-anchor="middle">0 s</text>
+<line x1="210" y1="922" x2="210" y2="938" stroke="#464a51" stroke-width="2"/>
+<text x="210" y="966" font-size="22" font-weight="400" fill="#464a51" text-anchor="middle">2 s</text>
+<line x1="370" y1="922" x2="370" y2="938" stroke="#464a51" stroke-width="2"/>
+<text x="370" y="966" font-size="22" font-weight="400" fill="#464a51" text-anchor="middle">4 s</text>
+<line x1="530" y1="922" x2="530" y2="938" stroke="#464a51" stroke-width="2"/>
+<text x="530" y="966" font-size="22" font-weight="400" fill="#464a51" text-anchor="middle">6 s</text>
+<line x1="690" y1="922" x2="690" y2="938" stroke="#464a51" stroke-width="2"/>
+<text x="690" y="966" font-size="22" font-weight="400" fill="#464a51" text-anchor="middle">8 s</text>
+<line x1="850" y1="922" x2="850" y2="938" stroke="#464a51" stroke-width="2"/>
+<text x="850" y="966" font-size="22" font-weight="400" fill="#464a51" text-anchor="middle">10 s</text>
+<text x="50" y="1006" font-size="20" font-weight="400" fill="#464a51" text-anchor="start">Bars 1 and 2: medians from the same probe, a laptop in the Philippines</text>
+<text x="50" y="1034" font-size="20" font-weight="400" fill="#464a51" text-anchor="start">calling us-central1. Write spans are drawn schematically.</text>
+<text x="50" y="1062" font-size="20" font-weight="400" fill="#464a51" text-anchor="start">Bar 3: the live evaluation of 18 October, a separate run.</text>
+</svg>
