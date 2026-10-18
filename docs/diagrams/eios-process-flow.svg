@@ -1,0 +1,257 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24cm" height="10cm" viewBox="0 0 2400 1000" font-family="'Avenir Next','Helvetica Neue',Helvetica,Arial,sans-serif">
+<rect width="2400" height="1000" fill="#f7f7f5"/>
+<rect x="30" y="126" width="2344" height="150" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<rect x="30" y="300" width="2344" height="330" fill="#dfe7f6" stroke="#8aa6dd" stroke-width="1.5"/>
+<rect x="30" y="654" width="2344" height="240" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<text x="36" y="68" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.3">WHO USES EIOS</text>
+<text x="36" y="98" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">People above and below, EIOS between</text>
+<rect x="330" y="44" width="52" height="32" rx="16" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="356" y="67" font-size="20" font-weight="600" fill="#1b1d21" text-anchor="middle">1</text>
+<text x="396" y="68" font-size="26" font-weight="600" fill="#1b1d21" text-anchor="start">An alert fires</text>
+<text x="396" y="98" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">what starts it</text>
+<rect x="742" y="44" width="52" height="32" rx="16" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="768" y="67" font-size="20" font-weight="600" fill="#1b1d21" text-anchor="middle">2</text>
+<text x="808" y="68" font-size="26" font-weight="600" fill="#1b1d21" text-anchor="start">EIOS builds the case</text>
+<text x="808" y="98" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">how EIOS helps</text>
+<rect x="1154" y="44" width="52" height="32" rx="16" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="1180" y="67" font-size="20" font-weight="600" fill="#1b1d21" text-anchor="middle">3</text>
+<text x="1220" y="68" font-size="26" font-weight="600" fill="#1b1d21" text-anchor="start">A person decides</text>
+<text x="1220" y="98" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">what the human does</text>
+<rect x="1566" y="44" width="52" height="32" rx="16" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="1592" y="67" font-size="20" font-weight="600" fill="#1b1d21" text-anchor="middle">4</text>
+<text x="1632" y="68" font-size="26" font-weight="600" fill="#1b1d21" text-anchor="start">A second person approves</text>
+<text x="1632" y="98" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">who else must agree</text>
+<rect x="1978" y="44" width="52" height="32" rx="16" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="2004" y="67" font-size="20" font-weight="600" fill="#1b1d21" text-anchor="middle">5</text>
+<text x="2044" y="68" font-size="26" font-weight="600" fill="#1b1d21" text-anchor="start">The proof is sealed</text>
+<text x="2044" y="98" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">what is left behind</text>
+<path d="M330 116H2362" stroke="#8a8d93" stroke-width="2"/>
+<path d="M2362 116l-14 -7v14z" fill="#8a8d93"/>
+<rect x="40" y="140" width="270" height="128" fill="#ffffff" stroke="#8a8d93" stroke-width="1.2"/>
+<text x="54" y="178" font-size="25" font-weight="500" fill="#1b1d21" text-anchor="start">Investigator</text>
+<text x="54" y="204" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">AML analyst. Reviews the</text>
+<text x="54" y="228" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">dossier, edits the draft,</text>
+<text x="54" y="252" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">proposes the action.</text>
+<rect x="40" y="314" width="270" height="152" fill="#ffffff" stroke="#8a8d93" stroke-width="1.2"/>
+<text x="54" y="352" font-size="25" font-weight="500" fill="#1b1d21" text-anchor="start">EIOS</text>
+<text x="54" y="378" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">The AI system on Google</text>
+<text x="54" y="402" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">Cloud. It reads, assembles,</text>
+<text x="54" y="426" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">drafts and proposes. It never</text>
+<text x="54" y="450" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">approves, signs or files.</text>
+<rect x="40" y="668" width="270" height="104" fill="#ffffff" stroke="#8a8d93" stroke-width="1.2"/>
+<text x="54" y="706" font-size="25" font-weight="500" fill="#1b1d21" text-anchor="start">Approver</text>
+<text x="54" y="732" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">Second officer. Authorises,</text>
+<text x="54" y="756" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">never initiates.</text>
+<rect x="40" y="784" width="270" height="104" fill="#ffffff" stroke="#8a8d93" stroke-width="1.2"/>
+<text x="54" y="822" font-size="25" font-weight="500" fill="#1b1d21" text-anchor="start">Compliance head</text>
+<text x="54" y="848" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">Owns thresholds, signs off</text>
+<text x="54" y="872" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">the SAR, verifies the ledger.</text>
+<rect x="330" y="140" width="384" height="122" fill="#ffffff" stroke="#8a8d93" stroke-width="1.4"/>
+<rect x="340" y="154" width="38" height="38" fill="#ffffff" stroke="#1b1d21" stroke-opacity="0.5" stroke-width="1"/>
+<circle cx="359" cy="169" r="4.6" fill="none" stroke="#1b1d21" stroke-width="1.8"/>
+<path d="M350 183c0-6 4-9 9-9s9 3 9 9" fill="none" stroke="#1b1d21" stroke-width="1.8"/>
+<text x="392" y="180" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start">Opens the top alert</text>
+<text x="392" y="210" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">Case CR84920 is first</text>
+<text x="392" y="235" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">in the queue.</text>
+<rect x="742" y="140" width="384" height="122" fill="#ffffff" stroke="#8a8d93" stroke-width="1.4"/>
+<rect x="752" y="154" width="38" height="38" fill="#ffffff" stroke="#1b1d21" stroke-opacity="0.5" stroke-width="1"/>
+<circle cx="771" cy="169" r="4.6" fill="none" stroke="#1b1d21" stroke-width="1.8"/>
+<path d="M762 183c0-6 4-9 9-9s9 3 9 9" fill="none" stroke="#1b1d21" stroke-width="1.8"/>
+<text x="804" y="180" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start">Reads one cited screen</text>
+<text x="804" y="210" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">Not five systems. Every</text>
+<text x="804" y="235" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">number shows its source.</text>
+<rect x="1154" y="140" width="384" height="122" fill="#ffffff" stroke="#c98a12" stroke-width="3"/>
+<rect x="1164" y="154" width="38" height="38" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.5" stroke-width="1"/>
+<path d="M1183 163l9 10-9 10-9-10z" fill="#c98a12"/>
+<text x="1216" y="180" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start">Reviews, edits, decides</text>
+<text x="1216" y="210" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">Edits the report and asks</text>
+<text x="1216" y="235" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">to hold the withdrawals.</text>
+<rect x="1340.4" y="115" width="187.6" height="29" rx="14.5" fill="#c98a12"/>
+<text x="1434.2" y="136" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">HUMAN DECISION</text>
+<rect x="1566" y="140" width="384" height="122" fill="#ffffff" stroke="#c0392b" stroke-width="2" stroke-dasharray="8 6"/>
+<rect x="1576" y="154" width="38" height="38" fill="#f8d2cf" stroke="#d0443b" stroke-opacity="0.5" stroke-width="1"/>
+<circle cx="1595" cy="169" r="4.6" fill="none" stroke="#d0443b" stroke-width="1.8"/>
+<path d="M1586 183c0-6 4-9 9-9s9 3 9 9" fill="none" stroke="#d0443b" stroke-width="1.8"/>
+<text x="1628" y="180" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start">Cannot approve own hold</text>
+<text x="1628" y="210" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">Two people are required:</text>
+<text x="1628" y="235" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">the proposer can’t approve.</text>
+<rect x="1718.2" y="115" width="221.8" height="29" rx="14.5" fill="#c0392b"/>
+<text x="1829.1" y="136" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">BLOCKED BY DESIGN</text>
+<rect x="330" y="668" width="384" height="212" fill="#ffffff" stroke="#8a8d93" stroke-width="1.4"/>
+<rect x="340" y="682" width="38" height="38" fill="#ffffff" stroke="#1b1d21" stroke-opacity="0.5" stroke-width="1"/>
+<circle cx="359" cy="697" r="4.6" fill="none" stroke="#1b1d21" stroke-width="1.8"/>
+<path d="M350 711c0-6 4-9 9-9s9 3 9 9" fill="none" stroke="#1b1d21" stroke-width="1.8"/>
+<text x="392" y="708" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start">Sets what triggers alerts</text>
+<text x="392" y="738" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">The compliance head owns</text>
+<text x="392" y="763" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">the alert thresholds.</text>
+<rect x="1566" y="668" width="384" height="212" fill="#ffffff" stroke="#c98a12" stroke-width="3"/>
+<rect x="1576" y="682" width="38" height="38" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.5" stroke-width="1"/>
+<path d="M1595 691l9 10-9 10-9-10z" fill="#c98a12"/>
+<text x="1628" y="708" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start">Approves the hold</text>
+<text x="1628" y="738" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">A second officer reviews the</text>
+<text x="1628" y="763" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">evidence and signs off.</text>
+<text x="1628" y="788" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">It expires if nobody acts.</text>
+<rect x="1752.4" y="643" width="187.6" height="29" rx="14.5" fill="#c98a12"/>
+<text x="1846.2" y="664" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">HUMAN DECISION</text>
+<rect x="1978" y="668" width="384" height="212" fill="#ffffff" stroke="#8a8d93" stroke-width="1.4"/>
+<rect x="1988" y="682" width="38" height="38" fill="#ffffff" stroke="#1b1d21" stroke-opacity="0.5" stroke-width="1"/>
+<circle cx="2007" cy="697" r="4.6" fill="none" stroke="#1b1d21" stroke-width="1.8"/>
+<path d="M1998 711c0-6 4-9 9-9s9 3 9 9" fill="none" stroke="#1b1d21" stroke-width="1.8"/>
+<text x="2040" y="708" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start">Verifies and signs off</text>
+<text x="2040" y="738" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">Checks the record is intact</text>
+<text x="2040" y="763" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">and signs off the report.</text>
+<text x="2040" y="788" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">Filing stays a human decision.</text>
+<rect x="330" y="310" width="384" height="310" fill="#f7f7f5" stroke="#8aa6dd" stroke-width="1.5"/>
+<rect x="742" y="310" width="384" height="310" fill="#f7f7f5" stroke="#8aa6dd" stroke-width="1.5"/>
+<rect x="1154" y="310" width="384" height="310" fill="#f7f7f5" stroke="#8aa6dd" stroke-width="1.5"/>
+<rect x="1566" y="310" width="384" height="310" fill="#f7f7f5" stroke="#8aa6dd" stroke-width="1.5"/>
+<rect x="1978" y="310" width="384" height="310" fill="#f7f7f5" stroke="#8aa6dd" stroke-width="1.5"/>
+<rect x="342" y="346" width="360" height="60" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="350" y="358.0" width="36" height="36" fill="#cdeed6" stroke="#2e9e5b" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M369 367.0l-7 11h6l-2 8 8-12h-6z" fill="#2e9e5b"/>
+<text x="400" y="370.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">Every transaction is</text>
+<text x="400" y="395.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">checked on arrival</text>
+<rect x="584.2" y="321" width="107.8" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="638.1" y="342" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Pub/Sub</text>
+<rect x="342" y="436" width="360" height="60" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="350" y="448.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.4" stroke-width="1"/>
+<rect x="361" y="468.0" width="4" height="7" fill="#3f7a8a"/>
+<rect x="367" y="463.0" width="4" height="12" fill="#3f7a8a"/>
+<rect x="373" y="458.0" width="4" height="17" fill="#3f7a8a"/>
+<text x="400" y="460.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">Detection ranks every</text>
+<text x="400" y="485.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">alert, riskiest first</text>
+<rect x="342" y="526" width="360" height="88" fill="#fff6e4" stroke="#c98a12" stroke-width="3"/>
+<rect x="350" y="552.0" width="36" height="36" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M369 561.0l-7 11h6l-2 8 8-12h-6z" fill="#c98a12"/>
+<text x="400" y="552.0" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start">$8,000 deposited against</text>
+<text x="400" y="577.0" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start">$500 declared (16×),</text>
+<text x="400" y="602.0" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start">then 96% withdrawn</text>
+<rect x="584.2" y="501" width="107.8" height="29" rx="14.5" fill="#c98a12"/>
+<text x="638.1" y="522" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">TRIGGER</text>
+<rect x="754" y="346" width="360" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="762" y="361.0" width="36" height="36" fill="#dccffa" stroke="#7a56d6" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M14 8L6 20H22Z" transform="translate(766 367.0)" fill="none" stroke="#7a56d6" stroke-width="1.8"/>
+<circle cx="780" cy="375.0" r="3" fill="#7a56d6"/>
+<circle cx="772" cy="387.0" r="3" fill="#7a56d6"/>
+<circle cx="788" cy="387.0" r="3" fill="#7a56d6"/>
+<text x="812" y="373.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">Spots a ring: 23 accounts</text>
+<text x="812" y="398.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">share a device and payment</text>
+<rect x="916.4" y="321" width="187.6" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1010.2" y="342" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">BigQuery Graph</text>
+<rect x="754" y="442" width="360" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="762" y="457.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M14 8L6 20H22Z" transform="translate(766 463.0)" fill="none" stroke="#3f7a8a" stroke-width="1.8"/>
+<circle cx="780" cy="471.0" r="3" fill="#3f7a8a"/>
+<circle cx="772" cy="483.0" r="3" fill="#3f7a8a"/>
+<circle cx="788" cy="483.0" r="3" fill="#3f7a8a"/>
+<text x="812" y="469.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">Ignores a public gateway</text>
+<text x="812" y="494.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">used by 142 strangers</text>
+<rect x="754" y="538" width="360" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="762" y="553.0" width="36" height="36" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M774 562.0h9l5 5v14h-14z" fill="none" stroke="#c98a12" stroke-width="1.8"/>
+<path d="M777 573.0h8M777 577.0h8" stroke="#c98a12" stroke-width="1.8"/>
+<text x="812" y="565.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">Quotes the exact rule</text>
+<text x="812" y="590.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">that applies</text>
+<rect x="939.2" y="513" width="164.8" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1021.6" y="534" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Agent Search</text>
+<rect x="1166" y="346" width="360" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1174" y="361.0" width="36" height="36" fill="#dccffa" stroke="#7a56d6" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M14 8L6 20H22Z" transform="translate(1178 367.0)" fill="none" stroke="#7a56d6" stroke-width="1.8"/>
+<circle cx="1192" cy="375.0" r="3" fill="#7a56d6"/>
+<circle cx="1184" cy="387.0" r="3" fill="#7a56d6"/>
+<circle cx="1200" cy="387.0" r="3" fill="#7a56d6"/>
+<text x="1224" y="373.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">Drafts the case summary</text>
+<text x="1224" y="398.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">and the report (SAR)</text>
+<rect x="1385.4" y="321" width="130.60000000000002" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1450.7" y="342" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Vertex AI</text>
+<rect x="1166" y="442" width="360" height="66" fill="#ffffff" stroke="#8a8d93" stroke-width="1.6"/>
+<rect x="1174" y="457.0" width="36" height="36" fill="#f8d2cf" stroke="#d0443b" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M1192 466.0l8 3v7c0 5-3.5 8-8 10-4.5-2-8-5-8-10v-7z" fill="none" stroke="#d0443b" stroke-width="1.8"/>
+<text x="1224" y="469.0" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start">No number without proof:</text>
+<text x="1224" y="494.0" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start">unverified drafts refused</text>
+<rect x="1166" y="538" width="360" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1174" y="553.0" width="36" height="36" fill="#f8d2cf" stroke="#d0443b" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M1192 562.0l8 3v7c0 5-3.5 8-8 10-4.5-2-8-5-8-10v-7z" fill="none" stroke="#d0443b" stroke-width="1.8"/>
+<text x="1224" y="565.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">Questions and answers</text>
+<text x="1224" y="590.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">are screened for abuse</text>
+<rect x="1362.6" y="513" width="153.4" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1439.3" y="534" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Model Armor</text>
+<rect x="1578" y="346" width="360" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1586" y="361.0" width="36" height="36" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M1605 370.0l-7 11h6l-2 8 8-12h-6z" fill="#c98a12"/>
+<text x="1636" y="373.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">The proposal is turned</text>
+<text x="1636" y="398.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">into a signed request</text>
+<rect x="1578" y="442" width="360" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1586" y="457.0" width="36" height="36" fill="#f8d2cf" stroke="#d0443b" stroke-opacity="0.4" stroke-width="1"/>
+<circle cx="1600" cy="475.0" r="4.5" fill="none" stroke="#d0443b" stroke-width="1.8"/>
+<path d="M1604.5 475.0h9M1610 475.0v4" stroke="#d0443b" stroke-width="1.8"/>
+<text x="1636" y="469.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">Digitally signed; expires</text>
+<text x="1636" y="494.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">in 15 minutes</text>
+<rect x="1797.4" y="417" width="130.60000000000002" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1862.7" y="438" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Cloud KMS</text>
+<rect x="1578" y="538" width="360" height="66" fill="#ffffff" stroke="#8a8d93" stroke-width="1.6"/>
+<rect x="1586" y="553.0" width="36" height="36" fill="#f8d2cf" stroke="#d0443b" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M1604 562.0l8 3v7c0 5-3.5 8-8 10-4.5-2-8-5-8-10v-7z" fill="none" stroke="#d0443b" stroke-width="1.8"/>
+<text x="1636" y="565.0" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start">The AI can only propose.</text>
+<text x="1636" y="590.0" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start">It cannot approve or act.</text>
+<rect x="1990" y="346" width="360" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1998" y="361.0" width="36" height="36" fill="#cdeed6" stroke="#2e9e5b" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M2017 370.0l-7 11h6l-2 8 8-12h-6z" fill="#2e9e5b"/>
+<text x="2048" y="373.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">The hold is carried out</text>
+<text x="2048" y="398.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">once; a receipt is kept</text>
+<rect x="1990" y="442" width="360" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1998" y="457.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M2009 469.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M2009 475.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M2009 481.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<text x="2048" y="469.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">Each approval is added to</text>
+<text x="2048" y="494.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">a record that can’t be edited</text>
+<rect x="2209.4" y="417" width="130.60000000000002" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="2274.7" y="438" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Firestore</text>
+<rect x="1990" y="538" width="360" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1998" y="553.0" width="36" height="36" fill="#d4d6da" stroke="#5c6068" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M2010 562.0h9l5 5v14h-14z" fill="none" stroke="#5c6068" stroke-width="1.8"/>
+<path d="M2013 573.0h8M2013 577.0h8" stroke="#5c6068" stroke-width="1.8"/>
+<text x="2048" y="565.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">The evidence is sealed so</text>
+<text x="2048" y="590.0" font-size="20" font-weight="400" fill="#1b1d21" text-anchor="start">anyone can re-check it</text>
+<path d="M420 310L420 276" stroke="#5d616a" stroke-width="3"/>
+<path d="M420 262l-9 17h18z" fill="#5d616a"/>
+<path d="M832 296L832 276" stroke="#5d616a" stroke-width="3"/>
+<path d="M832 262l-9 17h18z" fill="#5d616a"/>
+<path d="M832 310l-9 -17h18z" fill="#5d616a"/>
+<path d="M1244 296L1244 276" stroke="#5d616a" stroke-width="3"/>
+<path d="M1244 262l-9 17h18z" fill="#5d616a"/>
+<path d="M1244 310l-9 -17h18z" fill="#5d616a"/>
+<path d="M1656 310V262" stroke="#c0392b" stroke-width="3" stroke-dasharray="8 6"/>
+<circle cx="1656" cy="286.0" r="13" fill="#ffffff" stroke="#c0392b" stroke-width="2.5"/>
+<path d="M1650 280.0l12 12M1662 280.0l-12 12" stroke="#c0392b" stroke-width="2.5"/>
+<path d="M420 668L420 634" stroke="#5d616a" stroke-width="3"/>
+<path d="M420 620l-9 17h18z" fill="#5d616a"/>
+<path d="M1656 634L1656 654" stroke="#c98a12" stroke-width="3"/>
+<path d="M1656 668l-9 -17h18z" fill="#c98a12"/>
+<path d="M1656 620l-9 17h18z" fill="#c98a12"/>
+<path d="M2068 620L2068 654" stroke="#5d616a" stroke-width="3"/>
+<path d="M2068 668l-9 -17h18z" fill="#5d616a"/>
+<path d="M715 465L727 465" stroke="#5d616a" stroke-width="3"/>
+<path d="M741 465l-17 -9v18z" fill="#5d616a"/>
+<path d="M1127 465L1139 465" stroke="#5d616a" stroke-width="3"/>
+<path d="M1153 465l-17 -9v18z" fill="#5d616a"/>
+<path d="M1539 465L1551 465" stroke="#c98a12" stroke-width="3"/>
+<path d="M1565 465l-17 -9v18z" fill="#c98a12"/>
+<path d="M1951 465L1963 465" stroke="#c98a12" stroke-width="3"/>
+<path d="M1977 465l-17 -9v18z" fill="#c98a12"/>
+<text x="34" y="942" font-size="28" font-weight="600" xml:space="preserve"><tspan fill="#464a51">The AI proposes.</tspan><tspan fill="#8a5f08">&#160;&#160;People decide.</tspan><tspan fill="#1a56c4">&#160;&#160;The record remembers.</tspan></text>
+<text x="2374" y="940" font-size="18" font-weight="400" fill="#464a51" text-anchor="end">Case CR84920 is engine output on the seeded world; ids and figures are synthetic.</text>
+<rect x="34" y="958" width="56" height="24" rx="12" fill="#1a56c4"/>
+<text x="102" y="976" font-size="18" font-weight="400" fill="#1b1d21" text-anchor="start">Google Cloud service</text>
+<rect x="324" y="958" width="34" height="24" fill="#ffffff" stroke="#8a8d93" stroke-width="1.4"/>
+<text x="370" y="976" font-size="18" font-weight="400" fill="#1b1d21" text-anchor="start">a person</text>
+<rect x="494" y="958" width="34" height="24" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<text x="540" y="976" font-size="18" font-weight="400" fill="#1b1d21" text-anchor="start">EIOS</text>
+<rect x="614" y="958" width="34" height="24" fill="#ffffff" stroke="#c98a12" stroke-width="3"/>
+<text x="660" y="976" font-size="18" font-weight="400" fill="#1b1d21" text-anchor="start">a human decision</text>
+<path d="M844 970h40" stroke="#5d616a" stroke-width="3"/><path d="M896 970l-14 -8v16z" fill="#5d616a"/>
+<text x="908" y="976" font-size="18" font-weight="400" fill="#1b1d21" text-anchor="start">hand-off</text>
+<path d="M1034 970h40" stroke="#c98a12" stroke-width="3"/><path d="M1086 970l-14 -8v16z" fill="#c98a12"/>
+<text x="1098" y="976" font-size="18" font-weight="400" fill="#1b1d21" text-anchor="start">propose, sign, ledger</text>
+</svg>
