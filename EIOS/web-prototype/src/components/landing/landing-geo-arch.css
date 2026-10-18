@@ -573,7 +573,11 @@
   .fde-dag {
     min-width: 560px;
   }
-  .fde-viz:has(.fde-dag) {
+  .fde-ring {
+    min-width: 640px;
+  }
+  .fde-viz:has(.fde-dag),
+  .fde-viz:has(.fde-ring) {
     overflow-x: auto;
   }
   .fde-gcloud-list > div {

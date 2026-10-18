@@ -1,42 +1,69 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { HUB, RING_SIZE, RING_SUSPECT, SHARED_DEVICE, SHARED_PAYMENT } from "../data/ring";
+import {
+  HUB,
+  RING_SIZE,
+  RING_SUSPECT,
+  SHARED_DEVICE,
+  SHARED_PAYMENT,
+} from "../data/ring";
 
-const W = 560;
-const H = 440;
-const RING_C = { x: 210, y: 230 };
-const RING_R = 128;
-const HUB_P = { x: 452, y: 112 };
+const W = 820;
+const H = 500;
+const SUSPECT = 4;
 
-/** Deterministic scatter for the hub's other users, so the drawing never shifts between renders. */
-function cloud(n: number): Array<{ x: number; y: number }> {
-  let seed = 7;
-  const rand = () => {
-    seed = (seed * 16807) % 2147483647;
-    return seed / 2147483647;
-  };
-  return Array.from({ length: n }, () => {
-    const a = rand() * Math.PI * 2;
-    const r = 26 + Math.sqrt(rand()) * 92;
-    return { x: HUB_P.x + Math.cos(a) * r * 0.9, y: HUB_P.y + 40 + Math.sin(a) * r * 1.05 };
-  });
+/** The ring is drawn once in its own coordinates; the hub's burst arrives beside it and the ring shrinks to make room. */
+const DEVICE = { x: 150, y: 250 };
+const PAYMENT = { x: 650, y: 250 };
+const SCALE_OFF = 0.46;
+const SHIFT_OFF = { x: 10, y: 190 };
+const HUB_ON = { x: 712, y: 66 };
+const HUB_OFF = { x: 600, y: 250 };
+
+type Pt = { x: number; y: number };
+
+function accountPoints(n: number): Pt[] {
+  return Array.from({ length: n }, (_, i) => ({
+    x: 400 + 26 * Math.sin((Math.PI * i) / (n - 1)),
+    y: 70 + (i * 360) / (n - 1),
+  }));
 }
 
-function ringPoints(n: number): Array<{ x: number; y: number }> {
+/** Golden-angle spiral: a deterministic, even burst for the hub's other users. */
+function burst(n: number): Pt[] {
   return Array.from({ length: n }, (_, i) => {
-    const a = -Math.PI / 2 + (i / n) * Math.PI * 2;
-    return { x: RING_C.x + Math.cos(a) * RING_R, y: RING_C.y + Math.sin(a) * RING_R };
+    const r = 14 + 14.2 * Math.sqrt(i);
+    const a = i * 2.399963;
+    return { x: HUB_OFF.x + Math.cos(a) * r, y: HUB_OFF.y + Math.sin(a) * r };
   });
 }
+
+const toGlobal = (p: Pt, off: boolean): Pt =>
+  off
+    ? { x: SHIFT_OFF.x + p.x * SCALE_OFF, y: SHIFT_OFF.y + p.y * SCALE_OFF }
+    : p;
 
 export function RingGraph() {
   const [suppressed, setSuppressed] = useState(true);
-  const ring = useMemo(() => ringPoints(RING_SIZE), []);
-  const others = useMemo(() => cloud(HUB.collapsed), []);
-  const device = { x: RING_C.x - 26, y: RING_C.y - 8 };
-  const token = { x: RING_C.x + 30, y: RING_C.y + 14 };
-  const suspect = ring[0];
+  const accounts = useMemo(() => accountPoints(RING_SIZE), []);
+  const others = useMemo(() => burst(HUB.collapsed), []);
+  const off = !suppressed;
+  const suspect = accounts[SUSPECT];
+
+  const at = (p: Pt, dx = 0, dy = 0) => {
+    const g = toGlobal(p, off);
+    return { x: g.x + dx, y: g.y + dy };
+  };
+  const dev = at(DEVICE, 0, off ? 20 : 34);
+  const pay = at(PAYMENT, 0, off ? 20 : 34);
+  const sus = at(suspect, 12, 4);
+  const hub = off ? HUB_OFF : HUB_ON;
+  const groupTransform = off
+    ? `translate(${SHIFT_OFF.x}px, ${SHIFT_OFF.y}px) scale(${SCALE_OFF})`
+    : "translate(0px, 0px) scale(1)";
+  const suspectOff = toGlobal(suspect, true);
+  const suspectOn = toGlobal(suspect, false);
 
   return (
     <figure className="fde-viz" data-suppressed={suppressed}>
@@ -58,48 +85,158 @@ export function RingGraph() {
             : `False merge: +${HUB.collapsed} unrelated accounts through one public gateway`}
         </p>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="fde-ring" role="img" aria-label="Case CR84920: 23 accounts linked by a shared device and payment method, and a public gateway that would merge 141 strangers into the ring unless it is collapsed.">
-        <g className="fde-ring-cloud">
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="fde-ring"
+        role="img"
+        aria-label="Case CR84920: 23 accounts that all share one device and one payment method, and a public gateway that would merge 141 strangers into the ring unless it is collapsed."
+      >
+        <ellipse
+          cx={432}
+          cy={250}
+          rx={374}
+          ry={206}
+          className="fde-ring-false-hull"
+        />
+
+        <g
+          className="fde-ring-burst"
+          style={{ transformOrigin: `${HUB_OFF.x}px ${HUB_OFF.y}px` }}
+        >
           {others.map((p, i) => (
-            <g key={i}>
-              <path d={`M${HUB_P.x} ${HUB_P.y}L${p.x} ${p.y}`} className="fde-ring-cloud-edge" />
-              <circle cx={p.x} cy={p.y} r={2.4} className="fde-ring-cloud-node" />
+            <g key={i} style={{ transitionDelay: off ? `${i * 4}ms` : "0ms" }}>
+              <path
+                d={`M${HUB_OFF.x} ${HUB_OFF.y}L${p.x} ${p.y}`}
+                className="fde-ring-burst-edge"
+              />
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={2.5}
+                className="fde-ring-burst-node"
+              />
             </g>
           ))}
-          <ellipse cx={330} cy={210} rx={262} ry={196} className="fde-ring-false-hull" />
         </g>
 
-        {ring.map((p, i) => (
-          <g key={i}>
-            <path d={`M${p.x} ${p.y}L${device.x} ${device.y}`} className="fde-ring-edge" />
-            <path d={`M${p.x} ${p.y}L${token.x} ${token.y}`} className="fde-ring-edge fde-ring-edge-2" />
-          </g>
-        ))}
-        <circle cx={RING_C.x} cy={RING_C.y} r={RING_R + 22} className="fde-ring-hull" />
-
-        <path d={`M${suspect.x} ${suspect.y}Q${HUB_P.x - 60} ${suspect.y - 10} ${HUB_P.x} ${HUB_P.y}`} className="fde-ring-flow" />
-
-        {ring.map((p, i) => (
-          <circle key={i} cx={p.x} cy={p.y} r={i === 0 ? 7 : 4.5} className={i === 0 ? "fde-ring-suspect" : "fde-ring-node"} />
-        ))}
-        <rect x={device.x - 9} y={device.y - 9} width={18} height={18} className="fde-ring-key" transform={`rotate(45 ${device.x} ${device.y})`} />
-        <rect x={token.x - 8} y={token.y - 8} width={16} height={16} className="fde-ring-key" />
-
-        <g className="fde-ring-hub">
-          <circle cx={HUB_P.x} cy={HUB_P.y} r={suppressed ? 9 : 14} className="fde-ring-hub-node" />
-          <path d={`M${HUB_P.x - 6} ${HUB_P.y - 6}L${HUB_P.x + 6} ${HUB_P.y + 6}M${HUB_P.x + 6} ${HUB_P.y - 6}L${HUB_P.x - 6} ${HUB_P.y + 6}`} className="fde-ring-hub-x" />
+        <g className="fde-ring-group" style={{ transform: groupTransform }}>
+          <ellipse
+            cx={400}
+            cy={250}
+            rx={330}
+            ry={214}
+            className="fde-ring-hull"
+          />
+          {accounts.map((p, i) => (
+            <g key={i} className={i === SUSPECT ? "is-suspect" : undefined}>
+              <path
+                d={`M${DEVICE.x} ${DEVICE.y}C${DEVICE.x + 140} ${DEVICE.y} ${p.x - 120} ${p.y} ${p.x} ${p.y}`}
+                className="fde-ring-edge fde-ring-edge-l"
+              />
+              <path
+                d={`M${p.x} ${p.y}C${p.x + 120} ${p.y} ${PAYMENT.x - 140} ${PAYMENT.y} ${PAYMENT.x} ${PAYMENT.y}`}
+                className="fde-ring-edge fde-ring-edge-r"
+              />
+            </g>
+          ))}
+          {accounts.map((p, i) => (
+            <circle
+              key={i}
+              cx={p.x}
+              cy={p.y}
+              r={i === SUSPECT ? 8 : 5}
+              className={i === SUSPECT ? "fde-ring-suspect" : "fde-ring-node"}
+            />
+          ))}
+          <rect
+            x={DEVICE.x - 11}
+            y={DEVICE.y - 11}
+            width={22}
+            height={22}
+            className="fde-ring-key"
+            transform={`rotate(45 ${DEVICE.x} ${DEVICE.y})`}
+          />
+          <rect
+            x={PAYMENT.x - 10}
+            y={PAYMENT.y - 10}
+            width={20}
+            height={20}
+            className="fde-ring-key"
+          />
         </g>
 
-        <text x={suspect.x + 12} y={suspect.y - 6} className="fde-ring-label">{RING_SUSPECT}</text>
-        <text x={device.x - 92} y={device.y - 14} className="fde-ring-label fde-ring-label-dim">{SHARED_DEVICE}</text>
-        <text x={token.x + 14} y={token.y + 26} className="fde-ring-label fde-ring-label-dim">{SHARED_PAYMENT}</text>
-        <text x={HUB_P.x - 8} y={HUB_P.y - 24} className="fde-ring-label" textAnchor="end">
-          {HUB.id} · degree {HUB.degree}
-        </text>
+        <path
+          className="fde-ring-flow fde-ring-flow-on"
+          d={`M${suspectOn.x} ${suspectOn.y}Q${HUB_ON.x - 120} ${HUB_ON.y - 10} ${HUB_ON.x} ${HUB_ON.y}`}
+        />
+        <path
+          className="fde-ring-flow fde-ring-flow-off"
+          d={`M${suspectOff.x} ${suspectOff.y}Q${(suspectOff.x + HUB_OFF.x) / 2} ${suspectOff.y - 46} ${HUB_OFF.x} ${HUB_OFF.y}`}
+        />
+
+        <g
+          className="fde-ring-hub"
+          style={{ transform: `translate(${hub.x}px, ${hub.y}px)` }}
+        >
+          <circle r={off ? 13 : 9} className="fde-ring-hub-node" />
+          <path d="M-5 -5L5 5M5 -5L-5 5" className="fde-ring-hub-x" />
+        </g>
+
+        <g className="fde-ring-labels">
+          <text
+            x={dev.x + (off ? -24 : 0)}
+            y={dev.y}
+            textAnchor={off ? "start" : "middle"}
+            className="fde-ring-label fde-ring-label-dim fde-ring-id"
+          >
+            {SHARED_DEVICE}
+          </text>
+          <text
+            x={pay.x + (off ? 24 : 0)}
+            y={pay.y + (off ? 0 : 12)}
+            textAnchor={off ? "end" : "middle"}
+            className="fde-ring-label fde-ring-label-dim fde-ring-id"
+          >
+            {SHARED_PAYMENT}
+          </text>
+          <text x={sus.x} y={sus.y} className="fde-ring-label">
+            {RING_SUSPECT}
+          </text>
+          <text
+            x={off ? hub.x : hub.x + 14}
+            y={off ? 52 : hub.y - 20}
+            textAnchor={off ? "middle" : "end"}
+            className="fde-ring-label"
+          >
+            {HUB.id} · degree {HUB.degree}
+          </text>
+          {off && (
+            <text
+              x={HUB_OFF.x}
+              y={H - 18}
+              textAnchor="middle"
+              className="fde-ring-label fde-ring-label-warn"
+            >
+              +{HUB.collapsed} unrelated accounts
+            </text>
+          )}
+        </g>
+
+        <g className="fde-ring-axis" aria-hidden="true">
+          <text x={DEVICE.x} y={H - 12} textAnchor="middle">
+            Shared device
+          </text>
+          <text x={400} y={H - 12} textAnchor="middle">
+            {RING_SIZE} accounts, each linked to both
+          </text>
+          <text x={PAYMENT.x} y={H - 12} textAnchor="middle">
+            Shared payment method
+          </text>
+        </g>
       </svg>
       <figcaption className="fde-viz-cap">
-        Engine output for case {RING_SUSPECT} in the seeded world. Ids are synthetic; degrees and counts are what the graph
-        engine returned.
+        Engine output for case {RING_SUSPECT} in the seeded world. Ids are
+        synthetic; degrees and counts are what the graph engine returned.
       </figcaption>
     </figure>
   );

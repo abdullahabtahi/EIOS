@@ -7,6 +7,7 @@ import "./landing-capabilities.css";
 import "./landing-geo-arch.css";
 import "./landing-charts.css";
 import "./landing-push.css";
+import "./landing-ring.css";
 import { Architecture } from "./architecture/Architecture";
 import { Capabilities } from "./capabilities/Capabilities";
 import { Close } from "./Close";
