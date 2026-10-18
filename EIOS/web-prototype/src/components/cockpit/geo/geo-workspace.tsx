@@ -68,6 +68,8 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   const [side, setSide] = React.useState<CompareSide>('after');
   const dock = useChatDock();
   const [asking, setAsking] = React.useState(false);
+  const [hasThread, setHasThread] = React.useState(false);
+  const [newChat, setNewChat] = React.useState(0);
   const [unread, setUnread] = React.useState(false);
   const [intent, setIntent] = React.useState<{ id: number; text?: string } | null>(null);
   const [history, setHistory] = React.useState<readonly MapState[]>([]);
@@ -276,8 +278,8 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
 
   return (
     <div className="geo-inter relative flex h-full min-h-0 flex-col lg:flex-row">
-      <GeoChatWindow mode={dock.mode} pos={dock.pos} size={dock.size} bounds={box} onMove={dock.move} onSettle={dock.settle} onResize={dock.resizeTo} onResizeSettle={dock.settleResize} onDock={dock.dock} onFloat={dock.float} onClose={dock.close}>
-        <GeoAsk context={mapContextOf(mapState)} selected={selected} onClearSelection={() => setSelected(null)} onMove={applyMove} onPending={setAsking} onAnswered={answered} intent={intent} />
+      <GeoChatWindow mode={dock.mode} pos={dock.pos} size={dock.size} bounds={box} onMove={dock.move} onSettle={dock.settle} onResize={dock.resizeTo} onResizeSettle={dock.settleResize} onDock={dock.dock} onFloat={dock.float} onClose={dock.close} onNewChat={hasThread && !asking ? () => setNewChat((n) => n + 1) : undefined}>
+        <GeoAsk context={mapContextOf(mapState)} selected={selected} onClearSelection={() => setSelected(null)} onMove={applyMove} onPending={setAsking} onAnswered={answered} onThread={setHasThread} newChatSignal={newChat} intent={intent} />
       </GeoChatWindow>
       <div ref={mapBox} role="region" aria-label="World map" aria-describedby="geo-map-help" className="relative min-h-0 min-w-0 flex-[3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-cx-accent lg:flex-1">
         <p id="geo-map-help" className="sr-only">

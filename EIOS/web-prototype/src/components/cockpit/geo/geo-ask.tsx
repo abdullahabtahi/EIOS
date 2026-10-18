@@ -17,7 +17,7 @@ import { ChatComposer } from '../shell/chat-composer';
 import { ModelPicker, useModelChoice } from '../shell/model-picker';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { authFetch } from '@/lib/auth/token';
-import { readGeoChat, saveGeoChat } from './geo-chat-store';
+import { readGeoChat, readRecentQuestions, saveGeoChat } from './geo-chat-store';
 import { geoSuggestions, type MapContextPayload, moveLabel } from './geo-moves';
 
 import { GeoEvidence } from './geo-evidence';
@@ -68,6 +68,10 @@ export interface GeoAskProps {
   readonly onMove: (move: ViewCommand, auto: boolean) => void;
   /** An answer is being waited for, or is not. */
   readonly onPending?: (pending: boolean) => void;
+  /** Whether there is a conversation on screen, so the window can offer to start a new one. */
+  readonly onThread?: (has: boolean) => void;
+  /** Changes each time the reader asks for a new conversation. */
+  readonly newChatSignal?: number;
   /** An answer has arrived. */
   readonly onAnswered?: () => void;
   /** A request to be ready for a question: focus the box, and put the given text in it (not sent). The id changes with each request. */
@@ -111,7 +115,7 @@ function TurnMoves({ moves, onMove }: { readonly moves: readonly ViewCommand[]; 
   );
 }
 
-export function GeoAsk({ context, selected, onClearSelection, onMove, onPending, onAnswered, intent }: GeoAskProps) {
+export function GeoAsk({ context, selected, onClearSelection, onMove, onPending, onAnswered, onThread, newChatSignal, intent }: GeoAskProps) {
   const [items, setItems] = React.useState<ChatItem[]>(() => [...readGeoChat().items]);
   const [proposalStates, setProposalStates] = React.useState<Record<string, ProposalState>>(() => ({ ...readGeoChat().proposalStates }));
   const [query, setQuery] = React.useState('');
@@ -129,6 +133,18 @@ export function GeoAsk({ context, selected, onClearSelection, onMove, onPending,
   }, [items, proposalStates]);
 
   React.useEffect(() => onPending?.(pending), [pending, onPending]);
+  React.useEffect(() => onThread?.(items.length > 0), [items.length, onThread]);
+
+  // A new conversation empties the screen only: the questions asked stay offered below, and the assistant's own record of the session is not edited.
+  const [seenNewChat, setSeenNewChat] = React.useState(newChatSignal);
+  if (newChatSignal !== seenNewChat) {
+    setSeenNewChat(newChatSignal);
+    setItems([]);
+    setProposalStates({});
+  }
+  // A question already offered above is not listed twice.
+  const offered = geoSuggestions(selected);
+  const recent = items.length === 0 ? readRecentQuestions().filter((q) => !offered.includes(q)) : [];
 
   if (intent && seenIntent !== intent.id) {
     setSeenIntent(intent.id);
@@ -197,7 +213,7 @@ export function GeoAsk({ context, selected, onClearSelection, onMove, onPending,
               Every figure is checked against what a tool returned, and the map moves only to what a tool found.
             </p>
             <ul className="-mx-4 divide-y divide-cx-line-soft pt-1">
-              {geoSuggestions(selected).map((s) => (
+              {offered.map((s) => (
                 <li key={s}>
                   <button
                     type="button"
@@ -208,6 +224,23 @@ export function GeoAsk({ context, selected, onClearSelection, onMove, onPending,
                 </li>
               ))}
             </ul>
+            {recent.length > 0 && (
+              <>
+                <h4 className="pt-3 text-label font-semibold text-cx-muted">Asked earlier</h4>
+                <ul className="-mx-4 divide-y divide-cx-line-soft">
+                  {recent.map((q) => (
+                    <li key={q}>
+                      <button
+                        type="button"
+                        onClick={() => ask(q)}
+                        className="w-full cursor-pointer px-4 py-2 text-left text-xs text-cx-ink-soft outline-none transition-colors hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent">
+                        {q}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
           </div>
         ) : (
           items.map((item) =>
