@@ -1,0 +1,350 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24cm" height="10cm" viewBox="0 0 2400 1000" font-family="'Avenir Next','Helvetica Neue',Helvetica,Arial,sans-serif">
+<rect width="2400" height="1000" fill="#f7f7f5"/>
+<rect x="30" y="36" width="305" height="744" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<rect x="44" y="20" width="52" height="30" rx="15" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="70" y="42" font-size="19" font-weight="500" fill="#1b1d21" text-anchor="middle">1</text>
+<text x="46" y="84" font-size="28" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.2">WORKSTATIONS</text>
+<text x="46" y="112" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">Next.js on Cloud Run</text>
+<rect x="42" y="144" width="281" height="54" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="50" y="153.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M14 8L6 20H22Z" transform="translate(54 159.0)" fill="none" stroke="#3f7a8a" stroke-width="1.8"/>
+<circle cx="68" cy="167.0" r="3" fill="#3f7a8a"/>
+<circle cx="60" cy="179.0" r="3" fill="#3f7a8a"/>
+<circle cx="76" cy="179.0" r="3" fill="#3f7a8a"/>
+<text x="100" y="179.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">AML investigator</text>
+<rect x="42" y="212" width="281" height="54" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="50" y="221.0" width="36" height="36" fill="#cdeed6" stroke="#2e9e5b" stroke-opacity="0.35" stroke-width="1"/>
+<rect x="61" y="241.0" width="4" height="7" fill="#2e9e5b"/>
+<rect x="67" y="236.0" width="4" height="12" fill="#2e9e5b"/>
+<rect x="73" y="231.0" width="4" height="17" fill="#2e9e5b"/>
+<text x="100" y="247.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Partner manager</text>
+<rect x="42" y="280" width="281" height="54" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="50" y="289.0" width="36" height="36" fill="#dccffa" stroke="#7a56d6" stroke-opacity="0.35" stroke-width="1"/>
+<rect x="61" y="309.0" width="4" height="7" fill="#7a56d6"/>
+<rect x="67" y="304.0" width="4" height="12" fill="#7a56d6"/>
+<rect x="73" y="299.0" width="4" height="17" fill="#7a56d6"/>
+<text x="100" y="315.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Executive</text>
+<rect x="42" y="348" width="281" height="54" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="50" y="357.0" width="36" height="36" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M62 366.0h9l5 5v14h-14z" fill="none" stroke="#c98a12" stroke-width="1.8"/>
+<path d="M65 377.0h8M65 381.0h8" stroke="#c98a12" stroke-width="1.8"/>
+<text x="100" y="383.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Compliance &amp; audit</text>
+<rect x="42" y="416" width="281" height="54" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="50" y="425.0" width="36" height="36" fill="#d4d6da" stroke="#5c6068" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M61 437.0h14" stroke="#5c6068" stroke-width="1.8"/>
+<path d="M61 443.0h14" stroke="#5c6068" stroke-width="1.8"/>
+<path d="M61 449.0h14" stroke="#5c6068" stroke-width="1.8"/>
+<text x="100" y="451.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Data operations</text>
+<rect x="42" y="484" width="281" height="54" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="50" y="493.0" width="36" height="36" fill="#f8d2cf" stroke="#d0443b" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M68 521.0c-6-6-8-9-8-12a8 8 0 0 1 16 0c0 3-2 6-8 12z" fill="none" stroke="#d0443b" stroke-width="1.8"/>
+<circle cx="68" cy="509.0" r="2.5" fill="#d0443b"/>
+<text x="100" y="519.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Geospatial</text>
+<rect x="125.4" y="459" width="187.6" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="219.2" y="480" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">BigQuery Graph</text>
+<rect x="42" y="564" width="281" height="198" fill="#f7f7f5" stroke="#cfd0d2" stroke-width="1.2"/>
+<rect x="91.19999999999999" y="539" width="221.8" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="202.1" y="560" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Identity Platform</text>
+<text x="56" y="602" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.5">OPERATORS</text>
+<text x="56" y="640" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">analyst</text>
+<text x="56" y="662" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">triage and propose</text>
+<text x="56" y="690" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">approver</text>
+<text x="56" y="712" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">second signature</text>
+<text x="56" y="740" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">compliance_head</text>
+<text x="56" y="762" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">verify the ledger</text>
+<rect x="383" y="36" width="335" height="744" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<rect x="397" y="20" width="52" height="30" rx="15" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="423" y="42" font-size="19" font-weight="500" fill="#1b1d21" text-anchor="middle">2</text>
+<text x="399" y="84" font-size="28" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.2">GATEWAY + APIS</text>
+<text x="399" y="112" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">Public web, private API</text>
+<rect x="395" y="144" width="311" height="72" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="403" y="162.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.35" stroke-width="1"/>
+<rect x="413" y="172.0" width="8" height="8" fill="none" stroke="#3f7a8a" stroke-width="1.8"/>
+<rect x="413" y="183.0" width="8" height="8" fill="none" stroke="#3f7a8a" stroke-width="1.8"/>
+<rect x="424" y="172.0" width="8" height="8" fill="none" stroke="#3f7a8a" stroke-width="1.8"/>
+<rect x="424" y="183.0" width="8" height="8" fill="none" stroke="#3f7a8a" stroke-width="1.8"/>
+<text x="453" y="177.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Next.js web</text>
+<text x="453" y="202.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">only public surface</text>
+<rect x="565.4" y="119" width="130.60000000000002" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="630.7" y="140" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Cloud Run</text>
+<rect x="395" y="252" width="311" height="72" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="403" y="270.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M414 282.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M414 288.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M414 294.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<text x="453" y="285.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">FastAPI gateway</text>
+<text x="453" y="310.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">private, rate-limited</text>
+<rect x="565.4" y="227" width="130.60000000000002" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="630.7" y="248" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Cloud Run</text>
+<rect x="395" y="360" width="311" height="72" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="403" y="378.0" width="36" height="36" fill="#cdeed6" stroke="#2e9e5b" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M421 387.0l8 3v7c0 5-3.5 8-8 10-4.5-2-8-5-8-10v-7z" fill="none" stroke="#2e9e5b" stroke-width="1.8"/>
+<text x="453" y="393.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Token check</text>
+<text x="453" y="418.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">role bound to principal</text>
+<rect x="474.2" y="335" width="221.8" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="585.1" y="356" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Identity Platform</text>
+<rect x="395" y="468" width="311" height="72" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="403" y="486.0" width="36" height="36" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M415 495.0h9l5 5v14h-14z" fill="none" stroke="#c98a12" stroke-width="1.8"/>
+<path d="M418 506.0h8M418 510.0h8" stroke="#c98a12" stroke-width="1.8"/>
+<text x="453" y="501.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Evidence replay</text>
+<text x="453" y="526.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">re-derives a bundle</text>
+<rect x="395" y="576" width="311" height="72" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="403" y="594.0" width="36" height="36" fill="#d4d6da" stroke="#5c6068" stroke-opacity="0.35" stroke-width="1"/>
+<rect x="414" y="614.0" width="4" height="7" fill="#5c6068"/>
+<rect x="420" y="609.0" width="4" height="12" fill="#5c6068"/>
+<rect x="426" y="604.0" width="4" height="17" fill="#5c6068"/>
+<text x="453" y="609.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Telemetry</text>
+<text x="453" y="634.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">no prompt text kept</text>
+<rect x="542.6" y="551" width="153.4" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="619.3" y="572" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Cloud Trace</text>
+<rect x="766" y="36" width="380" height="744" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<rect x="780" y="20" width="52" height="30" rx="15" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="806" y="42" font-size="19" font-weight="500" fill="#1b1d21" text-anchor="middle">3</text>
+<text x="782" y="84" font-size="28" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.2">AGENTS · GOOGLE ADK</text>
+<text x="782" y="112" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">One LoopAgent per workstation</text>
+<rect x="778" y="138" width="356" height="330" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5" stroke-dasharray="8 6"/>
+<text x="792" y="168" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.3">ADK LoopAgent</text>
+<text x="1120" y="168" font-size="18" font-weight="400" fill="#464a51" text-anchor="end">max 3 passes</text>
+<rect x="792" y="196" width="328" height="62" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="800" y="209.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M819 218.0l-7 11h6l-2 8 8-12h-6z" fill="#3f7a8a"/>
+<text x="850" y="224.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Prefetcher</text>
+<text x="850" y="249.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">calls the selected tool</text>
+<rect x="792" y="282" width="328" height="62" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="800" y="295.0" width="36" height="36" fill="#dccffa" stroke="#7a56d6" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M14 8L6 20H22Z" transform="translate(804 301.0)" fill="none" stroke="#7a56d6" stroke-width="1.8"/>
+<circle cx="818" cy="309.0" r="3" fill="#7a56d6"/>
+<circle cx="810" cy="321.0" r="3" fill="#7a56d6"/>
+<circle cx="826" cy="321.0" r="3" fill="#7a56d6"/>
+<text x="850" y="310.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Drafter · Gemini</text>
+<text x="850" y="335.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">writes from tool results</text>
+<rect x="979.4" y="257" width="130.60000000000002" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1044.7" y="278" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Vertex AI</text>
+<rect x="792" y="368" width="328" height="62" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="800" y="381.0" width="36" height="36" fill="#cdeed6" stroke="#2e9e5b" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M818 390.0l8 3v7c0 5-3.5 8-8 10-4.5-2-8-5-8-10v-7z" fill="none" stroke="#2e9e5b" stroke-width="1.8"/>
+<text x="850" y="396.0" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start">Assembler</text>
+<text x="850" y="421.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">deterministic, fails closed</text>
+<rect x="778" y="502" width="356" height="62" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="786" y="515.0" width="36" height="36" fill="#f8d2cf" stroke="#d0443b" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M804 524.0l8 3v7c0 5-3.5 8-8 10-4.5-2-8-5-8-10v-7z" fill="none" stroke="#d0443b" stroke-width="1.8"/>
+<text x="836" y="530.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Model Armor</text>
+<text x="836" y="555.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">screens prompt and reply</text>
+<rect x="970.6" y="477" width="153.4" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1047.3" y="498" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Model Armor</text>
+<rect x="778" y="594" width="356" height="62" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="786" y="607.0" width="36" height="36" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.35" stroke-width="1"/>
+<ellipse cx="804" cy="620.0" rx="8" ry="3.5" fill="none" stroke="#c98a12" stroke-width="1.8"/>
+<path d="M796 620.0v11c0 2 3.6 3.5 8 3.5s8-1.5 8-3.5v-11" fill="none" stroke="#c98a12" stroke-width="1.8"/>
+<text x="836" y="622.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Sessions + briefs</text>
+<text x="836" y="647.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">ADK session service</text>
+<rect x="993.4" y="569" width="130.60000000000002" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1058.7" y="590" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Firestore</text>
+<rect x="778" y="686" width="356" height="62" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="786" y="699.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M798 708.0h9l5 5v14h-14z" fill="none" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M801 719.0h8M801 723.0h8" stroke="#3f7a8a" stroke-width="1.8"/>
+<text x="836" y="714.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Regulation search</text>
+<text x="836" y="739.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">quoted by sentence</text>
+<rect x="959.2" y="661" width="164.8" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1041.6" y="682" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Agent Search</text>
+<rect x="1194" y="36" width="380" height="744" fill="#dfe7f6" stroke="#8aa6dd" stroke-width="1.5"/>
+<rect x="1208" y="20" width="52" height="30" rx="15" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="1234" y="42" font-size="19" font-weight="500" fill="#1b1d21" text-anchor="middle">4</text>
+<text x="1210" y="84" font-size="28" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.2">ONTOLOGY</text>
+<text x="1210" y="112" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">The only way in</text>
+<rect x="1206" y="144" width="356" height="82" fill="#c5d5f3" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1214" y="167.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.35" stroke-width="1"/>
+<circle cx="1228" cy="185.0" r="4.5" fill="none" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M1232.5 185.0h9M1238 185.0v4" stroke="#3f7a8a" stroke-width="1.8"/>
+<text x="1264" y="182.0" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start">Governed tool port</text>
+<text x="1264" y="207.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">28 typed, scoped capabilities</text>
+<text x="1212" y="258" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start">No approve or execute tool exists.</text>
+<rect x="1206" y="290" width="356" height="62" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1214" y="303.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M1225 315.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M1225 321.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M1225 327.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<text x="1264" y="318.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Metric registry</text>
+<text x="1264" y="343.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">one definition per metric</text>
+<rect x="1206" y="380" width="356" height="62" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1214" y="393.0" width="36" height="36" fill="#dccffa" stroke="#7a56d6" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M14 8L6 20H22Z" transform="translate(1218 399.0)" fill="none" stroke="#7a56d6" stroke-width="1.8"/>
+<circle cx="1232" cy="407.0" r="3" fill="#7a56d6"/>
+<circle cx="1224" cy="419.0" r="3" fill="#7a56d6"/>
+<circle cx="1240" cy="419.0" r="3" fill="#7a56d6"/>
+<text x="1264" y="408.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Entity graph</text>
+<text x="1264" y="433.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">GQL queries, hubs collapsed</text>
+<rect x="1364.4" y="355" width="187.6" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1458.2" y="376" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">BigQuery Graph</text>
+<rect x="1206" y="470" width="356" height="62" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1214" y="483.0" width="36" height="36" fill="#cdeed6" stroke="#2e9e5b" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M1232 492.0l8 3v7c0 5-3.5 8-8 10-4.5-2-8-5-8-10v-7z" fill="none" stroke="#2e9e5b" stroke-width="1.8"/>
+<text x="1264" y="498.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Metric auditor</text>
+<text x="1264" y="523.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">numbers must trace to a tool</text>
+<rect x="1206" y="560" width="356" height="62" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1214" y="573.0" width="36" height="36" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M1233 582.0l-7 11h6l-2 8 8-12h-6z" fill="#c98a12"/>
+<text x="1264" y="588.0" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start">Action Intents</text>
+<text x="1264" y="613.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">signed, expiring proposals</text>
+<rect x="1206" y="646" width="356" height="116" fill="#f7f7f5" stroke="#8aa6dd" stroke-width="1.2"/>
+<text x="1220" y="680" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">Red lines RL-1 to RL-7</text>
+<text x="1220" y="706" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">models never compute or write</text>
+<rect x="1622" y="36" width="380" height="744" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<rect x="1636" y="20" width="52" height="30" rx="15" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="1662" y="42" font-size="19" font-weight="500" fill="#1b1d21" text-anchor="middle">5</text>
+<text x="1638" y="84" font-size="28" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.2">LOGIC · ENGINES</text>
+<text x="1638" y="112" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">Deterministic. Models never compute.</text>
+<rect x="1634" y="144" width="356" height="50" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1642" y="151.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M1653 163.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M1653 169.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M1653 175.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<text x="1692" y="177.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Alert triage, typologies</text>
+<rect x="1634" y="218" width="356" height="50" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1642" y="225.0" width="36" height="36" fill="#cdeed6" stroke="#2e9e5b" stroke-opacity="0.35" stroke-width="1"/>
+<rect x="1653" y="245.0" width="4" height="7" fill="#2e9e5b"/>
+<rect x="1659" y="240.0" width="4" height="12" fill="#2e9e5b"/>
+<rect x="1665" y="235.0" width="4" height="17" fill="#2e9e5b"/>
+<text x="1692" y="251.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Churn hazard</text>
+<rect x="1634" y="292" width="356" height="50" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1642" y="299.0" width="36" height="36" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M14 8L6 20H22Z" transform="translate(1646 305.0)" fill="none" stroke="#c98a12" stroke-width="1.8"/>
+<circle cx="1660" cy="313.0" r="3" fill="#c98a12"/>
+<circle cx="1652" cy="325.0" r="3" fill="#c98a12"/>
+<circle cx="1668" cy="325.0" r="3" fill="#c98a12"/>
+<text x="1692" y="325.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Causal SCM</text>
+<rect x="1634" y="366" width="356" height="50" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1642" y="373.0" width="36" height="36" fill="#d4d6da" stroke="#5c6068" stroke-opacity="0.35" stroke-width="1"/>
+<rect x="1653" y="393.0" width="4" height="7" fill="#5c6068"/>
+<rect x="1659" y="388.0" width="4" height="12" fill="#5c6068"/>
+<rect x="1665" y="383.0" width="4" height="17" fill="#5c6068"/>
+<text x="1692" y="399.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Forecast + what-if</text>
+<text x="1638" y="462" font-size="20" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.5">DATA SOURCES</text>
+<rect x="1634" y="488" width="356" height="50" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1642" y="495.0" width="36" height="36" fill="#d4d6da" stroke="#5c6068" stroke-opacity="0.35" stroke-width="1"/>
+<ellipse cx="1660" cy="508.0" rx="8" ry="3.5" fill="none" stroke="#5c6068" stroke-width="1.8"/>
+<path d="M1652 508.0v11c0 2 3.6 3.5 8 3.5s8-1.5 8-3.5v-11" fill="none" stroke="#5c6068" stroke-width="1.8"/>
+<text x="1692" y="521.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Seeded worlds</text>
+<rect x="1634" y="562" width="356" height="50" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1642" y="569.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.35" stroke-width="1"/>
+<ellipse cx="1660" cy="582.0" rx="8" ry="3.5" fill="none" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M1652 582.0v11c0 2 3.6 3.5 8 3.5s8-1.5 8-3.5v-11" fill="none" stroke="#3f7a8a" stroke-width="1.8"/>
+<text x="1692" y="595.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Reference + IP intel</text>
+<rect x="1860.8" y="537" width="119.2" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1920.4" y="558" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">BigQuery</text>
+<rect x="1634" y="636" width="356" height="50" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1642" y="643.0" width="36" height="36" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M1654 652.0h9l5 5v14h-14z" fill="none" stroke="#c98a12" stroke-width="1.8"/>
+<path d="M1657 663.0h8M1657 667.0h8" stroke="#c98a12" stroke-width="1.8"/>
+<text x="1692" y="669.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Regulation corpus</text>
+<rect x="1815.2" y="611" width="164.8" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1897.6" y="632" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Agent Search</text>
+<rect x="1634" y="710" width="356" height="50" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1642" y="717.0" width="36" height="36" fill="#cdeed6" stroke="#2e9e5b" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M1661 726.0l-7 11h6l-2 8 8-12h-6z" fill="#2e9e5b"/>
+<text x="1692" y="743.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Ingestion, DuckDB state</text>
+<rect x="1872.2" y="685" width="107.8" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="1926.1" y="706" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Pub/Sub</text>
+<rect x="2050" y="36" width="320" height="744" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<rect x="2064" y="20" width="52" height="30" rx="15" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="2090" y="42" font-size="19" font-weight="500" fill="#1b1d21" text-anchor="middle">6</text>
+<text x="2066" y="84" font-size="28" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.2">SYSTEMS OF ACTION</text>
+<text x="2066" y="112" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">Agents propose, people approve</text>
+<rect x="2062" y="144" width="296" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="2070" y="159.0" width="36" height="36" fill="#fbe3b8" stroke="#c98a12" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M2089 168.0l-7 11h6l-2 8 8-12h-6z" fill="#c98a12"/>
+<text x="2120" y="174.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Intent hub</text>
+<text x="2120" y="199.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">validates and signs</text>
+<rect x="2062" y="240" width="296" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="2070" y="255.0" width="36" height="36" fill="#f8d2cf" stroke="#d0443b" stroke-opacity="0.35" stroke-width="1"/>
+<circle cx="2084" cy="273.0" r="4.5" fill="none" stroke="#d0443b" stroke-width="1.8"/>
+<path d="M2088.5 273.0h9M2094 273.0v4" stroke="#d0443b" stroke-width="1.8"/>
+<text x="2120" y="270.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Cloud KMS signer</text>
+<text x="2120" y="295.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">ECDSA P-256</text>
+<rect x="2217.4" y="215" width="130.60000000000002" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="2282.7" y="236" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Cloud KMS</text>
+<rect x="2062" y="336" width="296" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="2070" y="351.0" width="36" height="36" fill="#cdeed6" stroke="#2e9e5b" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M2088 360.0l8 3v7c0 5-3.5 8-8 10-4.5-2-8-5-8-10v-7z" fill="none" stroke="#2e9e5b" stroke-width="1.8"/>
+<text x="2120" y="366.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Four-eyes approval</text>
+<text x="2120" y="391.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">proposer cannot approve</text>
+<rect x="2217.4" y="311" width="130.60000000000002" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="2282.7" y="332" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Firestore</text>
+<rect x="2062" y="432" width="296" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="2070" y="447.0" width="36" height="36" fill="#d3e2e6" stroke="#3f7a8a" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M2081 459.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M2081 465.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<path d="M2081 471.0h14" stroke="#3f7a8a" stroke-width="1.8"/>
+<text x="2120" y="462.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">WORM ledger</text>
+<text x="2120" y="487.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">SHA-256 hash chain</text>
+<rect x="2217.4" y="407" width="130.60000000000002" height="29" rx="14.5" fill="#1a56c4"/>
+<text x="2282.7" y="428" font-size="19" font-weight="600" fill="#ffffff" text-anchor="middle">Firestore</text>
+<rect x="2062" y="528" width="296" height="66" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="2070" y="543.0" width="36" height="36" fill="#d4d6da" stroke="#5c6068" stroke-opacity="0.35" stroke-width="1"/>
+<path d="M2082 552.0h9l5 5v14h-14z" fill="none" stroke="#5c6068" stroke-width="1.8"/>
+<path d="M2085 563.0h8M2085 567.0h8" stroke="#5c6068" stroke-width="1.8"/>
+<text x="2120" y="558.0" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Evidence bundles</text>
+<text x="2120" y="583.0" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">id is the content hash</text>
+<rect x="2062" y="612" width="296" height="150" fill="#f7f7f5" stroke="#cfd0d2" stroke-width="1.2"/>
+<text x="2076" y="646" font-size="19" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.6">KEY</text>
+<rect x="2076" y="662" width="64" height="26" rx="13" fill="#1a56c4"/>
+<text x="2156" y="682" font-size="19" font-weight="400" fill="#1b1d21" text-anchor="start">Google Cloud service</text>
+<path d="M2076 714h52" stroke="#5d616a" stroke-width="3"/><path d="M2142 714l-17 -9v18z" fill="#5d616a"/>
+<text x="2156" y="721" font-size="19" font-weight="400" fill="#1b1d21" text-anchor="start">request and reply</text>
+<path d="M2076 746h52" stroke="#c98a12" stroke-width="3"/><path d="M2142 746l-17 -9v18z" fill="#c98a12"/>
+<text x="2156" y="753" font-size="19" font-weight="400" fill="#1b1d21" text-anchor="start">propose, then sign</text>
+<path d="M351 171L367 171" stroke="#5d616a" stroke-width="3" fill="none"/>
+<path d="M381 171l-17 -9v18z" fill="#5d616a"/>
+<path d="M337 171l17 -9v18z" fill="#5d616a"/>
+<path d="M734 290L750 290" stroke="#5d616a" stroke-width="3" fill="none"/>
+<path d="M764 290l-17 -9v18z" fill="#5d616a"/>
+<path d="M720 290l17 -9v18z" fill="#5d616a"/>
+<path d="M1162 185L1178 185" stroke="#5d616a" stroke-width="3" fill="none"/>
+<path d="M1192 185l-17 -9v18z" fill="#5d616a"/>
+<path d="M1148 185l17 -9v18z" fill="#5d616a"/>
+<path d="M1590 185L1598 185" stroke="#5d616a" stroke-width="3" fill="none"/>
+<path d="M1612 185l-17 -9v18z" fill="#5d616a"/>
+<path d="M1576 185l17 -9v18z" fill="#5d616a"/>
+<path d="M1610 158V744" stroke="#5d616a" stroke-width="3" fill="none"/>
+<path d="M1574 591H1582V806H2034V180H2038" stroke="#c98a12" stroke-width="3.2" fill="none"/>
+<path d="M2049 180l-17 -9v18z" fill="#c98a12"/>
+<text x="1812.0" y="798" font-size="19" font-weight="600" fill="#8a5f08" text-anchor="middle">propose, then sign, then ledger</text>
+<rect x="30" y="836" width="2340" height="134" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<rect x="44" y="820" width="52" height="30" rx="15" fill="#f7f7f5" stroke="#8a8d93" stroke-width="1.5"/>
+<text x="70" y="842" font-size="19" font-weight="500" fill="#1b1d21" text-anchor="middle">7</text>
+<text x="114" y="876" font-size="24" font-weight="500" fill="#1b1d21" text-anchor="start" letter-spacing="0.2">SECURITY, PLATFORM &amp; OBSERVABILITY ON GOOGLE CLOUD</text>
+<rect x="44" y="896" width="175.52" height="76" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="44" y="896" width="6" height="76" fill="#1a56c4"/>
+<text x="64" y="930" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">Model Armor</text>
+<text x="64" y="956" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">screens prompts</text>
+<rect x="260.6857142857143" y="896" width="249.44000000000003" height="76" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="260.6857142857143" y="896" width="6" height="76" fill="#1a56c4"/>
+<text x="280.6857142857143" y="930" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">Identity Platform</text>
+<text x="280.6857142857143" y="956" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">operator sign-in</text>
+<rect x="551.2914285714286" y="896" width="157.0" height="76" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="551.2914285714286" y="896" width="6" height="76" fill="#1a56c4"/>
+<text x="571.2914285714286" y="930" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">Cloud KMS</text>
+<text x="571.2914285714286" y="956" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">signs intents</text>
+<rect x="749.4571428571428" y="896" width="212.48000000000002" height="76" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="749.4571428571428" y="896" width="6" height="76" fill="#1a56c4"/>
+<text x="769.4571428571428" y="930" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">Secret Manager</text>
+<text x="769.4571428571428" y="956" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">HMAC salt, keys</text>
+<rect x="1003.1028571428571" y="896" width="384.96000000000004" height="76" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1003.1028571428571" y="896" width="6" height="76" fill="#1a56c4"/>
+<text x="1023.1028571428571" y="930" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">Workload Identity Federation</text>
+<text x="1023.1028571428571" y="956" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">CI without keys</text>
+<rect x="1429.2285714285715" y="896" width="421.92" height="76" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1429.2285714285715" y="896" width="6" height="76" fill="#1a56c4"/>
+<text x="1449.2285714285715" y="930" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">Artifact Registry + Cloud Build</text>
+<text x="1449.2285714285715" y="956" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">images by digest</text>
+<rect x="1892.3142857142857" y="896" width="247.0" height="76" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="1892.3142857142857" y="896" width="6" height="76" fill="#1a56c4"/>
+<text x="1912.3142857142857" y="930" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">Cloud Run</text>
+<text x="1912.3142857142857" y="956" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">web public, API private</text>
+<rect x="2180.48" y="896" width="175.52" height="76" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<rect x="2180.48" y="896" width="6" height="76" fill="#1a56c4"/>
+<text x="2200.48" y="930" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="start">Cloud Trace</text>
+<text x="2200.48" y="956" font-size="18" font-weight="400" fill="#464a51" text-anchor="start">spans per turn</text>
+</svg>

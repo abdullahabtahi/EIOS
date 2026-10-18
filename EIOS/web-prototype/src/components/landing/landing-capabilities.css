@@ -1,0 +1,520 @@
+/* Landing, part three: problem and response, the capability explorer and its four interactive figures. */
+
+/* Problem and response */
+.fde-problem {
+  padding: clamp(96px, 13vw, 190px) var(--pad) clamp(64px, 8vw, 120px);
+  border-top: 1px solid var(--rule);
+}
+.fde-problem-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(32px, 6vw, 112px);
+  margin-bottom: clamp(56px, 7vw, 96px);
+}
+.fde-problem-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.fde-problem-copy p {
+  margin: 0;
+  max-width: 54ch;
+  color: var(--ink-2);
+}
+.fde-findings {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+.fde-findings thead th {
+  padding: 0 32px 12px 0;
+  font-weight: 400;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.fde-findings tbody th,
+.fde-findings tbody td {
+  vertical-align: top;
+  padding: 24px 32px 24px 0;
+  border-top: 1px solid var(--rule);
+  font-weight: 400;
+}
+.fde-findings tbody th {
+  width: 38%;
+  font-size: clamp(1.05rem, 1.6vw, 1.3rem);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+.fde-findings tbody td {
+  color: var(--ink-2);
+}
+.fde-findings tbody td:last-child {
+  width: 14rem;
+  text-align: right;
+  padding-right: 0;
+}
+.fde-findings-link {
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink-3);
+  padding-bottom: 2px;
+  white-space: nowrap;
+}
+.fde-findings-link:hover {
+  border-color: var(--sig);
+}
+
+/* Capability explorer */
+.fde-caps {
+  padding: clamp(96px, 12vw, 180px) var(--pad) 0;
+  border-top: 1px solid var(--rule);
+  margin-top: clamp(80px, 9vw, 140px);
+}
+.fde-caps-head {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 48px;
+}
+.fde-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+.fde-tab {
+  appearance: none;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+  font: inherit;
+  text-align: left;
+  padding: 14px 0 6px;
+  cursor: pointer;
+  display: grid;
+  gap: 6px;
+  transition: color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.fde-tab:hover {
+  color: var(--ink);
+}
+.fde-tab[aria-selected="true"] {
+  color: var(--ink);
+  border-top: 2px solid var(--ink);
+  padding-top: 13px;
+}
+.fde-tab-name {
+  font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+  letter-spacing: -0.015em;
+}
+.fde-cap {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.4fr);
+  gap: clamp(32px, 5vw, 80px);
+  align-items: start;
+  animation: fde-fade 0.5s var(--ease) both;
+}
+.fde-cap-title {
+  margin: 0 0 20px;
+  font-weight: 400;
+  font-size: clamp(1.8rem, 3.2vw, 2.9rem);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.fde-cap-body {
+  margin: 0 0 28px;
+  color: var(--ink-2);
+  max-width: 50ch;
+}
+.fde-cap-under {
+  list-style: none;
+  margin: 0 0 28px;
+  padding: 0;
+  font-size: 0.9375rem;
+}
+.fde-cap-under li {
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+}
+.fde-cap-under li::before {
+  content: "→ ";
+  color: var(--ink-3);
+}
+.fde-cap-runs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.fde-cap-runs > span:first-child {
+  margin-right: 4px;
+}
+.fde-gcp {
+  border: 1px solid rgb(157 183 207 / 0.5);
+  color: var(--sig);
+  padding: 2px 8px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 0.75rem;
+}
+
+/* Shared figure frame and controls */
+.fde-viz {
+  margin: 0;
+  border: 1px solid var(--rule);
+  padding: clamp(16px, 2vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+.fde-viz-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+}
+.fde-viz-readout {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink);
+}
+.fde-viz-cap {
+  font-size: 0.75rem;
+  color: var(--ink-2);
+  border-top: 1px solid var(--rule);
+  padding-top: 12px;
+}
+.fde-switch,
+.fde-chipbtn {
+  appearance: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  background: none;
+  cursor: pointer;
+}
+.fde-switch {
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+.fde-switch-track {
+  width: 34px;
+  height: 18px;
+  border: 1px solid var(--ink-3);
+  position: relative;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.fde-switch-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  background: var(--ink-2);
+  transition: transform 0.25s var(--ease), background 0.2s var(--ease);
+}
+.fde-switch[aria-pressed="true"] .fde-switch-track {
+  border-color: var(--sig);
+}
+.fde-switch[aria-pressed="true"] .fde-switch-thumb {
+  transform: translateX(16px);
+  background: var(--sig);
+}
+.fde-chipbtn {
+  border: 1px solid var(--ink-3);
+  padding: 7px 14px;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.fde-chipbtn:hover:not(:disabled) {
+  border-color: var(--ink);
+}
+.fde-chipbtn.is-primary {
+  background: var(--ink);
+  color: var(--ground);
+  border-color: var(--ink);
+}
+.fde-chipbtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Causal graph and what-if */
+.fde-dag {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.fde-dag-node rect {
+  fill: var(--ground);
+  stroke: var(--ink-3);
+}
+.fde-dag-name {
+  fill: var(--ink);
+  font-size: 11px;
+}
+.fde-dag-delta {
+  fill: var(--sig);
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+}
+[data-causal="false"] .fde-dag-delta {
+  fill: var(--warn);
+}
+.fde-dag-edge path {
+  fill: none;
+  stroke-width: 1.4;
+}
+.fde-dag-edge text {
+  font-family: var(--font-mono), monospace;
+  font-size: 9.5px;
+  fill: var(--ink-2);
+}
+.fde-dag-edge.is-causal path {
+  stroke: var(--sig);
+  stroke-dasharray: 6 4;
+  animation: fde-flow 1.6s linear infinite;
+}
+.fde-dag-edge.is-corr path {
+  stroke: var(--ink-3);
+  stroke-dasharray: 2 5;
+}
+.fde-dag-head {
+  fill: none;
+  stroke: var(--sig);
+  stroke-width: 1.4;
+}
+@keyframes fde-flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+.fde-whatif {
+  display: grid;
+  gap: 14px;
+}
+.fde-whatif-label {
+  font-size: 0.9375rem;
+}
+.fde-range {
+  width: 100%;
+  accent-color: var(--sig);
+}
+.fde-whatif-out {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.875rem;
+}
+.fde-whatif-out p {
+  margin: 0;
+}
+.fde-whatif-ci {
+  color: var(--ink-2);
+  margin-left: 8px;
+}
+.fde-verdict {
+  color: var(--sig);
+  font-family: var(--fde-sans), system-ui, sans-serif;
+}
+.fde-verdict.is-open {
+  color: var(--warn);
+}
+.fde-attr {
+  display: flex;
+  gap: 2px;
+  height: 44px;
+}
+.fde-attr-seg {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-top: 2px solid var(--sig);
+  background: rgb(157 183 207 / 0.07);
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.6875rem;
+}
+.fde-attr-name {
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.fde-attr-val {
+  font-family: var(--font-mono), monospace;
+}
+
+/* Agent trace */
+.fde-trace {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+}
+.fde-trace-step {
+  appearance: none;
+  width: 100%;
+  font: inherit;
+  color: var(--ink-2);
+  background: none;
+  border: 0;
+  border-top: 2px solid var(--rule);
+  padding: 10px 0 4px;
+  text-align: left;
+  cursor: pointer;
+  display: grid;
+  gap: 4px;
+  transition: color 0.2s var(--ease), border-color 0.3s var(--ease);
+}
+.fde-trace-step.is-done {
+  border-top-color: rgb(157 183 207 / 0.5);
+}
+.fde-trace-step.is-active {
+  color: var(--ink);
+  border-top-color: var(--sig);
+}
+.fde-trace-step.is-reject.is-active {
+  border-top-color: var(--warn);
+}
+.fde-trace-n {
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+}
+.fde-trace-name {
+  font-size: 0.875rem;
+}
+.fde-trace-panel {
+  min-height: 168px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+.fde-trace-who {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--sig);
+}
+.fde-trace-detail {
+  margin: 0;
+  color: var(--ink-2);
+  max-width: 60ch;
+}
+.fde-trace-code {
+  margin: 0;
+  padding: 12px 14px;
+  border-left: 1px solid var(--sig);
+  background: rgb(236 235 230 / 0.03);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.8125rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.fde-trace-code.is-reject {
+  border-left-color: var(--warn);
+  color: var(--warn);
+}
+
+/* Governed action */
+.fde-gov {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0;
+}
+.fde-gov li {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  column-gap: 12px;
+  row-gap: 6px;
+  padding: 14px 0;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+}
+.fde-gov li > :not(.fde-gov-n) {
+  grid-column: 2;
+}
+.fde-gov-n {
+  grid-row: span 4;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  padding-top: 3px;
+}
+.fde-gov li.is-done .fde-gov-n,
+.fde-gov li.is-next .fde-gov-n {
+  color: var(--sig);
+}
+.fde-gov-name {
+  margin: 0;
+  color: var(--ink);
+}
+.fde-gov-quote,
+.fde-gov-body {
+  margin: 0;
+  font-size: 0.875rem;
+}
+.fde-gov-quote {
+  color: var(--ink);
+}
+.fde-gov-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.fde-gov li .fde-chipbtn {
+  justify-self: start;
+}
+.fde-gov-refusal {
+  margin: 0;
+  color: var(--warn);
+  font-size: 0.875rem;
+}
+.fde-ledger-chain {
+  display: grid;
+  gap: 6px;
+}
+.fde-ledger-empty {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+.fde-block {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: baseline;
+  padding: 8px 12px;
+  border: 1px solid rgb(157 183 207 / 0.4);
+  font-family: var(--font-mono), monospace;
+  font-size: 0.75rem;
+  animation: fde-fade 0.5s var(--ease) both;
+}
+.fde-block-seq {
+  color: var(--sig);
+}
+.fde-block-hash {
+  color: var(--ink-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

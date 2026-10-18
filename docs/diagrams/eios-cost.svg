@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24cm" height="10cm" viewBox="0 0 2400 1000" font-family="'Avenir Next','Helvetica Neue',Helvetica,Arial,sans-serif">
+<rect width="2400" height="1000" fill="#f7f7f5"/>
+<text x="40" y="80" font-size="54" font-weight="700" fill="#1b1d21" text-anchor="start">17 Google Cloud services, under $200 a month. The real cost is people.</text>
+<text x="40" y="122" font-size="27" font-weight="400" fill="#464a51" text-anchor="start">What it costs to run EIOS as built. Illustrative: a mid-size APAC bank, 50,000 alerts a year, about 208 investigated cases a month.</text>
+<rect x="40.0" y="150" width="559.0" height="572" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<text x="66.0" y="202" font-size="36" font-weight="700" fill="#1b1d21" text-anchor="start" letter-spacing="1.2">THINK</text>
+<text x="66.0" y="238" font-size="25" font-weight="400" fill="#464a51" text-anchor="start">Agents and models</text>
+<line x1="66.0" y1="258" x2="573.0" y2="258" stroke="#cfd0d2" stroke-width="2"/>
+<rect x="66.0" y="274" width="14" height="14" fill="#464a51"/>
+<text x="94.0" y="296" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Google ADK</text>
+<text x="573.0" y="298" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">$0</text>
+<text x="94.0" y="326" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">open source agent framework</text>
+<rect x="66.0" y="358" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="94.0" y="380" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Gemini on Vertex AI</text>
+<text x="573.0" y="382" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">$13–58</text>
+<text x="94.0" y="410" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">per token, 8 turns a case</text>
+<rect x="66.0" y="442" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="94.0" y="464" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Agent Search</text>
+<text x="573.0" y="466" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">≈ $1</text>
+<text x="94.0" y="494" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">per query, about 2 a case</text>
+<rect x="66.0" y="526" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="94.0" y="548" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Model Armor</text>
+<text x="573.0" y="550" font-size="30" font-weight="700" fill="#464a51" text-anchor="end">not priced</text>
+<text x="94.0" y="578" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">per screened turn</text>
+<rect x="66.0" y="622" width="507.0" height="76" fill="#ffffff" stroke="#cfd0d2" stroke-width="1.5"/>
+<path d="M 82.0 650 l 8 8 l 15 -17" fill="none" stroke="#1a56c4" stroke-width="4"/>
+<text x="118.0" y="652" font-size="21" font-weight="500" fill="#1b1d21" text-anchor="start">One redraft, then fail closed.</text>
+<text x="118.0" y="680" font-size="21" font-weight="500" fill="#1b1d21" text-anchor="start">Rate limit per operator.</text>
+<rect x="627.0" y="150" width="559.0" height="572" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<text x="653.0" y="202" font-size="36" font-weight="700" fill="#1b1d21" text-anchor="start" letter-spacing="1.2">DATA</text>
+<text x="653.0" y="238" font-size="25" font-weight="400" fill="#464a51" text-anchor="start">Stores, streams and graph</text>
+<line x1="653.0" y1="258" x2="1160.0" y2="258" stroke="#cfd0d2" stroke-width="2"/>
+<rect x="653.0" y="274" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="681.0" y="296" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">BigQuery</text>
+<text x="1160.0" y="298" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">&lt; $1</text>
+<text x="681.0" y="326" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">storage, 100 MB cap per query</text>
+<rect x="653.0" y="358" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="681.0" y="380" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">BigQuery Graph</text>
+<text x="1160.0" y="382" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">≤ $25</text>
+<text x="681.0" y="410" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">Enterprise slots, baseline 0</text>
+<rect x="653.0" y="442" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="681.0" y="464" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Firestore</text>
+<text x="1160.0" y="466" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">&lt; $1</text>
+<text x="681.0" y="494" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">reads and writes per turn</text>
+<rect x="653.0" y="526" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="681.0" y="548" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Pub/Sub, Cloud Storage</text>
+<text x="1160.0" y="550" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">&lt; $2</text>
+<text x="681.0" y="578" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">per GiB</text>
+<rect x="653.0" y="622" width="507.0" height="76" fill="#ffffff" stroke="#cfd0d2" stroke-width="1.5"/>
+<path d="M 669.0 650 l 8 8 l 15 -17" fill="none" stroke="#1a56c4" stroke-width="4"/>
+<text x="705.0" y="652" font-size="21" font-weight="500" fill="#1b1d21" text-anchor="start">An idle graph reservation costs</text>
+<text x="705.0" y="680" font-size="21" font-weight="500" fill="#1b1d21" text-anchor="start">nothing. 30 s query timeout.</text>
+<rect x="1214.0" y="150" width="559.0" height="572" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<text x="1240.0" y="202" font-size="36" font-weight="700" fill="#1b1d21" text-anchor="start" letter-spacing="1.2">TRUST</text>
+<text x="1240.0" y="238" font-size="25" font-weight="400" fill="#464a51" text-anchor="start">Identity, keys, secrets</text>
+<line x1="1240.0" y1="258" x2="1747.0" y2="258" stroke="#cfd0d2" stroke-width="2"/>
+<rect x="1240.0" y="274" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="1268.0" y="296" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Cloud KMS</text>
+<text x="1747.0" y="298" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">&lt; $1</text>
+<text x="1268.0" y="326" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">one key, per signature</text>
+<rect x="1240.0" y="358" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="1268.0" y="380" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Secret Manager</text>
+<text x="1747.0" y="382" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">&lt; $1</text>
+<text x="1268.0" y="410" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">per secret version</text>
+<rect x="1240.0" y="442" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="1268.0" y="464" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Identity Platform</text>
+<text x="1747.0" y="466" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">$0</text>
+<text x="1268.0" y="494" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">first 50,000 users free</text>
+<rect x="1240.0" y="622" width="507.0" height="76" fill="#ffffff" stroke="#cfd0d2" stroke-width="1.5"/>
+<path d="M 1256.0 650 l 8 8 l 15 -17" fill="none" stroke="#1a56c4" stroke-width="4"/>
+<text x="1292.0" y="652" font-size="21" font-weight="500" fill="#1b1d21" text-anchor="start">Requests expire in 15 min. The</text>
+<text x="1292.0" y="680" font-size="21" font-weight="500" fill="#1b1d21" text-anchor="start">AI has no approve tool.</text>
+<rect x="1801.0" y="150" width="559.0" height="572" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<text x="1827.0" y="202" font-size="36" font-weight="700" fill="#1b1d21" text-anchor="start" letter-spacing="1.2">RUN</text>
+<text x="1827.0" y="238" font-size="25" font-weight="400" fill="#464a51" text-anchor="start">Runtime, deploy, observe</text>
+<line x1="1827.0" y1="258" x2="2334.0" y2="258" stroke="#cfd0d2" stroke-width="2"/>
+<rect x="1827.0" y="274" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="1855.0" y="296" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Cloud Run</text>
+<text x="2334.0" y="298" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">$23–93</text>
+<text x="1855.0" y="326" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">1 vCPU, 2 GiB, one warm instance</text>
+<rect x="1827.0" y="358" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="1855.0" y="380" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Artifact Registry, Cloud Build</text>
+<text x="2334.0" y="382" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">&lt; $2</text>
+<text x="1855.0" y="410" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">per GiB, per build minute</text>
+<rect x="1827.0" y="442" width="14" height="14" rx="7" fill="#1a56c4"/>
+<text x="1855.0" y="464" font-size="27" font-weight="700" fill="#1b1d21" text-anchor="start">Logging, Monitoring, Trace</text>
+<text x="2334.0" y="466" font-size="30" font-weight="700" fill="#1a56c4" text-anchor="end">&lt; $5</text>
+<text x="1855.0" y="494" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">above the free tier</text>
+<rect x="1827.0" y="622" width="507.0" height="76" fill="#ffffff" stroke="#cfd0d2" stroke-width="1.5"/>
+<path d="M 1843.0 650 l 8 8 l 15 -17" fill="none" stroke="#1a56c4" stroke-width="4"/>
+<text x="1879.0" y="652" font-size="21" font-weight="500" fill="#1b1d21" text-anchor="start">Budget alerts at 50, 80 and</text>
+<text x="1879.0" y="680" font-size="21" font-weight="500" fill="#1b1d21" text-anchor="start">100%. Images deploy by digest.</text>
+<rect x="40" y="746" width="2320" height="186" fill="#ffffff" stroke="#1b1d21" stroke-width="2.5"/>
+<text x="68" y="844" font-size="80" font-weight="700" fill="#1a56c4" text-anchor="start">$40–190</text>
+<text x="68" y="882" font-size="28" font-weight="500" fill="#1b1d21" text-anchor="start">a month, the whole stack</text>
+<text x="68" y="914" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">excluding Model Armor, not priced</text>
+<line x1="652" y1="770" x2="652" y2="908" stroke="#cfd0d2" stroke-width="2"/>
+<text x="680" y="844" font-size="80" font-weight="700" fill="#1a56c4" text-anchor="start">$0.07–0.29</text>
+<text x="680" y="882" font-size="28" font-weight="500" fill="#1b1d21" text-anchor="start">variable cost per case</text>
+<text x="680" y="914" font-size="21" font-weight="400" fill="#464a51" text-anchor="start">Gemini is over 95% of it</text>
+<line x1="1202" y1="770" x2="1202" y2="908" stroke="#cfd0d2" stroke-width="2"/>
+<text x="1230" y="788" font-size="24" font-weight="700" fill="#1b1d21" text-anchor="start" letter-spacing="1.2">3-YEAR COST, ABOUT $1.6M</text>
+<rect x="1230" y="812" width="527.7777777777778" height="52" fill="#1b1d21"/>
+<rect x="1757.7777777777778" y="812" width="570.0" height="52" fill="#464a51"/>
+<rect x="2327.777777777778" y="812" width="4.222222222222222" height="52" fill="#1a56c4"/>
+<text x="1244" y="847" font-size="26" font-weight="600" fill="#ffffff" text-anchor="start">Build, once  48%</text>
+<text x="1771.7777777777778" y="847" font-size="26" font-weight="600" fill="#ffffff" text-anchor="start">Run people  52%</text>
+<line x1="2331" y1="864" x2="2331" y2="884" stroke="#1a56c4" stroke-width="3"/>
+<text x="2332" y="906" font-size="24" font-weight="700" fill="#1a56c4" text-anchor="end">Cloud 0.4%</text>
+<text x="1230" y="906" font-size="23" font-weight="500" fill="#1b1d21" text-anchor="start">Pays back at a 15–35% cut in review effort, measured next</text>
+<text x="40" y="988" font-size="19" font-weight="400" fill="#464a51" text-anchor="start">Illustrative estimates. Prices: Google Cloud pricing pages and October 2026 web figures. Token counts, team size (6 for 24 weeks, then 3 FTE) and rates are assumptions. Review cost is a vendor range.</text>
+</svg>

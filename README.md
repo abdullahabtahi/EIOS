@@ -11,13 +11,25 @@
 ![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs)
 
-[Live demo](https://eios-web-562008989053.us-central1.run.app) · [Architecture](#architecture) · [Evals](#evaluation-what-we-measured-including-the-misses) · [Quickstart](#quickstart)
+[Live demo](https://eios-web-562008989053.us-central1.run.app) · [Who uses it](#who-uses-it) · [Architecture](#architecture) · [Evals](#evaluation-what-we-measured-including-the-misses) · [Quickstart](#quickstart)
 
-<img src="docs/img/aml-investigator.png" alt="AML investigator workstation: triage queue, copilot dossier with verified figures, and the entity graph of a mule ring" width="100%">
+<img src="docs/img/readme-hero.png" alt="EIOS as five layers, from the seeded worlds at the bottom, through ingestion, the governed ontology and the assistant, up to one workstation per role at the top." width="100%">
 
-<sub>The AML investigator workstation. Every figure in the dossier carries a check mark: a tool returned it in that same turn.</sub>
+<sub>EIOS as five layers. Every number is produced in the lower three and only narrated in the fourth; people act in the fifth.</sub>
 
 </div>
+
+---
+
+## In 30 seconds
+
+| You ask | The answer |
+|---|---|
+| **Who uses it?** | AML investigators, partner managers, executives, second-line approvers, compliance heads and geo analysts. One workstation each. |
+| **What triggers it?** | A signal in the transaction stream: for example a customer who deposits 16× what they declared, then withdraws 96% of it. |
+| **How does EIOS help?** | It assembles the case from five systems into one cited screen, finds the ring, quotes the rule that applies, and drafts the report. A number appears only if a deterministic engine returned it that turn. |
+| **What does the human do?** | Reviews, edits and decides. Then a *second* person approves. The proposer cannot approve their own action, and the AI has no approve or execute tool at all. |
+| **What happens afterward?** | The approved action is signed with Cloud KMS, expires if nobody acts, and is chained into a ledger that cannot be rewritten. The evidence is sealed so anyone can re-check it. |
 
 ---
 
@@ -32,6 +44,11 @@ The obvious fix is to put an LLM on top. In a regulated setting that creates a n
 
 ## What EIOS does
 
+<img src="docs/img/aml-investigator.png" alt="AML investigator workstation: triage queue, copilot dossier with verified figures, and the entity graph of a mule ring" width="100%">
+
+<sub>The AML investigator workstation. Every figure in the dossier carries a check mark: a tool returned it in that same turn.</sub>
+
+
 EIOS gives each role one workstation and one copilot. The copilot reasons over a **governed ontology** of the business, calls deterministic engines for every number, and shows an answer only after code has verified it.
 
 | | |
@@ -43,13 +60,15 @@ EIOS gives each role one workstation and one copilot. The copilot reasons over a
 
 ### Who uses it
 
-| Persona | Story |
-|---|---|
-| **AML investigator** | *"23 accounts share a device and move money in matched bursts."* Opens the top ring, reads a dossier that states why it was raised, expands the graph (CGNAT hubs suppressed so shared Wi-Fi does not look like laundering), and drafts a SAR narrative with every figure cited. |
-| **Partner manager** | Sees 240 partners on a risk × value-at-risk radar. Picks the high-value partner whose disengagement risk jumped from 29% to 62% in 30 days, reads the driver, and proposes a retention playbook for approval. |
-| **Executive** | Opens a morning briefing with a causal graph fitted from two years of history, a 28-day revenue forecast with a backtested interval, and what-if shocks that propagate in milliseconds. |
-| **MLRO / approver** | Reviews proposed holds and SARs. The second approver sees the exact evidence bundle that was frozen when the proposal was made, hash-checked. |
-| **Geo analyst** | Asks the map *"which corridors touch call-for-action jurisdictions?"* The answer moves the map to the objects it cited. |
+Each role gets one workstation. Each story says who needs something, what they need and why. The last column is what the build delivers today, on the seeded world.
+
+| Persona | User story | What it delivers |
+|---|---|---|
+| **AML investigator** | **As an** AML investigator, **I want** the top-ranked alert opened with the reason it was raised and the accounts around it, **so that** I can decide in minutes instead of rebuilding a timeline from five systems. | One cited dossier for case CR84920: a ring of 23 accounts sharing a device, with a shared gateway of 142 people left out. A SAR narrative in which every figure is checked. |
+| **Partner manager** | **As a** partner manager, **I want** to see which valuable partners are drifting away and why, **so that** I can step in before they leave. | 240 partners on a risk × value-at-risk radar. One partner's disengagement risk rises from 29% to 62% in 30 days, with the driver named and a retention playbook proposed for approval. |
+| **Executive** | **As an** executive, **I want** a morning briefing that separates what caused a change from what only moved with it, **so that** I act on causes and not on coincidences. | A causal graph fitted from two years of history, a 28-day revenue forecast with a backtested interval, and what-if shocks that propagate in milliseconds. |
+| **MLRO / approver** | **As a** second-line approver, **I want** to review the exact evidence behind a proposed hold or SAR, **so that** I can approve it, or refuse it, knowing nothing changed after it was proposed. | The evidence bundle frozen when the proposal was made, hash-checked. The proposer cannot approve their own action. |
+| **Geo analyst** | **As a** geo analyst, **I want** to ask the map a question in plain words, **so that** I see which corridors touch high-risk jurisdictions without building a query. | *"Which corridors touch call-for-action jurisdictions?"* The answer moves the map to the objects it cited, and only to those. |
 
 <table>
 <tr>
@@ -274,14 +293,36 @@ Agents are judged through an agent port against golden cases, never by the agent
 
 ## Tech stack
 
+Google Cloud where trust matters, open source where the numbers are computed.
+
 | | |
 |---|---|
 | **Gen AI** | Google ADK 2.11 · Gemini on Vertex AI · Model Armor · Agent Search · Firestore sessions |
 | **Backend** | Python 3.14 · FastAPI · DuckDB · scikit-learn · NetworkX · Pydantic |
 | **Data and graph** | BigQuery (warm tier) · **BigQuery Graph (GQL)** · Pub/Sub · Parquet |
-| **Frontend** | Next.js 16 · React 19 · Tailwind 4 · deck.gl on Google Maps · Firebase auth |
+| **Frontend and maps** | Next.js 16 · React 19 · Tailwind 4 · deck.gl on the Google Maps JavaScript API · Firebase auth |
 | **Security and infra** | Cloud KMS · Secret Manager · Cloud Run · Terraform · GitHub Actions |
-| **Quality** | pytest · Vitest · Ruff · strict mypy · CodeQL · Newman |
+| **Quality** | pytest · Vitest · Ruff · strict mypy · CodeQL · Newman · Promptfoo |
+
+<details>
+<summary><b>The full inventory</b>, by the job each technology does (each appears once)</summary>
+
+Google services are in **bold**. Versions are the ranges in `pyproject.toml` and `package.json`.
+
+| Job | Technologies |
+|---|---|
+| **See** (screens and maps) | Next.js 16.4, React 19.3, TypeScript 5, Tailwind CSS 4, Base UI, Radix UI, lucide-react, class-variance-authority, clsx, tailwind-merge, tw-animate-css, Schibsted Grotesk, deck.gl 9.4 (with its Google Maps overlay), vis.gl React Google Maps, **Google Maps JavaScript API** |
+| **Serve** (APIs and services) | Python 3.14, FastAPI, Starlette, Uvicorn, Pydantic 2, httpx, Node.js 22 |
+| **Think** (agents and models) | **Vertex AI**, **Gemini 3.5 Flash-Lite, 3.5 Flash and 3.8 Flash**, **Agent Search**, Google ADK 2.11, google-genai SDK |
+| **Compute** (analytics) | NumPy, SciPy, scikit-learn, pandas, Polars, NetworkX. Methods: ridge regression, IsolationForest, discrete-time hazard, placebo refuters, AIPW |
+| **Data** (stores, streams, graph) | **BigQuery**, **BigQuery Graph**, **Firestore**, **Cloud Storage**, **Pub/Sub**, DuckDB, Apache Parquet, PyArrow, JSON Schema, PyYAML |
+| **Sources** (public data and lists) | IPinfo Lite, Tor exit list, AWS IP ranges, Google Cloud IP ranges, X4BNet VPN and datacenter lists, Overture Maps, FATF lists, EU high-risk list, Basel AML Index, ICIJ Offshore Leaks, World Bank WDI, Natural Earth, five regulatory documents, seeded synthetic worlds (Faker), pycountry |
+| **Protect** (identity, secrets, signing, screening) | **Cloud KMS**, **Secret Manager**, **Identity Platform**, **Model Armor**, **Workload Identity Federation**, cryptography, limits, Firebase SDK 13 |
+| **Run** (runtime and observability) | **Cloud Run**, **Cloud Trace**, **Cloud Logging**, **Cloud Monitoring**, **Cloud Billing budgets**, OpenTelemetry, Arize Phoenix (local only) |
+| **Ship** (build and deploy) | **Cloud Build**, **Artifact Registry**, GitHub Actions, Terraform, Docker, uv, npm, Make, TFLint |
+| **Prove** (test, evaluate, scan) | pytest (xdist, cov), Vitest, Vite 8, jsdom, Testing Library, mypy, Ruff, ESLint, Promptfoo, Newman, pip-audit, python-hcl2, Firestore emulator, CodeQL, Dependabot, SonarQube |
+
+</details>
 
 ---
 
@@ -339,4 +380,4 @@ specs/                  numbered feature specs
 - The live quality numbers above were measured on `main` at `99f29ba` (2026-10-18), the build deployed to the demo; re-measure after any assistant change.
 - Some operations-board lines (RL-2 and RL-7 coverage) report `NOT_MEASURED` on purpose, rather than a green they have not earned.
 
-<div align="center"><sub>MIT License · Built on Google Cloud</sub></div>
+<div align="center"><sub>MIT License · Built on Google Cloud for the AI Builder Cup</sub></div>

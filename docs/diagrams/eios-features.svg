@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24cm" height="10cm" viewBox="0 0 2400 1000" font-family="'Avenir Next','Helvetica Neue',Helvetica,Arial,sans-serif">
+<rect width="2400" height="1000" fill="#f7f7f5"/>
+<rect x="30" y="34" width="474.71999999999997" height="800" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<rect x="58" y="62" width="64" height="44" rx="22" fill="#f7f7f5" stroke="#8a8d93" stroke-width="2"/>
+<text x="90" y="93" font-size="27" font-weight="600" fill="#1b1d21" text-anchor="middle">1</text>
+<text x="58" y="174" font-size="50" font-weight="700" fill="#1b1d21" text-anchor="start" letter-spacing="1">SIGNAL</text>
+<text x="58" y="222" font-size="29" font-weight="400" fill="#464a51" text-anchor="start">Know what matters</text>
+<line x1="58" y1="248" x2="476.71999999999997" y2="248" stroke="#cfd0d2" stroke-width="2"/>
+<rect x="58" y="285" width="12" height="12" fill="#464a51"/>
+<text x="88" y="302" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">Alerts ranked into</text>
+<text x="88" y="342" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">a focused queue</text>
+<rect x="58" y="403" width="12" height="12" fill="#464a51"/>
+<text x="88" y="420" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">Rings, geo risk</text>
+<text x="88" y="460" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">and partner churn</text>
+<text x="88" y="500" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">found by engines</text>
+<rect x="58" y="561" width="12" height="12" fill="#464a51"/>
+<text x="88" y="578" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">Causal graph,</text>
+<text x="88" y="618" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">forecast and what-if</text>
+<text x="88" y="658" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">for executives</text>
+<rect x="58.0" y="716.0" width="214.79999999999998" height="40" rx="20.0" fill="#1a56c4"/>
+<text x="165.39999999999998" y="744.0" font-size="22" font-weight="600" fill="#ffffff" text-anchor="middle">BigQuery Graph</text>
+<rect x="282.79999999999995" y="716.0" width="177.84" height="40" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<text x="371.71999999999997" y="744.0" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="middle">scikit-learn</text>
+<rect x="58.0" y="766.0" width="128.56" height="40" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<text x="122.28" y="794.0" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="middle">NetworkX</text>
+<rect x="548.72" y="34" width="629.28" height="800" fill="#ffffff" stroke="#1b1d21" stroke-width="3"/>
+<rect x="576.72" y="62" width="64" height="44" rx="22" fill="#1b1d21" stroke="#1b1d21" stroke-width="2"/>
+<text x="608.72" y="93" font-size="27" font-weight="600" fill="#ffffff" text-anchor="middle">2</text>
+<text x="576.72" y="174" font-size="50" font-weight="700" fill="#1b1d21" text-anchor="start" letter-spacing="1">EVIDENCE</text>
+<text x="576.72" y="222" font-size="29" font-weight="400" fill="#464a51" text-anchor="start">See the whole case, cited</text>
+<line x1="576.72" y1="248" x2="1150.0" y2="248" stroke="#cfd0d2" stroke-width="2"/>
+<rect x="576.72" y="285" width="12" height="12" fill="#1a56c4"/>
+<text x="606.72" y="302" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">One ontology over</text>
+<text x="606.72" y="342" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">contract-checked data</text>
+<rect x="576.72" y="403" width="12" height="12" fill="#1a56c4"/>
+<text x="606.72" y="420" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">Gemini briefs each role;</text>
+<text x="606.72" y="460" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">every figure is checked</text>
+<text x="606.72" y="500" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">against an engine</text>
+<rect x="576.72" y="561" width="12" height="12" fill="#1a56c4"/>
+<text x="606.72" y="578" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">Regulation quoted</text>
+<text x="606.72" y="618" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">by sentence number</text>
+<rect x="576.72" y="716.0" width="122.39999999999999" height="40" rx="20.0" fill="#1a56c4"/>
+<text x="637.9200000000001" y="744.0" font-size="22" font-weight="600" fill="#ffffff" text-anchor="middle">Pub/Sub</text>
+<rect x="709.12" y="716.0" width="280.79999999999995" height="40" rx="20.0" fill="#1a56c4"/>
+<text x="849.52" y="744.0" font-size="22" font-weight="600" fill="#ffffff" text-anchor="middle">Gemini on Vertex AI</text>
+<rect x="576.72" y="766.0" width="188.4" height="40" rx="20.0" fill="#1a56c4"/>
+<text x="670.9200000000001" y="794.0" font-size="22" font-weight="600" fill="#ffffff" text-anchor="middle">Agent Search</text>
+<rect x="775.12" y="766.0" width="103.92" height="40" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<text x="827.08" y="794.0" font-size="22" font-weight="500" fill="#1b1d21" text-anchor="middle">DuckDB</text>
+<rect x="1222.0" y="34" width="629.28" height="800" fill="#ffffff" stroke="#1b1d21" stroke-width="3"/>
+<rect x="1250.0" y="62" width="64" height="44" rx="22" fill="#1b1d21" stroke="#1b1d21" stroke-width="2"/>
+<text x="1282.0" y="93" font-size="27" font-weight="600" fill="#ffffff" text-anchor="middle">3</text>
+<text x="1250.0" y="174" font-size="50" font-weight="700" fill="#1b1d21" text-anchor="start" letter-spacing="1">DECISION</text>
+<text x="1250.0" y="222" font-size="29" font-weight="400" fill="#464a51" text-anchor="start">A person holds the key</text>
+<line x1="1250.0" y1="248" x2="1823.28" y2="248" stroke="#cfd0d2" stroke-width="2"/>
+<rect x="1250.0" y="285" width="12" height="12" fill="#1a56c4"/>
+<text x="1280.0" y="302" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">AI proposes; no</text>
+<text x="1280.0" y="342" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">approve tool exists</text>
+<rect x="1250.0" y="403" width="12" height="12" fill="#1a56c4"/>
+<text x="1280.0" y="420" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">A signed request that expires;</text>
+<text x="1280.0" y="460" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">a second person approves</text>
+<rect x="1250.0" y="521" width="12" height="12" fill="#1a56c4"/>
+<text x="1280.0" y="538" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">Role-based access; PII</text>
+<text x="1280.0" y="578" font-size="30" font-weight="500" fill="#1b1d21" text-anchor="start">tokenised before the model</text>
+<rect x="1250.0" y="716.0" width="148.8" height="40" rx="20.0" fill="#1a56c4"/>
+<text x="1324.4" y="744.0" font-size="22" font-weight="600" fill="#ffffff" text-anchor="middle">Cloud KMS</text>
+<rect x="1408.8" y="716.0" width="254.4" height="40" rx="20.0" fill="#1a56c4"/>
+<text x="1536.0" y="744.0" font-size="22" font-weight="600" fill="#ffffff" text-anchor="middle">Identity Platform</text>
+<rect x="1250.0" y="766.0" width="214.79999999999998" height="40" rx="20.0" fill="#1a56c4"/>
+<text x="1357.4" y="794.0" font-size="22" font-weight="600" fill="#ffffff" text-anchor="middle">Secret Manager</text>
+<rect x="1895.28" y="34" width="474.71999999999997" height="800" fill="#ececec" stroke="#cfd0d2" stroke-width="1.5"/>
+<rect x="1923.28" y="62" width="64" height="44" rx="22" fill="#f7f7f5" stroke="#8a8d93" stroke-width="2"/>
+<text x="1955.28" y="93" font-size="27" font-weight="600" fill="#1b1d21" text-anchor="middle">4</text>
+<text x="1923.28" y="174" font-size="50" font-weight="700" fill="#1b1d21" text-anchor="start" letter-spacing="1">RECORD</text>
+<text x="1923.28" y="222" font-size="29" font-weight="400" fill="#464a51" text-anchor="start">Prove it later</text>
+<line x1="1923.28" y1="248" x2="2342.0" y2="248" stroke="#cfd0d2" stroke-width="2"/>
+<rect x="1923.28" y="285" width="12" height="12" fill="#464a51"/>
+<text x="1953.28" y="302" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">Hash-chained</text>
+<text x="1953.28" y="342" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">decision ledger</text>
+<rect x="1923.28" y="403" width="12" height="12" fill="#464a51"/>
+<text x="1953.28" y="420" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">Evidence sealed</text>
+<text x="1953.28" y="460" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">with each approval</text>
+<rect x="1923.28" y="521" width="12" height="12" fill="#464a51"/>
+<text x="1953.28" y="538" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">SLOs, red-line tests</text>
+<text x="1953.28" y="578" font-size="30" font-weight="400" fill="#1b1d21" text-anchor="start">and a restore drill</text>
+<rect x="1923.28" y="716.0" width="148.8" height="40" rx="20.0" fill="#1a56c4"/>
+<text x="1997.68" y="744.0" font-size="22" font-weight="600" fill="#ffffff" text-anchor="middle">Firestore</text>
+<rect x="2082.08" y="716.0" width="201.6" height="40" rx="20.0" fill="#1a56c4"/>
+<text x="2182.88" y="744.0" font-size="22" font-weight="600" fill="#ffffff" text-anchor="middle">Cloud Storage</text>
+<rect x="1923.28" y="766.0" width="175.2" height="40" rx="20.0" fill="#1a56c4"/>
+<text x="2010.8799999999999" y="794.0" font-size="22" font-weight="600" fill="#ffffff" text-anchor="middle">Cloud Trace</text>
+<path d="M 516.72 112 L 536.72 134 L 516.72 156" fill="none" stroke="#464a51" stroke-width="4" stroke-linejoin="miter"/>
+<path d="M 1190.0 112 L 1210.0 134 L 1190.0 156" fill="none" stroke="#464a51" stroke-width="4" stroke-linejoin="miter"/>
+<path d="M 1863.28 112 L 1883.28 134 L 1863.28 156" fill="none" stroke="#464a51" stroke-width="4" stroke-linejoin="miter"/>
+<path d="M 548.72 860 L 548.72 882 L 1851.28 882 L 1851.28 860" fill="none" stroke="#1b1d21" stroke-width="3"/>
+<text x="1200.0" y="930" font-size="30" font-weight="700" fill="#1b1d21" text-anchor="middle" letter-spacing="1.5">TRUST BY CONSTRUCTION</text>
+<text x="1200.0" y="968" font-size="27" font-weight="400" fill="#464a51" text-anchor="middle">The model explains. It cannot approve, and it cannot show a figure no engine produced.</text>
+<rect x="1895.28" y="902" width="56" height="28" rx="14" fill="#1a56c4"/>
+<text x="1965.28" y="924" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Google Cloud service</text>
+<rect x="1895.28" y="944" width="46" height="28" fill="#dedfe0" stroke="#c0c1c4" stroke-width="1.2"/>
+<text x="1965.28" y="968" font-size="24" font-weight="400" fill="#1b1d21" text-anchor="start">Open source</text>
+</svg>

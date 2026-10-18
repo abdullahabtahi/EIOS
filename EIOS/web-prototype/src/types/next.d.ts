@@ -82,4 +82,5 @@ declare module 'next/link' {
 declare module 'next/font/google' {
   export function Inter(options?: any): { className: string; variable: string };
   export function JetBrains_Mono(options?: any): { className: string; variable: string };
+  export function Schibsted_Grotesk(options?: any): { className: string; variable: string };
 }
