@@ -84,10 +84,13 @@ export function ModelPicker({
   choices,
   selected,
   onSelect,
+  placement = 'up',
 }: {
   choices: ModelChoice[];
   selected: string | undefined;
   onSelect: (key: string) => void;
+  /** Which way the menu opens: up from a composer, down from a header. */
+  placement?: 'up' | 'down';
 }) {
   const [open, setOpen] = React.useState(false);
   const [active, setActive] = React.useState(0);
@@ -152,7 +155,7 @@ export function ModelPicker({
           role="listbox"
           aria-label="Model"
           aria-activedescendant={`${listId}-${active}`}
-          className="absolute bottom-full right-0 z-40 mb-1.5 w-60 bg-white py-1 shadow-md"
+          className={`absolute right-0 z-40 w-60 bg-white py-1 shadow-md ${placement === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}`}
         >
           {choices.map((c, i) => (
             <li

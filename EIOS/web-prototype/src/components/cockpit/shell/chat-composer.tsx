@@ -75,10 +75,12 @@ export function ChatComposer({ value, onChange, onSubmit, placeholder, ariaLabel
           <Icon icon={pending ? 'progress_activity' : 'keyboard_return'} size="sm" className={pending ? 'animate-spin motion-reduce:animate-none' : ''} />
         </button>
       </div>
-      <div className="mt-1.5 flex min-h-6 items-center gap-2 px-0.5">
-        <div className="min-w-0 flex-1">{context}</div>
-        {accessory}
-      </div>
+      {(context || accessory) && (
+        <div className="mt-1.5 flex min-h-6 items-center gap-2 px-0.5">
+          <div className="min-w-0 flex-1">{context}</div>
+          {accessory}
+        </div>
+      )}
     </form>
   );
 }

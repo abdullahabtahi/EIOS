@@ -153,8 +153,8 @@ export function CopilotChat() {
 
   return (
     <section aria-label="Copilot chat" className="w-full min-w-0 h-full flex flex-col bg-cx-wash-0">
-      <div className="px-3 py-2 bg-cx-sub border-b border-cx-line shrink-0 text-xs">
-        <div className="min-w-0" data-testid="chat-context">
+      <div className="px-3 py-2 bg-cx-sub border-b border-cx-line shrink-0 flex items-start justify-between gap-2 text-xs">
+        <div className="min-w-0 flex-1" data-testid="chat-context">
           {entityId ? (
             <>
               <span className="font-mono font-bold text-cx-ink">{entityId}</span>
@@ -164,6 +164,19 @@ export function CopilotChat() {
           ) : (
             <span className="text-cx-muted">No entity selected. Pick one from the triage rail, or ask in general.</span>
           )}
+        </div>
+        <div className="flex shrink-0 items-center gap-1 text-label">
+          {items.length > 0 && (
+            <button
+              type="button"
+              onClick={() => patch(role, () => [])}
+              title="Clear this conversation"
+              className="h-6 cursor-pointer px-1.5 text-cx-muted outline-none transition-colors hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
+            >
+              Clear conversation
+            </button>
+          )}
+          <ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} placement="down" />
         </div>
       </div>
 
@@ -213,19 +226,6 @@ export function CopilotChat() {
         pending={pending > 0}
         inputRef={inputRef}
         onKeyDown={(e) => e.key === 'Escape' && inputRef.current?.blur()}
-        context={
-          items.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => patch(role, () => [])}
-              title="Clear this conversation"
-              className="cursor-pointer text-label text-cx-muted outline-none hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
-            >
-              Clear conversation
-            </button>
-          ) : undefined
-        }
-        accessory={<ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />}
       />
     </section>
   );
