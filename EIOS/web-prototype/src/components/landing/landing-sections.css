@@ -92,6 +92,37 @@
   color: var(--ink-2);
   max-width: 58ch;
 }
+.fde-delta {
+  margin: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.fde-delta > div {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--rule);
+}
+.fde-delta > div:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.fde-delta dt {
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  padding-top: 3px;
+}
+.fde-delta dd {
+  margin: 0;
+  color: var(--ink-2);
+}
+.fde-delta .fde-delta-after {
+  color: var(--ink);
+}
+
 /* Close */
 .fde-close {
   padding: clamp(120px, 16vw, 240px) var(--pad) 32px;

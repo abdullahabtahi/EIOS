@@ -1,7 +1,5 @@
 import React from "react";
 import { FIELD_NOTES } from "./content";
-import { NOTE_CHARTS } from "./data/charts";
-import { MiniChart } from "./MiniChart";
 
 export function FieldNotes() {
   return (
@@ -16,21 +14,18 @@ export function FieldNotes() {
               <h3>{note.lead}</h3>
               <p>{note.body}</p>
             </div>
-            <div className="fde-note-figure">
-              {NOTE_CHARTS[note.lead] && <MiniChart chart={NOTE_CHARTS[note.lead]} />}
-              <dl className="fde-delta">
-                <div>
-                  <dt>Before</dt>
-                  <dd>{note.before}</dd>
-                </div>
-                <div>
-                  <dt>After</dt>
-                  <dd className="fde-delta-after">
-                    {note.after} <span className="fde-tag">MEASURED</span>
-                  </dd>
-                </div>
-              </dl>
-            </div>
+            <dl className="fde-delta">
+              <div>
+                <dt>Before</dt>
+                <dd>{note.before}</dd>
+              </div>
+              <div>
+                <dt>After</dt>
+                <dd className="fde-delta-after">
+                  {note.after} <span className="fde-tag">MEASURED</span>
+                </dd>
+              </div>
+            </dl>
           </li>
         ))}
       </ol>

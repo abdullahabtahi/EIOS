@@ -157,53 +157,9 @@
   padding-bottom: 4px;
 }
 
-/* Field notes: text beside a chart and the preserved before / after */
-.fde-note-list li {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-.fde-note-figure {
-  align-self: start;
-}
-.fde-note-figure .fde-mc {
-  margin-bottom: 12px;
-}
-.fde-delta {
-  margin: 0;
-  font-family: var(--font-mono), monospace;
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
-}
-.fde-delta > div {
-  display: grid;
-  grid-template-columns: 4.5rem 1fr;
-  gap: 12px;
-  padding: 10px 0;
-  border-top: 1px solid var(--rule);
-}
-.fde-delta > div:last-child {
-  border-bottom: 1px solid var(--rule);
-}
-.fde-delta dt {
-  font-size: 0.6875rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-2);
-  padding-top: 3px;
-}
-.fde-delta dd {
-  margin: 0;
-  color: var(--ink-2);
-}
-.fde-delta .fde-delta-after {
-  color: var(--ink);
-}
-
 @media (max-width: 720px) {
   .fde-ledger > li {
     grid-template-columns: minmax(0, 1fr);
     gap: 12px;
-  }
-  .fde-note-list li {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
