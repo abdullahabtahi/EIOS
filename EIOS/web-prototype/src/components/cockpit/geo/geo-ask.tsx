@@ -245,7 +245,7 @@ export function GeoAsk({ context, selected, onMove, onPending, onAnswered, inten
             onChange={(e) => setQuery(e.target.value)}
             placeholder={onScreen ? `Ask about the ${onScreen}…` : 'Ask about the map…'}
             aria-label="Ask the geospatial assistant"
-            className="min-w-0 flex-1 rounded-none border border-cx-line bg-white px-3 py-2 text-xs text-cx-ink outline-none placeholder:text-cx-muted focus-visible:border-cx-accent focus-visible:ring-2 focus-visible:ring-cx-accent"
+            className="min-w-0 flex-1 rounded-none border border-cx-line bg-white px-3 py-2 text-xs text-cx-ink outline-none placeholder:text-cx-muted focus-visible:border-cx-accent focus-visible:ring-1 focus-visible:ring-cx-accent"
           />
           <button
             type="submit"

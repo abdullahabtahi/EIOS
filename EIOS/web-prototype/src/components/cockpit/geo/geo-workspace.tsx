@@ -7,7 +7,7 @@ import { buildLayers, type HighlightArc, type HoverPoint, type ListChangeMarks }
 import { cameraFor, cameraForCodes, type CameraTarget } from './geo-camera';
 import { useGeoAccount } from './geo-account';
 import { GeoAsk } from './geo-ask';
-import { describeSelection } from './geo-format';
+import { describeSelection, nameOf } from './geo-format';
 import { focusFor } from './geo-focus';
 import { beforeTiers, changeCount, changeNotes, withChangeNote } from './geo-compare';
 import { type CompareSide, GeoCompareBar } from './geo-compare-bar';
@@ -47,6 +47,9 @@ const MAX_HISTORY = 20;
  * on the right lists where to look first, or holds the assistant. Hover previews a mark, click pins it, Esc puts it
  * down. The assistant moves the map only to objects its tools returned; every move says so and can be undone.
  */
+/** [ASSUMPTION] long enough to read a one-line note and press Back. */
+const NOTICE_MS = 8000;
+
 export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: string } = {}) {
   const reference = useGeoResource<GeoReference>('/api/cockpit/geo/reference');
   const flows = useGeoResource<GeoFlows>('/api/cockpit/geo/flows');
@@ -89,6 +92,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
     (id: ViewId) => {
       const focus = focusFor(id, flowData, referenceData);
       setView(id);
+      setNotice(null); // a note about the last move says nothing about the view just opened
       setVisible(viewOf(id).layers);
       setSelected(null);
       setHover(null);
@@ -141,10 +145,16 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
       setHistory((past) => [...past, mapState].slice(-MAX_HISTORY));
       restore(stateAfterMove(mapState, move));
       framed.current = null; // an account the assistant points at is framed again, even if it was framed before
-      setNotice({ label: moveLabel(move), auto });
+      setNotice({ label: moveLabel(move, (code) => nameOf(referenceData, code)), auto });
     },
-    [mapState, restore],
+    [mapState, restore, referenceData],
   );
+  // The note is a receipt, not a fixture: it leaves by itself once it has been read.
+  React.useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const goBack = React.useCallback(() => {
     const previous = history[history.length - 1];
     if (!previous) return;

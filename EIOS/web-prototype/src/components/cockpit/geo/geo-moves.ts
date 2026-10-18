@@ -46,8 +46,13 @@ const KIND_WORD: Readonly<Record<ViewCommand['kind'], string>> = {
 };
 
 /** A plain label for a move or a selection, used where no richer title is at hand. */
-export function moveLabel(move: { readonly kind: ViewCommand['kind']; readonly id: string }): string {
-  return `${KIND_WORD[move.kind]} ${move.id.replaceAll('>', ' → ')}`;
+export function moveLabel(
+  move: { readonly kind: ViewCommand['kind']; readonly id: string },
+  /** Turns a country code into its name, when the reference data is loaded; without it the code is shown. */
+  nameOf: (code: string) => string = (code) => code,
+): string {
+  const id = move.kind === 'corridor' || move.kind === 'mismatch' ? move.id.split('>').map(nameOf).join(' → ') : move.kind === 'country' ? nameOf(move.id) : move.id;
+  return `${KIND_WORD[move.kind]} ${id}`;
 }
 
 /** The questions offered before the first turn: fixed templates, each answered by a tool the geospatial assistant has. */

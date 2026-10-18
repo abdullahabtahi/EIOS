@@ -44,24 +44,43 @@ export interface GeoMapProps {
   readonly target?: CameraTarget | null;
 }
 
+function MapUnavailable({ title, detail, retry = false }: { readonly title: string; readonly detail: React.ReactNode; readonly retry?: boolean }) {
+  return (
+    <div role="status" className="flex h-full items-center justify-center bg-cx-sub text-cx-muted">
+      <div className="max-w-xs space-y-1.5 px-4 text-center">
+        <Icon icon="map" size="lg" className="text-cx-faint" />
+        <p className="text-sm font-semibold text-cx-ink">{title}</p>
+        <p className="text-xs">{detail}</p>
+        {retry && (
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-1 cursor-pointer text-xs font-semibold text-cx-accent outline-none hover:text-cx-accent-strong focus-visible:ring-2 focus-visible:ring-cx-accent">
+            Reload the page
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /** Google basemap with the deck.gl evidence layers; labelled unavailable, never blank, when no key is configured. */
 export function GeoMap({ layers, focus = null, target = null }: GeoMapProps) {
   const config = readMapsConfig();
-  if (!config) {
-    return (
-      <div role="status" className="flex h-full items-center justify-center bg-cx-sub text-cx-muted">
-        <div className="max-w-xs text-center space-y-1">
-          <Icon icon="map" size="lg" className="text-cx-faint" />
-          <p className="text-sm font-semibold text-cx-ink">Map unavailable</p>
-          <p className="text-xs">
-            No Google Maps key is configured (<span>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</span>).
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const [failed, setFailed] = React.useState(false);
+  // Google reports a rejected key (referrer, billing, quota) through this global, and paints its own "Oops" over the map.
+  React.useEffect(() => {
+    const w = window as unknown as { gm_authFailure?: () => void };
+    const previous = w.gm_authFailure;
+    w.gm_authFailure = () => setFailed(true);
+    return () => {
+      w.gm_authFailure = previous;
+    };
+  }, []);
+  if (!config) return <MapUnavailable title="Map unavailable" detail={<>No Google Maps key is configured (<span>NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</span>).</>} />;
+  if (failed) return <MapUnavailable title="The map could not load" detail="Google Maps refused or failed the request. The ranked list, figures and assistant still work." retry />;
   return (
-    <APIProvider apiKey={config.apiKey}>
+    <APIProvider apiKey={config.apiKey} onError={() => setFailed(true)}>
       <Map
         {...(config.mapId ? { mapId: config.mapId } : { styles: MUTED_LIGHT_STYLE })}
         defaultCenter={WORLD_CENTER}
