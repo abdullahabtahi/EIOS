@@ -176,27 +176,29 @@ export function CopilotChat() {
               Clear conversation
             </button>
           )}
+          <ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} placement="down" />
         </div>
       </div>
 
       <div ref={listRef} className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-4">
         {items.length === 0 ? (
-          <div className="space-y-2 pt-2">
-            <h3 className="text-sm font-semibold leading-snug text-cx-ink">Ask about what you are looking at</h3>
-            <p className="text-label text-cx-muted">Explain a risk, find what needs attention, or propose an action for a second operator to approve.</p>
-            <ul className="-mx-3 divide-y divide-cx-line-soft pt-1">
+          <div className="py-8 text-center space-y-4">
+            <div className="space-y-1">
+              <p className="text-xs font-semibold text-slate-800">Ask about what you are looking at</p>
+              <p className="text-label text-slate-500">Explain a risk, find what needs attention, or propose an action for a second operator to approve.</p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-2">
               {suggestions.map((s) => (
-                <li key={s}>
-                  <button
-                    type="button"
-                    onClick={() => ask(s)}
-                    className="w-full cursor-pointer px-3 py-2 text-left text-xs text-cx-ink outline-none transition-colors hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent"
-                  >
-                    {s}
-                  </button>
-                </li>
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => ask(s)}
+                  className="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 text-label transition-colors cursor-pointer hover:border-blue-500"
+                >
+                  {s}
+                </button>
               ))}
-            </ul>
+            </div>
           </div>
         ) : (
           items.map((item) =>
@@ -225,7 +227,6 @@ export function CopilotChat() {
         pending={pending > 0}
         inputRef={inputRef}
         onKeyDown={(e) => e.key === 'Escape' && inputRef.current?.blur()}
-        inlineAccessory={<ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />}
       />
     </section>
   );
