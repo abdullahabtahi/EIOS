@@ -145,7 +145,7 @@ export function ModelPicker({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         onClick={() => (open ? setOpen(false) : show())}
-        className="flex h-8 cursor-pointer items-center px-2.5 text-xs text-cx-muted outline-none transition-colors hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
+        className="flex h-8 cursor-pointer items-center pl-2 pr-1 text-xs text-cx-muted outline-none transition-colors hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
       >
         {current.label}
       </button>

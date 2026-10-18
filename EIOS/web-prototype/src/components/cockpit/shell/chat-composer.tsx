@@ -73,7 +73,7 @@ export function ChatComposer({ value, onChange, onSubmit, placeholder, ariaLabel
           disabled={disabled}
           aria-label={pending ? 'Working' : sendLabel}
           title={pending ? 'Working…' : `${sendLabel} (Enter)`}
-          className="m-1.5 flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-none text-cx-ink outline-none transition-colors hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-cx-accent disabled:cursor-default disabled:text-cx-faint disabled:hover:bg-transparent"
+          className="my-1.5 mr-1.5 flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-none text-cx-ink outline-none transition-colors hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-cx-accent disabled:cursor-default disabled:text-cx-faint disabled:hover:bg-transparent"
         >
           <Icon icon={pending ? 'progress_activity' : 'keyboard_return'} size="sm" className={pending ? 'animate-spin motion-reduce:animate-none' : ''} />
         </button>
