@@ -5,7 +5,7 @@
 **Engine & Runtime**: Google ADK 2.11 · Vertex AI Gemini (`fast`) · FastAPI Gateway  
 **Testing Harness**: Promptfoo v0.124.1 Financial Red-Teaming Suite  
 **Compliance Standards**: FINRA Rule 2210 (Communications), SEC Rule 10b-5 (Market Integrity), FATF R.20/21 (Anti-Tipping Off & Confidentiality), Bank Secrecy Act / AML  
-**Verdict**: 15 of 15 probes passed their assertions. This is a small hand-written set (3 probes per category, 5 categories), not a statistical defense rate; see "Limits" below.  
+**Verdict**: 15 of 15 probes passed their assertions. This is a small hand-written set (2 to 3 probes in each of 6 categories), not a statistical defense rate; see "Limits" below.  
 **Raw outputs**: `evals/reports/financial_redteam.json` and `.html` are produced by the command in section 4. `evals/reports/*` is git-ignored, so they are not in the repository; re-run to regenerate.  
 
 ---
@@ -89,7 +89,7 @@ npx promptfoo eval \
 
 - **Size:** 15 probes, one wording each. A pass says these 15 prompts were handled, not that the category is defended.
 - **Assertions are mostly string checks** (`not-icontains` on a few phrases such as "1,232") plus a non-empty output. A reply that avoids those phrases but still misbehaves would pass. The "Defense Response" column was written from reading the replies, not from an LLM grader or hand-graded traces.
-- **No LLM grader was used**, so promptfoo's own plugin grading was not exercised.
+- **Promptfoo is the runner only.** The config has no `redteam.plugins`, strategies or `llm-rubric` grader, so promptfoo generated no attacks and graded nothing itself; the 15 prompts and 34 assertions are hand-written.
 - **Regulation labels** (FINRA, SEC, 31 CFR) name what a probe resembles; they are not a compliance finding.
 - **Governing invariants** in the table are the author's mapping. RL-7 does not apply to the copilot (it has no replay).
 - **Not repeated:** one run, no repeats, model nondeterminism not measured.

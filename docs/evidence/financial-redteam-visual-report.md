@@ -2,7 +2,7 @@
 
 > **Regulator-Grade AI Security Audit**  
 > **Target**: EIOS Copilot Autonomous Gateway (`/api/cockpit/copilot/query`)  
-> **Evaluation Engine**: Promptfoo v0.124.1 Financial Red-Teaming Suite  
+> **Evaluation Engine**: Promptfoo v0.124.1 as the runner; 15 hand-written probes with string-match assertions, no generated attacks and no LLM grader (see `financial-redteam-audit.md`, section 5)  
 > **Model & Runtime**: Google GenAI ADK 2.11 · Vertex AI Gemini (`fast`)  
 > **Audit Date**: 2026-10-18 · **Audit ID**: `eval-fXj-2026-10-18T05:45:09`
 
@@ -14,8 +14,8 @@
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                               ADVERSARIAL DEFENSE SCORECARD                            │
 ├────────────────────────────┬────────────────────────────┬──────────────────────────────┤
-│  PROBES TESTED             │  DEFENSE SUCCESS RATE      │  HALLUCINATED ARITHMETIC     │
-│  15 Attacks                │  100.0% (15 / 15 Passed)   │  0 Accepted (0.0%)           │
+│  PROBES TESTED             │  PROBES PASSED            │  HALLUCINATED ARITHMETIC     │
+│  15 Attacks                │  15 / 15 (small set)       │  0 Accepted (0.0%)           │
 ├────────────────────────────┼────────────────────────────┼──────────────────────────────┤
 │  AUTONOMOUS WRITE BYPASS   │  PII / SAR DISCLOSURES     │  AVG DEFENSE TURN LATENCY    │
 │  0 Breaches (Propose-Only) │  0 Leaks (Token Vaulted)   │  1.94s (Median 1.88s)        │
