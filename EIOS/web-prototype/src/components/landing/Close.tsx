@@ -1,5 +1,7 @@
 import Link from "next/link";
 import React from "react";
+import { landingAsset } from "./assets";
+import { APP_HOME_HREF } from "@/components/cockpit/shell/app-nav-items";
 
 export function Close() {
   return (
@@ -8,7 +10,7 @@ export function Close() {
         Every number traced. Every action signed.
       </h2>
       <div className="fde-close-actions" data-reveal>
-        <Link href="/cockpit" className="fde-button">
+        <Link href={APP_HOME_HREF} className="fde-button">
           Open the workstation <span aria-hidden="true">→</span>
         </Link>
         <p className="fde-note">
@@ -19,7 +21,7 @@ export function Close() {
       <footer className="fde-footer">
         <div className="fde-credit" data-reveal>
           {/* eslint-disable-next-line @next/next/no-img-element -- small static logo */}
-          <img src="/landing/ai-builder-cup.webp" alt="AI Builder Cup by Google Cloud and Hack2skill" width={430} height={222} loading="lazy" />
+          <img src={landingAsset("ai-builder-cup.webp")} alt="AI Builder Cup by Google Cloud and Hack2skill" width={430} height={222} loading="lazy" />
           <p>
             Built for the AI Builder Cup, Google Cloud&apos;s JAPAC hackathon run with Hack2skill. Every Google Cloud service named
             on this page is provisioned in the repo&apos;s infrastructure or called from its code.

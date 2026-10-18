@@ -89,7 +89,7 @@ export function RingGraph() {
         viewBox={`0 0 ${W} ${H}`}
         className="fde-ring"
         role="img"
-        aria-label="Case CR84920: 23 accounts that all share one device and one payment method, and a public gateway that would merge 141 strangers into the ring unless it is collapsed."
+        aria-label={`Case CR84920: ${RING_SIZE} accounts that all share one device and one payment method, and a public gateway that would merge ${HUB.collapsed} strangers into the ring unless it is collapsed.`}
       >
         <ellipse
           cx={432}

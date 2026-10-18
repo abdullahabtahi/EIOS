@@ -27,7 +27,7 @@ describe("landing content", () => {
 });
 
 describe("landing sections", () => {
-  it("links the workstation from the nav and the close", () => {
+  it("opens the app on its first section (geospatial) from the nav and the close", () => {
     render(
       <>
         <SiteNav />
@@ -36,7 +36,7 @@ describe("landing sections", () => {
     );
     const links = screen.getAllByRole("link", { name: /open the workstation/i });
     expect(links).toHaveLength(2);
-    for (const link of links) expect(link).toHaveAttribute("href", "/cockpit");
+    for (const link of links) expect(link).toHaveAttribute("href", "/cockpit/geospatial");
   });
 
   it("renders the hero with one legend band per layer and an accessible diagram", () => {

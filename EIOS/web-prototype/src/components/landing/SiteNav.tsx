@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { APP_HOME_HREF } from "@/components/cockpit/shell/app-nav-items";
 
 const LINKS = [
   { href: "#system", label: "The system" },
@@ -22,7 +23,7 @@ export function SiteNav() {
           </a>
         ))}
       </nav>
-      <Link href="/cockpit" className="fde-nav-cta">
+      <Link href={APP_HOME_HREF} className="fde-nav-cta">
         Open the workstation <span aria-hidden="true">→</span>
       </Link>
     </header>

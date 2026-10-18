@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { landingAsset } from "../assets";
 import { COVERAGE, GEO_AS_OF, HUBS_SUPPRESSED } from "../data/geo";
 import { GEO_TURNS } from "../data/turns";
 import { GeoMap } from "./GeoMap";
@@ -66,8 +67,8 @@ export function GeoSection() {
     <section id="geo" className="fde-geo" aria-labelledby="fde-geo-title">
       <div className="fde-interlude">
         <picture>
-          <source media="(max-width: 900px)" srcSet="/landing/strait-1200.webp" />
-          <img src="/landing/strait-2400.webp" alt="" width={2400} height={1200} loading="lazy" decoding="async" />
+          <source media="(max-width: 900px)" srcSet={landingAsset("strait-1200.webp")} />
+          <img src={landingAsset("strait-2400.webp")} alt="" width={2400} height={1099} loading="lazy" decoding="async" />
         </picture>
         <div className="fde-interlude-copy" data-reveal>
           <h2 id="fde-geo-title" className="fde-interlude-title">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 
 interface Block {
   readonly seq: number;
@@ -12,6 +12,7 @@ interface Block {
 const GENESIS = "0".repeat(64);
 
 async function sha256(text: string): Promise<string> {
+  if (!globalThis.crypto?.subtle) throw new Error("crypto.subtle is unavailable on an insecure origin");
   const bytes = new TextEncoder().encode(text);
   const digest = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
@@ -34,14 +35,25 @@ export function GovernedAction() {
     setRefusal("Refused: the proposer cannot approve their own intent. A second operator must.");
   };
 
+  const approving = useRef(false);
+
   const approveAsSecond = useCallback(async () => {
+    if (approving.current) return;
+    approving.current = true;
     setRefusal(null);
-    const prev = chain.length ? chain[chain.length - 1].hash : GENESIS;
-    const seq = chain.length + 1;
-    const action = "HOLD W-84920-1 · CR84920";
-    const hash = await sha256(JSON.stringify({ seq, action, prev }));
-    setChain((c) => [...c, { seq, action, prev, hash }]);
-    setStage("approved");
+    try {
+      const prev = chain.length ? chain[chain.length - 1].hash : GENESIS;
+      const seq = chain.length + 1;
+      const action = "HOLD W-84920-1 · CR84920";
+      const hash = await sha256(JSON.stringify({ seq, action, prev }));
+      setChain((c) => [...c, { seq, action, prev, hash }]);
+      setStage("approved");
+    } catch (err) {
+      console.error("landing ledger demo could not hash", err);
+      setRefusal("This browser cannot compute the SHA-256 hash here (it needs a secure https page), so the demo ledger stays empty.");
+    } finally {
+      approving.current = false;
+    }
   }, [chain]);
 
   const reset = () => {

@@ -31,14 +31,6 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Sharp:opsz,wght,FILL,GRAD@20..48,300..400,0,0&display=swap"
-        />
-      </head>
       <body className="min-h-full bg-white text-[#111] font-sans flex flex-col selection:bg-[#111] selection:text-white">
         <AuthProvider>{children}</AuthProvider>
       </body>

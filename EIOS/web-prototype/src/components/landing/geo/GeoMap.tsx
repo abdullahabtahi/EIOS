@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import type { Deck, MapView, TransitionInterpolator } from "@deck.gl/core";
 import type * as DeckLayers from "@deck.gl/layers";
+import { landingAsset } from "../assets";
 import { COUNTRY_NAMES, type Corridor, type Gateway } from "../data/geo";
 import type { RecordedTurn } from "../data/turns";
 import { useReducedMotion } from "../hooks";
@@ -21,6 +22,7 @@ interface Runtime {
   readonly L: typeof DeckLayers;
   readonly FlyTo: new (opts?: { speed?: number }) => TransitionInterpolator;
   readonly countries: readonly CountryFeature[];
+  ready: boolean;
 }
 
 const usd = (n: number): string => `$${n.toLocaleString("en-US")}`;
@@ -65,7 +67,7 @@ export function GeoMap({ lens, basis, focus }: GeoMapProps) {
         const [core, L, res] = await Promise.all([
           import("@deck.gl/core"),
           import("@deck.gl/layers"),
-          fetch("/landing/geo/countries.json"),
+          fetch(landingAsset("geo/countries.json")),
         ]);
         if (!res.ok) throw new Error(`countries.json ${res.status}`);
         const geo = (await res.json()) as { features: CountryFeature[] };
@@ -77,15 +79,32 @@ export function GeoMap({ lens, basis, focus }: GeoMapProps) {
           controller: { scrollZoom: false, dragRotate: false, touchRotate: false, doubleClickZoom: true, dragPan: true },
           getTooltip: tooltip as never,
           style: { position: "absolute", inset: "0" },
+          // Let a vertical swipe over the map scroll the page; the map pans on horizontal drags and in the desktop pointer.
+          touchAction: "pan-y",
+          // A missing WebGL context is reported here rather than thrown; the map is ready only once the device exists.
+          onDeviceInitialized: () => {
+            if (rt.current) rt.current.ready = true;
+            if (!cancelled) setStatus("ready");
+          },
+          onError: (error: Error) => {
+            console.error("landing map error", error);
+            if (!cancelled && !rt.current?.ready) setStatus("failed");
+          },
         });
-        rt.current = { deck, L, FlyTo: core.FlyToInterpolator, countries: geo.features };
-        setStatus("ready");
+        rt.current = { deck, L, FlyTo: core.FlyToInterpolator, countries: geo.features, ready: false };
       } catch (err) {
         console.error("landing map failed to start", err);
         if (!cancelled) setStatus("failed");
       }
     };
-    if (typeof IntersectionObserver === "undefined") return;
+    if (typeof IntersectionObserver === "undefined") {
+      void start();
+      return () => {
+        cancelled = true;
+        rt.current?.deck.finalize();
+        rt.current = null;
+      };
+    }
     const io = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {

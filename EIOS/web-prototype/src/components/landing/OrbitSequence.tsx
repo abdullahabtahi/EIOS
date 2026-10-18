@@ -1,27 +1,20 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useState } from "react";
+import { landingAsset } from "./assets";
 import { LAYERS, type Layer } from "./content";
-import { useReducedMotion } from "./hooks";
+import { useDataSaver, useReducedMotion } from "./hooks";
+import { usePinnedSequence } from "./usePinnedSequence";
 
-/** Frames come from one generated orbit clip, cropped and sampled at every third frame (see public/landing/PROVENANCE.md). */
+/** Frames come from one generated orbit clip, cropped and sampled at every third frame (see asset-sources/landing/PROVENANCE.md). */
 const FRAME_COUNT = 81;
 const FRAME_W = 800;
 const FRAME_H = 864;
 const STILL_FRAME = 40;
 
-const frameSrc = (i: number): string => `/landing/orbit/f_${String(i + 1).padStart(3, "0")}.webp`;
-const clamp01 = (n: number): number => Math.min(1, Math.max(0, n));
-
-function loadFrame(i: number): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.decoding = "async";
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error(`frame ${i} failed to load`));
-    img.src = frameSrc(i);
-  });
-}
+const frameSrc = (i: number): string => landingAsset(`orbit/f_${String(i + 1).padStart(3, "0")}.webp`);
+/** Scroll progress to a position in the clip: a short hold at each end. */
+const frameAt = (p: number): number => (p - 0.03) / 0.94;
 
 function Caption({ layer, active }: { layer: Layer; active: boolean }) {
   return (
@@ -40,7 +33,7 @@ function StaticSystem() {
     <div className="fde-system-static">
       <div className="fde-frame">
         {/* eslint-disable-next-line @next/next/no-img-element -- a fixed local still; no optimiser needed */}
-        <img src={frameSrc(STILL_FRAME)} alt="" width={FRAME_W} height={FRAME_H} />
+        <img src={frameSrc(STILL_FRAME)} alt="" width={FRAME_W} height={FRAME_H} loading="lazy" decoding="async" />
       </div>
       <div className="fde-system-list">
         {LAYERS.map((layer) => (
@@ -52,85 +45,18 @@ function StaticSystem() {
 }
 
 function PinnedSystem() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const frames = useRef<Array<HTMLImageElement | undefined>>([]);
-  const shown = useRef(-1);
   const [layerIdx, setLayerIdx] = useState(0);
+  const onProgress = useCallback((p: number) => setLayerIdx(Math.min(LAYERS.length - 1, Math.floor(p * LAYERS.length))), []);
+  const { sectionRef, canvasRef, status } = usePinnedSequence({
+    count: FRAME_COUNT,
+    width: FRAME_W,
+    height: FRAME_H,
+    src: frameSrc,
+    frameAt,
+    onProgress,
+  });
 
-  const draw = useCallback((target: number) => {
-    const ctx = canvasRef.current?.getContext("2d");
-    if (!ctx) return;
-    let i = target;
-    while (i >= 0 && !frames.current[i]) i -= 1;
-    const img = frames.current[i];
-    if (!img || shown.current === i) return;
-    shown.current = i;
-    ctx.drawImage(img, 0, 0, FRAME_W, FRAME_H);
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    const step = window.matchMedia("(max-width: 720px)").matches ? 2 : 1;
-
-    const loadAll = async () => {
-      const first = await loadFrame(0).catch(() => undefined);
-      if (cancelled || !first) return;
-      frames.current[0] = first;
-      draw(0);
-      for (let i = 1; i < FRAME_COUNT; i += step) {
-        const batch = Array.from({ length: Math.min(6, Math.ceil((FRAME_COUNT - i) / step)) }, (_, b) => i + b * step);
-        const done = await Promise.all(batch.map((n) => loadFrame(n).catch(() => undefined)));
-        if (cancelled) return;
-        done.forEach((img, b) => {
-          frames.current[batch[b]] = img;
-        });
-        i += (batch.length - 1) * step;
-      }
-    };
-
-    const section = sectionRef.current;
-    if (!section) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          io.disconnect();
-          void loadAll();
-        }
-      },
-      { rootMargin: "120% 0px" },
-    );
-    io.observe(section);
-    return () => {
-      cancelled = true;
-      io.disconnect();
-    };
-  }, [draw]);
-
-  useEffect(() => {
-    let raf = 0;
-    const update = () => {
-      raf = 0;
-      const el = sectionRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const travel = rect.height - window.innerHeight;
-      const p = travel > 0 ? clamp01(-rect.top / travel) : 0;
-      draw(Math.round(clamp01((p - 0.03) / 0.94) * (FRAME_COUNT - 1)));
-      setLayerIdx(Math.min(LAYERS.length - 1, Math.floor(p * LAYERS.length)));
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      if (raf) cancelAnimationFrame(raf);
-    };
-  }, [draw]);
+  if (status === "failed") return <StaticSystem />;
 
   return (
     <div ref={sectionRef} className="fde-pin" style={{ "--stops": LAYERS.length } as React.CSSProperties}>
@@ -163,12 +89,14 @@ function PinnedSystem() {
 
 export function OrbitSequence() {
   const reduced = useReducedMotion();
+  const saver = useDataSaver();
+  const still = reduced || saver;
   return (
     <section id="system" className="fde-system" aria-labelledby="fde-system-title">
       <h2 id="fde-system-title" className="fde-h2 fde-system-title">
         Five layers. Each one can only be reached through the one below.
       </h2>
-      {reduced ? <StaticSystem /> : <PinnedSystem />}
+      {still ? <StaticSystem /> : <PinnedSystem />}
     </section>
   );
 }

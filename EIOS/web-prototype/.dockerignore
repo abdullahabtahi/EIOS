@@ -5,3 +5,6 @@ node_modules
 *.md
 tsconfig.tsbuildinfo
 CLAUDE.md.bak
+asset-sources
+public/landing/**/*.webp.json
+

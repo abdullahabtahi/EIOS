@@ -22,6 +22,17 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
+        // Landing rasters sit in public/, which Next serves with max-age=0. The page asks for them with a
+        // ?v= version (components/landing/assets.ts), so a change ships under a new URL and these can be immutable.
+        source: '/landing/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
         source: '/api/cockpit/geo/reference',
         headers: [
           {
