@@ -172,7 +172,21 @@
   letter-spacing: 0.04em;
   color: var(--ink-2);
 }
-.fde-footer-base span:first-child {
+.fde-footer-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 20px;
+}
+.fde-social {
+  display: inline-flex;
+  color: var(--ink-2);
+  transition: color 0.2s var(--ease);
+}
+.fde-social:hover,
+.fde-social:focus-visible {
+  color: var(--ink);
+}
+.fde-footer-base > span:first-child {
   color: var(--ink);
   letter-spacing: 0.18em;
   font-weight: 600;

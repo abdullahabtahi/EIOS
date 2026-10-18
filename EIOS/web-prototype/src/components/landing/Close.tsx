@@ -30,7 +30,25 @@ export function Close() {
           <span>
             Client data is synthetic with a planted answer key. Results are measured against that key, not production traffic.
           </span>
-          <a href="#top">Back to top ↑</a>
+          <span className="fde-footer-links">
+            <a href="#top">Back to top ↑</a>
+            <a
+              href="https://www.linkedin.com/in/abdullahabtahi/"
+              className="fde-social"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Abdullah Abtahi on LinkedIn"
+            >
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+                <rect x="2.5" y="2.5" width="19" height="19" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <circle cx="8" cy="8.2" r="1.3" fill="currentColor" />
+                <path
+                  d="M6.9 10.5h2.2V17H6.9zM11 10.5h2.1v.9c.4-.7 1.2-1.1 2.1-1.1 1.9 0 2.8 1.2 2.8 3.1V17h-2.2v-3.2c0-.9-.3-1.5-1.1-1.5-.9 0-1.5.6-1.5 1.6V17H11z"
+                  fill="currentColor"
+                />
+              </svg>
+            </a>
+          </span>
         </div>
       </footer>
     </section>
