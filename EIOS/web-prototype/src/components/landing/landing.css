@@ -1,0 +1,598 @@
+/* Landing case study. Scoped under .fde so nothing here reaches the cockpit tokens. */
+
+html:has(.fde) {
+  color-scheme: dark;
+  scrollbar-color: #343a42 #0e1116;
+  scroll-behavior: smooth;
+}
+html:has(.fde) body {
+  background: #0e1116;
+}
+
+.fde {
+  --ground: #0e1116;
+  --ink: #ecebe6;
+  --ink-2: rgb(236 235 230 / 0.68);
+  --ink-3: rgb(236 235 230 / 0.34);
+  --rule: rgb(236 235 230 / 0.16);
+  --sig: #9db7cf;
+  --warn: #d6a15f;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --pad: clamp(20px, 3.4vw, 56px);
+  --nav-h: 64px;
+
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--fde-sans), system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: clip;
+}
+.fde ::selection {
+  background: var(--sig);
+  color: var(--ground);
+}
+.fde :focus-visible {
+  outline: 1px solid var(--sig);
+  outline-offset: 4px;
+}
+.fde a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+.fde-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.fde-h2 {
+  font-weight: 400;
+  font-size: clamp(1.7rem, 3vw, 2.75rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  max-width: 24ch;
+  margin: 0;
+}
+.fde-note {
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  max-width: 58ch;
+  margin: 0;
+}
+.fde-tag {
+  display: inline-block;
+  margin-left: 0.5em;
+  padding: 0 6px;
+  border: 1px solid var(--rule);
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  line-height: 16px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  vertical-align: 0.1em;
+}
+
+/* Navigation */
+.fde-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  height: var(--nav-h);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  padding: 0 var(--pad);
+  background: var(--ground);
+  border-bottom: 1px solid var(--rule);
+}
+.fde-wordmark {
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-decoration: none;
+  font-size: 0.9375rem;
+}
+.fde-nav-links {
+  display: flex;
+  gap: 32px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+}
+.fde-nav-links a {
+  color: var(--ink-2);
+  text-decoration: none;
+  transition: color 0.2s var(--ease);
+}
+.fde-nav-links a:hover {
+  color: var(--ink);
+}
+.fde-nav-cta {
+  justify-self: end;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  border: 1px solid var(--ink-3);
+  padding: 8px 14px;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.fde-nav-cta:hover {
+  background: var(--ink);
+  color: var(--ground);
+  border-color: var(--ink);
+}
+
+/* Hero */
+.fde-hero {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.7fr) minmax(0, 1.7fr);
+  gap: clamp(24px, 3vw, 56px);
+  padding: 40px var(--pad) 32px;
+  min-height: calc(100svh - var(--nav-h));
+}
+.fde-hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.fde-crumb {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
+.fde-crumb-pill {
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  padding: 3px 14px;
+  color: var(--ink);
+}
+.fde-crumb-arrow {
+  width: 34px;
+  height: 1px;
+  background: var(--ink-2);
+  position: relative;
+}
+.fde-crumb-arrow::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -3px;
+  width: 6px;
+  height: 6px;
+  border-top: 1px solid var(--ink-2);
+  border-right: 1px solid var(--ink-2);
+  transform: rotate(45deg);
+}
+.fde-display {
+  font-weight: 400;
+  font-size: clamp(2.5rem, 4.2vw, 4.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  margin: 0;
+}
+.fde-lede {
+  color: var(--ink-2);
+  max-width: 40ch;
+  margin: 0;
+}
+.fde-scroll-cue {
+  margin-top: auto;
+  align-self: flex-start;
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--ink-3);
+  padding-bottom: 4px;
+  text-decoration: none;
+}
+.fde-scroll-cue:hover {
+  border-color: var(--ink);
+}
+
+.fde-diagram {
+  --sh: max(480px, calc(100svh - var(--nav-h) - 80px));
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: stretch;
+  column-gap: clamp(8px, 1.4vw, 24px);
+  justify-content: start;
+}
+.fde-stack {
+  height: var(--sh);
+  aspect-ratio: 760 / 840;
+  max-width: 100%;
+}
+.fde-stack-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* Stack drawing */
+.fde-layer {
+  --stroke: var(--ink);
+  --soft: rgb(236 235 230 / 0.62);
+  --sigc: var(--sig);
+  animation: fde-rise 1s var(--ease) both;
+  animation-delay: calc(var(--i) * 130ms);
+  transition: none;
+}
+.fde-stack-svg[data-active] .fde-layer:not(.is-active) {
+  --stroke: rgb(236 235 230 / 0.3);
+  --soft: rgb(236 235 230 / 0.18);
+  --sigc: rgb(157 183 207 / 0.3);
+}
+.fde-slab {
+  fill: var(--ground);
+  stroke: var(--stroke);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  animation: fde-draw 1.4s var(--ease) both;
+  animation-delay: calc(var(--i) * 130ms);
+}
+.fde-line {
+  fill: none;
+  stroke: var(--soft);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+.fde-fine {
+  stroke-width: 0.6;
+}
+.fde-dash {
+  stroke-dasharray: 3 4;
+}
+.fde-signal {
+  stroke: var(--sigc);
+  stroke-width: 1.6;
+}
+.fde-solid {
+  fill: var(--ground);
+  stroke: var(--stroke);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+.fde-fill-signal {
+  fill: var(--sigc);
+  stroke: none;
+}
+.fde-fill-ink {
+  fill: var(--stroke);
+  stroke: none;
+}
+.fde-node {
+  fill: var(--ground);
+  stroke: var(--stroke);
+  vector-effect: non-scaling-stroke;
+}
+.fde-hub {
+  fill: none;
+  stroke: var(--sigc);
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+.fde-art {
+  animation: fde-fade 1.2s var(--ease) both;
+  animation-delay: calc(var(--i) * 130ms + 500ms);
+}
+.fde-arrow-line,
+.fde-arrow-run {
+  fill: none;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+.fde-arrow-line {
+  stroke: rgb(157 183 207 / 0.55);
+  stroke-dasharray: 1;
+  animation: fde-draw 2s var(--ease) 0.4s both;
+}
+.fde-arrow-head {
+  fill: none;
+  stroke: var(--sig);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  animation: fde-fade 0.6s ease 2s both;
+}
+.fde-arrow-run {
+  stroke: var(--ink);
+  stroke-dasharray: 0.05 0.95;
+  animation: fde-run 5.5s linear 2.4s infinite;
+}
+
+@keyframes fde-rise {
+  from {
+    opacity: 0;
+    transform: translateY(-22px);
+  }
+}
+@keyframes fde-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes fde-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes fde-run {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.fde-edge {
+  fill: none;
+  stroke: var(--stroke);
+  stroke-width: 1.2;
+  stroke-linejoin: round;
+}
+.fde-leader {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+}
+
+/* Hero legend: one bracketed band per slab, aligned to the slab's height in the drawing */
+.fde-legend {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 240px;
+  margin-left: calc(var(--sh) * -0.1267);
+}
+.fde-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: center;
+  gap: 4px;
+  color: var(--ink-2);
+  transition: color 0.2s var(--ease);
+}
+.fde-band.is-active,
+.fde-band:hover {
+  color: var(--ink);
+}
+.fde-band-n {
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.fde-band-body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding-left: 14px;
+  border-left: 1px solid var(--ink-3);
+  position: relative;
+}
+.fde-band-body::before,
+.fde-band-body::after {
+  content: "";
+  position: absolute;
+  left: -1px;
+  width: 8px;
+  height: 1px;
+  background: var(--ink-3);
+}
+.fde-band-body::before {
+  top: 0;
+}
+.fde-band-body::after {
+  bottom: 0;
+}
+.fde-band.is-active .fde-band-body {
+  border-color: var(--sig);
+}
+.fde-band.is-active .fde-band-body::before,
+.fde-band.is-active .fde-band-body::after {
+  background: var(--sig);
+}
+.fde-band-name {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.fde-band-body ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+}
+.fde-band-body li::before {
+  content: "→ ";
+  color: var(--ink-3);
+}
+
+/* Situation */
+.fde-situation {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(32px, 6vw, 112px);
+  padding: clamp(96px, 14vw, 200px) var(--pad) clamp(80px, 10vw, 160px);
+  border-top: 1px solid var(--rule);
+}
+.fde-situation-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.fde-situation-copy p {
+  color: var(--ink-2);
+  max-width: 54ch;
+  margin: 0;
+}
+.fde-situation-copy .fde-h2 {
+  margin-bottom: 12px;
+  max-width: 20ch;
+}
+.fde-engagement {
+  margin: 0;
+  align-self: end;
+}
+.fde-engagement > div {
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  gap: 16px;
+  padding: 14px 0;
+  border-top: 1px solid var(--rule);
+}
+.fde-engagement > div:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.fde-engagement dt {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  padding-top: 3px;
+}
+.fde-engagement dd {
+  margin: 0;
+}
+
+/* Pinned orbit */
+.fde-system {
+  border-top: 1px solid var(--rule);
+  padding-top: clamp(72px, 9vw, 140px);
+}
+.fde-system-title {
+  padding: 0 var(--pad);
+  max-width: 28ch;
+}
+.fde-pin {
+  height: calc(var(--stops) * 85svh + 100svh);
+}
+.fde-pin-sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  box-sizing: border-box;
+  /* A sticky box is its own stacking context: it needs its own ground for the frame's screen blend to land on. */
+  background: var(--ground);
+  padding: var(--nav-h) var(--pad) 24px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 0.9fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: clamp(16px, 3vw, 48px);
+}
+.fde-rail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 18px;
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgb(236 235 230 / 0.58);
+}
+.fde-rail li {
+  transition: color 0.3s var(--ease);
+}
+.fde-rail li.is-lit {
+  color: var(--ink);
+}
+.fde-captions {
+  display: grid;
+}
+.fde-caption {
+  grid-area: 1 / 1;
+  align-self: center;
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity 0.5s var(--ease), transform 0.7s var(--ease);
+  pointer-events: none;
+}
+.fde-caption.is-active {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.fde-caption-name {
+  margin: 0 0 20px;
+  font-weight: 400;
+  font-size: clamp(2.4rem, 4.6vw, 4.5rem);
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+.fde-caption-body {
+  margin: 0 0 24px;
+  max-width: 44ch;
+  color: var(--ink-2);
+  font-size: 1.0625rem;
+}
+.fde-caption-fact {
+  margin: 0;
+  max-width: 44ch;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  font-size: 0.9375rem;
+}
+.fde-frame {
+  justify-self: end;
+  height: min(100%, 100svh - var(--nav-h) - 24px);
+  aspect-ratio: 800 / 864;
+  max-width: 100%;
+  /* Frames have their blacks crushed to pure black, so screen blending drops the clip's backdrop into the page ground. */
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent),
+    linear-gradient(to bottom, transparent, #000 7%, #000 93%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 14%, #000 86%, transparent),
+    linear-gradient(to bottom, transparent, #000 7%, #000 93%, transparent);
+  mask-composite: intersect;
+}
+.fde-frame canvas,
+.fde-frame img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+.fde-system-static {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--pad);
+  padding: 48px var(--pad) 96px;
+  align-items: start;
+}
+.fde-system-list {
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+.fde-system-list .fde-caption {
+  opacity: 1;
+  transform: none;
+}
+

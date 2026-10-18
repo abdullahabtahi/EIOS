@@ -1,0 +1,123 @@
+/* Pinned push-in before the close: the stack flown through to the workstation layer */
+.fde-push {
+  height: 300svh;
+}
+.fde-push-sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  box-sizing: border-box;
+  /* A sticky box is its own stacking context: it needs its own ground for the frame's screen blend to land on. */
+  background: var(--ground);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  padding: var(--nav-h) var(--pad) clamp(28px, 6svh, 64px);
+  gap: 20px;
+  overflow: hidden;
+}
+.fde-push-frame {
+  min-height: 0;
+  justify-self: center;
+  width: min(100%, calc((100svh - var(--nav-h) - 220px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  align-self: center;
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 80%, transparent),
+    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to bottom, transparent, #000 10%, #000 80%, transparent),
+    linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-composite: intersect;
+}
+.fde-push-frame canvas,
+.fde-push-frame img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+.fde-push-copy {
+  display: grid;
+  max-width: 62ch;
+}
+.fde-push-stage {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.5s var(--ease), transform 0.7s var(--ease);
+  pointer-events: none;
+}
+.fde-push-stage.is-active {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.fde-push-stage .fde-h2 {
+  margin: 0 0 10px;
+  font-size: clamp(1.5rem, 2.8vw, 2.4rem);
+}
+.fde-push-stage .fde-note {
+  margin: 0;
+}
+.fde-push-static {
+  display: grid;
+  gap: 24px;
+  padding: 48px var(--pad);
+}
+.fde-push-static .fde-push-frame {
+  width: min(100%, 1100px);
+}
+.fde-push-static .fde-push-stage {
+  grid-area: auto;
+  margin-bottom: 20px;
+}
+@media (max-width: 720px) {
+  .fde-push {
+    height: 220svh;
+  }
+  .fde-push-sticky {
+    padding-bottom: 28px;
+  }
+  .fde-push-frame {
+    width: 128%;
+    max-width: none;
+  }
+  .fde-push-sticky {
+    justify-items: center;
+  }
+  .fde-push-copy {
+    justify-self: start;
+  }
+}
+
+/* Architecture: the trace is driven by scroll on wide screens */
+.fde-arch-pin.is-pinned {
+  height: 620svh;
+}
+.fde-arch-pin.is-pinned .fde-arch-pin-sticky {
+  position: sticky;
+  top: var(--nav-h);
+  height: calc(100svh - var(--nav-h));
+  box-sizing: border-box;
+  padding: 12px 0 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: var(--ground);
+}
+.fde-arch-pin.is-pinned .fde-arch-svg {
+  width: auto;
+  max-width: 100%;
+  max-height: calc(100svh - var(--nav-h) - 150px);
+  margin: 0 auto;
+}
+.fde-arch-pin.is-pinned .fde-arch-panel {
+  position: static;
+  max-height: calc(100svh - var(--nav-h) - 80px);
+  overflow-y: auto;
+}
+.fde-arch-hint {
+  margin: 10px 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-2);
+}
