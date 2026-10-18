@@ -268,7 +268,7 @@ export function Architecture() {
                   : "You have the controls. Scroll back to the top of this section to hand them back."}
               </p>
               <a href="#gcloud" className="fde-scroll-cue">
-                Skip to the Google Cloud services{" "}
+                Skip the trace{" "}
                 <span aria-hidden="true">↓</span>
               </a>
             </div>
