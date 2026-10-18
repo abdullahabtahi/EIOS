@@ -23,12 +23,19 @@ the hash-chained decision ledger in Firestore (database `eios-state`).
 2. Build both images as the pipeline identity (see the header of `EIOS/services/cloudbuild.cockpit.yaml`).
 3. Put the two image digests in `terraform.tfvars` (`cockpit_api_image`, `cockpit_web_image`) and `terraform apply`.
 4. Smoke test: sign in as each operator; stage, approve twice (two distinct approvers), verify the ledger.
+5. A web-only release is enough when nothing under `EIOS/src`, `EIOS/services` or `EIOS/config` changed since the live `eios-api` revision was built (`git diff <that commit> HEAD -- EIOS/src EIOS/services EIOS/config`, with the commit found from the revision's creation time). Otherwise release the two services together: the web service calls API routes (ambient briefs, evidence replay, list changes, the shelf) that an older API revision may not have.
+6. Check the public site after the release:
+   - `/landing/orbit/f_001.webp?v=1` answers with `Cache-Control: public, max-age=31536000, immutable`, and `/landing/orbit/f_001.webp.json` answers 404 (generation prompts are kept in `asset-sources/`, not served).
+   - A landing raster that changes needs a new `LANDING_ASSET_VERSION` in `src/components/landing/assets.ts`, because the old URL is cached for a year.
+   - `/login` shows the evaluator guide link and the evaluator accounts card; signing in lands on `/cockpit/geospatial`, and the header shows a readable name (the account's display name, else the mailbox made readable).
+   - The cockpit's icons render (the Material Symbols stylesheet loads from `src/app/cockpit/layout.tsx`, not from the root layout).
 
 ## ADK assistant
 The cockpit's copilot endpoint is served by the ADK assistant (`src/eios/assistant/`, ADR-019) and nothing else; the
-legacy copilot and the `EIOS_ASSISTANT_RUNTIME` switch were removed. **Prerequisite for the next deploy:** the Model
-Armor templates and `GOOGLE_GENAI_USE_ENTERPRISE` below must exist, or every copilot query answers 503 `offline`.
-Nothing in this section is applied by Terraform yet. There is no kill switch: to take the assistant out of service,
+legacy copilot and the `EIOS_ASSISTANT_RUNTIME` switch were removed. **Prerequisite for every deploy:** the Model
+Armor templates and `GOOGLE_GENAI_USE_ENTERPRISE` below must be set, or every copilot query answers 503 `offline`.
+The live `eios-api` revision in `eios-hackathon-prod` carries both template variables and `GOOGLE_GENAI_USE_ENTERPRISE` (read from its
+environment on 2026-10-19), so a redeploy from the same tfvars keeps them. There is no kill switch: to take the assistant out of service,
 redeploy the previous revision.
 
 | Variable | Value | Notes |
@@ -37,7 +44,7 @@ redeploy the previous revision.
 | `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION` | project id, `global` | The current model generation is served from the `global` endpoint only. |
 | `EIOS_GEMINI_MODEL` | model id | Lives in tfvars/config only (ADR-002). |
 | `EIOS_PERSISTENCE`, `EIOS_FIRESTORE_DATABASE` | `firestore`, `eios-state` | Conversation sessions. Outside dev/test the service refuses to start without them: an in-memory thread would not survive a revision or be shared across instances. |
-| `EIOS_MODEL_ARMOR_PROMPT_TEMPLATE`, `EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE` | full template resource names | Both or neither. Outside dev/test the service refuses to start without both. The templates do not exist yet: they need Terraform, which is not written until approved. If screening fails the turn is blocked, never passed through. |
+| `EIOS_MODEL_ARMOR_PROMPT_TEMPLATE`, `EIOS_MODEL_ARMOR_RESPONSE_TEMPLATE` | full template resource names | Both or neither. Outside dev/test the service refuses to start without both. They are created by `infra/modules/model_armor` (see below). If screening fails the turn is blocked, never passed through. |
 | `EIOS_ASSISTANT_TURN_DEADLINE_S` | default 30 `[ASSUMPTION]` | A turn past this returns a labelled timeout, not a guess. |
 | `EIOS_ASSISTANT_MAX_LLM_CALLS` | default 12 `[ASSUMPTION]` | Tool rounds plus up to three assembly attempts. |
 | `EIOS_ASSISTANT_HISTORY_TURNS` | default 6 `[ASSUMPTION]` | Earlier turns the model reads; the stored thread keeps all of them. |
@@ -80,7 +87,7 @@ confidence and blocking. Sensitive Data Protection is off on purpose: answers ca
 - **Evidence bucket retention lock** disabled (`evidence_lock_retention = false`) to avoid an irreversible lock.
 
 ## Reviewer access (hackathon review)
-Shared accounts for reviewers and judges, shown on the login page. The password is public by design, so the accounts only see the demo's synthetic data; rotate or remove them when the review ends.
+Shared accounts for reviewers and judges, shown on the login page as "Evaluator accounts" beside the evaluator guide link (`src/components/auth/login/evaluator-guide.tsx`). The card's note defaults in code to "client activity is synthetic, the reference layers are real public data"; a `note` in `demo_access` overrides it, so leave it out unless the text is true. The password is public by design, so the accounts only see the demo's synthetic data; rotate or remove them when the review ends.
 1. Create the accounts: `EIOS_REVIEWER_PASSWORD=<12+ characters> uv run python -m tools.seed_demo_operators --project <id> --credentials-file <new file> --reviewers --skip-demo-operators`. Add `--owner-email you@example.com` to authorise a real mailbox as a `compliance_head` (its generated password goes to the credentials file). `--skip-demo-operators` keeps the three standard accounts' passwords unchanged.
 2. Publish the card: set `demo_access` in the local tfvars (JSON, see `variables.tf`) and apply the web service. The web service reads it at run time from `EIOS_DEMO_ACCESS`; nothing is in git or in the image.
 3. Take it down: remove `demo_access`, apply, then disable or rotate the accounts (reset their password with the same tool, or disable them in Identity Platform).
