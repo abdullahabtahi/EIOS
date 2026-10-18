@@ -177,6 +177,26 @@ The model never writes SQL, GQL, coordinates or layer settings. It can only name
 
 ---
 
+## BigQuery Graph: the ontology as a queryable property graph
+
+The network side of the ontology (who shares a device, a payment token, or a login gateway with whom) is a **BigQuery property graph**, `warm_graph.aml_geo`, queried with **GQL**. Most AML stacks bolt a separate graph database onto the warehouse. Here the graph lives next to the data it is derived from, in the warehouse the rest of the platform already uses.
+
+<img src="docs/img/bigquery-graph.png" alt="BigQuery Studio showing the aml_geo property graph: Account, Gateway, Country and Identifier nodes connected by LocatedIn, LoggedInVia, PaidVia, RegisteredIn and Uses edges" width="100%">
+
+<sub>The <code>aml_geo</code> graph in BigQuery Studio: 4 node types, 5 edge types.</sub>
+
+| | |
+|---|---|
+| **Model** | Nodes: `Account`, `Gateway`, `Country`, `Identifier` (device, payment token, IP). Edges: `REGISTERED_IN`, `LOGGED_IN_VIA`, `LOCATED_IN`, `PAID_VIA`, `USES`. Built from the world's raw frames, not from any engine's output, so it is an independent second derivation. |
+| **How it is queried** | A catalogue of **named queries** (`shared_exits`, `account_neighbourhood`, `exit_ring`, `country_links`), each a GQL `MATCH` run through `GRAPH_TABLE`. The agent can only name a query from the catalogue. It never writes GQL or SQL. |
+| **Where it is used** | The geospatial agent's "who else uses this exit?" and "what is this account's neighbourhood?" answers, the linked-accounts list in the dossier, and the effect of a list change (FATF, EU, Basel) on the book. Each answer says it came from BigQuery Graph and how long it took. |
+| **Why it matters** | A ring is a multi-hop pattern: account → gateway ← account, or account → shared device ← account. In GQL that is one readable pattern instead of a stack of self-joins, and it runs where the data already lives. No second system to sync, secure or audit. |
+| **Cost control** | GQL runs on a dedicated Enterprise reservation with a baseline of 0 slots and autoscale capped at 50. Each graph job names the reservation, so nothing else in the project is billed differently. An idle reservation costs nothing. |
+
+**How we know it is right.** A DuckDB double runs the same named queries as plain joins, so offline development, CI and a parity check need no cloud. Measured: BigQuery equals the local double on every query, and the graph's shared-exit accounts equal the engine's independent flags (71 of 71). Warm queries take 1.7 to 1.8 s, the first cold query about 9 s, and 54 to 133 slot-milliseconds each. The store also refuses graph tables built from a different world than the one being served. Details in [`docs/geospatial-milestones.md`](docs/geospatial-milestones.md) (N1). BigQuery Graph currently runs in the dev project.
+
+---
+
 ## Data: synthetic core, real reference layer
 
 **The transactional world is synthetic.** Clients, payments, devices, partners and alerts come from seeded generators with planted ground truth (rings, round-trip wash trades, churning partners, shared-exit gateways), so engines can be scored on whether they *find what was planted*. No real customer data is used. A signed-in demo shows synthetic accounts, and nothing in this repository should be mistaken for production data.
@@ -256,7 +276,7 @@ Agents are judged through an agent port against golden cases, never by the agent
 |---|---|
 | **Gen AI** | Google ADK 2.11 · Gemini on Vertex AI · Model Armor · Agent Search · Firestore sessions |
 | **Backend** | Python 3.14 · FastAPI · DuckDB · scikit-learn · NetworkX · Pydantic |
-| **Data and graph** | BigQuery (warm tier, BigQuery Graph) · Pub/Sub · Parquet |
+| **Data and graph** | BigQuery (warm tier) · **BigQuery Graph (GQL)** · Pub/Sub · Parquet |
 | **Frontend** | Next.js 16 · React 19 · Tailwind 4 · deck.gl on Google Maps · Firebase auth |
 | **Security and infra** | Cloud KMS · Secret Manager · Cloud Run · Terraform · GitHub Actions |
 | **Quality** | pytest · Vitest · Ruff · strict mypy · CodeQL · Newman |
