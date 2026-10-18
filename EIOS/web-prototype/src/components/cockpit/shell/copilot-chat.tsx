@@ -176,7 +176,6 @@ export function CopilotChat() {
               Clear conversation
             </button>
           )}
-          <ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} placement="down" />
         </div>
       </div>
 
@@ -226,6 +225,7 @@ export function CopilotChat() {
         pending={pending > 0}
         inputRef={inputRef}
         onKeyDown={(e) => e.key === 'Escape' && inputRef.current?.blur()}
+        inlineAccessory={<ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />}
       />
     </section>
   );

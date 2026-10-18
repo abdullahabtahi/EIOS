@@ -32,7 +32,11 @@ export function DossierColumn() {
   return (
     <div className="w-full h-full min-w-0 flex flex-col bg-white">
       {/* The same height, ground and segmented control as the canvas bar beside it, so the two headers read as one line. */}
-      <div className="flex h-11 shrink-0 items-center border-b border-slate-200 bg-white px-3">
+      <div className="flex h-11 shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3">
+        <h2 className="flex min-w-0 items-center gap-2 font-mono text-xs font-bold uppercase tracking-tight text-slate-900">
+          <span aria-hidden="true" className="material-symbols-sharp text-base text-cx-accent shrink-0">article</span>
+          <span className="truncate">Copilot Dossier</span>
+        </h2>
       <div role="tablist" aria-label="Dossier or chat" className="flex items-center bg-cx-sub p-0.5 border border-cx-line">
         <Tab active={!chatShown} onClick={showDossier}>
           Dossier

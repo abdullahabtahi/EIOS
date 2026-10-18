@@ -18,8 +18,10 @@ export interface ChatComposerProps {
   readonly pending: boolean;
   /** What the question is about, shown as a chip under the text. */
   readonly context?: React.ReactNode;
-  /** What sits beside the send button: the model picker. */
+  /** What sits under the frame at the right: the model picker. */
   readonly accessory?: React.ReactNode;
+  /** What sits inside the frame, before the send icon: the model picker, when there is no room for a line under it. */
+  readonly inlineAccessory?: React.ReactNode;
   readonly inputRef?: React.RefObject<HTMLTextAreaElement | null>;
   readonly onKeyDown?: React.KeyboardEventHandler<HTMLTextAreaElement>;
 }
@@ -27,7 +29,7 @@ export interface ChatComposerProps {
 /** [ASSUMPTION] about six lines at the text size; beyond that the field scrolls. */
 const MAX_FIELD_PX = 132;
 
-export function ChatComposer({ value, onChange, onSubmit, placeholder, ariaLabel, sendLabel, pending, context, accessory, inputRef, onKeyDown }: ChatComposerProps) {
+export function ChatComposer({ value, onChange, onSubmit, placeholder, ariaLabel, sendLabel, pending, context, accessory, inlineAccessory, inputRef, onKeyDown }: ChatComposerProps) {
   const own = React.useRef<HTMLTextAreaElement | null>(null);
   const field = inputRef ?? own;
   const disabled = pending || !value.trim();
@@ -65,6 +67,7 @@ export function ChatComposer({ value, onChange, onSubmit, placeholder, ariaLabel
           aria-label={ariaLabel}
           className="block max-h-[132px] min-h-[44px] min-w-0 flex-1 resize-none rounded-none bg-transparent px-3.5 py-3 text-[13px] leading-5 text-cx-ink outline-none placeholder:text-cx-muted scrollbar-thin"
         />
+        {inlineAccessory && <div className="my-1.5 flex shrink-0 items-center">{inlineAccessory}</div>}
         <button
           type="submit"
           disabled={disabled}
