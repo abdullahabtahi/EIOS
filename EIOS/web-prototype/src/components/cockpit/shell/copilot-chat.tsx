@@ -7,6 +7,7 @@
  */
 
 import * as React from 'react';
+import { useScrollToEnd } from './use-scroll-end';
 import { useCockpit } from '../state/cockpit-context';
 import type { AssistantProposal, CopilotQueryResponse } from '../state/cockpit-types';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
@@ -75,15 +76,12 @@ export function CopilotChat() {
   const models = useModelChoice();
   const [pending, setPending] = React.useState(0);
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const endRef = React.useRef<HTMLDivElement>(null);
   const items = threads[role] ?? [];
 
   const patch = (forRole: string, change: (items: ChatItem[]) => ChatItem[]) =>
     setThreads((all) => ({ ...all, [forRole]: change(all[forRole] ?? []) }));
 
-  React.useEffect(() => {
-    if (typeof endRef.current?.scrollIntoView === 'function') endRef.current.scrollIntoView({ behavior: 'smooth' });
-  }, [items]);
+  const listRef = useScrollToEnd<HTMLDivElement>(items);
 
   React.useEffect(() => {
     if (state.chatFocusTick === 0) return;
@@ -181,7 +179,7 @@ export function CopilotChat() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-4">
+      <div ref={listRef} className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-4">
         {items.length === 0 ? (
           <div className="py-8 text-center space-y-4">
             <div className="space-y-1">
@@ -216,7 +214,6 @@ export function CopilotChat() {
             ),
           )
         )}
-        <div ref={endRef} />
       </div>
 
       <form

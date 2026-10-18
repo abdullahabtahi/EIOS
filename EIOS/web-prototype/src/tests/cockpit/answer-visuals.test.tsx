@@ -207,3 +207,13 @@ describe('a chat turn with a visual', () => {
     expect(document.querySelector('[data-visual]')).toBeNull();
   });
 });
+
+describe('AnswerVisuals caption', () => {
+  it('does not repeat a time the answer already states', () => {
+    const withAsOf = { ...table, as_of: '2026-10-14T08:00:00Z' };
+    const { rerender } = render(<AnswerVisuals visuals={visuals(withAsOf)} />);
+    expect(screen.getByText(/as of 2026-10-14 08:00 UTC/)).toBeTruthy();
+    rerender(<AnswerVisuals visuals={visuals(withAsOf)} answerText="Done.\n\n_as of 2026-10-14 08:00 UTC._" />);
+    expect(screen.queryByText(/as of 2026-10-14 08:00 UTC/)).toBeNull();
+  });
+});

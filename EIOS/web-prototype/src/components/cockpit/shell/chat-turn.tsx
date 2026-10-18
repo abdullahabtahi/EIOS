@@ -98,7 +98,7 @@ export function ChatTurnView({ variant = 'default', turn, proposalStates, onStag
             className={`text-xs leading-relaxed font-sans ${plain ? "text-cx-ink" : "text-slate-800"}`}
           />
 
-          <AnswerVisuals visuals={response.visuals ?? []} />
+          <AnswerVisuals visuals={response.visuals ?? []} answerText={response.responseMarkdown} />
 
           {figures.length > 0 && <FigureBadges figures={figures} />}
           <SourceChips sources={response.sources ?? []} />

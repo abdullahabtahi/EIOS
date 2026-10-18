@@ -505,7 +505,9 @@ def assemble_draft(
         return Rejected(tuple(problems))
     shown = tuple(dict.fromkeys([*state.figures.values(), *traced]))
     for index, passage in enumerate(state.quoted):
-        text = text.replace(f"{_SENTINEL}{index}{_SENTINEL}", render_quote(passage))
+        # The credit line closes a quote, so the full stop the model typed after the placeholder would stand alone.
+        mark = re.compile(rf"{_SENTINEL}{index}{_SENTINEL}[ \t]*[.;,]?")
+        text = mark.sub(lambda _m, p=passage: render_quote(p), text, count=1)
     return Assembled(
         text=text.strip() + _footer(shown), figures=shown, sources=_sources_of(state.quoted)
     )

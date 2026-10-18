@@ -11,9 +11,11 @@ import type { AssistantProposal, CopilotQueryResponse, ViewCommand } from '../st
 import { ChatDividerView, type ChatItem, type ChatTurn, ChatTurnView } from '../shell/chat-turn';
 import { describeCopilotFailure } from '../shell/copilot-chat';
 import type { ProposalState } from '../shell/copilot-proposals';
+import { useScrollToEnd } from '../shell/use-scroll-end';
 import { ModelPicker, useModelChoice } from '../shell/model-picker';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { authFetch } from '@/lib/auth/token';
+import { readGeoChat, saveGeoChat } from './geo-chat-store';
 import { geoSuggestions, type MapContextPayload, moveLabel } from './geo-moves';
 
 import { GeoEvidence } from './geo-evidence';
@@ -99,20 +101,21 @@ function TurnMoves({ moves, onMove }: { readonly moves: readonly ViewCommand[]; 
 }
 
 export function GeoAsk({ context, selected, onMove, onPending, onAnswered, intent }: GeoAskProps) {
-  const [items, setItems] = React.useState<ChatItem[]>([]);
-  const [proposalStates, setProposalStates] = React.useState<Record<string, ProposalState>>({});
+  const [items, setItems] = React.useState<ChatItem[]>(() => [...readGeoChat().items]);
+  const [proposalStates, setProposalStates] = React.useState<Record<string, ProposalState>>(() => ({ ...readGeoChat().proposalStates }));
   const [query, setQuery] = React.useState('');
   const [pending, setPending] = React.useState(false);
   const models = useModelChoice();
-  const endRef = React.useRef<HTMLDivElement>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
   // A request to be ready for a question is answered once per id: the text lands in the box during the render that sees it.
   const [seenIntent, setSeenIntent] = React.useState<number | null>(null);
   const onScreen = selectionKey(selected);
 
+  const listRef = useScrollToEnd<HTMLDivElement>(items);
+  // Settled turns are kept for the session; a turn still loading is not (it would come back as a spinner that never ends).
   React.useEffect(() => {
-    if (typeof endRef.current?.scrollIntoView === 'function') endRef.current.scrollIntoView({ behavior: 'smooth' });
-  }, [items]);
+    saveGeoChat({ items: items.filter((i) => i.kind !== 'turn' || !i.isLoading), proposalStates });
+  }, [items, proposalStates]);
 
   React.useEffect(() => onPending?.(pending), [pending, onPending]);
 
@@ -182,7 +185,7 @@ export function GeoAsk({ context, selected, onMove, onPending, onAnswered, inten
         <ModelPicker quiet choices={models.choices} selected={models.selected} onSelect={models.select} />
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto border-t border-cx-line-soft p-4 scrollbar-thin">
+      <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto border-t border-cx-line-soft p-4 scrollbar-thin">
         {items.length === 0 ? (
           <div className="space-y-2">
             <h3 className="text-sm font-semibold leading-snug text-cx-ink">Ask why the map shows what it shows</h3>
@@ -225,7 +228,6 @@ export function GeoAsk({ context, selected, onMove, onPending, onAnswered, inten
             ),
           )
         )}
-        <div ref={endRef} />
       </div>
 
       <form

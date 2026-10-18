@@ -138,3 +138,12 @@ def test_with_no_run_named_the_excerpt_is_the_fallback() -> None:
         "{{quote:TEST-RULE-E.c1}}", facts={}, passages={LONG.passage_id: fallback}
     )
     assert isinstance(result, Assembled) and "not later than the next working day" in result.text
+
+
+def test_a_full_stop_typed_after_a_quote_does_not_stand_alone_on_its_line() -> None:
+    result = assemble(
+        "The duty is stated here:\n\n{{quote:TEST-RULE-A.c1}}.\n\nIt applies to every subject person."
+    )
+    assert isinstance(result, Assembled)
+    assert not any(line.strip() == "." for line in result.text.splitlines())
+    assert result.text.index("(MT)") < result.text.index("It applies")

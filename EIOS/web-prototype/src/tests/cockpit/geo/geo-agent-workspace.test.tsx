@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import React from 'react';
+import { clearGeoChat } from '@/components/cockpit/geo/geo-chat-store';
 import { FLOWS } from './flows-fixture';
 import { REFERENCE } from './reference-fixture';
 import { ACCOUNT, GATEWAY } from './account-fixture';
@@ -68,6 +69,7 @@ const ROUTES: Record<string, Reply> = {
 };
 
 beforeEach(() => {
+  clearGeoChat();
   window.history.replaceState(null, '', '/');
   authFetch.mockReset();
   authFetch.mockImplementation(async (url: string) => {
