@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1060" height="490" viewBox="0 0 1060 490" role="img" aria-label="ADK turn: Runner and plugins wrap a LoopAgent of prefetcher, drafter and assembler. Tool results are written to temp state which the assembler reads; a rejected draft loops back with feedback; an accepted one escalates and ends the loop."><style>svg{
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --fg: #16202e;
+  --muted: #566274;
+  --line: #d5dce6;
+  --edge: #45536a;
+  --adk-bg: #e3edff;  --adk: #2c5bcf;
+  --det-bg: #e1f3e8;  --det: #1d7646;
+  --ext-bg: #eceff4;  --ext: #75839a;
+  --gov-bg: #fff0d1;  --gov: #a8620a;
+  --geo-bg: #dbf3f1;  --geo: #0c7673;
+  --ml-bg:  #efe6fa;  --ml:  #7440b2;
+  
+  
+--font:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace;color:var(--edge)}@media (prefers-color-scheme:dark){svg{
+    --bg: #0e131b; --surface: #151c27; --fg: #e4eaf3; --muted: #97a3b8; --edge: #9aa7bd;
+    --line: #283244;
+    --adk-bg: #172746; --adk: #7ea5ff;
+    --det-bg: #12301f; --det: #5cc78b;
+    --ext-bg: #1c2330; --ext: #8996ac;
+    --gov-bg: #38290d; --gov: #f1b44f;
+    --geo-bg: #0e2f2e; --geo: #4fcdc6;
+    --ml-bg:  #281c3d; --ml:  #b995f2;
+    
+  }}
+svg text { fill: var(--fg); font-family: var(--font); font-size: 12.5px; }
+svg .b { font-weight: 600; }
+svg .m { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg .l { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg .lc { text-anchor: middle; }
+svg .le { text-anchor: end; }
+svg rect.n { stroke-width: 1.5; rx: 6; fill: var(--surface); stroke: var(--line); }
+svg rect.adk { fill: var(--adk-bg); stroke: var(--adk); }
+svg rect.det { fill: var(--det-bg); stroke: var(--det); }
+svg rect.ext { fill: var(--ext-bg); stroke: var(--ext); stroke-dasharray: 5 3; }
+svg rect.gov { fill: var(--gov-bg); stroke: var(--gov); }
+svg rect.geo { fill: var(--geo-bg); stroke: var(--geo); }
+svg rect.ml  { fill: var(--ml-bg);  stroke: var(--ml); }
+svg rect.frame { fill: none; stroke-dasharray: 6 4; stroke-width: 1.5; rx: 8; }
+svg rect.frame.adk { stroke: var(--adk); fill: none; }
+svg rect.frame.geo { stroke: var(--geo); fill: none; }
+svg rect.frame.ext { stroke: var(--ext); fill: none; }
+svg rect.frame.ml { stroke: var(--ml); fill: none; }
+svg .e { stroke: currentColor; stroke-width: 1.6; fill: none; }
+svg .e.d { stroke-dasharray: 5 4; }
+svg .e.back { stroke: var(--gov); color: var(--gov); }
+svg .e.ok { stroke: var(--det); color: var(--det); }
+svg rect.slow { fill: var(--gov-bg); stroke: var(--gov); stroke-width: 1.5; rx: 4; }
+svg rect.seg { fill: var(--adk-bg); stroke: var(--adk); stroke-width: 1.5; rx: 4; }
+svg rect.tool { fill: var(--det-bg); stroke: var(--det); stroke-width: 1.5; rx: 4; }
+svg rect.bg { fill: var(--ext-bg); stroke: var(--ext); stroke-width: 1.5; stroke-dasharray: 5 3; rx: 4; }
+</style><rect width="1060" height="490" fill="var(--surface)"/>
+      <defs><marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+
+      <rect class="n adk" x="20" y="14" width="1020" height="40"/>
+      <text class="b" x="34" y="30">Runner.run_async</text>
+      <text class="m" x="34" y="45">user_id = verified uid · session_id = "workstation:entity" · new_message · state_delta (fresh temp: state) · run_config</text>
+
+      <rect class="n" x="20" y="68" width="1020" height="38" style="stroke:var(--adk)"/>
+      <text class="b" x="34" y="91">App plugins</text>
+      <text class="m" x="130" y="91">ContextFilterPlugin keeps the last N invocations · TimingPlugin times tools · ScreenOncePerTurn: before_model screens the prompt once, after_model screens the reply</text>
+
+      <rect class="frame adk" x="20" y="122" width="860" height="180"/>
+      <text class="l" x="36" y="142">LoopAgent  &lt;workstation&gt;_assistant  ·  max_iterations = MAX_ATTEMPTS (3)</text>
+
+      <rect class="n det" x="36" y="178" width="190" height="86"/>
+      <text class="b" x="48" y="198">Prefetcher</text><text class="m" x="48" y="215">BaseAgent, optional</text><text class="m" x="48" y="229">runs the obvious tool</text><text class="m" x="48" y="243">emits a platform_call</text><text class="m" x="48" y="257">event as drafter's own</text>
+      <rect class="n adk" x="266" y="178" width="280" height="86"/>
+      <text class="b" x="278" y="198">drafter · LlmAgent</text><text class="m" x="278" y="215">Gemini · tools = PortTool[]</text><text class="m" x="278" y="229">output_key = temp:draft</text><text class="m" x="278" y="243">reads temp:assembly_feedback</text><text class="m" x="278" y="257">geo only: before_model_callback</text>
+      <rect class="n det" x="596" y="178" width="260" height="86"/>
+      <text class="b" x="608" y="198">assembler · BaseAgent</text><text class="m" x="608" y="215">assemble_draft(temp: state)</text><text class="m" x="608" y="229">ok → Event(escalate=True)</text><text class="m" x="608" y="243">else → Event(state_delta)</text><text class="m" x="608" y="257">3rd rejection → fail closed</text>
+      <path class="e" d="M226 221H266" marker-end="url(#a2)"/>
+      <path class="e" d="M546 221H596" marker-end="url(#a2)"/>
+      <text class="l lc" x="571" y="212">draft</text>
+
+      <path class="e back" d="M726 178V160H406V178" marker-end="url(#a2)"/>
+      <text class="l lc" x="566" y="153" style="fill:var(--gov)">rejected → state_delta {attempts, feedback}</text>
+
+      <rect class="n det" x="905" y="178" width="135" height="86"/>
+      <text class="b" x="915" y="198">Answer</text><text class="m" x="915" y="215">text · figures</text><text class="m" x="915" y="229">sources · citations</text><text class="m" x="915" y="243">proposed_actions</text><text class="m" x="915" y="257">view_commands</text>
+      <path class="e ok" d="M856 221H905" marker-end="url(#a2)"/>
+      <text class="l lc" x="880" y="212" style="fill:var(--det)">final</text>
+
+      <path class="e" d="M330 264V330" marker-end="url(#a2)"/>
+      <text class="l le" x="322" y="320">function_call</text>
+      <path class="e" d="M480 330V264" marker-end="url(#a2)"/>
+      <text class="l" x="488" y="320">function_response</text>
+      <rect class="n det" x="266" y="330" width="280" height="42"/>
+      <text class="b" x="278" y="349">PortTool × N · BaseTool</text><text class="m" x="278" y="364">run_async → port.call(principal, …)</text>
+      <path class="e" d="M266 351H210" marker-end="url(#a2)"/>
+      <rect class="n det" x="20" y="330" width="190" height="42"/>
+      <text class="b" x="32" y="349">GovernedToolPort</text><text class="m" x="32" y="364">validate · refuse · trace</text>
+
+      <path class="e" d="M406 372V410" marker-end="url(#a2)"/>
+      <text class="l" x="414" y="396">record_result writes</text>
+      <path class="e" d="M726 410V264" marker-end="url(#a2)"/>
+      <text class="l le" x="718" y="340">assembler reads</text>
+      <rect class="n" x="20" y="410" width="860" height="68" style="stroke:var(--adk)"/>
+      <text class="b" x="34" y="430">Session state · temp: scope (lives for one invocation; the stored thread never keeps it)</text>
+      <text class="m" x="34" y="448">temp:facts  temp:passages  temp:sources  temp:data_origins  temp:identifiers  temp:numbers</text>
+      <text class="m" x="34" y="464">temp:map_targets  temp:proposals  temp:draft  temp:assembly_attempts  temp:assembly_feedback  temp:input_screened</text>
+
+      <rect class="n ext" x="905" y="330" width="135" height="148"/>
+      <text class="b" x="915" y="350">Around the loop</text>
+      <text class="m" x="915" y="370">30 s turn deadline</text><text class="m" x="915" y="384">max_llm_calls cap</text><text class="m" x="915" y="398">OTel → Cloud Trace</text><text class="m" x="915" y="412">no prompt text kept</text><text class="m" x="915" y="426">on spans or logs</text>
+      <text class="m" x="915" y="446">hedged + timed</text><text class="m" x="915" y="460">model wrapper</text>
+    </svg>

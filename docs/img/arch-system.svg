@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="690" viewBox="0 0 1040 690" role="img" aria-label="Layered architecture: cockpit UI calls a FastAPI gateway, which runs the ADK assistant runtime; the assistant reaches engines only through a governed tool port; actions go to the intent hub, KMS and ledger."><style>svg{
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --fg: #16202e;
+  --muted: #566274;
+  --line: #d5dce6;
+  --edge: #45536a;
+  --adk-bg: #e3edff;  --adk: #2c5bcf;
+  --det-bg: #e1f3e8;  --det: #1d7646;
+  --ext-bg: #eceff4;  --ext: #75839a;
+  --gov-bg: #fff0d1;  --gov: #a8620a;
+  --geo-bg: #dbf3f1;  --geo: #0c7673;
+  --ml-bg:  #efe6fa;  --ml:  #7440b2;
+  
+  
+--font:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace;color:var(--edge)}@media (prefers-color-scheme:dark){svg{
+    --bg: #0e131b; --surface: #151c27; --fg: #e4eaf3; --muted: #97a3b8; --edge: #9aa7bd;
+    --line: #283244;
+    --adk-bg: #172746; --adk: #7ea5ff;
+    --det-bg: #12301f; --det: #5cc78b;
+    --ext-bg: #1c2330; --ext: #8996ac;
+    --gov-bg: #38290d; --gov: #f1b44f;
+    --geo-bg: #0e2f2e; --geo: #4fcdc6;
+    --ml-bg:  #281c3d; --ml:  #b995f2;
+    
+  }}
+svg text { fill: var(--fg); font-family: var(--font); font-size: 12.5px; }
+svg .b { font-weight: 600; }
+svg .m { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg .l { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg .lc { text-anchor: middle; }
+svg .le { text-anchor: end; }
+svg rect.n { stroke-width: 1.5; rx: 6; fill: var(--surface); stroke: var(--line); }
+svg rect.adk { fill: var(--adk-bg); stroke: var(--adk); }
+svg rect.det { fill: var(--det-bg); stroke: var(--det); }
+svg rect.ext { fill: var(--ext-bg); stroke: var(--ext); stroke-dasharray: 5 3; }
+svg rect.gov { fill: var(--gov-bg); stroke: var(--gov); }
+svg rect.geo { fill: var(--geo-bg); stroke: var(--geo); }
+svg rect.ml  { fill: var(--ml-bg);  stroke: var(--ml); }
+svg rect.frame { fill: none; stroke-dasharray: 6 4; stroke-width: 1.5; rx: 8; }
+svg rect.frame.adk { stroke: var(--adk); fill: none; }
+svg rect.frame.geo { stroke: var(--geo); fill: none; }
+svg rect.frame.ext { stroke: var(--ext); fill: none; }
+svg rect.frame.ml { stroke: var(--ml); fill: none; }
+svg .e { stroke: currentColor; stroke-width: 1.6; fill: none; }
+svg .e.d { stroke-dasharray: 5 4; }
+svg .e.back { stroke: var(--gov); color: var(--gov); }
+svg .e.ok { stroke: var(--det); color: var(--det); }
+svg rect.slow { fill: var(--gov-bg); stroke: var(--gov); stroke-width: 1.5; rx: 4; }
+svg rect.seg { fill: var(--adk-bg); stroke: var(--adk); stroke-width: 1.5; rx: 4; }
+svg rect.tool { fill: var(--det-bg); stroke: var(--det); stroke-width: 1.5; rx: 4; }
+svg rect.bg { fill: var(--ext-bg); stroke: var(--ext); stroke-width: 1.5; stroke-dasharray: 5 3; rx: 4; }
+</style><rect width="1040" height="690" fill="var(--surface)"/>
+      <defs><marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+
+      <rect class="n" x="20" y="16" width="740" height="60"/>
+      <text class="b" x="36" y="38">Cockpit UI · Next.js (web-prototype)</text>
+      <text class="m" x="36" y="56">six workstations: AML · Partner · Executive · Compliance · Operations · Geospatial (map + Ask panel)</text>
+
+      <path class="e" d="M390 76V110" marker-end="url(#a1)"/>
+      <text class="l" x="400" y="98">POST /api/cockpit/copilot/query  {question, entity, model_key, map context}</text>
+
+      <rect class="n det" x="20" y="110" width="740" height="60"/>
+      <text class="b" x="36" y="132">FastAPI gateway · cockpit/server.py, assistant_gateway.py</text>
+      <text class="m" x="36" y="150">Firebase token → Principal(uid, workstation) · rate limit per operator and per instance</text>
+
+      <path class="e" d="M390 170V200" marker-end="url(#a1)"/>
+      <text class="l" x="400" y="190">AssistantRuntime.run_turn(principal, question)</text>
+
+      <rect class="n adk" x="20" y="200" width="740" height="172"/>
+      <text class="b" x="34" y="220">assistant/runtime.py · ADK App + Runner, built per turn</text>
+      <text class="l le" x="746" y="220">RunConfig(max_llm_calls) · 30 s deadline</text>
+      <rect class="n" x="34" y="232" width="206" height="26" style="stroke:var(--adk)"/>
+      <text class="lc" x="137" y="249" style="text-anchor:middle">ContextFilterPlugin</text>
+      <rect class="n" x="248" y="232" width="206" height="26" style="stroke:var(--adk)"/>
+      <text class="lc" x="351" y="249" style="text-anchor:middle">TimingPlugin</text>
+      <rect class="n" x="462" y="232" width="264" height="26" style="stroke:var(--adk)"/>
+      <text class="lc" x="594" y="249" style="text-anchor:middle">ScreenOncePerTurn (Model Armor)</text>
+      <rect class="frame adk" x="34" y="268" width="692" height="96"/>
+      <text class="l" x="44" y="283">LoopAgent  &lt;workstation&gt;_assistant  ·  max 3 iterations</text>
+      <rect class="n det" x="44" y="292" width="200" height="62"/>
+      <text class="b" x="56" y="312">Prefetcher</text><text class="m" x="56" y="330">runs the obvious tool</text><text class="m" x="56" y="344">before the model</text>
+      <rect class="n adk" x="270" y="292" width="226" height="62"/>
+      <text class="b" x="282" y="312">drafter · LlmAgent</text><text class="m" x="282" y="330">Gemini, tools = PortTool[]</text><text class="m" x="282" y="344">writes temp:draft</text>
+      <rect class="n det" x="522" y="292" width="194" height="62"/>
+      <text class="b" x="534" y="312">assembler</text><text class="m" x="534" y="330">verifies every figure</text><text class="m" x="534" y="344">fails closed</text>
+      <path class="e" d="M244 323H270" marker-end="url(#a1)"/><path class="e" d="M496 323H522" marker-end="url(#a1)"/>
+
+      <path class="e" d="M760 226H810" marker-end="url(#a1)"/>
+      <rect class="n ext" x="810" y="200" width="210" height="52"/>
+      <text class="b" x="822" y="221">Vertex AI · Gemini</text><text class="m" x="822" y="239">global endpoint · hedged</text>
+      <path class="e d" d="M760 288H810" marker-end="url(#a1)"/>
+      <rect class="n ext" x="810" y="262" width="210" height="52"/>
+      <text class="b" x="822" y="283">Model Armor</text><text class="m" x="822" y="301">prompt + response templates</text>
+      <path class="e d" d="M760 348H810" marker-end="url(#a1)"/>
+      <rect class="n ext" x="810" y="324" width="210" height="48"/>
+      <text class="b" x="822" y="344">Firestore sessions</text><text class="m" x="822" y="361">write-behind, per uid</text>
+
+      <path class="e" d="M390 372V404" marker-end="url(#a1)"/>
+      <text class="l" x="400" y="394">PortTool.run_async → port.call(principal, tool, args)</text>
+
+      <rect class="n det" x="20" y="404" width="740" height="64"/>
+      <text class="b" x="36" y="426">GovernedToolPort · ontology/omcp/port</text>
+      <text class="m" x="36" y="444">validates arguments · workstation allow-list + markings · checks result against contract · traces every call</text>
+      <text class="m" x="36" y="458">no approve or execute tool is registered · outside-allow-list tool is refused like a missing one</text>
+
+      <path class="e back" d="M760 436H810" marker-end="url(#a1)"/>
+      <text class="l" x="785" y="429" style="text-anchor:middle;fill:var(--gov)">propose</text>
+      <rect class="n gov" x="810" y="404" width="210" height="96"/>
+      <text class="b" x="822" y="424">Governed actions</text>
+      <text class="m" x="822" y="442">intent hub validates</text><text class="m" x="822" y="456">Cloud KMS signs (ECDSA)</text>
+      <text class="m" x="822" y="470">second human approves</text><text class="m" x="822" y="484">WORM ledger, SHA-256 chain</text>
+
+      <path class="e" d="M390 468V500" marker-end="url(#a1)"/>
+      <text class="l" x="400" y="490">tool handlers read ReadModels (dataplane.plane.read_models)</text>
+
+      <rect class="n ml" x="20" y="500" width="136" height="92"/>
+      <text class="b" x="30" y="520">AML + fraud ML</text><text class="m" x="30" y="538">alert triage scorer</text><text class="m" x="30" y="552">IsolationForest</text><text class="m" x="30" y="566">mule-ring graph</text><text class="m" x="30" y="580">round-trip rules</text>
+      <rect class="n ml" x="171" y="500" width="136" height="92"/>
+      <text class="b" x="181" y="520">Partner churn</text><text class="m" x="181" y="538">discrete-time</text><text class="m" x="181" y="552">hazard (logit)</text><text class="m" x="181" y="566">change point</text><text class="m" x="181" y="580">cohort detector</text>
+      <rect class="n ml" x="322" y="500" width="136" height="92"/>
+      <text class="b" x="332" y="520">Executive causal</text><text class="m" x="332" y="538">SCM + refuters</text><text class="m" x="332" y="552">AIPW estimator</text><text class="m" x="332" y="566">ridge forecast</text><text class="m" x="332" y="580">what-if shocks</text>
+      <rect class="n geo" x="473" y="500" width="136" height="92"/>
+      <text class="b" x="483" y="520">Geo + graph</text><text class="m" x="483" y="538">geo_evidence</text><text class="m" x="483" y="552">BigQuery Graph</text><text class="m" x="483" y="566">FATF · EU · Basel</text><text class="m" x="483" y="580">IP netintel</text>
+      <rect class="n ml" x="624" y="500" width="136" height="92"/>
+      <text class="b" x="634" y="520">Regulation RAG</text><text class="m" x="634" y="538">chunks + page span</text><text class="m" x="634" y="552">quote by sentence</text><text class="m" x="634" y="566">no match → nothing</text>
+      <path class="e" d="M760 546H810" marker-end="url(#a1)"/>
+      <rect class="n ext" x="810" y="526" width="210" height="40"/>
+      <text class="b" x="822" y="544">Agent Search</text><text class="m" x="822" y="558">regulation data store</text>
+
+      <path class="e" d="M390 592V614" marker-end="url(#a1)"/>
+      <rect class="n" x="20" y="614" width="740" height="60"/>
+      <text class="b" x="36" y="636">Data</text>
+      <text class="m" x="36" y="654">DuckDB hot state (Parquet warm start) · BigQuery warm tier + property graph · Firestore (approvals, ledger)</text>
+      <text class="m" x="36" y="667">seeded synthetic worlds: truth tables are read by evaluations only, never by an engine</text>
+    </svg>

@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="370" viewBox="0 0 1040 370" role="img" aria-label="Request states: validate entity id, screen prompt, prefetch, draft, assemble, answer, with failure exits for invalid id, blocked prompt or refused question, and fail-closed after three rejections; a deadline wraps the whole turn."><style>svg{
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --fg: #16202e;
+  --muted: #566274;
+  --line: #d5dce6;
+  --edge: #45536a;
+  --adk-bg: #e3edff;  --adk: #2c5bcf;
+  --det-bg: #e1f3e8;  --det: #1d7646;
+  --ext-bg: #eceff4;  --ext: #75839a;
+  --gov-bg: #fff0d1;  --gov: #a8620a;
+  --geo-bg: #dbf3f1;  --geo: #0c7673;
+  --ml-bg:  #efe6fa;  --ml:  #7440b2;
+  
+  
+--font:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace;color:var(--edge)}@media (prefers-color-scheme:dark){svg{
+    --bg: #0e131b; --surface: #151c27; --fg: #e4eaf3; --muted: #97a3b8; --edge: #9aa7bd;
+    --line: #283244;
+    --adk-bg: #172746; --adk: #7ea5ff;
+    --det-bg: #12301f; --det: #5cc78b;
+    --ext-bg: #1c2330; --ext: #8996ac;
+    --gov-bg: #38290d; --gov: #f1b44f;
+    --geo-bg: #0e2f2e; --geo: #4fcdc6;
+    --ml-bg:  #281c3d; --ml:  #b995f2;
+    
+  }}
+svg text { fill: var(--fg); font-family: var(--font); font-size: 12.5px; }
+svg .b { font-weight: 600; }
+svg .m { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg .l { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg .lc { text-anchor: middle; }
+svg .le { text-anchor: end; }
+svg rect.n { stroke-width: 1.5; rx: 6; fill: var(--surface); stroke: var(--line); }
+svg rect.adk { fill: var(--adk-bg); stroke: var(--adk); }
+svg rect.det { fill: var(--det-bg); stroke: var(--det); }
+svg rect.ext { fill: var(--ext-bg); stroke: var(--ext); stroke-dasharray: 5 3; }
+svg rect.gov { fill: var(--gov-bg); stroke: var(--gov); }
+svg rect.geo { fill: var(--geo-bg); stroke: var(--geo); }
+svg rect.ml  { fill: var(--ml-bg);  stroke: var(--ml); }
+svg rect.frame { fill: none; stroke-dasharray: 6 4; stroke-width: 1.5; rx: 8; }
+svg rect.frame.adk { stroke: var(--adk); fill: none; }
+svg rect.frame.geo { stroke: var(--geo); fill: none; }
+svg rect.frame.ext { stroke: var(--ext); fill: none; }
+svg rect.frame.ml { stroke: var(--ml); fill: none; }
+svg .e { stroke: currentColor; stroke-width: 1.6; fill: none; }
+svg .e.d { stroke-dasharray: 5 4; }
+svg .e.back { stroke: var(--gov); color: var(--gov); }
+svg .e.ok { stroke: var(--det); color: var(--det); }
+svg rect.slow { fill: var(--gov-bg); stroke: var(--gov); stroke-width: 1.5; rx: 4; }
+svg rect.seg { fill: var(--adk-bg); stroke: var(--adk); stroke-width: 1.5; rx: 4; }
+svg rect.tool { fill: var(--det-bg); stroke: var(--det); stroke-width: 1.5; rx: 4; }
+svg rect.bg { fill: var(--ext-bg); stroke: var(--ext); stroke-width: 1.5; stroke-dasharray: 5 3; rx: 4; }
+</style><rect width="1040" height="370" fill="var(--surface)"/>
+      <defs><marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+      <rect class="n det" x="20" y="40" width="120" height="56"/>
+      <text class="b lc" x="80" y="63">Validate</text><text class="m lc" x="80" y="80">entity id</text>
+      <rect class="n ext" x="190" y="40" width="120" height="56"/>
+      <text class="b lc" x="250" y="63">Screen</text><text class="m lc" x="250" y="80">prompt, once</text>
+      <rect class="n det" x="360" y="40" width="120" height="56"/>
+      <text class="b lc" x="420" y="63">Prefetch</text><text class="m lc" x="420" y="80">if tool is obvious</text>
+      <rect class="n adk" x="530" y="40" width="120" height="56"/>
+      <text class="b lc" x="590" y="63">Draft</text><text class="m lc" x="590" y="80">Gemini + tools</text>
+      <rect class="n det" x="700" y="40" width="120" height="56"/>
+      <text class="b lc" x="760" y="63">Assemble</text><text class="m lc" x="760" y="80">verify figures</text>
+      <rect class="n det" x="870" y="40" width="120" height="56" style="stroke-width:2.5"/>
+      <text class="b lc" x="930" y="63">Answer</text><text class="m lc" x="930" y="80">with citations</text>
+      <path class="e" d="M140 68H190" marker-end="url(#a3)"/><path class="e" d="M310 68H360" marker-end="url(#a3)"/><path class="e" d="M480 68H530" marker-end="url(#a3)"/><path class="e" d="M650 68H700" marker-end="url(#a3)"/><path class="e ok" d="M820 68H870" marker-end="url(#a3)"/>
+      <path class="e back" d="M760 40V18H590V40" marker-end="url(#a3)"/>
+      <text class="l lc" x="675" y="12" style="fill:var(--gov)">redraft, up to twice, with reasons</text>
+
+      <path class="e d" d="M80 96V190" marker-end="url(#a3)"/>
+      <path class="e d" d="M250 96V190" marker-end="url(#a3)"/>
+      <path class="e d" d="M590 96V190" marker-end="url(#a3)"/>
+      <path class="e d" d="M760 96V190" marker-end="url(#a3)"/>
+      <rect class="n" x="20" y="190" width="150" height="76"/>
+      <text class="b" x="30" y="210">Bad entity id</text><text class="m" x="30" y="228">ValueError</text><text class="m" x="30" y="242">no turn is started</text>
+      <rect class="n ext" x="190" y="190" width="260" height="76"/>
+      <text class="b" x="200" y="210">Model Armor blocks the prompt</text><text class="m" x="200" y="228">fixed text, blocked = true</text><text class="m" x="200" y="242">a screening failure blocks too</text>
+      <rect class="n geo" x="470" y="190" width="240" height="76"/>
+      <text class="b" x="480" y="210">Reply blocked or refused</text><text class="m" x="480" y="228">geo origin guard answers</text><text class="m" x="480" y="242">before the model is called</text>
+      <rect class="n gov" x="730" y="190" width="260" height="76"/>
+      <text class="b" x="740" y="210">Third rejection</text><text class="m" x="740" y="228">fail_closed_answer()</text><text class="m" x="740" y="242">nothing unverified is shown</text>
+
+      <rect class="frame ext" x="20" y="288" width="970" height="70"/>
+      <text class="b" x="36" y="310">Around everything: asyncio.wait_for(turn_deadline_s = 30)</text>
+      <text class="m" x="36" y="328">timeout or any exception → plain "unavailable" Answer (status timeout or error); the failed question is closed in the thread so the next turn</text>
+      <text class="m" x="36" y="342">does not inherit it. No replay, no legacy fallback (ADR-019); the gateway surfaces an outage as 503 offline.</text>
+    </svg>

@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="360" viewBox="0 0 1040 360" role="img" aria-label="Three comparisons: prefetch removes the model call that only picks a tool; write-behind sessions move Firestore writes after the answer; hedging starts a second identical model call when the first is slow and takes whichever answers first."><style>svg{
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --fg: #16202e;
+  --muted: #566274;
+  --line: #d5dce6;
+  --edge: #45536a;
+  --adk-bg: #e3edff;  --adk: #2c5bcf;
+  --det-bg: #e1f3e8;  --det: #1d7646;
+  --ext-bg: #eceff4;  --ext: #75839a;
+  --gov-bg: #fff0d1;  --gov: #a8620a;
+  --geo-bg: #dbf3f1;  --geo: #0c7673;
+  --ml-bg:  #efe6fa;  --ml:  #7440b2;
+  
+  
+--font:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;--mono:ui-monospace,Menlo,Consolas,monospace;color:var(--edge)}@media (prefers-color-scheme:dark){svg{
+    --bg: #0e131b; --surface: #151c27; --fg: #e4eaf3; --muted: #97a3b8; --edge: #9aa7bd;
+    --line: #283244;
+    --adk-bg: #172746; --adk: #7ea5ff;
+    --det-bg: #12301f; --det: #5cc78b;
+    --ext-bg: #1c2330; --ext: #8996ac;
+    --gov-bg: #38290d; --gov: #f1b44f;
+    --geo-bg: #0e2f2e; --geo: #4fcdc6;
+    --ml-bg:  #281c3d; --ml:  #b995f2;
+    
+  }}
+svg text { fill: var(--fg); font-family: var(--font); font-size: 12.5px; }
+svg .b { font-weight: 600; }
+svg .m { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg .l { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+svg .lc { text-anchor: middle; }
+svg .le { text-anchor: end; }
+svg rect.n { stroke-width: 1.5; rx: 6; fill: var(--surface); stroke: var(--line); }
+svg rect.adk { fill: var(--adk-bg); stroke: var(--adk); }
+svg rect.det { fill: var(--det-bg); stroke: var(--det); }
+svg rect.ext { fill: var(--ext-bg); stroke: var(--ext); stroke-dasharray: 5 3; }
+svg rect.gov { fill: var(--gov-bg); stroke: var(--gov); }
+svg rect.geo { fill: var(--geo-bg); stroke: var(--geo); }
+svg rect.ml  { fill: var(--ml-bg);  stroke: var(--ml); }
+svg rect.frame { fill: none; stroke-dasharray: 6 4; stroke-width: 1.5; rx: 8; }
+svg rect.frame.adk { stroke: var(--adk); fill: none; }
+svg rect.frame.geo { stroke: var(--geo); fill: none; }
+svg rect.frame.ext { stroke: var(--ext); fill: none; }
+svg rect.frame.ml { stroke: var(--ml); fill: none; }
+svg .e { stroke: currentColor; stroke-width: 1.6; fill: none; }
+svg .e.d { stroke-dasharray: 5 4; }
+svg .e.back { stroke: var(--gov); color: var(--gov); }
+svg .e.ok { stroke: var(--det); color: var(--det); }
+svg rect.slow { fill: var(--gov-bg); stroke: var(--gov); stroke-width: 1.5; rx: 4; }
+svg rect.seg { fill: var(--adk-bg); stroke: var(--adk); stroke-width: 1.5; rx: 4; }
+svg rect.tool { fill: var(--det-bg); stroke: var(--det); stroke-width: 1.5; rx: 4; }
+svg rect.bg { fill: var(--ext-bg); stroke: var(--ext); stroke-width: 1.5; stroke-dasharray: 5 3; rx: 4; }
+</style><rect width="1040" height="360" fill="var(--surface)"/>
+      <defs><marker id="a5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="currentColor"/></marker></defs>
+
+      <text class="b" x="20" y="20">Prefetch · prefetch.py</text>
+      <text class="m" x="20" y="48">without</text>
+      <rect class="slow" x="110" y="32" width="250" height="26"/><text class="lc" x="235" y="49" style="text-anchor:middle">model call 1: choose a tool</text>
+      <rect class="tool" x="364" y="32" width="90" height="26"/><text class="lc" x="409" y="49" style="text-anchor:middle">tool</text>
+      <rect class="seg" x="458" y="32" width="250" height="26"/><text class="lc" x="583" y="49" style="text-anchor:middle">model call 2: draft</text>
+      <rect class="tool" x="712" y="32" width="100" height="26"/><text class="lc" x="762" y="49" style="text-anchor:middle">assemble</text>
+      <text class="m" x="20" y="82">with</text>
+      <rect class="tool" x="110" y="66" width="90" height="26"/><text class="lc" x="155" y="83" style="text-anchor:middle">platform tool</text>
+      <rect class="seg" x="204" y="66" width="250" height="26"/><text class="lc" x="329" y="83" style="text-anchor:middle">model call: draft</text>
+      <rect class="tool" x="458" y="66" width="100" height="26"/><text class="lc" x="508" y="83" style="text-anchor:middle">assemble</text>
+      <text class="l" x="830" y="49">the tool-picking call: 4–11 s on the</text><text class="l" x="830" y="63">shared endpoint, per prefetch.py</text>
+      <text class="l" x="580" y="83">a wrong guess costs a tool call, never a wrong answer</text>
+
+      <text class="b" x="20" y="132">Sessions · session_cache.py</text>
+      <text class="m" x="20" y="160">ADK Firestore</text>
+      <rect class="seg" x="110" y="144" width="200" height="26"/><text class="lc" x="210" y="161" style="text-anchor:middle">model + tools</text>
+      <rect class="slow" x="314" y="144" width="42" height="26"/><rect class="slow" x="360" y="144" width="42" height="26"/><rect class="slow" x="406" y="144" width="42" height="26"/><rect class="slow" x="452" y="144" width="42" height="26"/><rect class="slow" x="498" y="144" width="42" height="26"/><rect class="slow" x="544" y="144" width="42" height="26"/>
+      <text class="l" x="594" y="161">6–8 awaited transactions, then the answer</text>
+      <text class="m" x="20" y="194">write-behind</text>
+      <rect class="seg" x="110" y="178" width="200" height="26"/><text class="lc" x="210" y="195" style="text-anchor:middle">model + tools</text>
+      <rect class="tool" x="314" y="178" width="60" height="26"/><text class="lc" x="344" y="195" style="text-anchor:middle">memory</text>
+      <path class="e ok" d="M374 191H410" marker-end="url(#a5)"/><text class="l" x="416" y="195" style="fill:var(--det)">answer returned</text>
+      <rect class="bg" x="540" y="178" width="360" height="26"/><text class="lc" x="720" y="195" style="text-anchor:middle">Firestore catches up, in order, afterwards</text>
+      <text class="l" x="20" y="226">cost: the last turn can be missing from conversation memory if the process dies in that moment; the decision ledger does not use this path</text>
+
+      <text class="b" x="20" y="262">Hedge · providers/hedged.py</text>
+      <text class="m" x="20" y="290">call 1</text>
+      <rect class="slow" x="110" y="274" width="560" height="26"/><text class="lc" x="390" y="291" style="text-anchor:middle">slow, cancelled when the other answers</text>
+      <text class="m" x="20" y="322">call 2</text>
+      <rect class="seg" x="330" y="306" width="200" height="26"/><text class="lc" x="430" y="323" style="text-anchor:middle">identical call, answers first</text>
+      <path class="e d" d="M330 266V338"/><text class="l" x="338" y="352">hedge_after_s</text>
+      <path class="e ok" d="M530 319H700" marker-end="url(#a5)"/><text class="l" x="540" y="348" style="fill:var(--det)">first answer wins · at most one hedge per call</text>
+    </svg>
