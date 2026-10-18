@@ -277,7 +277,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   return (
     <div className="geo-inter relative flex h-full min-h-0 flex-col lg:flex-row">
       <GeoChatWindow mode={dock.mode} pos={dock.pos} size={dock.size} bounds={box} onMove={dock.move} onSettle={dock.settle} onResize={dock.resizeTo} onResizeSettle={dock.settleResize} onDock={dock.dock} onFloat={dock.float} onClose={dock.close}>
-        <GeoAsk context={mapContextOf(mapState)} selected={selected} onMove={applyMove} onPending={setAsking} onAnswered={answered} intent={intent} />
+        <GeoAsk context={mapContextOf(mapState)} selected={selected} onClearSelection={() => setSelected(null)} onMove={applyMove} onPending={setAsking} onAnswered={answered} intent={intent} />
       </GeoChatWindow>
       <div ref={mapBox} role="region" aria-label="World map" aria-describedby="geo-map-help" className="relative min-h-0 min-w-0 flex-[3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-cx-accent lg:flex-1">
         <p id="geo-map-help" className="sr-only">

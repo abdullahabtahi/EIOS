@@ -7,6 +7,7 @@
  */
 
 import * as React from "react";
+import { Icon } from "@/components/ui/icon";
 import { authFetch } from "@/lib/auth/token";
 
 export interface ModelChoice {
@@ -163,9 +164,7 @@ export function ModelPicker({
               onClick={() => pick(c.key)}
               className={`flex cursor-pointer items-start gap-2 px-3 py-1.5 ${i === active ? 'bg-cx-sub' : ''}`}
             >
-              <span className="material-symbols-sharp w-3.5 shrink-0 text-[14px] leading-4 text-cx-ink" aria-hidden="true">
-                {c.key === selected ? 'check' : ''}
-              </span>
+              <span className="flex h-4 w-3.5 shrink-0 items-center text-cx-ink">{c.key === selected && <Icon icon="check" size="sm" />}</span>
               <span className="min-w-0">
                 <span className={`block text-xs text-cx-ink ${c.key === selected ? "font-semibold" : ""}`}>{c.label}</span>
                 <span className="block text-label text-cx-muted">{c.note}</span>

@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Icon } from '@/components/ui/icon';
 
 /**
  * The box a question is typed in, as the leading chat products set it: one frame with a text area that grows with what is
@@ -71,9 +72,7 @@ export function ChatComposer({ value, onChange, onSubmit, placeholder, ariaLabel
           title={pending ? 'Working…' : `${sendLabel} (Enter)`}
           className="m-1.5 flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-none text-cx-ink outline-none transition-colors hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-cx-accent disabled:cursor-default disabled:text-cx-faint disabled:hover:bg-transparent"
         >
-          <span className={`material-symbols-sharp text-lg leading-none ${pending ? 'animate-spin motion-reduce:animate-none' : ''}`} aria-hidden="true">
-            {pending ? 'progress_activity' : 'keyboard_return'}
-          </span>
+          <Icon icon={pending ? 'progress_activity' : 'keyboard_return'} size="sm" className={pending ? 'animate-spin motion-reduce:animate-none' : ''} />
         </button>
       </div>
       <div className="mt-1.5 flex min-h-6 items-center gap-2 px-0.5">

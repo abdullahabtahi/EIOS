@@ -97,3 +97,15 @@ describe('the thread across a workstation switch', () => {
     expect(screen.getByText(/shared by 22 accounts/)).toBeInTheDocument();
   });
 });
+
+describe('what the question is about', () => {
+  it('shows the pick with a way to put it down, and nothing else to read', () => {
+    reply(200, ANSWER);
+    const onClear = vi.fn();
+    render(<GeoAsk context={CONTEXT} selected={{ kind: 'gateway', id: 'GW-NG-X00' }} onMove={() => undefined} onClearSelection={onClear} />);
+    expect(screen.getByTestId('geo-ask-context')).toHaveTextContent('gateway GW-NG-X00');
+    expect(screen.getByTestId('geo-ask-context')).not.toHaveTextContent('About');
+    fireEvent.click(screen.getByRole('button', { name: 'Ask about the whole book instead' }));
+    expect(onClear).toHaveBeenCalled();
+  });
+});
