@@ -238,6 +238,7 @@ Agents are judged through an agent port against golden cases, never by the agent
 | Check | Result | Note |
 |---|---|---|
 | Live baseline, default (fast) model, 246 turns (`live_final`) | **200 pass / 13 fail / 0 inconclusive** | 0 timeouts; the previous run scored 204 / 9 / 0 (single 3-repeat runs of a live model) |
+| Sealed held-out split (`live_sealed`), run once | **40 pass / 2 fail / 0 inconclusive** | 7 cases, 3 repeats; p95 10.3 s over 42 turns. One failure is a tool-routing miss (`partner.signals` instead of `entity.resolve`); the other is the judge reading the first digits of a SHA-256 hash as a figure |
 | Numeric faithfulness | **96.8%** | Share of figures that traced to a tool result; the 3% that did not are mostly digits in labels the judge cannot bind |
 | p95 turn latency | **4.8 s (4,803 ms)** | p95 over 246 live turns; 19.7% of turns ran on fixture data |
 | Financial red-team probes (Promptfoo) | **15 of 15 passed** | Small hand-written set with string-match assertions and no LLM grader ([`docs/evidence/financial-redteam-audit.md`](docs/evidence/financial-redteam-audit.md)) |
@@ -247,7 +248,7 @@ Agents are judged through an agent port against golden cases, never by the agent
 | Geo lens vs planted truth | IP-versus-KYC: precision 1.00, recall 0.77; geo score top 50: lift 41.7× over base rate | The first rule scored 0.81 precision, and we changed it |
 | Executive forecast | Backtested on 75 past forecasts: error 0.74× a naive carry-forward, interval held 87% of the time | |
 
-**Known gaps, stated up front.** Three remaining baseline failures are grader false positives (digits inside names such as "Boom 1000"). We left the grader alone on purpose: loosening a judge to turn a result green is what a baseline exists to prevent. Not yet measured: the live agent judges on the newest rules, and load on Cloud Run. See [`docs/agent-baseline.md`](docs/agent-baseline.md).
+**Known gaps, stated up front.** The 13 failing verdicts in `live_final` are mostly figure-check cases where digits sit inside labels or echo the question ("28-day", "16.0x", a year), plus five trajectory misses (an extra tool round or a missing call); one, `geo_country_exposure`, has not been read closely enough to call it a false positive. The previous run scored 204 pass, so the 4-verdict gap is not shown to be either noise or a regression. We left the grader alone on purpose: loosening a judge to turn a result green is what a baseline exists to prevent. Also: 19.7% of `live_final` turns ran on fixture data, no spend was recorded, and load on Cloud Run is not measured. See [`docs/agent-baseline.md`](docs/agent-baseline.md) and [`docs/evidence/live-final-eval-visual-report.md`](docs/evidence/live-final-eval-visual-report.md).
 
 ---
 
@@ -335,7 +336,7 @@ specs/                  numbered feature specs
 
 - All transactional data is synthetic. Reference data is real; the cockpit does not currently mark synthetic figures on screen, so do not present this build as production data.
 - The shared reviewer login on the demo is public by design. Only the copilot is rate-limited.
-- The live quality baseline predates some of the latest assistant changes; re-measure before quoting it.
+- The live quality numbers above were measured on `main` at `99f29ba` (2026-10-18), the build deployed to the demo; re-measure after any assistant change.
 - Some operations-board lines (RL-2 and RL-7 coverage) report `NOT_MEASURED` on purpose, rather than a green they have not earned.
 
 <div align="center"><sub>MIT License · Built on Google Cloud</sub></div>
