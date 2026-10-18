@@ -159,18 +159,20 @@
   color: var(--ink);
 }
 .fde-footer {
+  margin-top: clamp(80px, 10vw, 150px);
+}
+.fde-footer-base {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 12px 32px;
-  margin-top: clamp(96px, 12vw, 180px);
   padding-top: 20px;
   border-top: 1px solid var(--rule);
   font-size: 0.75rem;
   letter-spacing: 0.04em;
   color: var(--ink-2);
 }
-.fde-footer span:first-child {
+.fde-footer-base span:first-child {
   color: var(--ink);
   letter-spacing: 0.18em;
   font-weight: 600;

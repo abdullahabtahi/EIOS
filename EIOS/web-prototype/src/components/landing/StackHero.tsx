@@ -36,11 +36,6 @@ export function StackHero() {
           <a href="#system" className="fde-scroll-cue">
             Read the case study <span aria-hidden="true">↓</span>
           </a>
-          <p className="fde-entry">
-            <span>Entry for</span>
-            {/* eslint-disable-next-line @next/next/no-img-element -- small static logo */}
-            <img src="/landing/ai-builder-cup.webp" alt="AI Builder Cup by Google Cloud and Hack2skill" width={430} height={222} />
-          </p>
         </div>
       </div>
 
