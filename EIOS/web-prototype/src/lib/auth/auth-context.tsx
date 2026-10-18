@@ -10,6 +10,7 @@ export type AuthStatus = 'disabled' | 'loading' | 'signedOut' | 'signedIn';
 export interface OperatorSession {
   uid: string;
   email: string | null;
+  displayName: string | null;
   role: string | null;
 }
 
@@ -38,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const result = await getIdTokenResult(user);
       const role = typeof result.claims.role === 'string' ? result.claims.role : null;
-      setOperator({ uid: user.uid, email: user.email, role });
+      setOperator({ uid: user.uid, email: user.email, displayName: user.displayName, role });
       setStatus('signedIn');
     });
   }, [auth]);

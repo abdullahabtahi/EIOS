@@ -7,7 +7,7 @@
  */
 
 import * as React from 'react';
-import { useCockpit } from '../state/cockpit-context';
+import { useOperatorIdentity } from './use-operator-identity';
 import { useAuth } from '@/lib/auth/auth-context';
 
 // An environment name (STAGE, PROD) is shown only when one is configured; there is no default label.
@@ -44,18 +44,18 @@ export function ChromeBrand({ section, heading = false }: ChromeBrandProps) {
 
 /** Who is signed in, with sign out. Falls back to the cockpit's operator when auth is off. */
 export function ChromeOperator() {
-  const { status: authStatus, operator: authOperator, signOutOperator } = useAuth();
-  const { state } = useCockpit();
+  const { status: authStatus, signOutOperator } = useAuth();
+  const identity = useOperatorIdentity();
   return (
-    <div className="flex items-center gap-2 pl-2 border-l border-chrome-line">
+    <div className="flex items-center gap-2 pl-2 border-l border-chrome-line" title={identity.email ?? undefined}>
       <div className="size-6 bg-white/10 border border-white/15 text-white flex items-center justify-center font-mono font-bold text-label">
-        {(authOperator?.email ?? state.operator.officerId).slice(0, 2).toUpperCase()}
+        {identity.initials}
       </div>
       <div className="hidden xl:block text-left">
-        <div className="text-label font-bold text-white leading-tight">{authOperator?.email ?? state.operator.name}</div>
-        <div className="text-label font-mono text-slate-400 leading-tight uppercase tracking-wider">
-          {authOperator?.role ?? state.operator.clearanceLevel.replace(/_/g, ' ')}
+        <div data-testid="chrome-operator-name" className="text-label font-bold text-white leading-tight">
+          {identity.name}
         </div>
+        <div className="text-label font-mono text-slate-400 leading-tight uppercase tracking-wider">{identity.role}</div>
       </div>
       {authStatus === 'signedIn' && (
         <button

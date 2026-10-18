@@ -54,7 +54,10 @@ A second, separate world for `/` only (`EIOS/web-prototype/src/components/landin
 - **Map:** deck.gl over Natural Earth outlines with no basemap; arcs coloured by corridor tier (ink low, steel-blue medium, warm high), shared exits in the warm colour, jurisdiction fills in warm steps; scroll-zoom off so the page keeps scrolling.
 - **Architecture:** isometric platforms in the hero's slab grammar; chips with a steel-blue left tick mark a Google Cloud service; traced paths animate as steel-blue dashed hops.
 - **Honesty:** every figure is a `[MEASURED]` result from repo docs or an engine snapshot, and lives in `content.ts` or `data/`; misses stay in the ledger; client activity is labelled synthetic while the reference layer is real public data; the client is never named; copy says "workstation".
-- **Rasters:** `public/landing/orbit/*` are generated frames (Magnific, 2026-10-18); provenance in `public/landing/PROVENANCE.md` and per-file sidecars.
+- **Rasters:** `public/landing/orbit/*` are generated frames (Magnific, 2026-10-18); provenance in `EIOS/web-prototype/asset-sources/landing/PROVENANCE.md` and per-file sidecars (kept out of `public/` so they are not served).
+
+### Sign-in (`/login`) in the same world
+The sign-in inherits the Field Report tokens (scoped under `.fde`, styles in `src/components/auth/login/login.css`, type variable set by `src/app/login/layout.tsx`). Left column: breadcrumb, display line, lede, and the **Evaluator guide** block, the one place that carries `--sig` (tick, border, kicker) and a solid ink button that opens the owner's Google Slides deck in a new tab (`evaluator-guide.tsx`). Right column: the sign-in frame and the evaluator accounts, both hairline frames with corner ticks. The five-slab stack sits behind at 13% opacity, hidden on narrow screens. Mobile order: lede, guide, sign-in, accounts. A failed sign-in uses `--warn` on a left tick, never red. The left column is independent of the form so an error line never moves the guide. Copy says "evaluator", never "reviewer", and never "all data is synthetic".
 
 ### Landing round 3 additions
 - Charts (`MiniChart`) draw only values already printed in the row's copy: a fill, a unit strip or a one-dimensional track with dot marks. Reference values are a vertical tick, earlier or weaker values a hollow dot. No axes numbers; the labels carry the values.

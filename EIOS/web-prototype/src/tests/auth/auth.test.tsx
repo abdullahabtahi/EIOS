@@ -119,6 +119,36 @@ describe('RequireAuth', () => {
 });
 
 describe('LoginPage', () => {
+  afterEach(() => {
+    replace.mockReset();
+    authState.user = null;
+  });
+
+  it('links the evaluator guide in a new tab, without handing the guide the opener', () => {
+    authState.auth = {};
+    authState.user = null;
+    render(
+      <AuthProvider>
+        <LoginPage />
+      </AuthProvider>,
+    );
+    const link = screen.getByRole('link', { name: /open the evaluator guide/i });
+    expect(link).toHaveAttribute('href', expect.stringMatching(/^https:\/\/docs\.google\.com\/presentation\/d\//));
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link.getAttribute('rel')).toContain('noopener');
+  });
+
+  it('sends a signed-in operator to the geospatial workstation, the first section of the rail', async () => {
+    authState.auth = {};
+    authState.user = { uid: 'u1', email: 'a@example.org' };
+    render(
+      <AuthProvider>
+        <LoginPage />
+      </AuthProvider>,
+    );
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/cockpit/geospatial'));
+  });
+
   it('shows one generic error for any failed sign-in', async () => {
     authState.auth = {};
     authState.user = null;
@@ -133,5 +163,26 @@ describe('LoginPage', () => {
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('Sign-in failed');
     expect(alert.textContent).not.toMatch(/invalid-credential|user-not-found|wrong-password/i);
+  });
+});
+
+describe('signed-in operator name in the shell', () => {
+  it('shows a readable name in the header and the rail, with the mailbox only as a tooltip', async () => {
+    const { CockpitProvider } = await import('@/components/cockpit/state/cockpit-context');
+    const { ChromeOperator } = await import('@/components/cockpit/shell/chrome-bar');
+    authState.auth = {};
+    authState.user = { uid: 'u1', email: 'judge-approver1@eios-demo.example.org', displayName: null };
+    const { container } = render(
+      <AuthProvider>
+        <CockpitProvider>
+          <ChromeOperator />
+        </CockpitProvider>
+      </AuthProvider>,
+    );
+    expect(await screen.findByTestId('chrome-operator-name')).toHaveTextContent('Judge Approver 1');
+    expect(screen.queryByText(/eios-demo\.example\.org/)).not.toBeInTheDocument();
+    expect(container.querySelector('[title="judge-approver1@eios-demo.example.org"]')).not.toBeNull();
+    expect(screen.getByText('JA')).toBeInTheDocument();
+    authState.user = null;
   });
 });

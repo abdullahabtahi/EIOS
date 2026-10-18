@@ -4,6 +4,7 @@ import React from 'react';
 import { CockpitProvider, useCockpit } from '@/components/cockpit/state/cockpit-context';
 import { TripartiteShell } from '@/components/cockpit/shell/tripartite-shell';
 import { AppNavRail } from '@/components/cockpit/shell/app-nav-rail';
+import { APP_HOME_HREF } from '@/components/cockpit/shell/app-nav-items';
 
 const OPEN_INTENT_MS = 120;
 const CLOSE_GRACE_MS = 280;
@@ -156,6 +157,16 @@ describe('AppNavRail: content', () => {
     const bb = within(nav).getByRole('button', { name: /OpenBB/ });
     expect(bb).toHaveAttribute('aria-disabled', 'true');
     expect(within(bb).getByText('SOON')).toBeInTheDocument();
+  });
+
+  it('lists Geospatial first, then Workstations, and lands sign-in on the first section', () => {
+    renderRail();
+    const nav = screen.getByRole('navigation', { name: 'Primary' });
+    const ids = within(nav)
+      .getAllByTestId(/^nav-app-/)
+      .map((el) => el.getAttribute('data-testid'));
+    expect(ids).toEqual(['nav-app-geospatial', 'nav-app-workstations', 'nav-app-openbb']);
+    expect(APP_HOME_HREF).toBe('/cockpit/geospatial');
   });
 
   it('marks the section it is told is current, and links back to the cockpit from elsewhere', () => {

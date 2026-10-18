@@ -1,0 +1,346 @@
+/* Operator sign-in, in the landing's Field Report world. Tokens come from .fde (landing.css); scoped under .fde-login. */
+
+.fde-login {
+  display: flex;
+  flex-direction: column;
+}
+.fde-login-nav {
+  grid-template-columns: 1fr auto 1fr;
+}
+
+.fde-login-grid {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: clamp(24px, 3.4vw, 52px) var(--pad) clamp(40px, 6vw, 88px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 460px);
+  grid-template-rows: auto auto;
+  grid-template-areas:
+    "left form"
+    "left accounts";
+  column-gap: clamp(32px, 6vw, 96px);
+  row-gap: 28px;
+  align-content: start;
+}
+/* Lede and guide stack in their own column, so a taller form (an error line) never moves the guide. */
+.fde-login-left {
+  grid-area: left;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  align-self: start;
+}
+.fde-login-form {
+  grid-area: form;
+  position: relative;
+  z-index: 1;
+  align-self: start;
+}
+.fde-login-accounts-slot {
+  grid-area: accounts;
+  position: relative;
+  z-index: 1;
+  align-self: start;
+}
+
+/* The five-slab stack, kept quiet behind the left column. */
+.fde-login-art {
+  --sh: min(86vh, 820px);
+  position: absolute;
+  z-index: 0;
+  left: 22%;
+  top: 0;
+  opacity: 0.13;
+  pointer-events: none;
+}
+
+.fde-login-display {
+  font-weight: 400;
+  font-size: clamp(2.25rem, 4.2vw, 3.75rem);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+  max-width: 15ch;
+  margin: 24px 0 20px;
+}
+.fde-login-intro .fde-lede {
+  max-width: 44ch;
+}
+
+/* Hairline frames with corner ticks, the landing's figure-frame grammar. */
+.fde-login-form,
+.fde-login-accounts,
+.fde-login-guide {
+  position: relative;
+  border: 1px solid var(--rule);
+  background: var(--ground);
+  padding: clamp(20px, 2.4vw, 32px);
+}
+.fde-login-form::before,
+.fde-login-accounts::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 14px;
+  height: 14px;
+  border-top: 1px solid var(--ink);
+  border-left: 1px solid var(--ink);
+}
+.fde-login-form::after,
+.fde-login-accounts::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 14px;
+  height: 14px;
+  border-right: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+/* The evaluator guide: the one block that carries the signal colour. */
+.fde-login-guide {
+  max-width: 520px;
+  border-color: rgb(157 183 207 / 0.5);
+  background: #111922;
+  padding-left: clamp(22px, 2.6vw, 34px);
+}
+.fde-login-guide::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: -1px;
+  bottom: -1px;
+  width: 3px;
+  background: var(--sig);
+}
+.fde-login-kicker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 14px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--sig);
+}
+.fde-login-tick {
+  width: 18px;
+  height: 1px;
+  background: var(--sig);
+}
+.fde-login-guide-title {
+  margin: 0 0 8px;
+  font-weight: 400;
+  font-size: clamp(1.5rem, 2.2vw, 2rem);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.fde-login-guide-body {
+  margin: 0 0 22px;
+  color: var(--ink-2);
+  font-size: 0.9375rem;
+  max-width: 44ch;
+}
+.fde .fde-login-cta,
+.fde .fde-login-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--ink);
+  color: var(--ground);
+  border: 1px solid var(--ink);
+  padding: 15px 20px;
+  font: inherit;
+  font-size: 0.9375rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
+}
+.fde .fde-login-cta:hover,
+.fde .fde-login-submit:hover:not(:disabled) {
+  background: var(--ground);
+  color: var(--ink);
+}
+.fde .fde-login-submit:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* Labels, fields, notes */
+.fde-login-label {
+  margin: 0 0 20px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.fde-login-field {
+  display: block;
+  margin-bottom: 18px;
+}
+.fde-login-field > span {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+}
+.fde-login-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  background: rgb(236 235 230 / 0.04);
+  border: 1px solid var(--rule);
+  border-radius: 0;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.fde-login-field input:hover {
+  border-color: var(--ink-3);
+}
+.fde-login-field input:focus {
+  border-color: var(--sig);
+  background: rgb(157 183 207 / 0.07);
+}
+.fde-login-field input:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 40px #151a21 inset;
+  caret-color: var(--ink);
+}
+.fde-login-error {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--warn);
+  color: var(--warn);
+  font-size: 0.8125rem;
+}
+.fde-login-note {
+  margin: -8px 0 18px;
+  color: var(--ink-2);
+  font-size: 0.8125rem;
+  max-width: 52ch;
+}
+
+/* Evaluator accounts */
+.fde-login-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fde-login-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-top: 1px dashed var(--rule);
+}
+.fde-login-row:first-child {
+  border-top: 1px solid var(--rule);
+}
+.fde-login-row-pw {
+  border-top: 1px solid var(--rule);
+  margin-top: 6px;
+}
+.fde-login-row-text {
+  min-width: 0;
+}
+.fde-login-row-name {
+  display: block;
+  font-size: 0.875rem;
+}
+.fde-login-row-mono {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono), monospace;
+  font-size: 0.75rem;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+.fde-login-chip {
+  flex-shrink: 0;
+  appearance: none;
+  background: none;
+  color: var(--ink);
+  border: 1px solid var(--ink-3);
+  padding: 7px 14px;
+  font: inherit;
+  font-size: 0.8125rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), color 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+.fde-login-chip:hover {
+  background: var(--ink);
+  color: var(--ground);
+  border-color: var(--ink);
+}
+
+/* One authored entrance, off under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .fde-login-intro,
+  .fde-login-guide,
+  .fde-login-form,
+  .fde-login-accounts-slot {
+    animation: fde-login-in 0.7s var(--ease) both;
+  }
+  .fde-login-guide {
+    animation-delay: 90ms;
+  }
+  .fde-login-form {
+    animation-delay: 160ms;
+  }
+  .fde-login-accounts-slot {
+    animation-delay: 240ms;
+  }
+}
+@keyframes fde-login-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* One column: lede, guide, sign-in, accounts. */
+@media (max-width: 920px) {
+  .fde-login-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    grid-template-areas:
+      "left"
+      "form"
+      "accounts";
+  }
+  .fde-login-art {
+    display: none;
+  }
+  .fde-login-display {
+    margin: 22px 0 18px;
+    max-width: 18ch;
+  }
+  .fde-login-guide {
+    max-width: none;
+  }
+  .fde-login-nav {
+    grid-template-columns: auto 1fr auto;
+  }
+}

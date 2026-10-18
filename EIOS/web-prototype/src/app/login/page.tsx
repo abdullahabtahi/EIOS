@@ -1,8 +1,15 @@
 'use client';
 
 import * as React from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth/auth-context';
+import { APP_HOME_HREF } from '@/components/cockpit/shell/app-nav-items';
+import { EvaluatorAccounts } from '@/components/auth/login/evaluator-accounts';
+import { EvaluatorGuide } from '@/components/auth/login/evaluator-guide';
+import { StackSvg } from '@/components/landing/StackSvg';
+import '@/components/landing/landing.css';
+import '@/components/auth/login/login.css';
 import type { DemoAccess } from '@/lib/auth/demo-access';
 
 export default function LoginPage() {
@@ -39,7 +46,7 @@ export default function LoginPage() {
   };
 
   React.useEffect(() => {
-    if (status === 'signedIn' || status === 'disabled') router.replace('/cockpit');
+    if (status === 'signedIn' || status === 'disabled') router.replace(APP_HOME_HREF);
   }, [status, router]);
 
   const onSubmit = async (event: React.FormEvent) => {
@@ -57,99 +64,94 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-cx-canvas px-4 py-8">
-      <form onSubmit={onSubmit} aria-labelledby="login-title" className="w-full max-w-sm border border-cx-line bg-white p-6">
-        <h1 id="login-title" className="text-sm font-bold uppercase tracking-wider text-cx-ink">
-          EIOS Operator Sign-in
-        </h1>
-        <p className="mt-1 text-xs text-cx-muted">Access is limited to provisioned operators. Actions are attributed to your identity.</p>
-        <label className="mt-5 block text-xs font-semibold text-cx-ink-soft" htmlFor="email">
-          Email
-        </label>
-        <input
-          id="email"
-          type="email"
-          autoComplete="username"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="mt-1 w-full border border-cx-line-strong bg-white px-3 py-2 text-sm text-cx-ink outline-none focus:border-cx-accent"
-        />
-        <label className="mt-4 block text-xs font-semibold text-cx-ink-soft" htmlFor="password">
-          Password
-        </label>
-        <input
-          id="password"
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="mt-1 w-full border border-cx-line-strong bg-white px-3 py-2 text-sm text-cx-ink outline-none focus:border-cx-accent"
-        />
-        {error && (
-          <p role="alert" className="mt-3 text-xs text-red-700">
-            {error}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={busy}
-          className="mt-5 w-full bg-cx-ink px-3 py-2 text-xs font-bold uppercase tracking-wider text-white hover:bg-cx-ink-hover disabled:opacity-60"
-        >
-          {busy ? 'Signing in…' : 'Sign in'}
-        </button>
-      </form>
-      {access && (
-        <section
-          aria-labelledby="reviewer-access-title"
-          className="mt-4 w-full max-w-sm border border-cx-line bg-white p-6"
-          data-testid="reviewer-access"
-        >
-          <h2 id="reviewer-access-title" className="text-xs font-bold uppercase tracking-wider text-cx-ink">
-            Reviewer access
-          </h2>
-          <p className="mt-1 text-xs text-cx-muted">
-            {access.note ?? 'Shared demo accounts for reviewers and judges. All data in this build is synthetic.'}
-          </p>
-          <ul className="mt-3 space-y-2">
-            {access.accounts.map((account) => (
-              <li key={account.email} className="flex items-center justify-between gap-2 text-xs">
-                <span className="min-w-0">
-                  <span className="block font-semibold text-cx-ink-soft">{account.label}</span>
-                  <span className="block truncate font-mono text-cx-muted">{account.email}</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail(account.email);
-                    setPassword(access.password);
-                    setError(null);
-                  }}
-                  className="shrink-0 border border-cx-line-strong px-2 py-1 font-semibold text-cx-ink hover:border-cx-accent"
-                >
-                  Use
-                </button>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4 flex items-center justify-between gap-2 border-t border-cx-line pt-3 text-xs">
-            <span>
-              <span className="block font-semibold text-cx-ink-soft">Password (all accounts)</span>
-              <span className="block font-mono text-cx-ink" data-testid="reviewer-password">
-                {access.password}
-              </span>
-            </span>
-            <button
-              type="button"
-              onClick={copyPassword}
-              className="shrink-0 border border-cx-line-strong px-2 py-1 font-semibold text-cx-ink hover:border-cx-accent"
-            >
-              {copied ? 'Copied' : 'Copy'}
-            </button>
+    <div className="fde fde-login">
+      <header className="fde-nav fde-login-nav">
+        <Link href="/" className="fde-wordmark" aria-label="EIOS home">
+          EIOS
+        </Link>
+        <span aria-hidden="true" />
+        <Link href="/" className="fde-nav-cta">
+          <span aria-hidden="true">←</span> The case study
+        </Link>
+      </header>
+
+      <main className="fde-login-grid">
+        <div className="fde-login-art" aria-hidden="true">
+          <div className="fde-stack">
+            <StackSvg active={null} />
           </div>
-        </section>
-      )}
-    </main>
+        </div>
+
+        <div className="fde-login-left">
+          <section className="fde-login-intro" aria-labelledby="login-heading">
+            <p className="fde-crumb">
+              <span className="fde-crumb-pill">Operator access</span>
+              <span className="fde-crumb-arrow" aria-hidden="true" />
+              <span>Financial services</span>
+            </p>
+            <h1 id="login-heading" className="fde-login-display">
+              Every action is attributed to a person.
+            </h1>
+            <p className="fde-lede">
+              Access is limited to provisioned operators. Nothing changes state without a second approver, and every approval
+              carries your identity.
+            </p>
+          </section>
+
+          <EvaluatorGuide />
+        </div>
+
+        <form onSubmit={onSubmit} aria-labelledby="login-title" className="fde-login-form">
+          <h2 id="login-title" className="fde-login-label">
+            Operator sign-in
+          </h2>
+          <label className="fde-login-field" htmlFor="email">
+            <span>Email</span>
+            <input
+              id="email"
+              type="email"
+              autoComplete="username"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </label>
+          <label className="fde-login-field" htmlFor="password">
+            <span>Password</span>
+            <input
+              id="password"
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </label>
+          {error && (
+            <p role="alert" className="fde-login-error">
+              {error}
+            </p>
+          )}
+          <button type="submit" disabled={busy} className="fde-login-submit">
+            {busy ? 'Signing in…' : 'Sign in'} <span aria-hidden="true">→</span>
+          </button>
+        </form>
+
+        {access && (
+          <div className="fde-login-accounts-slot">
+            <EvaluatorAccounts
+              access={access}
+              copied={copied}
+              onUse={(nextEmail, nextPassword) => {
+                setEmail(nextEmail);
+                setPassword(nextPassword);
+                setError(null);
+              }}
+              onCopyPassword={copyPassword}
+            />
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
