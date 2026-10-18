@@ -15,6 +15,7 @@ import { authFetch } from '@/lib/auth/token';
 import { ChatDividerView, ChatItem, ChatTurn, ChatTurnView } from './chat-turn';
 import { suggestedQuestions } from './chat-suggestions';
 import type { ProposalState } from './copilot-proposals';
+import { ChatComposer } from './chat-composer';
 import { ModelPicker, useModelChoice } from './model-picker';
 
 /** An operator-readable reason for a failed copilot request. Never an answer. */
@@ -165,7 +166,6 @@ export function CopilotChat() {
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />
           {items.length > 0 && (
             <button
               type="button"
@@ -216,33 +216,18 @@ export function CopilotChat() {
         )}
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void ask(query);
-        }}
-        className="border-t border-slate-200 bg-slate-50 p-2.5 shrink-0"
-      >
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Escape' && inputRef.current?.blur()}
-            placeholder={entityId ? `Ask about ${entityId}…` : 'Ask the copilot…'}
-            aria-label="Ask the copilot"
-            className="flex-1 min-w-0 px-3 py-2 bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-blue-600 rounded-none"
-          />
-          <button
-            type="submit"
-            disabled={pending > 0 || !query.trim()}
-            className="px-3 py-2 bg-slate-900 hover:bg-black text-white text-xs font-medium rounded-none disabled:opacity-40 cursor-pointer shrink-0"
-          >
-            {pending > 0 ? 'Working…' : 'Send'}
-          </button>
-        </div>
-      </form>
+      <ChatComposer
+        value={query}
+        onChange={setQuery}
+        onSubmit={() => void ask(query)}
+        placeholder={entityId ? `Ask about ${entityId}…` : 'Ask the copilot…'}
+        ariaLabel="Ask the copilot"
+        sendLabel="Send"
+        pending={pending > 0}
+        inputRef={inputRef}
+        onKeyDown={(e) => e.key === 'Escape' && inputRef.current?.blur()}
+        accessory={<ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />}
+      />
     </section>
   );
 }

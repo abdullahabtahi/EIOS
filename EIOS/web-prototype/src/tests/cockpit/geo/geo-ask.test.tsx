@@ -59,7 +59,7 @@ describe('the geospatial assistant beside the map', () => {
     const onMove = vi.fn();
     render(<GeoAsk context={{ view: 'corridors' }} selected={null} onMove={onMove} />);
     fireEvent.change(screen.getByLabelText('Ask the geospatial assistant'), { target: { value: 'Who else?' } });
-    fireEvent.click(screen.getByText('Ask'));
+    fireEvent.click(screen.getByRole('button', { name: 'Ask' }));
     fireEvent.click(await screen.findByText('account CR11568'));
     expect(onMove).toHaveBeenLastCalledWith({ kind: 'account', id: 'CR11568' }, false);
   });
@@ -80,7 +80,7 @@ describe('the geospatial assistant beside the map', () => {
     await screen.findByText(/shared by 22 accounts/);
     rerender(<GeoAsk context={CONTEXT} selected={{ kind: 'gateway', id: 'GW-NG-X00' }} onMove={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Ask the geospatial assistant'), { target: { value: 'And this?' } });
-    fireEvent.click(screen.getByText('Ask'));
+    fireEvent.click(screen.getByRole('button', { name: 'Ask' }));
     expect(await screen.findByRole('separator')).toHaveTextContent('Now viewing gateway GW-NG-X00');
   });
 });

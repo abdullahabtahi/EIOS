@@ -12,6 +12,7 @@ import { ChatDividerView, type ChatItem, type ChatTurn, ChatTurnView } from '../
 import { describeCopilotFailure } from '../shell/copilot-chat';
 import type { ProposalState } from '../shell/copilot-proposals';
 import { useScrollToEnd } from '../shell/use-scroll-end';
+import { ChatComposer } from '../shell/chat-composer';
 import { ModelPicker, useModelChoice } from '../shell/model-picker';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { authFetch } from '@/lib/auth/token';
@@ -182,7 +183,6 @@ export function GeoAsk({ context, selected, onMove, onPending, onAnswered, inten
         <span className="min-w-0 text-cx-muted" data-testid="geo-ask-context">
           {onScreen ? `About the ${onScreen} on the map` : 'Nothing selected: ask about the whole book'}
         </span>
-        <ModelPicker quiet choices={models.choices} selected={models.selected} onSelect={models.select} />
       </div>
 
       <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto border-t border-cx-line-soft p-4 scrollbar-thin">
@@ -230,32 +230,17 @@ export function GeoAsk({ context, selected, onMove, onPending, onAnswered, inten
         )}
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void ask(query);
-        }}
-        className="shrink-0 border-t border-cx-line bg-white p-3"
-      >
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={onScreen ? `Ask about the ${onScreen}…` : 'Ask about the map…'}
-            aria-label="Ask the geospatial assistant"
-            className="min-w-0 flex-1 rounded-none border border-cx-line bg-white px-3 py-2 text-xs text-cx-ink outline-none placeholder:text-cx-muted focus-visible:border-cx-accent focus-visible:ring-1 focus-visible:ring-cx-accent"
-          />
-          <button
-            type="submit"
-            disabled={pending || !query.trim()}
-            className="shrink-0 cursor-pointer rounded-none bg-cx-ink px-3 py-2 text-xs font-medium text-white outline-none hover:bg-black focus-visible:ring-2 focus-visible:ring-cx-accent focus-visible:ring-offset-1 disabled:opacity-40"
-          >
-            {pending ? 'Working…' : 'Ask'}
-          </button>
-        </div>
-      </form>
+      <ChatComposer
+        value={query}
+        onChange={setQuery}
+        onSubmit={() => void ask(query)}
+        placeholder={onScreen ? `Ask about the ${onScreen}…` : 'Ask about the map…'}
+        ariaLabel="Ask the geospatial assistant"
+        sendLabel="Ask"
+        pending={pending}
+        inputRef={inputRef}
+        accessory={<ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />}
+      />
     </section>
   );
 }

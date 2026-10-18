@@ -28,19 +28,29 @@ afterEach(() => {
 });
 
 describe('model picker', () => {
+  it('opens a list that names what each model is for, and closes on Escape', async () => {
+    respond({ models: MODELS });
+    render(<Harness />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Model/ }));
+    expect(screen.getByRole('option', { name: /Fastest answers/ })).toHaveAttribute('aria-selected', 'true');
+    fireEvent.keyDown(screen.getByRole('listbox'), { key: 'Escape' });
+    expect(screen.queryByRole('listbox')).toBeNull();
+  });
+
   it('starts on the backend default, the fastest model', async () => {
     respond({ models: MODELS });
     render(<Harness />);
-    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Model' })).toBeTruthy());
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Model: 3.5 Flash-Lite' })).toBeTruthy());
     expect(screen.getByTestId('selected').textContent).toBe('fast');
   });
 
   it('remembers the operator pick for next time', async () => {
     respond({ models: MODELS });
     render(<Harness />);
-    const select = await screen.findByRole('combobox', { name: 'Model' });
+    fireEvent.click(await screen.findByRole('button', { name: 'Model: 3.5 Flash-Lite' }));
+    expect(screen.getByRole('option', { name: /3.8 Flash/ })).toBeTruthy();
     act(() => {
-      fireEvent.change(select, { target: { value: 'deep' } });
+      fireEvent.click(screen.getByRole('option', { name: /3.8 Flash/ }));
     });
     expect(screen.getByTestId('selected').textContent).toBe('deep');
     expect(window.localStorage.getItem('eios.copilot.model')).toBe('deep');
@@ -57,7 +67,7 @@ describe('model picker', () => {
     respond({ detail: 'offline' }, false);
     render(<Harness />);
     await new Promise((r) => setTimeout(r, 20));
-    expect(screen.queryByRole('combobox')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Model/ })).toBeNull();
     expect(screen.getByTestId('selected').textContent).toBe('none');
   });
 
@@ -65,6 +75,6 @@ describe('model picker', () => {
     respond({ workstation: 'partner_manager' });
     render(<Harness />);
     await new Promise((r) => setTimeout(r, 20));
-    expect(screen.queryByRole('combobox')).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Model/ })).toBeNull();
   });
 });
