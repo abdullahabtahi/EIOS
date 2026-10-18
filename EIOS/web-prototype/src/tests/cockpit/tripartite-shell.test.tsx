@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
-import { CockpitProvider } from '@/components/cockpit/state/cockpit-context';
+import { CockpitProvider, useCockpit } from '@/components/cockpit/state/cockpit-context';
+import type { PersonaRole } from '@/components/cockpit/state/cockpit-types';
 import { TripartiteShell } from '@/components/cockpit/shell/tripartite-shell';
 
 // Mock global fetch for testing
@@ -79,10 +80,17 @@ beforeEach(() => {
   });
 });
 
+function RoleDriver({ role }: { role: PersonaRole }) {
+  const { setRole } = useCockpit();
+  React.useEffect(() => { setRole(role); }, [role, setRole]);
+  return null;
+}
+
 describe('Tripartite Shell Layout & Navigation (User Story 1)', () => {
   it('renders all tripartite COP zones: Left Rail, Center Dossier, Right Canvas, Header Nav, and Governed Action Shelf', async () => {
     render(
       <CockpitProvider>
+        <RoleDriver role="aml_investigator" />
         <TripartiteShell />
       </CockpitProvider>
     );
@@ -95,7 +103,7 @@ describe('Tripartite Shell Layout & Navigation (User Story 1)', () => {
     expect(screen.getByRole('button', { name: /Simulate Outage/i })).toBeInTheDocument();
 
     // Left Triage Rail
-    expect(screen.getByPlaceholderText(/Filter triage queue/i)).toBeInTheDocument();
+    expect(await screen.findByPlaceholderText(/Filter triage queue/i)).toBeInTheDocument();
 
     // Governed Action Shelf
     expect(screen.getByText(/GOVERNED ACTION SHELF/i)).toBeInTheDocument();

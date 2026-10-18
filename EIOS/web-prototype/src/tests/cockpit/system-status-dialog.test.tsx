@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import React from 'react';
-import { CockpitProvider } from '@/components/cockpit/state/cockpit-context';
+import { CockpitProvider, useCockpit } from '@/components/cockpit/state/cockpit-context';
+import type { PersonaRole } from '@/components/cockpit/state/cockpit-types';
 import { HeaderNav } from '@/components/cockpit/shell/header-nav';
 import { TripartiteShell } from '@/components/cockpit/shell/tripartite-shell';
 import { getMockWorkstationState } from '@/components/cockpit/state/fixtures';
@@ -21,6 +22,12 @@ function mockFixture() {
 }
 
 afterEach(() => vi.restoreAllMocks());
+
+function RoleDriver({ role }: { role: PersonaRole }) {
+  const { setRole } = useCockpit();
+  React.useEffect(() => { setRole(role); }, [role, setRole]);
+  return null;
+}
 
 describe('System status dialog (replaces the canvas "Diagnostics" tab)', () => {
   it('opens from the header pipeline chip, which is a real button with dialog semantics', async () => {
@@ -78,14 +85,16 @@ describe('System status dialog (replaces the canvas "Diagnostics" tab)', () => {
 });
 
 describe('Pane collapse controls live inside their pane headers', () => {
-  it('triage collapse is inside the triage rail header; canvas collapse inside the canvas bar', () => {
+  it('triage collapse is inside the triage rail header; canvas collapse inside the canvas bar', async () => {
+    window.history.replaceState(null, '', '/'); // an earlier test may have left a role in the address
     mockLive();
     render(
       <CockpitProvider>
+        <RoleDriver role="aml_investigator" />
         <TripartiteShell />
       </CockpitProvider>,
     );
-    const left = screen.getByRole('button', { name: /Collapse Left Rail/i });
+    const left = await screen.findByRole('button', { name: /Collapse Left Rail/i });
     expect(left.closest('aside[aria-label="Triage Queue Rail"]')).not.toBeNull();
     const right = screen.getByRole('button', { name: /Collapse Right Canvas/i });
     expect(right.closest('[data-testid="canvas-bar"]')).not.toBeNull();
