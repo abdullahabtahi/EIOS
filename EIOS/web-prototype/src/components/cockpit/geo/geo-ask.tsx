@@ -107,7 +107,7 @@ export function GeoAsk({ context, selected, onMove, onPending, onAnswered, inten
   const [query, setQuery] = React.useState('');
   const [pending, setPending] = React.useState(false);
   const models = useModelChoice();
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const inputRef = React.useRef<HTMLTextAreaElement>(null);
   // A request to be ready for a question is answered once per id: the text lands in the box during the render that sees it.
   const [seenIntent, setSeenIntent] = React.useState<number | null>(null);
   const onScreen = selectionKey(selected);
@@ -179,27 +179,26 @@ export function GeoAsk({ context, selected, onMove, onPending, onAnswered, inten
 
   return (
     <section aria-label="Ask about the map" className="flex h-full min-h-0 flex-col bg-white">
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-0.5 px-4 pb-2 text-label">
-        <span className="min-w-0 text-cx-muted" data-testid="geo-ask-context">
-          {onScreen ? `About the ${onScreen} on the map` : 'Nothing selected: ask about the whole book'}
-        </span>
-      </div>
-
-      <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto border-t border-cx-line-soft p-4 scrollbar-thin">
+      <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto border-t border-cx-line-soft px-4 py-5 scrollbar-thin">
         {items.length === 0 ? (
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold leading-snug text-cx-ink">Ask why the map shows what it shows</h3>
-            <p className="text-label text-cx-muted">
-              Every figure is checked against what a tool returned, and the map moves only to what a tool found.
-            </p>
-            <ul className="-mx-4 divide-y divide-cx-line-soft pt-1">
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <h3 className="text-base font-semibold leading-snug text-cx-ink">Ask why the map shows what it shows</h3>
+              <p className="text-xs leading-relaxed text-cx-muted">
+                Every figure is checked against what a tool returned, and the map moves only to what a tool found.
+              </p>
+            </div>
+            <ul className="space-y-1.5" aria-label="Suggested questions">
               {geoSuggestions(selected).map((s) => (
                 <li key={s}>
                   <button
                     type="button"
                     onClick={() => ask(s)}
-                    className="w-full cursor-pointer px-4 py-2 text-left text-xs text-cx-ink outline-none transition-colors hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cx-accent">
-                    {s}
+                    className="group flex w-full cursor-pointer items-start gap-2.5 border border-cx-line-soft bg-white px-3 py-2.5 text-left text-xs leading-snug text-cx-ink outline-none transition-colors hover:border-cx-line hover:bg-cx-sub focus-visible:ring-2 focus-visible:ring-cx-accent">
+                    <span className="material-symbols-sharp mt-px text-base leading-none text-cx-faint transition-colors group-hover:text-cx-accent" aria-hidden="true">
+                      north_east
+                    </span>
+                    <span className="min-w-0">{s}</span>
                   </button>
                 </li>
               ))}
@@ -239,6 +238,18 @@ export function GeoAsk({ context, selected, onMove, onPending, onAnswered, inten
         sendLabel="Ask"
         pending={pending}
         inputRef={inputRef}
+        context={
+          <span
+            className="inline-flex max-w-full items-center gap-1 border border-cx-line-soft bg-cx-sub px-2 py-1 text-label text-cx-ink-soft"
+            data-testid="geo-ask-context"
+            title={onScreen ? `Questions are about the ${onScreen} on the map` : 'Nothing is selected, so questions are about the whole book'}
+          >
+            <span className="material-symbols-sharp text-sm leading-none text-cx-muted" aria-hidden="true">
+              {onScreen ? 'my_location' : 'public'}
+            </span>
+            <span className="truncate">{onScreen ?? 'Whole book'}</span>
+          </span>
+        }
         accessory={<ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />}
       />
     </section>

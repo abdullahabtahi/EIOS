@@ -76,7 +76,7 @@ export function CopilotChat() {
   const [query, setQuery] = React.useState('');
   const models = useModelChoice();
   const [pending, setPending] = React.useState(0);
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const items = threads[role] ?? [];
 
   const patch = (forRole: string, change: (items: ChatItem[]) => ChatItem[]) =>
