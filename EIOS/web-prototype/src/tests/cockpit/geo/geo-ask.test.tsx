@@ -109,16 +109,3 @@ describe('what the question is about', () => {
     expect(onClear).toHaveBeenCalled();
   });
 });
-
-describe('a new conversation', () => {
-  it('empties the screen and does not list an offered question twice', async () => {
-    reply(200, ANSWER);
-    const props = { context: { view: 'corridors' as const }, selected: null, onMove: () => undefined };
-    const { rerender } = render(<GeoAsk {...props} newChatSignal={0} />);
-    fireEvent.click(screen.getByText('Where should I look first?'));
-    await screen.findByText(/shared by 22 accounts/);
-    rerender(<GeoAsk {...props} newChatSignal={1} />);
-    expect(screen.queryByText(/shared by 22 accounts/)).toBeNull();
-    expect(screen.getAllByText('Where should I look first?').length).toBe(1); // offered above, so not listed twice
-  });
-});

@@ -21,8 +21,6 @@ export interface GeoChatWindowProps {
   readonly onDock: () => void;
   readonly onFloat: () => void;
   readonly onClose: () => void;
-  /** Starts a new conversation; absent while there is nothing to clear or an answer is on its way. */
-  readonly onNewChat?: () => void;
   readonly children: React.ReactNode;
 }
 
@@ -38,7 +36,7 @@ const BUTTON = 'flex size-7 shrink-0 cursor-pointer items-center justify-center 
  * not shown), floating over the map (moved by its handle, with the pointer or the arrow keys), or docked as the first
  * column of the page. Its content is the caller's.
  */
-export function GeoChatWindow({ mode, pos, size: remembered, bounds, onMove, onSettle, onResize, onResizeSettle, onDock, onFloat, onClose, onNewChat, children }: GeoChatWindowProps) {
+export function GeoChatWindow({ mode, pos, size: remembered, bounds, onMove, onSettle, onResize, onResizeSettle, onDock, onFloat, onClose, children }: GeoChatWindowProps) {
   const floating = mode === 'floating';
   const size = windowSize(bounds, remembered ?? undefined);
   const at = clampPosition(pos ?? defaultPosition(size, bounds), size, bounds);
@@ -93,11 +91,6 @@ export function GeoChatWindow({ mode, pos, size: remembered, bounds, onMove, onS
             <Icon icon={ASSISTANT_ICON} size="sm" className="text-cx-accent" />
             <span className="truncate">Geospatial Agent</span>
           </h2>
-        )}
-        {onNewChat && (
-          <button type="button" aria-label="New chat" title="New chat" onClick={onNewChat} className={BUTTON}>
-            <Icon icon="edit_square" size="sm" />
-          </button>
         )}
         <button
           type="button"
