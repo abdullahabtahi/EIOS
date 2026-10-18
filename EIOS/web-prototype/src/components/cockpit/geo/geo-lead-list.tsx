@@ -24,7 +24,7 @@ function Row({ lead, selected, onSelect }: { readonly lead: Lead; readonly selec
         <span aria-hidden="true" className={`mt-1.5 size-2 shrink-0 ${lead.tier ? DOT[lead.tier] : ''}`} />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-xs font-medium text-cx-ink">{lead.title}</span>
-          <span className="block truncate text-label text-cx-muted">
+          <span className="block text-label text-cx-muted">
             {lead.tier && <span className="font-semibold text-cx-ink-soft">{lead.tier === 'high' ? 'High' : 'Medium'} · </span>}
             {lead.detail}
           </span>

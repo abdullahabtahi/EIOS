@@ -166,7 +166,7 @@ describe('the chat view', () => {
     expect(screen.queryByText('Partner answer.')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('role-partner'));
     expect(await screen.findByText('Partner answer.')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear conversation' }));
     expect(screen.queryByText('Partner answer.')).not.toBeInTheDocument();
   });
 
@@ -229,12 +229,13 @@ describe('the model choice', () => {
     window.localStorage.clear();
     await renderColumn();
     fireEvent.click(screen.getByRole('tab', { name: /Chat/ }));
-    const picker = await screen.findByRole('combobox', { name: 'Model' });
+    await screen.findByRole('button', { name: /^Model/ });
     send('first');
     await waitFor(() => expect(bodies()).toHaveLength(1));
     expect(bodies()[0].model).toBe('fast');
     await screen.findByText('hi');
-    fireEvent.change(picker, { target: { value: 'deep' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Model/ }));
+    fireEvent.click(screen.getByRole('option', { name: /deep|All-around|3.8/i }));
     send('second');
     await waitFor(() => expect(bodies()).toHaveLength(2));
     expect(bodies()[1].model).toBe('deep');

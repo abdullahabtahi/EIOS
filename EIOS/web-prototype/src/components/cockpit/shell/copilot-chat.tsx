@@ -7,6 +7,7 @@
  */
 
 import * as React from 'react';
+import { useScrollToEnd } from './use-scroll-end';
 import { useCockpit } from '../state/cockpit-context';
 import type { AssistantProposal, CopilotQueryResponse } from '../state/cockpit-types';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
@@ -14,6 +15,7 @@ import { authFetch } from '@/lib/auth/token';
 import { ChatDividerView, ChatItem, ChatTurn, ChatTurnView } from './chat-turn';
 import { suggestedQuestions } from './chat-suggestions';
 import type { ProposalState } from './copilot-proposals';
+import { ChatComposer } from './chat-composer';
 import { ModelPicker, useModelChoice } from './model-picker';
 
 /** An operator-readable reason for a failed copilot request. Never an answer. */
@@ -74,16 +76,13 @@ export function CopilotChat() {
   const [query, setQuery] = React.useState('');
   const models = useModelChoice();
   const [pending, setPending] = React.useState(0);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const endRef = React.useRef<HTMLDivElement>(null);
+  const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const items = threads[role] ?? [];
 
   const patch = (forRole: string, change: (items: ChatItem[]) => ChatItem[]) =>
     setThreads((all) => ({ ...all, [forRole]: change(all[forRole] ?? []) }));
 
-  React.useEffect(() => {
-    if (typeof endRef.current?.scrollIntoView === 'function') endRef.current.scrollIntoView({ behavior: 'smooth' });
-  }, [items]);
+  const listRef = useScrollToEnd<HTMLDivElement>(items);
 
   React.useEffect(() => {
     if (state.chatFocusTick === 0) return;
@@ -154,8 +153,8 @@ export function CopilotChat() {
 
   return (
     <section aria-label="Copilot chat" className="w-full min-w-0 h-full flex flex-col bg-cx-wash-0">
-      <div className="px-3 py-2 bg-cx-sub border-b border-cx-line shrink-0 flex items-center justify-between gap-2 text-xs">
-        <div className="min-w-0" data-testid="chat-context">
+      <div className="px-3 py-2 bg-cx-sub border-b border-cx-line shrink-0 flex items-start justify-between gap-2 text-xs">
+        <div className="min-w-0 flex-1" data-testid="chat-context">
           {entityId ? (
             <>
               <span className="font-mono font-bold text-cx-ink">{entityId}</span>
@@ -166,22 +165,21 @@ export function CopilotChat() {
             <span className="text-cx-muted">No entity selected. Pick one from the triage rail, or ask in general.</span>
           )}
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />
+        <div className="flex shrink-0 items-center gap-1 text-label">
           {items.length > 0 && (
             <button
               type="button"
               onClick={() => patch(role, () => [])}
-              className="text-label text-slate-500 hover:text-slate-900 underline cursor-pointer shrink-0"
               title="Clear this conversation"
+              className="h-6 cursor-pointer px-1.5 text-cx-muted outline-none transition-colors hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
             >
-              Clear
+              Clear conversation
             </button>
           )}
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-4">
+      <div ref={listRef} className="flex-1 overflow-y-auto scrollbar-thin p-3 space-y-4">
         {items.length === 0 ? (
           <div className="py-8 text-center space-y-4">
             <div className="space-y-1">
@@ -216,36 +214,20 @@ export function CopilotChat() {
             ),
           )
         )}
-        <div ref={endRef} />
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void ask(query);
-        }}
-        className="border-t border-slate-200 bg-slate-50 p-2.5 shrink-0"
-      >
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Escape' && inputRef.current?.blur()}
-            placeholder={entityId ? `Ask about ${entityId}…` : 'Ask the copilot…'}
-            aria-label="Ask the copilot"
-            className="flex-1 min-w-0 px-3 py-2 bg-white border border-slate-300 text-slate-900 text-xs focus:outline-none focus:border-blue-600 rounded-none"
-          />
-          <button
-            type="submit"
-            disabled={pending > 0 || !query.trim()}
-            className="px-3 py-2 bg-slate-900 hover:bg-black text-white text-xs font-medium rounded-none disabled:opacity-40 cursor-pointer shrink-0"
-          >
-            {pending > 0 ? 'Working…' : 'Send'}
-          </button>
-        </div>
-      </form>
+      <ChatComposer
+        value={query}
+        onChange={setQuery}
+        onSubmit={() => void ask(query)}
+        placeholder={entityId ? `Ask about ${entityId}…` : 'Ask the copilot…'}
+        ariaLabel="Ask the copilot"
+        sendLabel="Send"
+        pending={pending > 0}
+        inputRef={inputRef}
+        onKeyDown={(e) => e.key === 'Escape' && inputRef.current?.blur()}
+        inlineAccessory={<ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />}
+      />
     </section>
   );
 }

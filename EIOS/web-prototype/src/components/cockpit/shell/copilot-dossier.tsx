@@ -86,39 +86,24 @@ export function CopilotDossier() {
       aria-label="Copilot Dossier Center Zone"
       className="w-full min-w-0 bg-white flex flex-col h-full overflow-hidden select-text"
     >
-      {/* Dossier Header Strip */}
-      <div className="p-4 bg-cx-sub border-b border-cx-line space-y-2 shrink-0">
-        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-          <div className="flex items-center gap-1.5 min-w-0 font-mono text-label text-cx-muted">
-            <span className="material-symbols-sharp text-sm text-cx-accent">article</span>
-            <span className="uppercase font-bold tracking-wider text-cx-ink whitespace-nowrap">
-              Copilot Dossier
-            </span>
-            <span className="text-cx-line-strong">|</span>
-            <span
-              title={dossier.entityId}
-              className="bg-cx-sub-2 border border-cx-line px-1.5 py-0.2 text-cx-ink font-bold truncate max-w-[200px]"
-            >
-              {dossier.entityId}
-            </span>
-          </div>
-
+      {/* The title and the Dossier/Chat switch live in the column header; this strip is the case itself. */}
+      <div className="px-4 py-3 bg-cx-sub border-b border-cx-line space-y-1.5 shrink-0">
+        <div className="flex items-start justify-between gap-x-3 gap-y-1.5">
+          <h2 className="min-w-0 text-sm font-bold text-cx-ink tracking-tight leading-snug">
+            {dossier.headline}
+          </h2>
           {dossier.isCachedSnapshot ? (
             <FallbackReplayBadge timestamp={dossier.asOfTimestamp} reason={dossier.replayReason} size="sm" />
           ) : (
             <span
               title="Served by the gateway, not a cached replay. Each figure carries its own verification in its popover."
-              className="text-label font-mono text-cx-ok px-1.5 py-0.5 border border-cx-line flex items-center gap-1 whitespace-nowrap"
+              className="shrink-0 text-label font-mono text-cx-ok px-1.5 py-0.5 border border-cx-line flex items-center gap-1 whitespace-nowrap"
             >
               <span className="size-1.5 bg-cx-ok-solid inline-block" />
               Synchronized{asOfClock(dossier.asOfTimestamp)}
             </span>
           )}
         </div>
-
-        <h2 className="text-sm font-bold text-cx-ink tracking-tight leading-snug">
-          {dossier.headline}
-        </h2>
 
         {/* Suppress summary when it duplicates the individual section cards below (e.g. morning briefing synthesis) */}
         {dossier.executiveSummary &&
@@ -134,7 +119,7 @@ export function CopilotDossier() {
       </div>
 
       {/* Dossier Scrollable Narrative Sections */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-5">
+      <div className="flex-1 overflow-y-auto scrollbar-thin p-4 space-y-4">
         {/* Geography of the account under investigation (AML only - prioritized at top for rapid investigative triage) */}
         {state.activeRole === 'aml_investigator' && dossier.entityId && (
           <GeoDossierCard entityId={dossier.entityId} />

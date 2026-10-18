@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import React from 'react';
+import { clearGeoChat } from '@/components/cockpit/geo/geo-chat-store';
 
 const authFetch = vi.fn();
 vi.mock('@/lib/auth/token', () => ({ authFetch: (...args: unknown[]) => authFetch(...args) }));
@@ -35,6 +36,7 @@ function reply(status: number, body: unknown) {
 const CONTEXT = { view: 'logins' as const, selection: { kind: 'gateway' as const, id: 'GW-NG-X00' } };
 
 beforeEach(() => {
+  clearGeoChat();
   authFetch.mockReset(); // a block body: a returned function would be run as a cleanup hook
 });
 
@@ -57,7 +59,7 @@ describe('the geospatial assistant beside the map', () => {
     const onMove = vi.fn();
     render(<GeoAsk context={{ view: 'corridors' }} selected={null} onMove={onMove} />);
     fireEvent.change(screen.getByLabelText('Ask the geospatial assistant'), { target: { value: 'Who else?' } });
-    fireEvent.click(screen.getByText('Ask'));
+    fireEvent.click(screen.getByRole('button', { name: 'Ask' }));
     fireEvent.click(await screen.findByText('account CR11568'));
     expect(onMove).toHaveBeenLastCalledWith({ kind: 'account', id: 'CR11568' }, false);
   });
@@ -78,7 +80,32 @@ describe('the geospatial assistant beside the map', () => {
     await screen.findByText(/shared by 22 accounts/);
     rerender(<GeoAsk context={CONTEXT} selected={{ kind: 'gateway', id: 'GW-NG-X00' }} onMove={vi.fn()} />);
     fireEvent.change(screen.getByLabelText('Ask the geospatial assistant'), { target: { value: 'And this?' } });
-    fireEvent.click(screen.getByText('Ask'));
+    fireEvent.click(screen.getByRole('button', { name: 'Ask' }));
     expect(await screen.findByRole('separator')).toHaveTextContent('Now viewing gateway GW-NG-X00');
+  });
+});
+
+describe('the thread across a workstation switch', () => {
+  it('comes back when the panel is mounted again', async () => {
+    reply(200, ANSWER);
+    const first = render(<GeoAsk context={{ view: 'corridors' }} selected={null} onMove={() => undefined} />);
+    fireEvent.click(screen.getByText('Where should I look first?'));
+    await screen.findByText(/shared by 22 accounts/);
+    first.unmount();
+    render(<GeoAsk context={{ view: 'corridors' }} selected={null} onMove={() => undefined} />);
+    expect(screen.getByText('Where should I look first?')).toBeInTheDocument();
+    expect(screen.getByText(/shared by 22 accounts/)).toBeInTheDocument();
+  });
+});
+
+describe('what the question is about', () => {
+  it('shows the pick with a way to put it down, and nothing else to read', () => {
+    reply(200, ANSWER);
+    const onClear = vi.fn();
+    render(<GeoAsk context={CONTEXT} selected={{ kind: 'gateway', id: 'GW-NG-X00' }} onMove={() => undefined} onClearSelection={onClear} />);
+    expect(screen.getByTestId('geo-ask-context')).toHaveTextContent('gateway GW-NG-X00');
+    expect(screen.getByTestId('geo-ask-context')).not.toHaveTextContent('About');
+    fireEvent.click(screen.getByRole('button', { name: 'Ask about the whole book instead' }));
+    expect(onClear).toHaveBeenCalled();
   });
 });

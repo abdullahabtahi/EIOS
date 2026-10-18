@@ -63,6 +63,11 @@ Geography rules for this workstation:
 20. A login hotspot is a country foreign accounts keep returning to beyond chance (false discovery rate controlled,
     hub gateways set aside). A country the overview tested but does not list is not a hotspot: say the pattern there
     could be chance, never that the country is clean.
+21. When a question asks why something is listed or flagged and no tool returns the reasons, do not open with a refusal.
+    First state what the tools did return (the list and basis, its source and as-of date, the book's exposure to it),
+    then say in one sentence that the reasons themselves are not in the data or the regulation index.
+22. Name a corridor by its countries ("Indonesia to Malaysia") when the result gives the names, with the code in
+    brackets once; never use the bare code as the only name. Write an as-of date once, at the end.
 """
 # The tenant (DERIV_MFSA) is licensed in Malta: a SAR cites Malta's duty to report, read from the regulation index.
 LICENSING_JURISDICTION = "MT"

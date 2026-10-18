@@ -11,9 +11,13 @@ import type { AssistantProposal, CopilotQueryResponse, ViewCommand } from '../st
 import { ChatDividerView, type ChatItem, type ChatTurn, ChatTurnView } from '../shell/chat-turn';
 import { describeCopilotFailure } from '../shell/copilot-chat';
 import type { ProposalState } from '../shell/copilot-proposals';
+import { useScrollToEnd } from '../shell/use-scroll-end';
+import { Icon } from '@/components/ui/icon';
+import { ChatComposer } from '../shell/chat-composer';
 import { ModelPicker, useModelChoice } from '../shell/model-picker';
 import { GovernedActionError, stageProposal } from '@/lib/actions/governed-actions';
 import { authFetch } from '@/lib/auth/token';
+import { readGeoChat, saveGeoChat } from './geo-chat-store';
 import { geoSuggestions, type MapContextPayload, moveLabel } from './geo-moves';
 
 import { GeoEvidence } from './geo-evidence';
@@ -37,6 +41,15 @@ const STEP_LABEL: Readonly<Record<string, string>> = {
 const newId = (prefix: string) => `${prefix}_${Date.now()}_${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Math.random().toString(36).slice(2, 8)}`;
 const timeLabel = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+/** An icon for what the question is about, drawn from the same family as the rest of the map's controls. */
+const CONTEXT_ICON: Readonly<Record<NonNullable<GeoSelection>['kind'], string>> = {
+  country: 'flag',
+  corridor: 'swap_horiz',
+  mismatch: 'swap_horiz',
+  gateway: 'router',
+  account: 'person',
+};
+
 class AskError extends Error {
   constructor(
     readonly status: number,
@@ -49,6 +62,8 @@ class AskError extends Error {
 export interface GeoAskProps {
   readonly context: MapContextPayload;
   readonly selected: GeoSelection;
+  /** Put the pick down, so the next question is about the whole book again. */
+  readonly onClearSelection?: () => void;
   /** Apply one of an answer's map moves; `auto` is true for the move applied when the answer arrives. */
   readonly onMove: (move: ViewCommand, auto: boolean) => void;
   /** An answer is being waited for, or is not. */
@@ -88,9 +103,7 @@ function TurnMoves({ moves, onMove }: { readonly moves: readonly ViewCommand[]; 
           onClick={() => onMove(m, false)}
           className="flex cursor-pointer items-center gap-1 border border-cx-line bg-white px-2 py-0.5 text-label text-cx-ink hover:border-cx-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cx-accent"
         >
-          <span className="material-symbols-sharp text-sm" aria-hidden="true">
-            my_location
-          </span>
+          <Icon icon="my_location" size="sm" />
           {moveLabel(m)}
         </button>
       ))}
@@ -98,21 +111,22 @@ function TurnMoves({ moves, onMove }: { readonly moves: readonly ViewCommand[]; 
   );
 }
 
-export function GeoAsk({ context, selected, onMove, onPending, onAnswered, intent }: GeoAskProps) {
-  const [items, setItems] = React.useState<ChatItem[]>([]);
-  const [proposalStates, setProposalStates] = React.useState<Record<string, ProposalState>>({});
+export function GeoAsk({ context, selected, onClearSelection, onMove, onPending, onAnswered, intent }: GeoAskProps) {
+  const [items, setItems] = React.useState<ChatItem[]>(() => [...readGeoChat().items]);
+  const [proposalStates, setProposalStates] = React.useState<Record<string, ProposalState>>(() => ({ ...readGeoChat().proposalStates }));
   const [query, setQuery] = React.useState('');
   const [pending, setPending] = React.useState(false);
   const models = useModelChoice();
-  const endRef = React.useRef<HTMLDivElement>(null);
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const inputRef = React.useRef<HTMLTextAreaElement>(null);
   // A request to be ready for a question is answered once per id: the text lands in the box during the render that sees it.
   const [seenIntent, setSeenIntent] = React.useState<number | null>(null);
   const onScreen = selectionKey(selected);
 
+  const listRef = useScrollToEnd<HTMLDivElement>(items);
+  // Settled turns are kept for the session; a turn still loading is not (it would come back as a spinner that never ends).
   React.useEffect(() => {
-    if (typeof endRef.current?.scrollIntoView === 'function') endRef.current.scrollIntoView({ behavior: 'smooth' });
-  }, [items]);
+    saveGeoChat({ items: items.filter((i) => i.kind !== 'turn' || !i.isLoading), proposalStates });
+  }, [items, proposalStates]);
 
   React.useEffect(() => onPending?.(pending), [pending, onPending]);
 
@@ -175,14 +189,7 @@ export function GeoAsk({ context, selected, onMove, onPending, onAnswered, inten
 
   return (
     <section aria-label="Ask about the map" className="flex h-full min-h-0 flex-col bg-white">
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-0.5 px-4 pb-2 text-label">
-        <span className="min-w-0 text-cx-muted" data-testid="geo-ask-context">
-          {onScreen ? `About the ${onScreen} on the map` : 'Nothing selected: ask about the whole book'}
-        </span>
-        <ModelPicker quiet choices={models.choices} selected={models.selected} onSelect={models.select} />
-      </div>
-
-      <div className="flex-1 space-y-4 overflow-y-auto border-t border-cx-line-soft p-4 scrollbar-thin">
+      <div ref={listRef} className="flex-1 space-y-4 overflow-y-auto border-t border-cx-line-soft p-4 scrollbar-thin">
         {items.length === 0 ? (
           <div className="space-y-2">
             <h3 className="text-sm font-semibold leading-snug text-cx-ink">Ask why the map shows what it shows</h3>
@@ -225,35 +232,46 @@ export function GeoAsk({ context, selected, onMove, onPending, onAnswered, inten
             ),
           )
         )}
-        <div ref={endRef} />
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          void ask(query);
-        }}
-        className="shrink-0 border-t border-cx-line bg-white p-3"
-      >
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={onScreen ? `Ask about the ${onScreen}…` : 'Ask about the map…'}
-            aria-label="Ask the geospatial assistant"
-            className="min-w-0 flex-1 rounded-none border border-cx-line bg-white px-3 py-2 text-xs text-cx-ink outline-none placeholder:text-cx-muted focus-visible:border-cx-accent focus-visible:ring-2 focus-visible:ring-cx-accent"
-          />
-          <button
-            type="submit"
-            disabled={pending || !query.trim()}
-            className="shrink-0 cursor-pointer rounded-none bg-cx-ink px-3 py-2 text-xs font-medium text-white outline-none hover:bg-black focus-visible:ring-2 focus-visible:ring-cx-accent focus-visible:ring-offset-1 disabled:opacity-40"
-          >
-            {pending ? 'Working…' : 'Ask'}
-          </button>
-        </div>
-      </form>
+      <ChatComposer
+        value={query}
+        onChange={setQuery}
+        onSubmit={() => void ask(query)}
+        placeholder={onScreen ? `Ask about the ${onScreen}…` : 'Ask about the map…'}
+        ariaLabel="Ask the geospatial assistant"
+        sendLabel="Ask"
+        pending={pending}
+        inputRef={inputRef}
+        context={
+          onScreen ? (
+            <span
+              className="inline-flex max-w-full items-center gap-1 text-label text-cx-ink-soft"
+              data-testid="geo-ask-context"
+              title={`Questions are about the ${onScreen} on the map`}
+            >
+              <Icon icon={CONTEXT_ICON[selected?.kind ?? 'country']} size="sm" className="text-cx-muted" />
+              <span className="truncate font-medium">{onScreen}</span>
+              {onClearSelection && (
+                <button
+                  type="button"
+                  onClick={onClearSelection}
+                  aria-label="Ask about the whole book instead"
+                  title="Ask about the whole book instead"
+                  className="flex size-5 shrink-0 cursor-pointer items-center justify-center text-cx-muted outline-none hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent">
+                  <Icon icon="close" size="sm" />
+                </button>
+              )}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 text-label text-cx-muted" data-testid="geo-ask-context" title="Nothing is selected, so questions are about the whole book">
+              <Icon icon="public" size="sm" />
+              Whole book
+            </span>
+          )
+        }
+        accessory={<ModelPicker choices={models.choices} selected={models.selected} onSelect={models.select} />}
+      />
     </section>
   );
 }

@@ -7,6 +7,7 @@
  */
 
 import * as React from "react";
+import { Icon } from "@/components/ui/icon";
 import { authFetch } from "@/lib/auth/token";
 
 export interface ModelChoice {
@@ -75,35 +76,106 @@ export function useModelChoice() {
   return { choices, selected: selected?.key, select };
 }
 
+/**
+ * The picker sits with the composer and opens upward, like the reference chat apps: the trigger names the model, each
+ * option adds what it is good for, and the pick is a tick. Arrow keys, Enter and Escape work; a click elsewhere closes it.
+ */
 export function ModelPicker({
   choices,
   selected,
   onSelect,
-  quiet = false,
+  placement = 'up',
 }: {
   choices: ModelChoice[];
   selected: string | undefined;
   onSelect: (key: string) => void;
-  /** Set as plain text with no box, for a header that is already framed. */
-  quiet?: boolean;
+  /** Which way the menu opens: up from a composer, down from a header. */
+  placement?: 'up' | 'down';
 }) {
+  const [open, setOpen] = React.useState(false);
+  const [active, setActive] = React.useState(0);
+  const root = React.useRef<HTMLDivElement>(null);
+  const trigger = React.useRef<HTMLButtonElement>(null);
+  const listId = React.useId();
+
+  React.useEffect(() => {
+    if (!open) return;
+    const away = (e: PointerEvent) => {
+      if (root.current && !root.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', away);
+    return () => document.removeEventListener('pointerdown', away);
+  }, [open]);
+
   if (choices.length < 2 || !selected) return null;
+  const current = choices.find((c) => c.key === selected) ?? choices[0];
+
+  const show = () => {
+    setActive(Math.max(0, choices.findIndex((c) => c.key === selected)));
+    setOpen(true);
+  };
+  const pick = (key: string) => {
+    onSelect(key);
+    setOpen(false);
+    trigger.current?.focus();
+  };
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape' && open) {
+      e.preventDefault();
+      e.stopPropagation();
+      setOpen(false);
+      trigger.current?.focus();
+    } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!open) return show();
+      setActive((i) => (e.key === 'ArrowDown' ? Math.min(i + 1, choices.length - 1) : Math.max(i - 1, 0)));
+    } else if ((e.key === 'Enter' || e.key === ' ') && open) {
+      e.preventDefault();
+      pick(choices[active].key);
+    }
+  };
+
   return (
-    <label className="flex items-center gap-1 text-label text-cx-muted shrink-0">
-      <span className="sr-only">Model</span>
-      <select
-        aria-label="Model"
-        value={selected}
-        onChange={(e) => onSelect(e.target.value)}
-        className={quiet ? 'cursor-pointer bg-transparent py-0.5 pr-1 text-label text-cx-ink-soft outline-none hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent' : 'bg-white border border-cx-line text-cx-ink text-label py-0.5 pl-1.5 pr-1 cursor-pointer hover:border-blue-500'}
-        title={choices.find((c) => c.key === selected)?.note}
+    <div ref={root} className="relative shrink-0" onKeyDown={onKeyDown}>
+      <button
+        ref={trigger}
+        type="button"
+        aria-label={`Model: ${current.label}`}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-controls={open ? listId : undefined}
+        onClick={() => (open ? setOpen(false) : show())}
+        className="flex h-8 cursor-pointer items-center pl-2 pr-1 text-xs text-cx-muted outline-none transition-colors hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
       >
-        {choices.map((c) => (
-          <option key={c.key} value={c.key}>
-            {c.label} · {c.note}
-          </option>
-        ))}
-      </select>
-    </label>
+        {current.label}
+      </button>
+      {open && (
+        <ul
+          id={listId}
+          role="listbox"
+          aria-label="Model"
+          aria-activedescendant={`${listId}-${active}`}
+          className={`absolute right-0 z-40 w-60 bg-white py-1 shadow-md ${placement === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'}`}
+        >
+          {choices.map((c, i) => (
+            <li
+              key={c.key}
+              id={`${listId}-${i}`}
+              role="option"
+              aria-selected={c.key === selected}
+              onPointerEnter={() => setActive(i)}
+              onClick={() => pick(c.key)}
+              className={`flex cursor-pointer items-start gap-2 px-3 py-1.5 ${i === active ? 'bg-cx-sub' : ''}`}
+            >
+              <span className="flex h-4 w-3.5 shrink-0 items-center text-cx-ink">{c.key === selected && <Icon icon="check" size="sm" />}</span>
+              <span className="min-w-0">
+                <span className={`block text-xs text-cx-ink ${c.key === selected ? "font-semibold" : ""}`}>{c.label}</span>
+                <span className="block text-label text-cx-muted">{c.note}</span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

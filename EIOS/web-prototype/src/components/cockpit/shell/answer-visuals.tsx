@@ -46,7 +46,7 @@ export function VisualTable({ visual }: { visual: AnswerVisual }) {
                   <td
                     key={c.key}
                     title={missing ? NO_DATA : undefined}
-                    className={`px-2 py-1 align-top ${c.kind === 'number' ? 'text-right font-mono tabular-nums text-cx-ink' : 'text-left text-cx-ink-soft min-w-[5rem] max-w-[11rem] break-words'} ${missing ? 'text-cx-faint' : ''}`}
+                    className={`px-2 py-1 align-top ${c.kind === 'number' ? 'text-right font-mono tabular-nums text-cx-ink' : 'text-left text-cx-ink-soft min-w-[4rem] max-w-[9rem] break-words'} ${missing ? 'text-cx-faint' : ''}`}
                   >
                     {cellText(value, c)}
                   </td>
@@ -214,7 +214,7 @@ function asOfText(iso: string): string {
   return m ? `${m[1]} ${m[2]} UTC` : iso;
 }
 
-function VisualCard({ visual }: { visual: AnswerVisual }) {
+function VisualCard({ visual, answerText }: { visual: AnswerVisual; answerText: string }) {
   const isChart = visual.kind === 'chart' && visual.chart;
   return (
     <figure className="border border-cx-line bg-white" data-visual={visual.kind}>
@@ -238,18 +238,19 @@ function VisualCard({ visual }: { visual: AnswerVisual }) {
       )}
       <figcaption className="border-t border-cx-line-soft px-2 py-1 text-label text-cx-muted" title={visual.dataOrigin ? `Data origin: ${visual.dataOrigin}` : undefined}>
         {visual.citation ? `Source: ${visual.citation}` : 'Source: governed tool result'}
-        {visual.asOf ? ` · as of ${asOfText(visual.asOf)}` : ''}
+        {visual.asOf && !answerText.includes(asOfText(visual.asOf)) ? ` · as of ${asOfText(visual.asOf)}` : ''}
       </figcaption>
     </figure>
   );
 }
 
-export function AnswerVisuals({ visuals }: { visuals: AnswerVisual[] }) {
+/** `answerText` is the answer's own prose: a time it already states under the answer is not repeated in a card's caption. */
+export function AnswerVisuals({ visuals, answerText = '' }: { visuals: AnswerVisual[]; answerText?: string }) {
   if (visuals.length === 0) return null;
   return (
     <div className="space-y-2.5">
       {visuals.map((v) => (
-        <VisualCard key={`${v.kind}:${v.source}`} visual={v} />
+        <VisualCard key={`${v.kind}:${v.source}`} visual={v} answerText={answerText} />
       ))}
     </div>
   );

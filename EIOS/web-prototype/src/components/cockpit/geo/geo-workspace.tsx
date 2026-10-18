@@ -3,11 +3,11 @@
 import * as React from 'react';
 import type { ViewCommand } from '../state/cockpit-types';
 import { DEFAULT_BASIS, type BasisId } from './geo-basis';
-import { buildLayers, LABEL_DEFAULT_ZOOM, type HighlightArc, type HoverPoint, type ListChangeMarks } from './geo-layers';
+import { buildLayers, type HighlightArc, type HoverPoint, type ListChangeMarks } from './geo-layers';
 import { cameraFor, cameraForCodes, type CameraTarget } from './geo-camera';
 import { useGeoAccount } from './geo-account';
 import { GeoAsk } from './geo-ask';
-import { describeSelection } from './geo-format';
+import { describeSelection, nameOf } from './geo-format';
 import { focusFor } from './geo-focus';
 import { beforeTiers, changeCount, changeNotes, withChangeNote } from './geo-compare';
 import { type CompareSide, GeoCompareBar } from './geo-compare-bar';
@@ -47,6 +47,9 @@ const MAX_HISTORY = 20;
  * on the right lists where to look first, or holds the assistant. Hover previews a mark, click pins it, Esc puts it
  * down. The assistant moves the map only to objects its tools returned; every move says so and can be undone.
  */
+/** [ASSUMPTION] long enough to read a one-line note and press Back. */
+const NOTICE_MS = 8000;
+
 export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: string } = {}) {
   const reference = useGeoResource<GeoReference>('/api/cockpit/geo/reference');
   const flows = useGeoResource<GeoFlows>('/api/cockpit/geo/flows');
@@ -89,6 +92,7 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
     (id: ViewId) => {
       const focus = focusFor(id, flowData, referenceData);
       setView(id);
+      setNotice(null); // a note about the last move says nothing about the view just opened
       setVisible(viewOf(id).layers);
       setSelected(null);
       setHover(null);
@@ -141,10 +145,16 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
       setHistory((past) => [...past, mapState].slice(-MAX_HISTORY));
       restore(stateAfterMove(mapState, move));
       framed.current = null; // an account the assistant points at is framed again, even if it was framed before
-      setNotice({ label: moveLabel(move), auto });
+      setNotice({ label: moveLabel(move, (code) => nameOf(referenceData, code)), auto });
     },
-    [mapState, restore],
+    [mapState, restore, referenceData],
   );
+  // The note is a receipt, not a fixture: it leaves by itself once it has been read.
+  React.useEffect(() => {
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(null), NOTICE_MS);
+    return () => clearTimeout(timer);
+  }, [notice]);
   const goBack = React.useCallback(() => {
     const previous = history[history.length - 1];
     if (!previous) return;
@@ -219,7 +229,6 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
 
   // The map's size, so a tooltip can flip away from an edge.
   const [box, setBox] = React.useState({ width: 0, height: 0 });
-  const [zoom, setZoom] = React.useState(LABEL_DEFAULT_ZOOM);
   React.useEffect(() => {
     const el = mapBox.current;
     if (!el) return;
@@ -241,8 +250,8 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
     [view, side, listChange],
   );
   const layers = React.useMemo(
-    () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }, highlight, basis, marks, earlier, zoom),
-    [flowData, referenceData, visible, selected, onHover, highlight, basis, marks, earlier, zoom],
+    () => buildLayers(flowData, referenceData, visible, selected, { onHover, onSelect: setSelected }, highlight, basis, marks, earlier),
+    [flowData, referenceData, visible, selected, onHover, highlight, basis, marks, earlier],
   );
   const focus = React.useMemo(() => focusFor(view, flowData, referenceData), [view, flowData, referenceData]);
 
@@ -268,13 +277,13 @@ export function GeoWorkspace({ initialSearch }: { readonly initialSearch?: strin
   return (
     <div className="geo-inter relative flex h-full min-h-0 flex-col lg:flex-row">
       <GeoChatWindow mode={dock.mode} pos={dock.pos} size={dock.size} bounds={box} onMove={dock.move} onSettle={dock.settle} onResize={dock.resizeTo} onResizeSettle={dock.settleResize} onDock={dock.dock} onFloat={dock.float} onClose={dock.close}>
-        <GeoAsk context={mapContextOf(mapState)} selected={selected} onMove={applyMove} onPending={setAsking} onAnswered={answered} intent={intent} />
+        <GeoAsk context={mapContextOf(mapState)} selected={selected} onClearSelection={() => setSelected(null)} onMove={applyMove} onPending={setAsking} onAnswered={answered} intent={intent} />
       </GeoChatWindow>
       <div ref={mapBox} role="region" aria-label="World map" aria-describedby="geo-map-help" className="relative min-h-0 min-w-0 flex-[3] has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:-outline-offset-2 has-[:focus-visible]:outline-cx-accent lg:flex-1">
         <p id="geo-map-help" className="sr-only">
           {describeMap(view, visible, flowData, selected)}
         </p>
-        <GeoMap layers={layers} focus={focus} target={target} onZoom={setZoom} />
+        <GeoMap layers={layers} focus={focus} target={target} />
         <div className="absolute left-3 top-3 z-10">
           <GeoViewSwitcher current={view} onChange={changeView} />
         </div>

@@ -28,20 +28,29 @@ import { KineticCanvas } from './kinetic-canvas';
 import { GovernedActionShelf } from './governed-action-shelf';
 import { KeyboardShortcutsModal } from '../common/keyboard-shortcuts-modal';
 import { useCockpit } from '../state/cockpit-context';
+import type { PersonaRole } from '../state/cockpit-types';
 import { useForensicUrlSync } from '../state/use-forensic-url-sync';
+
+/** [ASSUMPTION] the executive reads a briefing first; the triage queue is one click away. Every other workstation works from it. */
+const RAIL_CLOSED_BY_DEFAULT: ReadonlySet<PersonaRole> = new Set<PersonaRole>(['executive']);
 
 export function TripartiteShell({
   defaultRailCollapsed = false,
 }: {
   defaultRailCollapsed?: boolean;
 } = {}) {
-  const { setRole } = useCockpit();
+  const { state, setRole } = useCockpit();
+  const role = state.activeRole;
   useForensicUrlSync();
-  const [leftRailCollapsed, setLeftRailCollapsed] = React.useState(() => {
-    if (defaultRailCollapsed) return true;
-    if (typeof window !== 'undefined' && window.innerWidth < 768) return true;
-    return false;
-  });
+  const [narrowAtStart] = React.useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
+  // The rail opens by default except on a workstation that starts from a briefing (the executive's). A pick made by
+  // the operator on a workstation is kept for that workstation, and does not carry over to the others.
+  const [railPicked, setRailPicked] = React.useState<Readonly<Partial<Record<PersonaRole, boolean>>>>({});
+  const railDefault = defaultRailCollapsed || narrowAtStart || RAIL_CLOSED_BY_DEFAULT.has(role);
+  const leftRailCollapsed = railPicked[role] ?? railDefault;
+  const setLeftRailCollapsed = (collapsed: boolean) => setRailPicked((picked) => ({ ...picked, [role]: collapsed }));
+  const toggleRailRef = React.useRef<() => void>(() => undefined);
+  const toggleRail = () => setRailPicked((picked) => ({ ...picked, [role]: !(picked[role] ?? railDefault) }));
   const [rightCanvasCollapsed, setRightCanvasCollapsed] = React.useState(false);
   const [shortcutsModalOpen, setShortcutsModalOpen] = React.useState(false);
   const [dossierWidth, setDossierWidth] = usePersistedWidth(
@@ -50,6 +59,8 @@ export function TripartiteShell({
     DOSSIER_MIN_PX,
     DOSSIER_MAX_PX,
   );
+
+  toggleRailRef.current = toggleRail;
 
   // Global Keyboard Shortcuts ([, ], ?, 1-5)
   React.useEffect(() => {
@@ -62,7 +73,7 @@ export function TripartiteShell({
 
       if (e.key === '[') {
         e.preventDefault();
-        setLeftRailCollapsed((prev) => !prev);
+        toggleRailRef.current();
       } else if (e.key === ']') {
         e.preventDefault();
         setRightCanvasCollapsed((prev) => !prev);

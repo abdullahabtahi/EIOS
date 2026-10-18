@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { clearGeoChat } from '@/components/cockpit/geo/geo-chat-store';
 import { getIdTokenResult, onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getFirebaseAuth } from './firebase';
 
@@ -30,6 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!auth) return;
     return onAuthStateChanged(auth, async (user) => {
       if (!user) {
+        clearGeoChat();
         setOperator(null);
         setStatus('signedOut');
         return;
@@ -50,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const signOutOperator = React.useCallback(async () => {
+    clearGeoChat();
     if (auth) await signOut(auth);
   }, [auth]);
 
