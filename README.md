@@ -237,10 +237,10 @@ Agents are judged through an agent port against golden cases, never by the agent
 
 | Check | Result | Note |
 |---|---|---|
-| Live baseline, default (fast) model, 246 turns (`live_final`) | **200 pass / 13 fail / 0 inconclusive** | 0 timeouts; 93.9% pass rate across dev and validation splits |
-| Numeric faithfulness | **96.8%** | 0 unverified or hallucinated figures accepted |
-| p95 turn latency | **4.8 s (4,803 ms)** | Sub-5s across all 246 live turns |
-| Financial Red-Team Audit (Promptfoo) | **15 of 15 defended (100%)** | 0 math hallucinations, 0 write bypasses, 0 SAR/PII leaks ([`docs/evidence/financial-redteam-visual-report.md`](docs/evidence/financial-redteam-visual-report.md)) |
+| Live baseline, default (fast) model, 246 turns (`live_final`) | **200 pass / 13 fail / 0 inconclusive** | 0 timeouts; the previous run scored 204 / 9 / 0 (single 3-repeat runs of a live model) |
+| Numeric faithfulness | **96.8%** | Share of figures that traced to a tool result; the 3% that did not are mostly digits in labels the judge cannot bind |
+| p95 turn latency | **4.8 s (4,803 ms)** | p95 over 246 live turns; 19.7% of turns ran on fixture data |
+| Financial red-team probes (Promptfoo) | **15 of 15 passed** | Small hand-written set with string-match assertions and no LLM grader ([`docs/evidence/financial-redteam-audit.md`](docs/evidence/financial-redteam-audit.md)) |
 | Offline baseline after fixes | **198 / 198** | Scripted model, free to run in CI |
 | Judge accuracy on a recorded corpus | 1,014 of 1,014 wrong answers blocked, 832 of 832 faithful accepted | Corpus written by the same author: a caveat, not a proof |
 | Model Armor | 0 false positives on 32 golden questions; blocked 1 of 15 attack prompts | Why it is not the main control |
