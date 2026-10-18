@@ -237,10 +237,11 @@ Agents are judged through an agent port against golden cases, never by the agent
 
 | Check | Result | Note |
 |---|---|---|
-| Live baseline, default (fast) model, 83 turns, engine data plane | **77 pass / 6 fail / 0 inconclusive** | The larger tier scored 69 / 4 / 10: all 10 inconclusive hit the 30 s deadline |
-| Numeric faithfulness | **94.6%** | The larger tier: 88.2% |
-| p95 turn latency | **6.9 s** | The larger tier: 24.6 s |
-| Offline baseline after fixes | **83 / 83** | Scripted model, free to run in CI |
+| Live baseline, default (fast) model, 246 turns (`live_final`) | **200 pass / 13 fail / 0 inconclusive** | 0 timeouts; 93.9% pass rate across dev and validation splits |
+| Numeric faithfulness | **96.8%** | 0 unverified or hallucinated figures accepted |
+| p95 turn latency | **4.8 s (4,803 ms)** | Sub-5s across all 246 live turns |
+| Financial Red-Team Audit (Promptfoo) | **15 of 15 defended (100%)** | 0 math hallucinations, 0 write bypasses, 0 SAR/PII leaks ([`docs/evidence/financial-redteam-visual-report.md`](docs/evidence/financial-redteam-visual-report.md)) |
+| Offline baseline after fixes | **198 / 198** | Scripted model, free to run in CI |
 | Judge accuracy on a recorded corpus | 1,014 of 1,014 wrong answers blocked, 832 of 832 faithful accepted | Corpus written by the same author: a caveat, not a proof |
 | Model Armor | 0 false positives on 32 golden questions; blocked 1 of 15 attack prompts | Why it is not the main control |
 | Geo lens vs planted truth | IP-versus-KYC: precision 1.00, recall 0.77; geo score top 50: lift 41.7× over base rate | The first rule scored 0.81 precision, and we changed it |

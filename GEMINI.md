@@ -47,6 +47,9 @@ Guidance and behavioral constraints for Google Antigravity and Gemini Code Assis
 
 ## 4. Multi-Agent & Environment Gotchas
 
+- **One Server Set Only**:
+  - Web on 3012 (production build `npm run build && npm run start -- -p 3012`) + Gateway on 8002 (`.env.local` points to `http://127.0.0.1:8002`).
+  - Before starting any server, always run `lsof -nP -iTCP:3000 -iTCP:3012 -iTCP:8002 -sTCP:LISTEN`. Reuse what is already running, never start a duplicate set, and kill only your own PIDs.
 - **Ports & CORS**:
   - Default ports: Web `3000`, Backend `8002` (port `8000` is legacy).
   - Alternative local port: Web `3012`. `src/eios/cockpit/auth.py` allows `http://localhost:3012` in `DEV_CORS_ORIGINS`.
@@ -66,7 +69,7 @@ Guidance and behavioral constraints for Google Antigravity and Gemini Code Assis
 - **L0 `foundry/`**: Synthetic seeded generators. Evaluated by benchmarks; engines never read truth tables directly.
 - **L1 `ingestion/` & `contracts/`**: Pub/Sub ingestion, schema validation (breaches to DLQ, never dropped), DuckDB hot state.
 - **L2 `ontology/`**: Metrics registry (ADR-003), graph engine (ADR-004), Action Intents (`intent_hub.py`, Cloud KMS signer).
-- **L3 `assistant/`**: ADK assistant runtime (ADR-019). No client-side fallback; plain figures must be cited from tool outputs; outages fail closed (HTTP 503).
+- **L3 `assistant/`**: ADK assistant runtime (ADR-019). No client-side fallback; plain figures must be cited from tool outputs; figure signs must match returned values; tool results can be projected into `{{table:tool.field}}` or `{{chart:tool.field}}`; outages fail closed (HTTP 503).
 - **L4 `cockpit/`**: FastAPI gateway (`server.py`), `auth.py` Firebase verification, Next.js workstation dashboards.
 
 ## 6. Development & PR Safety Rules
