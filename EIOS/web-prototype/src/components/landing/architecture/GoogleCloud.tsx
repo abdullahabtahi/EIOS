@@ -67,7 +67,7 @@ const SERVICES: readonly Service[] = [
 
 export function GoogleCloud() {
   return (
-    <div className="fde-gcloud" data-reveal>
+    <div id="gcloud" className="fde-gcloud" data-reveal>
       <h3 className="fde-gcloud-title">What each Google Cloud service does here</h3>
       <dl className="fde-gcloud-list">
         {SERVICES.map((s) => (

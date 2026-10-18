@@ -260,11 +260,18 @@ export function Architecture() {
               )}
             </aside>
           </div>
-          {scrollLinked && (
-            <p className="fde-arch-hint">
-              Scroll to trace a question, then an action. Use the controls to
-              take over.
-            </p>
+          {wide && !reduced && (
+            <div className="fde-arch-foot">
+              <p className="fde-arch-hint">
+                {scrollLinked
+                  ? "Scroll to trace a question, then an action. Use the controls to take over."
+                  : "You have the controls. Scroll back to the top of this section to hand them back."}
+              </p>
+              <a href="#gcloud" className="fde-scroll-cue">
+                Skip to the Google Cloud services{" "}
+                <span aria-hidden="true">↓</span>
+              </a>
+            </div>
           )}
         </div>
       </div>

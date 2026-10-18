@@ -116,8 +116,24 @@
   max-height: calc(100svh - var(--nav-h) - 80px);
   overflow-y: auto;
 }
+.fde-arch-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-top: 10px;
+}
+.fde-arch-foot .fde-scroll-cue {
+  margin-top: 0;
+  align-self: auto;
+}
 .fde-arch-hint {
-  margin: 10px 0 0;
+  margin: 0;
   font-size: 0.8125rem;
   color: var(--ink-2);
+}
+
+.fde-gcloud {
+  scroll-margin-top: calc(var(--nav-h) + 24px);
 }
