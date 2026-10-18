@@ -55,10 +55,12 @@ class RoundTripDetector:
             withdrawals = sorted_events[sorted_events["event_type"] == "WITHDRAWAL"]
             trades = sorted_events[sorted_events["event_type"] == "TRADE"]
 
-            for _, dep in deposits.iterrows():
-                dep_ts = dep["timestamp"]
-                dep_amt = float(dep["amount"])
-                kyc_dt = dep.get("kyc_approved_at", None)
+            for dep in deposits.itertuples():
+                dep_ts = dep.timestamp
+                dep_amt = float(dep.amount)
+
+                # Handle missing attribute depending on how itertuples names it (if it has NaN or something)
+                kyc_dt = getattr(dep, "kyc_approved_at", None)
 
                 # Match subsequent withdrawals within window_hours
                 subsequent_wdls = withdrawals[
@@ -66,9 +68,9 @@ class RoundTripDetector:
                     & (withdrawals["timestamp"] <= dep_ts + cutoff_delta)
                 ]
 
-                for _, wdl in subsequent_wdls.iterrows():
-                    wdl_ts = wdl["timestamp"]
-                    wdl_amt = float(wdl["amount"])
+                for wdl in subsequent_wdls.itertuples():
+                    wdl_ts = wdl.timestamp
+                    wdl_amt = float(wdl.amount)
 
                     # Intervening trades
                     inter_trades = (
@@ -149,14 +151,10 @@ class RoundTripDetector:
                             event_id=f"EV-RT-{uuid.uuid4().hex[:8].upper()}",
                             client_id=str(client_id),
                             deposit_txn_id=str(
-                                dep.get("txn_id")
-                                if "txn_id" in dep
-                                else dep.get("transaction_id", "TXN-DEP")
+                                getattr(dep, "txn_id", getattr(dep, "transaction_id", "TXN-DEP"))
                             ),
                             withdrawal_txn_id=str(
-                                wdl.get("txn_id")
-                                if "txn_id" in wdl
-                                else wdl.get("transaction_id", "TXN-WTH")
+                                getattr(wdl, "txn_id", getattr(wdl, "transaction_id", "TXN-WTH"))
                             ),
                             deposit_amount_usd=dep_amt,
                             withdrawal_amount_usd=wdl_amt,
