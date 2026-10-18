@@ -20,7 +20,7 @@ the hash-chained decision ledger in Firestore (database `eios-state`).
 
 ## Release
 1. Grant the build identity read on the source bucket once: `roles/storage.objectViewer` on `gs://<project>_cloudbuild` for `pipeline@`.
-2. Build both images as the pipeline identity (see the header of `EIOS/services/cloudbuild.cockpit.yaml`).
+2. Build both images as the pipeline identity (see the header of `EIOS/services/cloudbuild.cockpit.yaml`). Pass `_MAPS_API_KEY` (the restricted browser key) as well as the Firebase key: it is inlined into the browser bundle at build time, and an image built without it shows "Map unavailable" on the Geospatial page.
 3. Put the two image digests in `terraform.tfvars` (`cockpit_api_image`, `cockpit_web_image`) and `terraform apply`.
 4. Smoke test: sign in as each operator; stage, approve twice (two distinct approvers), verify the ledger.
 5. A web-only release is enough when nothing under `EIOS/src`, `EIOS/services` or `EIOS/config` changed since the live `eios-api` revision was built (`git diff <that commit> HEAD -- EIOS/src EIOS/services EIOS/config`, with the commit found from the revision's creation time). Otherwise release the two services together: the web service calls API routes (ambient briefs, evidence replay, list changes, the shelf) that an older API revision may not have.
@@ -28,6 +28,7 @@ the hash-chained decision ledger in Firestore (database `eios-state`).
    - `/landing/orbit/f_001.webp?v=1` answers with `Cache-Control: public, max-age=31536000, immutable`, and `/landing/orbit/f_001.webp.json` answers 404 (generation prompts are kept in `asset-sources/`, not served).
    - A landing raster that changes needs a new `LANDING_ASSET_VERSION` in `src/components/landing/assets.ts`, because the old URL is cached for a year.
    - `/login` shows the evaluator guide link and the evaluator accounts card; signing in lands on `/cockpit/geospatial`, and the header shows a readable name (the account's display name, else the mailbox made readable).
+   - `/cockpit/geospatial` draws the Google map (no "Map unavailable" message).
    - The cockpit's icons render (the Material Symbols stylesheet loads from `src/app/cockpit/layout.tsx`, not from the root layout).
 
 ## ADK assistant
