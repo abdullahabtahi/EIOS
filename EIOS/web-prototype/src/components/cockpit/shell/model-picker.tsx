@@ -141,7 +141,7 @@ export function ModelPicker({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         onClick={() => (open ? setOpen(false) : show())}
-        className="flex h-8 cursor-pointer items-center px-2 text-label text-cx-muted outline-none transition-colors hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
+        className="flex h-6 cursor-pointer items-center px-1.5 text-label text-cx-muted outline-none transition-colors hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
       >
         {current.label}
       </button>
@@ -151,7 +151,7 @@ export function ModelPicker({
           role="listbox"
           aria-label="Model"
           aria-activedescendant={`${listId}-${active}`}
-          className="absolute bottom-full right-0 z-40 mb-1 w-64 border border-cx-line bg-white py-1 shadow-lg"
+          className="absolute bottom-full right-0 z-40 mb-1.5 w-60 bg-white py-1 shadow-md"
         >
           {choices.map((c, i) => (
             <li
@@ -161,13 +161,13 @@ export function ModelPicker({
               aria-selected={c.key === selected}
               onPointerEnter={() => setActive(i)}
               onClick={() => pick(c.key)}
-              className={`flex cursor-pointer items-start gap-2 px-3 py-1.5 ${i === active ? 'bg-cx-sub-2' : ''}`}
+              className={`flex cursor-pointer items-start gap-2 px-3 py-1.5 ${i === active ? 'bg-cx-sub' : ''}`}
             >
-              <span className="material-symbols-sharp mt-px w-4 shrink-0 text-sm leading-none text-cx-accent" aria-hidden="true">
+              <span className="material-symbols-sharp w-3.5 shrink-0 text-[14px] leading-4 text-cx-ink" aria-hidden="true">
                 {c.key === selected ? 'check' : ''}
               </span>
               <span className="min-w-0">
-                <span className="block text-xs font-medium text-cx-ink">{c.label}</span>
+                <span className={`block text-xs text-cx-ink ${c.key === selected ? "font-semibold" : ""}`}>{c.label}</span>
                 <span className="block text-label text-cx-muted">{c.note}</span>
               </span>
             </li>

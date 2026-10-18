@@ -3,9 +3,8 @@
 import * as React from 'react';
 
 /**
- * The box a question is typed in, as the leading chat products set it: one frame, a text area that grows with what is
- * typed (Enter sends, Shift+Enter starts a new line), the thing the question is about as a small chip at the bottom left,
- * and the model and the send button at the bottom right. The frame carries the focus ring, so the field inside stays plain.
+ * The box a question is typed in, as the leading chat products set it: one frame with a text area that grows with what is
+ * typed (Enter sends, Shift+Enter starts a new line), and a small enter icon at its end; under the frame, on one quiet line, what the question is about (left) and the model (right).
  */
 export interface ChatComposerProps {
   readonly value: string;
@@ -47,7 +46,7 @@ export function ChatComposer({ value, onChange, onSubmit, placeholder, ariaLabel
       }}
       className="shrink-0 bg-white px-3 pb-3 pt-2"
     >
-      <div className="border border-cx-line bg-white shadow-sm transition-[border-color,box-shadow] focus-within:border-cx-accent focus-within:shadow-md">
+      <div className="flex items-end border border-cx-line bg-white shadow-sm transition-[border-color,box-shadow] focus-within:border-cx-accent focus-within:shadow-md">
         <textarea
           ref={field}
           rows={1}
@@ -63,23 +62,23 @@ export function ChatComposer({ value, onChange, onSubmit, placeholder, ariaLabel
           }}
           placeholder={placeholder}
           aria-label={ariaLabel}
-          className="block max-h-[132px] min-h-[44px] w-full resize-none rounded-none bg-transparent px-3.5 pb-1 pt-3 text-[13px] leading-5 text-cx-ink outline-none placeholder:text-cx-muted scrollbar-thin"
+          className="block max-h-[132px] min-h-[44px] min-w-0 flex-1 resize-none rounded-none bg-transparent px-3.5 py-3 text-[13px] leading-5 text-cx-ink outline-none placeholder:text-cx-muted scrollbar-thin"
         />
-        <div className="flex items-center gap-2 px-2 pb-2 pt-1">
-          <div className="min-w-0 flex-1">{context}</div>
-          {accessory}
-          <button
-            type="submit"
-            disabled={disabled}
-            aria-label={pending ? 'Working' : sendLabel}
-            title={pending ? 'Working…' : `${sendLabel} (Enter)`}
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-none bg-cx-ink text-white outline-none transition-colors hover:bg-black focus-visible:ring-2 focus-visible:ring-cx-accent focus-visible:ring-offset-1 disabled:cursor-default disabled:bg-cx-sub disabled:text-cx-faint disabled:hover:bg-cx-sub"
-          >
-            <span className={`material-symbols-sharp text-lg leading-none ${pending ? 'animate-spin motion-reduce:animate-none' : ''}`} aria-hidden="true">
-              {pending ? 'progress_activity' : 'arrow_upward'}
-            </span>
-          </button>
-        </div>
+        <button
+          type="submit"
+          disabled={disabled}
+          aria-label={pending ? 'Working' : sendLabel}
+          title={pending ? 'Working…' : `${sendLabel} (Enter)`}
+          className="m-1.5 flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-none text-cx-ink outline-none transition-colors hover:bg-cx-sub-2 focus-visible:ring-2 focus-visible:ring-cx-accent disabled:cursor-default disabled:text-cx-faint disabled:hover:bg-transparent"
+        >
+          <span className={`material-symbols-sharp text-lg leading-none ${pending ? 'animate-spin motion-reduce:animate-none' : ''}`} aria-hidden="true">
+            {pending ? 'progress_activity' : 'keyboard_return'}
+          </span>
+        </button>
+      </div>
+      <div className="mt-1.5 flex min-h-6 items-center gap-2 px-0.5">
+        <div className="min-w-0 flex-1">{context}</div>
+        {accessory}
       </div>
     </form>
   );
