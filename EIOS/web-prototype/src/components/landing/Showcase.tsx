@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import React, { useState } from "react";
+import { landingAsset, landingSrcSet } from "./assets";
+import { APP_HOME_HREF } from "@/components/cockpit/shell/app-nav-items";
 
 interface Callout {
   readonly x: number;
@@ -13,7 +15,7 @@ interface Callout {
 interface Screen {
   readonly id: string;
   readonly tab: string;
-  readonly src: string;
+  readonly stem: string;
   readonly alt: string;
   readonly callouts: readonly Callout[];
 }
@@ -23,7 +25,7 @@ const SCREENS: readonly Screen[] = [
   {
     id: "aml",
     tab: "AML investigator",
-    src: "/landing/workstation-aml.webp",
+    stem: "workstation-aml",
     alt: "The AML investigator workstation: triage queue, evidence dossier, network graph, entity inspector and SAR composer.",
     callouts: [
       { x: 12, y: 24, label: "Triage", body: "Rings and alerts ranked by the engine's score, filterable by severity." },
@@ -37,7 +39,7 @@ const SCREENS: readonly Screen[] = [
   {
     id: "exec",
     tab: "Executive",
-    src: "/landing/workstation-exec.webp",
+    stem: "workstation-exec",
     alt: "The executive workstation: morning briefing, 28-day revenue projection and the fitted causal graph with refuter verdicts.",
     callouts: [
       { x: 18, y: 32, label: "Morning briefing", body: "Four horizons, each figure computed by an engine and cited." },
@@ -47,6 +49,10 @@ const SCREENS: readonly Screen[] = [
     ],
   },
 ];
+
+/** Widths of the pre-built `-1200` and `-1800` variants beside the 2400 original; the shot is at most about 1100 css px wide. */
+const SHOT_WIDTHS = [1200, 1800] as const;
+const SHOT_SIZES = "(max-width: 1200px) 100vw, 1100px";
 
 export function Showcase() {
   const [idx, setIdx] = useState(0);
@@ -79,7 +85,16 @@ export function Showcase() {
       <div className="fde-show-body">
         <figure className="fde-shot" key={screen.id}>
           {/* eslint-disable-next-line @next/next/no-img-element -- static capture, fixed intrinsic size */}
-          <img src={screen.src} alt={screen.alt} width={2400} height={1500} loading="lazy" decoding="async" />
+          <img
+            src={landingAsset(`${screen.stem}.webp`)}
+            srcSet={landingSrcSet(screen.stem, SHOT_WIDTHS, 2400)}
+            sizes={SHOT_SIZES}
+            alt={screen.alt}
+            width={2400}
+            height={1500}
+            loading="lazy"
+            decoding="async"
+          />
           {screen.callouts.map((c, i) => (
             <button
               key={c.label}
@@ -117,7 +132,7 @@ export function Showcase() {
             </li>
           ))}
           <li className="fde-show-cta">
-            <Link href="/cockpit" className="fde-findings-link">
+            <Link href={APP_HOME_HREF} className="fde-findings-link">
               Open the workstation <span aria-hidden="true">→</span>
             </Link>
           </li>

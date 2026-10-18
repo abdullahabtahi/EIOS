@@ -15,6 +15,7 @@ import { useCockpit } from '../state/cockpit-context';
 import Link from 'next/link';
 import { APP_NAV_ITEMS, DEFAULT_APP_NAV_ID, type AppNavId } from './app-nav-items';
 import { useNavReveal } from './use-nav-reveal';
+import { useOperatorIdentity } from './use-operator-identity';
 import { getPipelineStatus, type PipelineTone } from '../state/pipeline-status';
 
 const TONE_DOT: Record<PipelineTone, string> = {
@@ -103,6 +104,7 @@ function NavRows({ currentId, onSelect }: { currentId: AppNavId; onSelect: () =>
 function RailFooter({ onCommandBar, onShortcuts }: { onCommandBar: () => void; onShortcuts?: () => void }) {
   const { state } = useCockpit();
   const pipeline = getPipelineStatus(state);
+  const identity = useOperatorIdentity();
   const replaying = pipeline.label === 'Replay';
   const footerRow = `${ROW} h-10 cursor-pointer text-slate-200 hover:bg-chrome-hover hover:text-white`;
 
@@ -130,11 +132,11 @@ function RailFooter({ onCommandBar, onShortcuts }: { onCommandBar: () => void; o
         </button>
       )}
 
-      <div className="h-14 flex items-center border-t border-chrome-line">
+      <div className="h-14 flex items-center border-t border-chrome-line" title={identity.email ?? undefined}>
         <span className={ICON_COL}>
           <span className="relative">
             <span className="size-7 bg-white/10 border border-white/15 text-white flex items-center justify-center font-mono font-bold text-label">
-              {state.operator.officerId.slice(0, 2)}
+              {identity.initials}
             </span>
             <span
               className={`absolute -right-1 -bottom-1 size-2 rounded-full border-2 border-cockpit-rail ${TONE_DOT[pipeline.tone]}`}
@@ -144,10 +146,10 @@ function RailFooter({ onCommandBar, onShortcuts }: { onCommandBar: () => void; o
         </span>
         <span className={`${LABEL} text-left`}>
           <span data-testid="nav-operator-name" className="block truncate text-label font-bold text-white leading-tight">
-            {state.operator.name}
+            {identity.name}
           </span>
           <span className="block truncate text-label font-mono uppercase tracking-wider text-slate-400 leading-tight">
-            {state.operator.clearanceLevel.replace(/_/g, ' ')}
+            {identity.role}
           </span>
           <span data-testid="nav-pipeline-status" className="block truncate text-label font-mono text-slate-300 leading-tight mt-0.5">
             Pipeline: <span className="font-semibold text-white">{pipeline.label}</span>

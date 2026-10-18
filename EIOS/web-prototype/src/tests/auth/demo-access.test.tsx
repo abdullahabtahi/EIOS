@@ -41,7 +41,7 @@ describe('the login page', () => {
     render(<LoginPage />);
     expect(await screen.findByTestId('reviewer-access')).toBeInTheDocument();
     expect(screen.getByTestId('reviewer-password')).toHaveTextContent('judge-demo-2026');
-    fireEvent.click(screen.getAllByRole('button', { name: 'Use' })[1]);
+    fireEvent.click(screen.getAllByRole('button', { name: /^Use / })[1]);
     expect(screen.getByLabelText('Email')).toHaveValue('judge-approver1@eios-demo.example.org');
     expect(screen.getByLabelText('Password')).toHaveValue('judge-demo-2026');
   });

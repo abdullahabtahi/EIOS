@@ -19,6 +19,31 @@ export function useReducedMotion(): boolean {
   );
 }
 
+interface ConnectionLike {
+  readonly saveData?: boolean;
+  readonly effectiveType?: string;
+  addEventListener(type: "change", listener: () => void): void;
+  removeEventListener(type: "change", listener: () => void): void;
+}
+
+const connection = (): ConnectionLike | undefined => (navigator as Navigator & { connection?: ConnectionLike }).connection;
+
+/** True when the visitor asked to save data or is on a 2g link, so heavy image sequences should give way to stills. */
+export function useDataSaver(): boolean {
+  return useSyncExternalStore(
+    (onChange) => {
+      const c = connection();
+      c?.addEventListener("change", onChange);
+      return () => c?.removeEventListener("change", onChange);
+    },
+    () => {
+      const c = connection();
+      return c?.saveData === true || c?.effectiveType === "slow-2g" || c?.effectiveType === "2g";
+    },
+    () => false,
+  );
+}
+
 /** Live result of a media query. Server render assumes it does not match. */
 export function useMediaQuery(query: string): boolean {
   return useSyncExternalStore(

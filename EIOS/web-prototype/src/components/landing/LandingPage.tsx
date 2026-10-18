@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useRef } from "react";
+import React from "react";
 import "./landing.css";
 import "./landing-sections.css";
 import "./landing-capabilities.css";
@@ -14,9 +12,9 @@ import { Close } from "./Close";
 import { FieldNotes } from "./FieldNotes";
 import { landingSans } from "./fonts";
 import { GeoSection } from "./geo/GeoSection";
-import { useReveal } from "./hooks";
 import { OrbitSequence } from "./OrbitSequence";
 import { PushIn } from "./PushIn";
+import { RevealRoot } from "./RevealRoot";
 import { Problem } from "./Problem";
 import { Showcase } from "./Showcase";
 import { RedLines } from "./RedLines";
@@ -25,11 +23,8 @@ import { SiteNav } from "./SiteNav";
 import { StackHero } from "./StackHero";
 
 export function LandingPage() {
-  const root = useRef<HTMLDivElement>(null);
-  useReveal(root);
-
   return (
-    <div ref={root} id="top" className={`fde ${landingSans.variable}`}>
+    <RevealRoot className={`fde ${landingSans.variable}`}>
       <SiteNav />
       <main>
         <StackHero />
@@ -45,6 +40,6 @@ export function LandingPage() {
       </main>
       <PushIn />
       <Close />
-    </div>
+    </RevealRoot>
   );
 }
