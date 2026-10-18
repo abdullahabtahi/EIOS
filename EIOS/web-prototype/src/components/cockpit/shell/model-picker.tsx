@@ -141,12 +141,9 @@ export function ModelPicker({
         aria-expanded={open}
         aria-controls={open ? listId : undefined}
         onClick={() => (open ? setOpen(false) : show())}
-        className="flex h-8 cursor-pointer items-center gap-0.5 px-2 text-label text-cx-muted outline-none transition-colors hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
+        className="flex h-8 cursor-pointer items-center px-2 text-label text-cx-muted outline-none transition-colors hover:bg-cx-sub-2 hover:text-cx-ink focus-visible:ring-2 focus-visible:ring-cx-accent"
       >
-        <span>{current.label}</span>
-        <span className="material-symbols-sharp text-base leading-none opacity-70" aria-hidden="true">
-          {open ? 'expand_more' : 'expand_less'}
-        </span>
+        {current.label}
       </button>
       {open && (
         <ul
