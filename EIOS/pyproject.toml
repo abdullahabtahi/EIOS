@@ -31,6 +31,7 @@ dependencies = [
     "limits>=3.13",
     "pycountry>=26.2.16",
     "scipy>=1.18.1",
+    "certifi==2026.10.19",
 ]
 
 [project.optional-dependencies]
