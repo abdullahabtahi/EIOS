@@ -138,7 +138,10 @@ def _quality(
 
 def _contributions(scored: pd.DataFrame) -> dict[str, tuple[SignalContribution, ...]]:
     explainer = ChurnSignalExplainer()
-    return {str(pid): tuple(explainer.compute_contributions(row)) for pid, row in scored.iterrows()}
+    # Use itertuples() instead of iterrows() to avoid high object creation overhead
+    return {
+        str(row.Index): tuple(explainer.compute_contributions(row)) for row in scored.itertuples()
+    }
 
 
 def run_partner_engine(world: PartnerWorld) -> PartnerSnapshot:
