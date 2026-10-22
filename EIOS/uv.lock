@@ -733,7 +733,7 @@ requires-dist = [
     { name = "duckdb", specifier = ">=1.1.0" },
     { name = "faker", specifier = ">=24.0.0" },
     { name = "fastapi", specifier = ">=0.133.0,<0.142.2" },
-    { name = "google-adk", extras = ["gcp"], specifier = "==2.11.0" },
+    { name = "google-adk", extras = ["gcp"], specifier = ">=2.11.0" },
     { name = "google-cloud-bigquery", specifier = ">=3.25.0" },
     { name = "google-cloud-firestore", specifier = ">=2.34.0" },
     { name = "google-cloud-firestore", marker = "extra == 'cloud'", specifier = ">=2.34.0" },

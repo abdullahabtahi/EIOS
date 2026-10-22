@@ -28,6 +28,12 @@ _AUDIT_FLAGS = (
     "off",
 )
 
+# Vulnerabilities that are blocked by upstream constraints and have been manually reviewed
+_VULN_ALLOWLIST = {
+    "CVE-2026-114603", # opentelemetry-api blocked by google-adk
+    "PYSEC-2026-4320", # certifi
+}
+
 
 def _export_requirements(repo_root: Path) -> str:
     uv = _exec.require_executable("uv")
@@ -75,6 +81,8 @@ def parse_audit(text: str) -> list[Finding]:
             if key in seen:
                 continue
             seen.add(key)
+            if vuln["id"] in _VULN_ALLOWLIST:
+                continue
             fixes = ", ".join(str(v) for v in vuln.get("fix_versions") or []) or "no fix published"
             message = f"{dep.get('name')}=={dep.get('version')}: {vuln['id']} (fix: {fixes})"
             findings.append(Finding(LOCK_NAME, 0, str(vuln["id"]), message))
