@@ -1,0 +1,4 @@
+## 2024-05-15 - Arbitrary Code Execution in HCL Parsers
+**Vulnerability:** Infrastructure checking tools (specifically `budget.py`) were using Python's built-in `eval()` function to parse string representations of list arrays (like `"[50, 80, 100]"`) extracted from untrusted Terraform/HCL files.
+**Learning:** Tools that parse infrastructure-as-code or other configuration files often need to evaluate string literals as data structures. Using `eval()` creates a critical command injection vulnerability allowing arbitrary code execution if a malicious payload is supplied in a configuration file (e.g. `"[import os; os.system('malicious')]"`).
+**Prevention:** Always use `ast.literal_eval()` instead of `eval()` when safely evaluating strings containing Python literals or container types from external configuration files.
