@@ -30,8 +30,8 @@ _AUDIT_FLAGS = (
 
 # Vulnerabilities that are blocked by upstream constraints and have been manually reviewed
 _VULN_ALLOWLIST = {
-    "CVE-2026-114603", # opentelemetry-api blocked by google-adk
-    "PYSEC-2026-4320", # certifi
+    "CVE-2026-114603",  # opentelemetry-api blocked by google-adk
+    "PYSEC-2026-4320",  # certifi
 }
 
 
