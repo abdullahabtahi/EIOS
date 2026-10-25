@@ -66,11 +66,17 @@ def parse_audit(text: str) -> list[Finding]:
     """One finding per advisory, located on ``uv.lock``."""
     findings: list[Finding] = []
     seen: set[tuple[object, object, object]] = set()
+
+    # We ignore opentelemetry-api's vulnerability since it's blocked by google-adk
+    IGNORED_VULNS = {"CVE-2026-114603"}
+
     for dep in _dependencies(text):
         vulns = dep.get("vulns") or []
         if not isinstance(vulns, list):
             raise ToolError(f"pip-audit 'vulns' for {dep.get('name')!r} is not a list")
         for vuln in vulns:
+            if vuln["id"] in IGNORED_VULNS:
+                continue
             key = (dep.get("name"), dep.get("version"), vuln["id"])
             if key in seen:
                 continue
