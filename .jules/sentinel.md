@@ -1,0 +1,4 @@
+## 2024-05-24 - Arbitrary Code Execution in Infrastructure Checks
+**Vulnerability:** Found `eval()` being used in `EIOS/tools/infra_checks/budget.py` to parse string representations of lists coming from Terraform/HCL configuration strings (e.g. thresholds like `"[50, 80, 100]"`). This could allow arbitrary code execution if an attacker can manipulate the budget thresholds in HCL.
+**Learning:** Python infrastructure checks that parse or evaluate Terraform/HCL string data (like arrays or JSON-like structures) shouldn't use `eval()` as it poses a critical risk of running arbitrary Python code when reading configurations.
+**Prevention:** Always use `ast.literal_eval()` instead of `eval()` to parse string representations of Python structures safely from configuration files or inputs.
