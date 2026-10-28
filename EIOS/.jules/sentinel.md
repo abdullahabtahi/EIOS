@@ -1,0 +1,4 @@
+## 2026-10-28 - [CRITICAL] Fix arbitrary code execution in budget checks
+**Vulnerability:** The infrastructure check for budget alerts (`tools/infra_checks/budget.py`) used the insecure `eval()` function to parse string representations of data structures (like arrays) from HCL configurations.
+**Learning:** `eval()` allows for arbitrary code execution if the input is untrusted or manipulated. In this codebase, it was used to parse strings like `"[50, 80, 100]"` from Terraform configuration files. Using `# noqa: S307` to suppress the security warning masked a genuine vulnerability.
+**Prevention:** When parsing string representations of data structures from configuration files in Python, strictly use `ast.literal_eval()` instead of `eval()` to prevent arbitrary code execution vulnerabilities. Do not use `# noqa` on security warnings without careful verification and fixing the root cause.
