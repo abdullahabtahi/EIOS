@@ -46,12 +46,11 @@ class MuleRingDetector:
 
         # 1. Build bipartite graph
         # Node attribute 'bipartite': 0 for clients, 1 for entity tokens
-        # Optimization: use itertuples instead of iterrows for massive performance boost (~15x)
-        for row in network_edges_df.itertuples():
-            client_id = str(row.source_id)
-            token_id = str(row.target_id)
-            edge_type = str(getattr(row, "edge_type", "SHARED_ATTR"))
-            is_shared_context = bool(getattr(row, "is_shared_context", False))
+        for _, row in network_edges_df.iterrows():
+            client_id = str(row["source_id"])
+            token_id = str(row["target_id"])
+            edge_type = str(row.get("edge_type", "SHARED_ATTR"))
+            is_shared_context = bool(row.get("is_shared_context", False))
 
             B.add_node(client_id, bipartite=0)
             B.add_node(
