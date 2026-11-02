@@ -105,7 +105,7 @@ class ChurnRadarPipeline:
             df_scored["change_point_flag"] = False
 
         # 5. Persist into DuckDB churn_radar_scores
-        for _, row in df_scored.iterrows():
+        for row in df_scored.itertuples(index=False):
             self.conn.execute(
                 """
                 INSERT OR REPLACE INTO churn_radar_scores (
@@ -123,17 +123,17 @@ class ChurnRadarPipeline:
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
-                    str(row["partner_id"]),
+                    str(row.partner_id),
                     as_of_date,
-                    float(row["hazard_probability_30d"]),
-                    float(row["priority_score"]),
-                    str(row["risk_tier"]),
-                    str(row["intervention_window"]),
-                    bool(row["change_point_flag"]),
-                    str(row["top_driver_family"]),
-                    str(row["top_driver_metric"]),
-                    float(row["top_driver_delta"]),
-                    f"{row['risk_tier']} risk partner driven by {row['top_driver_family']} signals.",
+                    float(row.hazard_probability_30d),
+                    float(row.priority_score),
+                    str(row.risk_tier),
+                    str(row.intervention_window),
+                    bool(row.change_point_flag),
+                    str(row.top_driver_family),
+                    str(row.top_driver_metric),
+                    float(row.top_driver_delta),
+                    f"{row.risk_tier} risk partner driven by {row.top_driver_family} signals.",
                 ),
             )
 
