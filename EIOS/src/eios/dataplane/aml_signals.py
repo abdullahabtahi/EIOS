@@ -96,20 +96,20 @@ def _alert(
     )
 
 
-def _features(
-    row: pd.Series, z: float, hours_kyc: float, mule_size: float = 1.0
-) -> dict[str, float]:
+def _features(row: Any, z: float, hours_kyc: float, mule_size: float = 1.0) -> dict[str, float]:
     return {
         "peer_z_score": z,
         "hours_since_kyc": hours_kyc,
-        "deposit_withdrawal_ratio": float(row["dw_ratio"]),
+        "deposit_withdrawal_ratio": float(getattr(row, "dw_ratio", 0.0)),
         "mule_cluster_size": mule_size,
-        "market_risk_pct": float(row["market_risk"]),
+        "market_risk_pct": float(getattr(row, "market_risk", 0.0)),
     }
 
 
-def _hours_since_kyc(row: pd.Series, at: pd.Timestamp) -> float:
-    return float(max((at - pd.Timestamp(row["kyc_approved_at"])).total_seconds() / 3600.0, 0.0))
+def _hours_since_kyc(row: Any, at: pd.Timestamp) -> float:
+    return float(
+        max((at - pd.Timestamp(getattr(row, "kyc_approved_at", 0))).total_seconds() / 3600.0, 0.0)
+    )
 
 
 def rule_alerts(
@@ -121,16 +121,16 @@ def rule_alerts(
     """Threshold rules over 30 days of events: volume against income, burst, new account, pass-through, large deposit."""
     as_of = pd.Timestamp(world.config.as_of)
     out: list[AMLAlert] = []
-    for client_id, row in facts[facts["dep_volume"] > 0].iterrows():
-        cid = str(client_id)
+    for row in facts[facts["dep_volume"] > 0].itertuples():
+        cid = str(row.Index)
         z = peer_z(
             volume_engine,
             cid,
-            str(row["cohort_id"]),
-            float(row["dep_volume"]),
-            int(row["dep_count"]),
+            str(getattr(row, "cohort_id", "")),
+            float(getattr(row, "dep_volume", 0.0)),
+            int(getattr(row, "dep_count", 0)),
         )
-        base = _features(row, z, _hours_since_kyc(row, pd.Timestamp(row["first_dep"])))
+        base = _features(row, z, _hours_since_kyc(row, pd.Timestamp(getattr(row, "first_dep", 0))))
         for rule, detail in _fired(row, rules):
             out.append(
                 _alert(
@@ -138,7 +138,7 @@ def rule_alerts(
                     rule,
                     AMLTriggerType.THRESHOLD_RULE,
                     _typology(rule),
-                    float(row["dep_volume"]),
+                    float(getattr(row, "dep_volume", 0.0)),
                     as_of.to_pydatetime(),
                     {**base, "detail": detail},
                 )
@@ -150,8 +150,11 @@ def _typology(rule: str) -> AMLTypology:
     return AMLTypology.STRUCTURING if rule == "VOLUME_VS_INCOME" else AMLTypology.RAPID_MOVEMENT
 
 
-def _fired(row: pd.Series, rules: RuleThresholds) -> list[tuple[str, str]]:
-    volume, income = float(row["dep_volume"]), float(row["declared_monthly_income_usd"])
+def _fired(row: Any, rules: RuleThresholds) -> list[tuple[str, str]]:
+    volume, income = (
+        float(getattr(row, "dep_volume", 0.0)),
+        float(getattr(row, "declared_monthly_income_usd", 0.0)),
+    )
     fired: list[tuple[str, str]] = []
     if volume >= max(rules.volume_multiple_of_income * income, rules.volume_floor_usd):
         fired.append(
@@ -161,17 +164,19 @@ def _fired(row: pd.Series, rules: RuleThresholds) -> list[tuple[str, str]]:
             )
         )
     if (
-        float(row["dw_ratio"]) >= rules.pass_through_ratio
+        float(getattr(row, "dw_ratio", 0.0)) >= rules.pass_through_ratio
         and volume >= rules.pass_through_floor_usd
     ):
-        fired.append(("PASS_THROUGH", f"{float(row['dw_ratio']):.0%} of deposits withdrawn"))
-    if int(row["dep_count"]) >= rules.burst_deposits_24h and _burst(row):
-        fired.append(("DEPOSIT_BURST", f"{int(row['dep_count'])} deposits inside a day"))
+        dw_ratio = float(getattr(row, "dw_ratio", 0.0))
+        fired.append(("PASS_THROUGH", f"{dw_ratio:.0%} of deposits withdrawn"))
+    if int(getattr(row, "dep_count", 0)) >= rules.burst_deposits_24h and _burst(row):
+        dep_count = int(getattr(row, "dep_count", 0))
+        fired.append(("DEPOSIT_BURST", f"{dep_count} deposits inside a day"))
     return fired
 
 
-def _burst(row: pd.Series) -> bool:
-    span = pd.Timestamp(row["last_dep"]) - pd.Timestamp(row["first_dep"])
+def _burst(row: Any) -> bool:
+    span = pd.Timestamp(getattr(row, "last_dep", 0)) - pd.Timestamp(getattr(row, "first_dep", 0))
     return bool(span <= timedelta(hours=24))
 
 
