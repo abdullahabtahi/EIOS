@@ -147,14 +147,15 @@ class BriefingBuilder:
     def risks(self, as_of: datetime) -> list[StrategicRisk]:
         out: list[StrategicRisk] = []
         roster = self._partners.snapshot.world.roster.set_index("partner_id")
-        for pid, row in self._top_partners(2).iterrows():
-            hazard = float(row["hazard_probability_30d"])
+        for row in self._top_partners(2).itertuples():
+            pid = row.Index
+            hazard = float(getattr(row, "hazard_probability_30d", 0.0))
             out.append(
                 StrategicRisk(
                     risk_id=f"rsk_partner_{pid}",
                     title=f"{roster.loc[pid, 'name']} ({pid}) is likely to disengage",
                     severity="HIGH" if hazard >= HIGH_SEVERITY_HAZARD else "MEDIUM",
-                    exposure_usd=round(float(row["exposure"]), 2),
+                    exposure_usd=round(float(getattr(row, "exposure", 0.0)), 2),
                     provenance=self._resolver.resolve("realized_volume_30d_usd", as_of=as_of),
                 )
             )
@@ -181,7 +182,8 @@ class BriefingBuilder:
         cf = self._partners.counterfactual()
         out: list[tuple[StrategicOpportunity, dict[str, Any]]] = []
         roster = self._partners.snapshot.world.roster.set_index("partner_id")
-        for pid, row in self._top_partners(3).iterrows():
+        for row in self._top_partners(3).itertuples():
+            pid = row.Index
             options = [
                 (pb, cf.project(row, pb)) for pb in playbooks_for(self._partners.evidence(str(pid)))
             ]

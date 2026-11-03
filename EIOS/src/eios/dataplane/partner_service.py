@@ -101,11 +101,11 @@ class EnginePartnerService:
             )
         return PartnerQuadrant.HIGH_VALUE_STABLE if high_value else PartnerQuadrant.LOW_VALUE_STABLE
 
-    def _item(self, pid: str, row: pd.Series) -> PartnerChurnItem:
+    def _item(self, pid: str, row: Any) -> PartnerChurnItem:
         ev = self._evidence[pid]
         meta = self._roster.loc[pid]
-        hazard = round(float(row["hazard_probability_30d"]), 4)
-        value = round(float(row["realized_volume_30d_usd"]), 2)
+        hazard = round(float(getattr(row, "hazard_probability_30d", 0.0)), 4)
+        value = round(float(getattr(row, "realized_volume_30d_usd", 0.0)), 2)
         past = {
             back: (float(h.loc[pid, "hazard_probability_30d"]), float(h.loc[pid, "value_at_risk"]))
             for back, h in self._snap.history.items()
@@ -125,8 +125,8 @@ class EnginePartnerService:
             quadrant=self._quadrant(hazard, value),
             days_to_intervention_deadline=expected_days_to_churn(hazard),
             primary_root_cause=ev.root_cause,
-            login_decay_pct=round(-float(row["login_velocity_decay_3w"]) * 100.0, 1),
-            ftd_decay_pct=round(float(row["ftd_volume_delta_pct"]) * 100.0, 1),
+            login_decay_pct=round(-float(getattr(row, "login_velocity_decay_3w", 0.0)) * 100.0, 1),
+            ftd_decay_pct=round(float(getattr(row, "ftd_volume_delta_pct", 0.0)) * 100.0, 1),
             provenance=self.provenance_resolver.resolve(
                 "churn_hazard_probability", as_of=self.as_of
             ),
@@ -136,7 +136,7 @@ class EnginePartnerService:
             historical_drift=_drift(hazard, value, past),
             empirical_win_rate=None,  # no playbook outcome history exists yet
             primary_driver=ev.driver,
-            change_point_flag=bool(row.get("seasonal_dip_flag", False)),
+            change_point_flag=bool(getattr(row, "seasonal_dip_flag", False)),
             support_ticket_count=ev.negative_messages,
             cashier_latency_sla_hours=ev.payout_latency_hours,
             competitor_poaching=ev.rival,
@@ -149,7 +149,8 @@ class EnginePartnerService:
     def _build_radar(self) -> ChurnRadarScatter:
         ranked = self._snap.scored.sort_values("priority_score", ascending=False)
         return ChurnRadarScatter(
-            as_of=self.as_of, partners=[self._item(str(pid), row) for pid, row in ranked.iterrows()]
+            as_of=self.as_of,
+            partners=[self._item(str(row.Index), row) for row in ranked.itertuples()],
         )
 
     def get_churn_radar_scatter(self) -> ChurnRadarScatter:
@@ -174,14 +175,16 @@ class EnginePartnerService:
         rows = self._snap.world.messages
         return [
             PartnerMessage(
-                message_id=str(m["message_id"]),
-                channel=str(m["channel"]),
-                sentiment=str(m["sentiment"]),
-                topic=str(m["topic"]),
-                received_at=pd.Timestamp(m["timestamp"]).to_pydatetime().replace(tzinfo=UTC),
-                text=str(m["text"]),
+                message_id=str(getattr(m, "message_id", "")),
+                channel=str(getattr(m, "channel", "")),
+                sentiment=str(getattr(m, "sentiment", "")),
+                topic=str(getattr(m, "topic", "")),
+                received_at=pd.Timestamp(getattr(m, "timestamp", ""))
+                .to_pydatetime()
+                .replace(tzinfo=UTC),
+                text=str(getattr(m, "text", "")),
             )
-            for _, m in rows[rows["partner_id"] == pid].iterrows()
+            for m in rows[rows["partner_id"] == pid].itertuples()
         ]
 
     def partner_ids(self) -> list[str]:

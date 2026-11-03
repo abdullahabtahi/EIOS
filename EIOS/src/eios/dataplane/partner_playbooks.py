@@ -39,8 +39,8 @@ class Playbook:
     shift: Shift  # the feature values the playbook aims for
 
 
-def _volume(row: pd.Series) -> float:
-    return float(row["realized_volume_30d_usd"])
+def _volume(row: Any) -> float:
+    return float(getattr(row, "realized_volume_30d_usd", 0.0))
 
 
 PLAYBOOKS: dict[str, Playbook] = {
@@ -50,8 +50,8 @@ PLAYBOOKS: dict[str, Playbook] = {
         "WhitelistDirectCashierRail",
         lambda _r: 0.0,
         lambda r: {
-            "sentiment_negative_ratio": 0.3 * r["sentiment_negative_ratio"],
-            "login_velocity_decay_3w": 0.5 * r["login_velocity_decay_3w"],
+            "sentiment_negative_ratio": 0.3 * getattr(r, "sentiment_negative_ratio", 0.0),
+            "login_velocity_decay_3w": 0.5 * getattr(r, "login_velocity_decay_3w", 0.0),
         },
     ),
     "spread_rebate": Playbook(
@@ -63,18 +63,18 @@ PLAYBOOKS: dict[str, Playbook] = {
         ),  # [ASSUMPTION] 1.2% of quarterly volume
         lambda r: {
             "competitor_mention_flag": 0.0,
-            "sentiment_negative_ratio": 0.5 * r["sentiment_negative_ratio"],
-            "login_velocity_decay_3w": 0.6 * r["login_velocity_decay_3w"],
+            "sentiment_negative_ratio": 0.5 * getattr(r, "sentiment_negative_ratio", 0.0),
+            "login_velocity_decay_3w": 0.6 * getattr(r, "login_velocity_decay_3w", 0.0),
         },
     ),
     "rebate_reconcile": Playbook(
         "pb_rebate_reconcile",
         "Reconcile the rebate and restore the agreed rate",
         "DeployRetentionConcession",
-        lambda r: round(max(float(r["comm_prior"]) - float(r["comm_recent"]), 0.0), -1),
+        lambda r: round(max(float(getattr(r, "comm_prior", 0.0)) - float(getattr(r, "comm_recent", 0.0)), 0.0), -1),
         lambda r: {
             "commission_velocity_30d": 0.0,
-            "sentiment_negative_ratio": 0.4 * r["sentiment_negative_ratio"],
+            "sentiment_negative_ratio": 0.4 * getattr(r, "sentiment_negative_ratio", 0.0),
         },
     ),
     "co_marketing": Playbook(
@@ -84,7 +84,7 @@ PLAYBOOKS: dict[str, Playbook] = {
         lambda r: round(
             0.005 * HORIZON_MONTHS * _volume(r), -1
         ),  # [ASSUMPTION] 0.5% of quarterly volume
-        lambda r: {"login_velocity_decay_3w": 0.6 * r["login_velocity_decay_3w"]},
+        lambda r: {"login_velocity_decay_3w": 0.6 * getattr(r, "login_velocity_decay_3w", 0.0)},
     ),
 }
 _BY_DRIVER = {
@@ -110,22 +110,22 @@ class Counterfactual:
     def __init__(self) -> None:
         self._model = DiscreteTimeHazardModel()
 
-    def hazard(self, row: pd.Series, overrides: dict[str, float]) -> float:
+    def hazard(self, row: Any, overrides: dict[str, float]) -> float:
         frame = pd.DataFrame(
             [
                 {
-                    **{f: float(row[f]) for f in _FEATURES},
+                    **{f: float(getattr(row, f, 0.0)) for f in _FEATURES},
                     **overrides,
-                    "seasonal_dip_flag": bool(row.get("seasonal_dip_flag", False)),
+                    "seasonal_dip_flag": bool(getattr(row, "seasonal_dip_flag", False)),
                 }
             ]
         )
         return float(self._model.predict_30d_hazard(frame)["hazard_probability_30d"].iloc[0])
 
-    def project(self, row: pd.Series, playbook: Playbook, intensity: float = 1.0) -> Projection:
-        now = float(row["hazard_probability_30d"])
+    def project(self, row: Any, playbook: Playbook, intensity: float = 1.0) -> Projection:
+        now = float(getattr(row, "hazard_probability_30d", 0.0))
         target = playbook.shift(row)
-        blended = {f: float(row[f]) + (v - float(row[f])) * intensity for f, v in target.items()}
+        blended = {f: float(getattr(row, f, 0.0)) + (v - float(getattr(row, f, 0.0))) * intensity for f, v in target.items()}
         after = min(self.hazard(row, blended), now)
         cost = round(playbook.cost(row) * intensity, 2)
         saved = (now - after) * _volume(row) * HORIZON_MONTHS * NET_REVENUE_RATE
