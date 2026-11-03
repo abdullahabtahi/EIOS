@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 import pandas as pd
 
@@ -71,7 +72,10 @@ PLAYBOOKS: dict[str, Playbook] = {
         "pb_rebate_reconcile",
         "Reconcile the rebate and restore the agreed rate",
         "DeployRetentionConcession",
-        lambda r: round(max(float(getattr(r, "comm_prior", 0.0)) - float(getattr(r, "comm_recent", 0.0)), 0.0), -1),
+        lambda r: round(
+            max(float(getattr(r, "comm_prior", 0.0)) - float(getattr(r, "comm_recent", 0.0)), 0.0),
+            -1,
+        ),
         lambda r: {
             "commission_velocity_30d": 0.0,
             "sentiment_negative_ratio": 0.4 * getattr(r, "sentiment_negative_ratio", 0.0),
@@ -125,7 +129,10 @@ class Counterfactual:
     def project(self, row: Any, playbook: Playbook, intensity: float = 1.0) -> Projection:
         now = float(getattr(row, "hazard_probability_30d", 0.0))
         target = playbook.shift(row)
-        blended = {f: float(getattr(row, f, 0.0)) + (v - float(getattr(row, f, 0.0))) * intensity for f, v in target.items()}
+        blended = {
+            f: float(getattr(row, f, 0.0)) + (v - float(getattr(row, f, 0.0))) * intensity
+            for f, v in target.items()
+        }
         after = min(self.hazard(row, blended), now)
         cost = round(playbook.cost(row) * intensity, 2)
         saved = (now - after) * _volume(row) * HORIZON_MONTHS * NET_REVENUE_RATE
