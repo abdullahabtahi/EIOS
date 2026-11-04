@@ -1,0 +1,4 @@
+## 2025-02-15 - Replace `eval` with `ast.literal_eval`
+**Vulnerability:** Arbitrary code execution via `eval()` call in `tools/infra_checks/budget.py` when parsing string representation of list structures from Terraform/HCL.
+**Learning:** Python's built-in `eval()` function executes arbitrary code. When taking inputs from external files (like YAML, HCL, configs), they should not be passed to `eval()` as it opens up serious RCE vulnerabilities.
+**Prevention:** Always use `ast.literal_eval()` instead of `eval()` when evaluating strings that contain Python literals or data structures (strings, bytes, numbers, tuples, lists, dicts, sets, booleans, and None). It is completely safe.
