@@ -1,6 +1,10 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import nextVitals from "eslint-config-next/core-web-vitals";
-import nextTs from "eslint-config-next/typescript";
+import tseslint from "typescript-eslint";
+import { FlatCompat } from "@eslint/eslintrc";
+
+const compat = new FlatCompat({
+  baseDirectory: import.meta.dirname,
+});
 
 // Design-system guardrails for the cockpit: colours come from cx-* tokens, type never drops below 11px.
 const HEX_CLASS = '-\\[#[0-9a-fA-F]{3,8}\\]';
@@ -11,15 +15,15 @@ const guard = (pattern, message) => [
 ];
 
 const eslintConfig = defineConfig([
-  ...nextVitals,
-  ...nextTs,
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+...tseslint.configs.recommended,
   {
     rules: {
       '@typescript-eslint/no-explicit-any': 'warn',
-      'react-hooks/purity': 'warn',
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/refs': 'warn',
-      'react-hooks/immutability': 'warn',
+      //'react-hooks/purity': 'warn',
+      //'react-hooks/set-state-in-effect': 'warn',
+      //'react-hooks/refs': 'warn',
+      //'react-hooks/immutability': 'warn',
       'react/display-name': 'warn',
       '@typescript-eslint/no-unused-vars': 'warn',
     },
