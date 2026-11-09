@@ -1,3 +1,4 @@
+import ast
 from pathlib import Path
 
 import yaml
@@ -136,7 +137,7 @@ def check_budgets(root: Path, tree: InfraTree) -> tuple[Finding, ...]:  # noqa: 
         elif isinstance(thresh_raw, str) and thresh_raw.strip().startswith("["):
             is_literal = True
             try:
-                thresh_val = eval(thresh_raw)  # noqa: S307
+                thresh_val = ast.literal_eval(thresh_raw)
             except Exception:
                 thresh_val = []
         elif isinstance(thresh_raw, str) and ("other.yaml" in thresh_raw or "slice(" in thresh_raw):
