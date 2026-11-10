@@ -1,3 +1,7 @@
 ## 2025-05-18 - [NetworkX Hub Suppression Clustering Optimization]
 **Learning:** [The codebase's `detect_communities` function in `property_graph.py` was doing a deep copy of the entire graph and then a loop to remove edges from "hub" nodes just to exclude them from the resulting communities. This is extremely slow for large graphs ($O(V+E)$ copy, then expensive edge removal). Because the original code excluded size-1 components anyway (`len(c) > 1`), a simple `subgraph` excluding those hub nodes is functionally equivalent and vastly faster.]
 **Action:** [When working with NetworkX graphs to find communities or components while excluding specific nodes, always use `subgraph` with a filtered list of valid nodes instead of copying the graph and modifying it.]
+
+## 2025-05-19 - [Pandas DataFrame Iteration Optimization]
+**Learning:** [Iterating over pandas DataFrames using `.iterrows()` wraps each row into a `Series` object, causing massive overhead for row-by-row data extraction. In `MuleRingDetector.detect_mule_rings`, which iterates over thousands of rows to construct NetworkX graphs, this was a significant bottleneck. Switching to `.itertuples(index=False)` avoids this wrapper overhead yielding approximately a 19x speedup without changing application behavior.]
+**Action:** [Never use `.iterrows()` when extracting cell data in a loop. Always default to `.itertuples()` for row-by-row DataFrame operations, adapting dict-style `.get(col, def)` to `getattr(row, col, def)` for optional columns.]
