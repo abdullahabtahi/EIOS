@@ -4,14 +4,14 @@
 # Nothing secret is copied or baked in: configuration arrives through environment variables
 # (EIOS_PORT, EIOS_SERVICE_NAME, EIOS_OTEL_EXPORTER_ENDPOINT, EIOS_CORE_URL, EIOS_CORE_TIMEOUT_SECONDS) at run time.
 
-FROM python:3.14-slim AS builder
+FROM python:3.15-slim AS builder
 ENV UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1
 WORKDIR /app
 RUN pip install --no-cache-dir uv
 COPY pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
-FROM python:3.14-slim
+FROM python:3.15-slim
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app/src:/app PATH=/app/.venv/bin:$PATH \
     EIOS_PORT=8080 EIOS_SERVICE_NAME=skeleton_edge
